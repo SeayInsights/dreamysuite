@@ -4,7 +4,7 @@ import type { Route } from "./+types/_auth.login";
 import "~/lib/context";
 
 export function meta() {
-  return [{ title: "Sign in — Pagebloom" }];
+  return [{ title: "Sign in — DreamySuite" }];
 }
 
 export async function loader({ request, context }: Route.LoaderArgs) {
@@ -76,7 +76,7 @@ export default function Login() {
         Welcome back
       </h1>
       <p style={{ color: "#9b8e85", fontSize: "0.9rem", marginBottom: "2rem" }}>
-        Sign in to your Pagebloom account
+        Sign in to your DreamySuite account
       </p>
 
       <Form method="post" style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>

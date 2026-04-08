@@ -1,5 +1,5 @@
 {
-  "name": "pagebloom",
+  "name": "dreamysuite",
   "private": true,
   "type": "module",
   "scripts": {
@@ -7,8 +7,8 @@
     "dev": "react-router dev",
     "deploy": "npm run build && wrangler deploy",
     "typecheck": "react-router typegen && tsc",
-    "db:migrate:local": "wrangler d1 migrations apply pagebloom-db --local",
-    "db:migrate:prod": "wrangler d1 migrations apply pagebloom-db"
+    "db:migrate:local": "wrangler d1 migrations apply dreamysuite-db --local",
+    "db:migrate:prod": "wrangler d1 migrations apply dreamysuite-db"
   },
   "dependencies": {
     "better-auth": "^1.2.7",

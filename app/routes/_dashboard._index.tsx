@@ -1,7 +1,7 @@
 import { Link } from "react-router";
 
 export function meta() {
-  return [{ title: "My Sites — Pagebloom" }];
+  return [{ title: "My Sites — DreamySuite" }];
 }
 
 // Placeholder site data — will be replaced with D1 queries

@@ -1,4 +1,4 @@
-name = "pagebloom"
+name = "dreamysuite"
 main = "workers/app.ts"
 compatibility_date = "2025-01-01"
 compatibility_flags = ["nodejs_compat"]
@@ -8,7 +8,7 @@ directory = "./build/client"
 
 [[d1_databases]]
 binding = "DB"
-database_name = "pagebloom-db"
+database_name = "dreamysuite-db"
 database_id = "placeholder"
 
 [[kv_namespaces]]

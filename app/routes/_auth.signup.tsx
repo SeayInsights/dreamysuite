@@ -4,7 +4,7 @@ import type { Route } from "./+types/_auth.signup";
 import "~/lib/context";
 
 export function meta() {
-  return [{ title: "Create account — Pagebloom" }];
+  return [{ title: "Create account — DreamySuite" }];
 }
 
 export async function loader({ request, context }: Route.LoaderArgs) {
@@ -104,7 +104,7 @@ export default function Signup() {
         Create your account
       </h1>
       <p style={{ color: "#9b8e85", fontSize: "0.9rem", marginBottom: "2rem" }}>
-        Start building beautiful sites with Pagebloom
+        Start building beautiful sites with DreamySuite
       </p>
 
       <Form method="post" style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>

@@ -57,7 +57,7 @@ export default function AuthLayout() {
               letterSpacing: "-0.02em",
             }}
           >
-            Pagebloom
+            DreamySuite
           </span>
         </a>
       </div>

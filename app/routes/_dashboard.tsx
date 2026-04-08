@@ -77,7 +77,7 @@ export default function DashboardLayout() {
                 letterSpacing: "-0.02em",
               }}
             >
-              Pagebloom
+              DreamySuite
             </span>
           </Link>
         </div>
