@@ -1,0 +1,21 @@
+name = "pagebloom"
+main = "workers/app.ts"
+compatibility_date = "2025-01-01"
+compatibility_flags = ["nodejs_compat"]
+
+[assets]
+directory = "./build/client"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "pagebloom-db"
+database_id = "placeholder"
+
+[[kv_namespaces]]
+binding = "KV"
+id = "placeholder"
+preview_id = "placeholder"
+
+[vars]
+APP_URL = "http://localhost:8787"
+# AUTH_SECRET must be set as a secret via: wrangler secret put AUTH_SECRET
