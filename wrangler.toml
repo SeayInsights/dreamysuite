@@ -9,12 +9,12 @@ directory = "./build/client"
 [[d1_databases]]
 binding = "DB"
 database_name = "dreamysuite-db"
-database_id = "placeholder"
+database_id = "db07b9de-1e33-4b16-af0b-df7e4e444a54"
 
 [[kv_namespaces]]
 binding = "KV"
-id = "placeholder"
-preview_id = "placeholder"
+id = "8fb116b82a3f4b5d8de3195ebe28df04"
+preview_id = "8fb116b82a3f4b5d8de3195ebe28df04"
 
 [vars]
 APP_URL = "http://localhost:8787"
