@@ -1,4 +1,4 @@
-import { Link, Outlet, redirect, useLoaderData, useMatches, useSearchParams } from "react-router";
+import { Link, Outlet, redirect, useLoaderData, useLocation, useMatches, useSearchParams } from "react-router";
 import { useState, useCallback } from "react";
 import { createAuth } from "~/lib/auth.server";
 import type { Route } from "./+types/_dashboard";
@@ -19,15 +19,17 @@ interface SiteData {
 
 export default function DashboardLayout() {
   const { user } = useLoaderData<typeof loader>();
+  const location = useLocation();
   const matches = useMatches();
   const [searchParams, setSearchParams] = useSearchParams();
   const [publishing, setPublishing] = useState(false);
 
-  // Detect editor mode
+  // Detect editor mode from URL path (reliable) + get site data from matches
+  const pathMatch = location.pathname.match(/^\/sites\/([^/]+)$/);
+  const siteId = pathMatch?.[1];
+  const isEditor = Boolean(siteId);
   const siteMatch = matches.find((m) => (m.params as Record<string, string>).id);
-  const siteId = (siteMatch?.params as Record<string, string>)?.id;
   const site = (siteMatch?.data as { site?: SiteData } | undefined)?.site;
-  const isEditor = Boolean(siteId && site);
 
   const currentSection = searchParams.get("s") ?? "hub";
 
