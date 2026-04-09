@@ -14,6 +14,10 @@ APP_URL = "https://dreamysuite.com"
 pattern = "dreamysuite.com"
 custom_domain = true
 
+[[routes]]
+pattern = "*.dreamysuite.com/*"
+zone_name = "dreamysuite.com"
+
 [[d1_databases]]
 binding = "DB"
 database_name = "dreamysuite-db"

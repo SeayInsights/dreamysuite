@@ -340,7 +340,7 @@ export default function SiteEditor() {
 
   const siteUrl = site.customDomain
     ? `https://${site.customDomain}`
-    : `https://dreamysuite.com/${site.slug}`;
+    : `/${site.slug}`;
 
   const previewWidth = previewDevice === "mobile" ? "390px" : "100%";
 

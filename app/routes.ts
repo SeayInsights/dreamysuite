@@ -50,4 +50,11 @@ export default [
     route("sites/new", "routes/_dashboard.sites.new.tsx"),
     route("sites/:id", "routes/_dashboard.sites.$id.tsx"),
   ]),
+
+  // Domain availability check + purchase
+  route("api/domain/check", "routes/api.domain.check.ts"),
+  route("api/domain/purchase", "routes/api.domain.purchase.ts"),
+
+  // Public site renderer — catch-all slug, must be last
+  route(":slug", "routes/$slug.tsx"),
 ] satisfies RouteConfig;
