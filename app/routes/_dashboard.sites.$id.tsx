@@ -1065,10 +1065,40 @@ export default function SiteEditor() {
 
               {/* Content tab */}
               {activeTab === "content" && (
-                <div className="left-tab-panel" style={{ padding: "1rem" }}>
-                  <p style={{ fontSize: "0.78rem", color: "#9b8e85", lineHeight: 1.6 }}>
-                    Content editing for <strong>{activePage?.label ?? "…"}</strong> will appear here once blocks are added.
-                  </p>
+                <div className="left-tab-panel" style={{ padding: "0.75rem" }}>
+                  {!activePage ? (
+                    <p style={{ fontSize: "0.78rem", color: "#9b8e85" }}>Select a page to edit content.</p>
+                  ) : blocks.length === 0 ? (
+                    <p style={{ fontSize: "0.78rem", color: "#9b8e85", lineHeight: 1.6 }}>
+                      No blocks on <strong>{activePage.label}</strong> yet. Add blocks in the Blocks tab.
+                    </p>
+                  ) : (
+                    <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem" }}>
+                      {blocks.map((block) => {
+                        const cfg = (() => { try { return JSON.parse(block.config || "{}") as Record<string, unknown>; } catch { return {} as Record<string, unknown>; } })();
+                        const preview = (cfg.title ?? cfg.heading ?? cfg.text ?? cfg.contentKey ?? cfg.imageSlot ?? cfg.item_name ?? cfg.url ?? cfg.vimeoId ?? "") as string;
+                        return (
+                          <div
+                            key={block.id}
+                            style={{ border: "1px solid #e0dbd4", borderRadius: "8px", padding: "0.55rem 0.75rem", cursor: "pointer", background: block.isVisible ? "#fafaf9" : "#f5f3f0", opacity: block.isVisible ? 1 : 0.6 }}
+                            onClick={() => handleEditBlock(block)}
+                            role="button"
+                            aria-label={`Edit ${blockLabel(block.type)} block`}
+                          >
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                              <span style={{ fontSize: "0.78rem", fontWeight: 600, color: "#1c1917" }}>{blockLabel(block.type)}</span>
+                              <span style={{ fontSize: "0.68rem", color: "#9b8e85" }}>Edit →</span>
+                            </div>
+                            {preview && (
+                              <p style={{ fontSize: "0.7rem", color: "#9b8e85", margin: "0.2rem 0 0", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                {preview}
+                              </p>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
               )}
 

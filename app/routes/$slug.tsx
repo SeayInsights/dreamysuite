@@ -541,6 +541,20 @@ function renderBlock(block: ParsedBlock, settings: SiteSettingRow | null): strin
 
     case "video": {
       const url = cfg.url as string | undefined;
+      const vimeoId = cfg.vimeoId as string | undefined;
+      const height = (cfg.height as string | undefined) ?? "100dvh";
+      if (vimeoId) {
+        return `
+        <section class="block block-video" aria-label="Video" style="position:relative;width:100%;height:${escHtml(height)};overflow:hidden;background:#000;">
+          <iframe
+            src="https://player.vimeo.com/video/${escHtml(vimeoId)}?autoplay=1&muted=1&loop=1&background=1"
+            style="position:absolute;top:50%;left:50%;width:177.78vh;min-width:100%;min-height:100%;height:56.25vw;transform:translate(-50%,-50%);border:0;"
+            allow="autoplay; fullscreen; picture-in-picture"
+            allowfullscreen
+            title="Wedding video"
+          ></iframe>
+        </section>`;
+      }
       return `
         <section class="block block-video" aria-label="Video">
           ${url ? `<video src="${escHtml(url)}" controls class="media-element" aria-label="Wedding video"></video>` : mediaPlaceholder("Video")}
