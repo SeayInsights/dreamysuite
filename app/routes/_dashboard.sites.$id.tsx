@@ -244,6 +244,7 @@ export default function SiteEditor() {
   const [blockEditOpen, setBlockEditOpen]       = useState(false);
   const [editingBlock, setEditingBlock]         = useState<Block | null>(null);
   const [blockConfigFields, setBlockConfigFields] = useState<Record<string, unknown>>({});
+  const [expandedBlockId, setExpandedBlockId]   = useState<string | null>(null);
 
   // Style tab
   const [styleHeadingFont, setStyleHeadingFont] = useState("Georgia");
@@ -645,6 +646,20 @@ export default function SiteEditor() {
     setBlockEditOpen(true);
   }
 
+  function toggleBlockExpand(block: Block) {
+    if (expandedBlockId === block.id) {
+      setExpandedBlockId(null);
+    } else {
+      setEditingBlock(block);
+      try {
+        setBlockConfigFields(JSON.parse(block.config || "{}") as Record<string, unknown>);
+      } catch {
+        setBlockConfigFields({});
+      }
+      setExpandedBlockId(block.id);
+    }
+  }
+
   async function handleSaveBlockConfig() {
     if (!editingBlock) return;
     try {
@@ -955,7 +970,7 @@ export default function SiteEditor() {
                         >
                           <span
                             style={{ flex: 1, cursor: "pointer", padding: "2px 0" }}
-                            onClick={() => { setActivePage(p); setPageDropOpen(false); }}
+                            onClick={() => { setActivePage(p); setPageDropOpen(false); setExpandedBlockId(null); }}
                           >
                             {p.label}
                           </span>
@@ -1011,46 +1026,235 @@ export default function SiteEditor() {
                         </p>
                       )}
                       <div ref={blockListRef} style={{ marginBottom: "0.5rem" }}>
-                        {blocks.map((block) => (
-                          <div key={block.id} className="bl-card-wrap">
-                            <div className="bl-card">
-                              <div className="drag-handle" aria-hidden="true">⠿</div>
-                              <div className="bl-stripe" style={{ background: blockColor(block.type) }} />
-                              <div className="bl-body">
-                                <div className={`bl-name${block.isVisible === 0 ? " off" : ""}`}>
-                                  {blockLabel(block.type)}
+                        {blocks.map((block) => {
+                          const isExpanded = expandedBlockId === block.id;
+                          const cfg = isExpanded ? blockConfigFields : (() => { try { return JSON.parse(block.config || "{}") as Record<string,unknown>; } catch { return {} as Record<string,unknown>; } })();
+
+                          const bgMode     = cfg.background ? 'color' : 'none';
+                          const bgColor    = ((cfg.background as Record<string,unknown>)?.value as string | undefined) ?? '#ffffff';
+                          const tcMode     = cfg.textColor ? 'custom' : 'default';
+                          const tcVal      = (cfg.textColor as string | undefined) ?? '#1c1917';
+                          const fontVal    = (cfg.fontFamily as string | undefined) ?? '';
+                          const borderMode = cfg.hideBorder ? 'none' : 'show';
+                          const animVal    = (cfg.animation as string | undefined) ?? '';
+
+                          const scheduleEvts = isExpanded && Array.isArray(cfg.events) ? (cfg.events as {name:string;date:string;time:string;location:string;description:string}[]) : [];
+                          const faqItms = isExpanded && Array.isArray(cfg.items) ? (cfg.items as {q:string;a:string}[]) : [];
+
+                          return (
+                            <div key={block.id} className="bl-card-wrap">
+                              {/* Tile header */}
+                              <div
+                                className={`bl-card${isExpanded ? ' bl-card-open' : ''}`}
+                                onClick={() => toggleBlockExpand(block)}
+                                style={{ cursor: 'pointer', borderRadius: isExpanded ? '8px 8px 0 0' : undefined, borderBottom: isExpanded ? 'none' : undefined }}
+                              >
+                                <div className="drag-handle" aria-hidden="true" onClick={e => e.stopPropagation()}>⠿</div>
+                                <div className="bl-stripe" style={{ background: blockColor(block.type) }} />
+                                <div className="bl-body">
+                                  <div className={`bl-name${block.isVisible === 0 ? ' off' : ''}`}>{blockLabel(block.type)}</div>
+                                  <div className="bl-sub">{block.isVisible === 0 ? 'hidden' : 'default'}</div>
                                 </div>
-                                <div className="bl-sub">{block.type}</div>
+                                <div className="bl-acts" onClick={e => e.stopPropagation()}>
+                                  <button className={`bact${block.isVisible !== 0 ? ' vis-on' : ''}`}
+                                    title={block.isVisible !== 0 ? 'Hide' : 'Show'}
+                                    aria-label={block.isVisible !== 0 ? 'Hide block' : 'Show block'}
+                                    onClick={() => handleToggleBlockVisibility(block)}>
+                                    {block.isVisible !== 0 ? '●' : '○'}
+                                  </button>
+                                  <button className="bact" title="Delete block" aria-label="Delete block"
+                                    onClick={() => handleDeleteBlock(block.id)}>✕</button>
+                                </div>
                               </div>
-                              <div className="bl-acts">
-                                <button
-                                  className={`bact${block.isVisible !== 0 ? " vis-on" : ""}`}
-                                  title={block.isVisible !== 0 ? "Hide block" : "Show block"}
-                                  aria-label={block.isVisible !== 0 ? "Hide block" : "Show block"}
-                                  onClick={() => handleToggleBlockVisibility(block)}
-                                >
-                                  {block.isVisible !== 0 ? "👁" : "🙈"}
-                                </button>
-                                <button
-                                  className="bact"
-                                  title="Edit block config"
-                                  aria-label="Edit block config"
-                                  onClick={() => handleEditBlock(block)}
-                                >
-                                  ✎
-                                </button>
-                                <button
-                                  className="bact"
-                                  title="Delete block"
-                                  aria-label="Delete block"
-                                  onClick={() => handleDeleteBlock(block.id)}
-                                >
-                                  ✕
-                                </button>
-                              </div>
+
+                              {/* Inline config panel */}
+                              {isExpanded && (
+                                <div className="bl-inline-config" onClick={e => e.stopPropagation()}>
+                                  <p className="bl-config-title">{blockLabel(block.type)}</p>
+
+                                  {/* Block-type specific fields */}
+                                  {block.type === 'home-hero' && (<>
+                                    <div className="sf-group"><label className="sf-lbl">Couple Names</label><input className="sf-input" value={String(cfg.coupleNames??'')} onChange={e=>setField('coupleNames',e.target.value)} placeholder="Jane & John"/></div>
+                                    <div className="sf-group"><label className="sf-lbl">Date Text</label><input className="sf-input" value={String(cfg.dateText??'')} onChange={e=>setField('dateText',e.target.value)} placeholder="October 12, 2025"/></div>
+                                    <div className="sf-group"><label className="sf-lbl">Location Text</label><input className="sf-input" value={String(cfg.locationText??'')} onChange={e=>setField('locationText',e.target.value)} placeholder="Grand Ballroom"/></div>
+                                    <div className="sf-group"><label className="sf-lbl">RSVP Button Text</label><input className="sf-input" value={String(cfg.cta??'')} onChange={e=>setField('cta',e.target.value)} placeholder="RSVP Now"/></div>
+                                  </>)}
+
+                                  {block.type === 'header' && (
+                                    <div className="sf-group"><label className="sf-lbl">Page Title</label><input className="sf-input" value={String(cfg.title??'')} onChange={e=>setField('title',e.target.value)} placeholder="Our Story"/></div>
+                                  )}
+
+                                  {block.type === 'text' && (<>
+                                    <div className="sf-group"><label className="sf-lbl">Heading</label><input className="sf-input" value={String(cfg.heading??'')} onChange={e=>setField('heading',e.target.value)} placeholder="Section heading…"/></div>
+                                    <div className="sf-group"><label className="sf-lbl">Body</label><textarea className="sf-input" rows={4} value={String(cfg.body??'')} onChange={e=>setField('body',e.target.value)} style={{resize:'vertical'}}/></div>
+                                    <div className="sf-group"><label className="sf-lbl">Content Key <span style={{fontWeight:400,color:'#b0a99f'}}>(advanced)</span></label><input className="sf-input" value={String(cfg.contentKey??'')} onChange={e=>setField('contentKey',e.target.value)} placeholder="story / home-welcome / registry…"/></div>
+                                  </>)}
+
+                                  {block.type === 'video' && (<>
+                                    <div className="sf-group"><label className="sf-lbl">Vimeo URL or ID</label><input className="sf-input" value={String(cfg.vimeoId??'')} onChange={e=>setField('vimeoId',e.target.value)} placeholder="https://vimeo.com/123456789 (blank = default)"/></div>
+                                    <div className="sf-group"><label className="sf-lbl">Block Height</label>
+                                      <div style={{display:'flex',gap:'6px',flexWrap:'wrap'}}>
+                                        {(['50dvh','75dvh','100dvh','100vh'] as const).map((h,i)=>(<button key={h} onClick={()=>setField('height',h)} style={{padding:'4px 12px',borderRadius:'20px',border:'1.5px solid',borderColor:((cfg.height??'100dvh')===h)?'var(--color-accent)':'#e0dbd4',background:((cfg.height??'100dvh')===h)?'var(--color-accent)':'#fff',color:((cfg.height??'100dvh')===h)?'#fff':'#6b5e56',fontSize:'0.75rem',cursor:'pointer'}}>{['Short','Medium','Tall','Full'][i]}</button>))}
+                                      </div>
+                                    </div>
+                                    <div className="sf-group" style={{display:'flex',alignItems:'center',gap:'8px'}}>
+                                      <label style={{fontSize:'0.75rem',color:'#6b5e56',flex:1}}>Show countdown clock</label>
+                                      <input type="checkbox" checked={!!cfg.showCountdown} onChange={e=>setField('showCountdown',e.target.checked)} style={{width:'16px',height:'16px',accentColor:'var(--color-accent)',cursor:'pointer'}}/>
+                                    </div>
+                                  </>)}
+
+                                  {block.type === 'countdown' && (
+                                    <div className="sf-group"><label className="sf-lbl">Countdown To</label><input className="sf-input" type="datetime-local" value={String(cfg.countdownDate??'')} onChange={e=>setField('countdownDate',e.target.value)}/></div>
+                                  )}
+
+                                  {block.type === 'images' && (
+                                    <div className="sf-group"><label className="sf-lbl">Image Slot Name</label><input className="sf-input" value={String(cfg.imageSlot??'')} onChange={e=>setField('imageSlot',e.target.value)} placeholder="home"/></div>
+                                  )}
+
+                                  {block.type === 'youtube' && (<>
+                                    <div className="sf-group"><label className="sf-lbl">YouTube URL or Video ID</label><input className="sf-input" value={String(cfg.url??'')} onChange={e=>setField('url',e.target.value)} placeholder="https://youtube.com/watch?v=…"/></div>
+                                    <div className="sf-group"><label className="sf-lbl">Title</label><input className="sf-input" value={String(cfg.title??'')} onChange={e=>setField('title',e.target.value)}/></div>
+                                  </>)}
+
+                                  {block.type === 'spacer' && (
+                                    <div className="sf-group"><label className="sf-lbl">Height (CSS value)</label><input className="sf-input" value={String(cfg.height??'4rem')} onChange={e=>setField('height',e.target.value)} placeholder="4rem"/></div>
+                                  )}
+
+                                  {block.type === 'registry-card' && (<>
+                                    <div className="sf-group"><label className="sf-lbl">Registry Name</label><input className="sf-input" value={String(cfg.item_name??'')} onChange={e=>setField('item_name',e.target.value)} placeholder="Honeymoon Fund"/></div>
+                                    <div className="sf-group"><label className="sf-lbl">Description</label><textarea className="sf-input" rows={3} value={String(cfg.item_description??'')} onChange={e=>setField('item_description',e.target.value)} style={{resize:'vertical'}}/></div>
+                                    <div className="sf-group"><label className="sf-lbl">Link URL</label><input className="sf-input" type="url" value={String(cfg.link_url??'')} onChange={e=>setField('link_url',e.target.value)} placeholder="https://paypal.me/…"/></div>
+                                    <div className="sf-group"><label className="sf-lbl">Button Text</label><input className="sf-input" value={String(cfg.cta??'')} onChange={e=>setField('cta',e.target.value)} placeholder="Contribute"/></div>
+                                  </>)}
+
+                                  {block.type === 'hotel-card' && (<>
+                                    <div className="sf-group"><label className="sf-lbl">Hotel / Venue Name</label><input className="sf-input" value={String(cfg.name??'')} onChange={e=>setField('name',e.target.value)}/></div>
+                                    <div className="sf-group"><label className="sf-lbl">Description</label><textarea className="sf-input" rows={3} value={String(cfg.description??'')} onChange={e=>setField('description',e.target.value)} style={{resize:'vertical'}}/></div>
+                                    <div className="sf-group"><label className="sf-lbl">Room Block Note</label><input className="sf-input" value={String(cfg.room_note??'')} onChange={e=>setField('room_note',e.target.value)}/></div>
+                                    <div className="sf-group"><label className="sf-lbl">Google Maps URL</label><input className="sf-input" type="url" value={String(cfg.map_url??'')} onChange={e=>setField('map_url',e.target.value)}/></div>
+                                  </>)}
+
+                                  {block.type === 'venue-map' && (<>
+                                    <div className="sf-group"><label className="sf-lbl">Search Query</label><input className="sf-input" value={String(cfg.query??'')} onChange={e=>setField('query',e.target.value)} placeholder="Grand Ballroom New York"/></div>
+                                    <div className="sf-group"><label className="sf-lbl">Map Height (px)</label><input className="sf-input" type="number" value={String(cfg.height??'360')} onChange={e=>setField('height',Number(e.target.value))}/></div>
+                                  </>)}
+
+                                  {block.type === 'schedule' && (<>
+                                    {scheduleEvts.map((evt,i)=>(
+                                      <div key={i} style={{border:'1px solid #e0dbd4',borderRadius:'8px',padding:'0.75rem',marginBottom:'0.75rem'}}>
+                                        <div style={{display:'flex',justifyContent:'space-between',marginBottom:'0.5rem'}}>
+                                          <span style={{fontSize:'0.72rem',fontWeight:600,color:'#9b8e85'}}>Event {i+1}</span>
+                                          <button onClick={()=>setField('events',scheduleEvts.filter((_,j)=>j!==i))} style={{background:'none',border:'none',cursor:'pointer',color:'#ccc',fontSize:'0.8rem'}}>✕</button>
+                                        </div>
+                                        {(['name','date','time','location','description'] as const).map(f=>(
+                                          <div key={f} className="sf-group" style={{marginBottom:'0.35rem'}}>
+                                            <label className="sf-lbl" style={{textTransform:'capitalize',fontSize:'0.68rem'}}>{f}</label>
+                                            <input className="sf-input" style={{padding:'5px 8px',fontSize:'0.78rem'}} value={String((evt as Record<string,unknown>)[f]??'')} onChange={e=>{const next=[...scheduleEvts];(next[i] as Record<string,unknown>)[f]=e.target.value;setField('events',next);}}/>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    ))}
+                                    <button onClick={()=>setField('events',[...scheduleEvts,{name:'',date:'',time:'',location:'',description:''}])} className="btn-ghost" style={{fontSize:'0.76rem',width:'100%'}}>+ Add Event</button>
+                                  </>)}
+
+                                  {block.type === 'faq' && (<>
+                                    <div className="sf-group"><label className="sf-lbl">Intro Text</label><input className="sf-input" value={String(cfg.intro??'')} onChange={e=>setField('intro',e.target.value)}/></div>
+                                    {faqItms.map((item,i)=>(
+                                      <div key={i} style={{border:'1px solid #e0dbd4',borderRadius:'8px',padding:'0.75rem',marginBottom:'0.75rem'}}>
+                                        <div style={{display:'flex',justifyContent:'space-between',marginBottom:'0.5rem'}}>
+                                          <span style={{fontSize:'0.72rem',fontWeight:600,color:'#9b8e85'}}>Q&A {i+1}</span>
+                                          <button onClick={()=>setField('items',faqItms.filter((_,j)=>j!==i))} style={{background:'none',border:'none',cursor:'pointer',color:'#ccc',fontSize:'0.8rem'}}>✕</button>
+                                        </div>
+                                        <div className="sf-group" style={{marginBottom:'0.35rem'}}>
+                                          <label className="sf-lbl" style={{fontSize:'0.68rem'}}>Question</label>
+                                          <input className="sf-input" style={{padding:'5px 8px',fontSize:'0.78rem'}} value={item.q??''} onChange={e=>{const next=[...faqItms];next[i]={...next[i],q:e.target.value};setField('items',next);}}/>
+                                        </div>
+                                        <div className="sf-group">
+                                          <label className="sf-lbl" style={{fontSize:'0.68rem'}}>Answer</label>
+                                          <textarea className="sf-input" rows={2} style={{padding:'5px 8px',fontSize:'0.78rem',resize:'vertical'}} value={item.a??''} onChange={e=>{const next=[...faqItms];next[i]={...next[i],a:e.target.value};setField('items',next);}}/>
+                                        </div>
+                                      </div>
+                                    ))}
+                                    <button onClick={()=>setField('items',[...faqItms,{q:'',a:''}])} className="btn-ghost" style={{fontSize:'0.76rem',width:'100%'}}>+ Add Q&A</button>
+                                  </>)}
+
+                                  {/* APPEARANCE section */}
+                                  <div className="bl-section-label">APPEARANCE</div>
+
+                                  <div className="sf-group">
+                                    <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'6px'}}>
+                                      <label className="sf-lbl" style={{margin:0}}>BACKGROUND</label>
+                                      <label className="sf-lbl" style={{margin:0}}>TEXT COLOR</label>
+                                    </div>
+                                    <div style={{display:'flex',gap:'16px'}}>
+                                      <div style={{display:'flex',gap:'4px',alignItems:'center'}}>
+                                        {(['none','color'] as const).map(opt=>(
+                                          <button key={opt} onClick={()=>setField('background', opt==='none' ? null : {type:'color',value:bgColor})}
+                                            style={{padding:'3px 10px',borderRadius:'20px',border:'1.5px solid',borderColor:bgMode===opt?'var(--color-accent)':'#e0dbd4',background:bgMode===opt?'var(--color-accent)':'#fff',color:bgMode===opt?'#fff':'#6b5e56',fontSize:'0.73rem',cursor:'pointer'}}>
+                                            {opt==='none'?'None':'Color'}
+                                          </button>
+                                        ))}
+                                        {bgMode==='color' && <input type="color" value={bgColor} onChange={e=>setField('background',{type:'color',value:e.target.value})} style={{width:'28px',height:'26px',border:'1px solid #e0dbd4',borderRadius:'4px',padding:'1px',cursor:'pointer'}}/>}
+                                      </div>
+                                      <div style={{display:'flex',gap:'4px',alignItems:'center'}}>
+                                        {(['default','custom'] as const).map(opt=>(
+                                          <button key={opt} onClick={()=>setField('textColor', opt==='default' ? null : tcVal)}
+                                            style={{padding:'3px 10px',borderRadius:'20px',border:'1.5px solid',borderColor:tcMode===opt?'var(--color-accent)':'#e0dbd4',background:tcMode===opt?'var(--color-accent)':'#fff',color:tcMode===opt?'#fff':'#6b5e56',fontSize:'0.73rem',cursor:'pointer'}}>
+                                            {opt==='default'?'Default':'Custom'}
+                                          </button>
+                                        ))}
+                                        {tcMode==='custom' && <input type="color" value={tcVal} onChange={e=>setField('textColor',e.target.value)} style={{width:'28px',height:'26px',border:'1px solid #e0dbd4',borderRadius:'4px',padding:'1px',cursor:'pointer'}}/>}
+                                      </div>
+                                    </div>
+                                  </div>
+
+                                  <div className="sf-group">
+                                    <label className="sf-lbl">BORDERS</label>
+                                    <div style={{display:'flex',gap:'4px'}}>
+                                      {(['show','none'] as const).map(opt=>(
+                                        <button key={opt} onClick={()=>setField('hideBorder', opt==='none')}
+                                          style={{padding:'3px 10px',borderRadius:'20px',border:'1.5px solid',borderColor:borderMode===opt?'var(--color-accent)':'#e0dbd4',background:borderMode===opt?'var(--color-accent)':'#fff',color:borderMode===opt?'#fff':'#6b5e56',fontSize:'0.73rem',cursor:'pointer'}}>
+                                          {opt==='show'?'Show':'None'}
+                                        </button>
+                                      ))}
+                                    </div>
+                                  </div>
+
+                                  <div className="sf-group">
+                                    <label className="sf-lbl">FONT</label>
+                                    <select className="sf-input" value={fontVal} onChange={e=>setField('fontFamily', e.target.value||null)}>
+                                      <option value="">Site default</option>
+                                      <option value="Georgia, serif">Georgia</option>
+                                      <option value="'Playfair Display', Georgia, serif">Playfair Display</option>
+                                      <option value="'Cormorant Garamond', Georgia, serif">Cormorant Garamond</option>
+                                      <option value="'EB Garamond', Georgia, serif">EB Garamond</option>
+                                      <option value="Inter, sans-serif">Inter</option>
+                                      <option value="'DM Sans', sans-serif">DM Sans</option>
+                                    </select>
+                                  </div>
+
+                                  <div className="sf-group">
+                                    <label className="sf-lbl">ENTRANCE ANIMATION</label>
+                                    <select className="sf-input" value={animVal} onChange={e=>setField('animation', e.target.value||null)}>
+                                      <option value="">None</option>
+                                      <option value="fade-up">Fade Up</option>
+                                      <option value="fade-down">Fade Down</option>
+                                      <option value="fade-left">Fade Left</option>
+                                      <option value="fade-right">Fade Right</option>
+                                      <option value="zoom-in">Zoom In</option>
+                                      <option value="slide-up">Slide Up</option>
+                                    </select>
+                                  </div>
+
+                                  <div style={{display:'flex',gap:'8px',marginTop:'1rem',paddingTop:'0.75rem',borderTop:'1px solid #f0ede8'}}>
+                                    <button className="btn-ghost" style={{flex:1}} onClick={()=>setExpandedBlockId(null)}>Cancel</button>
+                                    <button className="btn-primary-sm" style={{flex:1}} onClick={()=>{handleSaveBlockConfig();setExpandedBlockId(null);}}>Save</button>
+                                  </div>
+                                </div>
+                              )}
                             </div>
-                          </div>
-                        ))}
+                          );
+                        })}
                       </div>
                     </>
                   )}

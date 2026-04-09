@@ -100,6 +100,10 @@ body { background:#fff !important; }
 .bact.vis-on { color:#5c8a52; }
 .drag-handle { display:flex; align-items:center; padding:0 5px 0 7px; cursor:grab; color:#d4cec8; font-size:0.95rem; user-select:none; flex-shrink:0; }
 .drag-handle:hover { color:#b0a99f; }
+.bl-card-open { border-color: var(--color-accent, #e75850) !important; border-bottom-left-radius: 0 !important; border-bottom-right-radius: 0 !important; border-bottom: none !important; }
+.bl-inline-config { border: 1.5px solid var(--color-accent, #e75850); border-top: none; border-radius: 0 0 8px 8px; padding: 0.75rem; margin-bottom: 0.5rem; background: #fffcfb; }
+.bl-config-title { font-size: 0.85rem; font-weight: 700; color: #1c1917; margin: 0 0 0.75rem; }
+.bl-section-label { font-size: 0.65rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #9b8e85; margin: 1rem 0 0.5rem; padding-top: 0.75rem; border-top: 1px solid #f0ede8; }
 
 /* ── Add block ────────────────────────────────────────── */
 .add-block-btn { width:calc(100% - 2rem); margin:0.75rem 1rem; background:#fff; border:1.5px dashed #d8d2cb; border-radius:8px; padding:8px; font-size:0.76rem; color:#b0a99f; cursor:pointer; text-align:center; transition:all 0.12s; }
