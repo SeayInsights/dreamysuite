@@ -84,6 +84,7 @@ body { background:#fff !important; }
 
 /* ── Block cards ──────────────────────────────────────── */
 .bl-card-wrap { margin-bottom:5px; }
+.bl-drag-ghost { opacity:0.45; background:#f0fdfa !important; border:1.5px dashed #0d9488 !important; }
 .bl-card { display:flex; align-items:stretch; border:1.5px solid #ebe6e0; border-radius:8px; overflow:hidden; cursor:pointer; background:#fff; transition:border-color 0.12s, box-shadow 0.12s; user-select:none; }
 .bl-card:hover:not(.active) { border-color:#d4cec8; box-shadow:0 2px 8px rgba(0,0,0,0.05); }
 .bl-card.active { border-color:#0d9488; box-shadow:0 0 0 3px rgba(13,148,136,0.07); background:#f0fdfa; }

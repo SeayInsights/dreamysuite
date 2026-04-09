@@ -4,6 +4,7 @@ import { createAuth } from "~/lib/auth.server";
 import type { Route } from "./+types/sites.$id";
 import "~/lib/context";
 import editorStyles from "~/styles/site-editor.css?url";
+import Sortable from "sortablejs";
 
 export function links() {
   return [{ rel: "stylesheet", href: editorStyles }];
@@ -247,6 +248,7 @@ export default function SiteEditor() {
 
   // Settings drawer
   const [settingsOpen, setSettingsOpen]   = useState(false);
+  const [settingsDrawerTab, setSettingsDrawerTab] = useState<"info" | "style" | "access" | "music" | "language" | "popup">("info");
   const [settings, setSettings]           = useState<SiteSettings | null>(null);
   const [settingsLoading, setSettingsLoading] = useState(false);
   const [savingSettings, setSavingSettings]   = useState(false);
@@ -257,6 +259,7 @@ export default function SiteEditor() {
     greeting: "",
     musicUrl: "",
     mainLanguage: "en",
+    secondLanguage: "",
     guestPassword: "",
     headingFont: "Georgia",
     bodyFont: "Inter",
@@ -266,6 +269,11 @@ export default function SiteEditor() {
   // Analytics section state
   const [analytics, setAnalytics]           = useState<AnalyticsData | null>(null);
   const [analyticsLoading, setAnalyticsLoading] = useState(false);
+
+  // Drag-to-reorder refs
+  const blockListRef = useRef<HTMLDivElement | null>(null);
+  const blocksRef = useRef<Block[]>(blocks);
+  blocksRef.current = blocks;
 
   const siteUrl = site.customDomain
     ? `https://${site.customDomain}`
@@ -360,16 +368,17 @@ export default function SiteEditor() {
       const data = await apiFetch("/settings") as { settings: SiteSettings };
       setSettings(data.settings);
       setSettingsForm({
-        eventName:     data.settings.eventName     ?? "",
-        eventDate:     data.settings.eventDate     ?? "",
-        eventLocation: data.settings.eventLocation ?? "",
-        greeting:      data.settings.greeting      ?? "",
-        musicUrl:      data.settings.musicUrl      ?? "",
-        mainLanguage:  data.settings.mainLanguage  ?? "en",
-        guestPassword: data.settings.guestPassword ?? "",
-        headingFont:   data.settings.headingFont   ?? "Georgia",
-        bodyFont:      data.settings.bodyFont      ?? "Inter",
-        accentColor:   data.settings.accentColor   ?? "#0d9488",
+        eventName:      data.settings.eventName      ?? "",
+        eventDate:      data.settings.eventDate      ?? "",
+        eventLocation:  data.settings.eventLocation  ?? "",
+        greeting:       data.settings.greeting       ?? "",
+        musicUrl:       data.settings.musicUrl       ?? "",
+        mainLanguage:   data.settings.mainLanguage   ?? "en",
+        secondLanguage: data.settings.secondLanguage ?? "",
+        guestPassword:  data.settings.guestPassword  ?? "",
+        headingFont:    data.settings.headingFont     ?? "Georgia",
+        bodyFont:       data.settings.bodyFont        ?? "Inter",
+        accentColor:    data.settings.accentColor     ?? "#0d9488",
       });
       setStyleHeadingFont(data.settings.headingFont ?? "Georgia");
       setStyleBodyFont(data.settings.bodyFont ?? "Inter");
@@ -428,6 +437,40 @@ export default function SiteEditor() {
   useEffect(() => {
     if (settingsOpen && !settings) fetchSettings();
   }, [settingsOpen]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // SortableJS — drag-to-reorder blocks
+  useEffect(() => {
+    if (section !== "website" || activeTab !== "tiles") return;
+    if (!blockListRef.current) return;
+    const siteId = site.id;
+    const sortable = Sortable.create(blockListRef.current, {
+      handle: ".drag-handle",
+      animation: 150,
+      ghostClass: "bl-drag-ghost",
+      onEnd(evt) {
+        const { oldIndex, newIndex } = evt;
+        if (oldIndex === undefined || newIndex === undefined || oldIndex === newIndex) return;
+        setBlocks((prev) => {
+          const reordered = [...prev];
+          const [moved] = reordered.splice(oldIndex, 1);
+          reordered.splice(newIndex, 0, moved);
+          Promise.all(
+            reordered.map((b, i) =>
+              fetch(`/api/sites/${siteId}/blocks/${b.id}`, {
+                method: "PUT",
+                headers: { "content-type": "application/json" },
+                body: JSON.stringify({ sortOrder: i }),
+              })
+            )
+          )
+            .then(() => toast("Block order saved"))
+            .catch(() => toast("Failed to save order", true));
+          return reordered;
+        });
+      },
+    });
+    return () => sortable.destroy();
+  }, [section, activeTab]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Mutations ───────────────────────────────────────────────────────────────
 
@@ -838,12 +881,14 @@ export default function SiteEditor() {
                     <p style={{ fontSize: "0.75rem", color: "#b0a99f", textAlign: "center", padding: "2rem 0.5rem" }}>
                       Loading blocks…
                     </p>
-                  ) : blocks.length === 0 ? (
-                    <p style={{ fontSize: "0.7rem", color: "#b0a99f", textAlign: "center", padding: "2rem 0.5rem", lineHeight: 1.6 }}>
-                      No blocks yet.<br />Add your first block to start building.
-                    </p>
                   ) : (
-                    <div style={{ marginBottom: "0.5rem" }}>
+                    <>
+                      {blocks.length === 0 && (
+                        <p style={{ fontSize: "0.7rem", color: "#b0a99f", textAlign: "center", padding: "2rem 0.5rem", lineHeight: 1.6 }}>
+                          No blocks yet.<br />Add your first block to start building.
+                        </p>
+                      )}
+                    <div ref={blockListRef} style={{ marginBottom: "0.5rem" }}>
                       {blocks.map((block) => (
                         <div key={block.id} className="bl-card-wrap">
                           <div className={`bl-card${block.isVisible === 0 ? "" : ""}`}>
@@ -880,6 +925,7 @@ export default function SiteEditor() {
                         </div>
                       ))}
                     </div>
+                    </>
                   )}
                   <button
                     className="add-block-btn"
@@ -1632,126 +1678,217 @@ export default function SiteEditor() {
               </button>
             </div>
 
+            {/* Tab strip */}
+            <div style={{ display: "flex", borderBottom: "1px solid #eae5df", flexShrink: 0, overflowX: "auto" }}>
+              {(["info", "style", "music", "language", "popup", "access"] as const).map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => setSettingsDrawerTab(tab)}
+                  style={{
+                    padding: "0.6rem 0.9rem",
+                    fontSize: "0.73rem",
+                    fontWeight: settingsDrawerTab === tab ? 600 : 400,
+                    color: settingsDrawerTab === tab ? "#0d9488" : "#9b8e85",
+                    background: "none",
+                    border: "none",
+                    borderBottom: settingsDrawerTab === tab ? "2px solid #0d9488" : "2px solid transparent",
+                    cursor: "pointer",
+                    whiteSpace: "nowrap",
+                    textTransform: "capitalize",
+                  }}
+                >
+                  {tab === "info" ? "Event Info" : tab}
+                </button>
+              ))}
+            </div>
+
             {/* Drawer body */}
             <div style={{ flex: 1, overflowY: "auto", padding: "1.25rem" }}>
               {settingsLoading ? (
                 <p style={{ color: "#b0a99f", fontSize: "0.82rem" }}>Loading settings…</p>
               ) : (
                 <>
-                  <div className="sf-group">
-                    <label className="sf-lbl" htmlFor="s-event-name">Event Name</label>
-                    <input
-                      id="s-event-name"
-                      type="text"
-                      className="sf-input"
-                      placeholder="Jane & John's Wedding"
-                      value={settingsForm.eventName}
-                      onChange={(e) => setSettingsForm((f) => ({ ...f, eventName: e.target.value }))}
-                    />
-                  </div>
-                  <div className="sf-group">
-                    <label className="sf-lbl" htmlFor="s-event-date">Event Date</label>
-                    <input
-                      id="s-event-date"
-                      type="date"
-                      className="sf-input"
-                      value={settingsForm.eventDate}
-                      onChange={(e) => setSettingsForm((f) => ({ ...f, eventDate: e.target.value }))}
-                    />
-                  </div>
-                  <div className="sf-group">
-                    <label className="sf-lbl" htmlFor="s-event-location">Event Location</label>
-                    <input
-                      id="s-event-location"
-                      type="text"
-                      className="sf-input"
-                      placeholder="Grand Ballroom, New York"
-                      value={settingsForm.eventLocation}
-                      onChange={(e) => setSettingsForm((f) => ({ ...f, eventLocation: e.target.value }))}
-                    />
-                  </div>
-                  <div className="sf-group">
-                    <label className="sf-lbl" htmlFor="s-greeting">Greeting / Welcome Message</label>
-                    <input
-                      id="s-greeting"
-                      type="text"
-                      className="sf-input"
-                      placeholder="We're getting married!"
-                      value={settingsForm.greeting}
-                      onChange={(e) => setSettingsForm((f) => ({ ...f, greeting: e.target.value }))}
-                    />
-                  </div>
-                  <div className="sf-group">
-                    <label className="sf-lbl" htmlFor="s-music">Background Music URL</label>
-                    <input
-                      id="s-music"
-                      type="url"
-                      className="sf-input"
-                      placeholder="https://…"
-                      value={settingsForm.musicUrl}
-                      onChange={(e) => setSettingsForm((f) => ({ ...f, musicUrl: e.target.value }))}
-                    />
-                  </div>
-                  <div className="sf-group">
-                    <label className="sf-lbl" htmlFor="s-language">Main Language</label>
-                    <select
-                      id="s-language"
-                      className="sf-input"
-                      value={settingsForm.mainLanguage}
-                      onChange={(e) => setSettingsForm((f) => ({ ...f, mainLanguage: e.target.value }))}
-                    >
-                      {LANGUAGES.map(({ code, label }) => (
-                        <option key={code} value={code}>{label}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="sf-group">
-                    <label className="sf-lbl" htmlFor="s-password">Guest Password</label>
-                    <input
-                      id="s-password"
-                      type="text"
-                      className="sf-input"
-                      placeholder="Leave blank for no password"
-                      value={settingsForm.guestPassword}
-                      onChange={(e) => setSettingsForm((f) => ({ ...f, guestPassword: e.target.value }))}
-                    />
-                  </div>
-                  <div className="sf-group">
-                    <label className="sf-lbl" htmlFor="s-heading-font">Heading Font</label>
-                    <select
-                      id="s-heading-font"
-                      className="sf-input"
-                      value={settingsForm.headingFont}
-                      onChange={(e) => setSettingsForm((f) => ({ ...f, headingFont: e.target.value }))}
-                    >
-                      {HEADING_FONTS.map((f) => <option key={f}>{f}</option>)}
-                    </select>
-                  </div>
-                  <div className="sf-group">
-                    <label className="sf-lbl" htmlFor="s-body-font">Body Font</label>
-                    <select
-                      id="s-body-font"
-                      className="sf-input"
-                      value={settingsForm.bodyFont}
-                      onChange={(e) => setSettingsForm((f) => ({ ...f, bodyFont: e.target.value }))}
-                    >
-                      {BODY_FONTS.map((f) => <option key={f}>{f}</option>)}
-                    </select>
-                  </div>
-                  <div className="sf-group">
-                    <label className="sf-lbl" htmlFor="s-accent">Accent Color</label>
-                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                      <input
-                        id="s-accent"
-                        type="color"
-                        value={settingsForm.accentColor}
-                        onChange={(e) => setSettingsForm((f) => ({ ...f, accentColor: e.target.value }))}
-                        style={{ width: "36px", height: "36px", border: "1px solid #e0dbd4", borderRadius: "6px", cursor: "pointer" }}
-                        aria-label="Accent color picker"
-                      />
-                      <span style={{ fontSize: "0.78rem", color: "#9b8e85" }}>{settingsForm.accentColor}</span>
-                    </div>
-                  </div>
+                  {/* ── Info tab ── */}
+                  {settingsDrawerTab === "info" && (
+                    <>
+                      <div className="sf-group">
+                        <label className="sf-lbl" htmlFor="s-event-name">Event Name</label>
+                        <input
+                          id="s-event-name"
+                          type="text"
+                          className="sf-input"
+                          placeholder="Jane & John's Wedding"
+                          value={settingsForm.eventName}
+                          onChange={(e) => setSettingsForm((f) => ({ ...f, eventName: e.target.value }))}
+                        />
+                      </div>
+                      <div className="sf-group">
+                        <label className="sf-lbl" htmlFor="s-event-date">Event Date</label>
+                        <input
+                          id="s-event-date"
+                          type="date"
+                          className="sf-input"
+                          value={settingsForm.eventDate}
+                          onChange={(e) => setSettingsForm((f) => ({ ...f, eventDate: e.target.value }))}
+                        />
+                      </div>
+                      <div className="sf-group">
+                        <label className="sf-lbl" htmlFor="s-event-location">Event Location</label>
+                        <input
+                          id="s-event-location"
+                          type="text"
+                          className="sf-input"
+                          placeholder="Grand Ballroom, New York"
+                          value={settingsForm.eventLocation}
+                          onChange={(e) => setSettingsForm((f) => ({ ...f, eventLocation: e.target.value }))}
+                        />
+                      </div>
+                    </>
+                  )}
+
+                  {/* ── Style tab ── */}
+                  {settingsDrawerTab === "style" && (
+                    <>
+                      <div className="sf-group">
+                        <label className="sf-lbl" htmlFor="s-heading-font">Heading Font</label>
+                        <select
+                          id="s-heading-font"
+                          className="sf-input"
+                          value={settingsForm.headingFont}
+                          onChange={(e) => setSettingsForm((f) => ({ ...f, headingFont: e.target.value }))}
+                        >
+                          {HEADING_FONTS.map((f) => <option key={f}>{f}</option>)}
+                        </select>
+                      </div>
+                      <div className="sf-group">
+                        <label className="sf-lbl" htmlFor="s-body-font">Body Font</label>
+                        <select
+                          id="s-body-font"
+                          className="sf-input"
+                          value={settingsForm.bodyFont}
+                          onChange={(e) => setSettingsForm((f) => ({ ...f, bodyFont: e.target.value }))}
+                        >
+                          {BODY_FONTS.map((f) => <option key={f}>{f}</option>)}
+                        </select>
+                      </div>
+                      <div className="sf-group">
+                        <label className="sf-lbl" htmlFor="s-accent">Accent Color</label>
+                        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                          <input
+                            id="s-accent"
+                            type="color"
+                            value={settingsForm.accentColor}
+                            onChange={(e) => setSettingsForm((f) => ({ ...f, accentColor: e.target.value }))}
+                            style={{ width: "36px", height: "36px", border: "1px solid #e0dbd4", borderRadius: "6px", cursor: "pointer" }}
+                            aria-label="Accent color picker"
+                          />
+                          <span style={{ fontSize: "0.78rem", color: "#9b8e85" }}>{settingsForm.accentColor}</span>
+                        </div>
+                      </div>
+                    </>
+                  )}
+
+                  {/* ── Music tab ── */}
+                  {settingsDrawerTab === "music" && (
+                    <>
+                      <p style={{ fontSize: "0.75rem", color: "#9b8e85", marginBottom: "1rem", lineHeight: 1.6 }}>
+                        Add a YouTube or SoundCloud link. The music will play softly in the background when guests visit your site.
+                      </p>
+                      <div className="sf-group">
+                        <label className="sf-lbl" htmlFor="s-music">Music URL</label>
+                        <input
+                          id="s-music"
+                          type="url"
+                          className="sf-input"
+                          placeholder="https://youtube.com/watch?v=…"
+                          value={settingsForm.musicUrl}
+                          onChange={(e) => setSettingsForm((f) => ({ ...f, musicUrl: e.target.value }))}
+                        />
+                      </div>
+                    </>
+                  )}
+
+                  {/* ── Language tab ── */}
+                  {settingsDrawerTab === "language" && (
+                    <>
+                      <p style={{ fontSize: "0.75rem", color: "#9b8e85", marginBottom: "1rem", lineHeight: 1.6 }}>
+                        Set a main language and an optional second language. Guests can switch between them on your site.
+                      </p>
+                      <div className="sf-group">
+                        <label className="sf-lbl" htmlFor="s-main-lang">Main Language</label>
+                        <select
+                          id="s-main-lang"
+                          className="sf-input"
+                          value={settingsForm.mainLanguage}
+                          onChange={(e) => setSettingsForm((f) => ({ ...f, mainLanguage: e.target.value }))}
+                        >
+                          {LANGUAGES.map(({ code, label }) => (
+                            <option key={code} value={code}>{label}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="sf-group">
+                        <label className="sf-lbl" htmlFor="s-second-lang">Second Language <span style={{ fontWeight: 400, color: "#b0a99f" }}>(optional)</span></label>
+                        <select
+                          id="s-second-lang"
+                          className="sf-input"
+                          value={settingsForm.secondLanguage}
+                          onChange={(e) => setSettingsForm((f) => ({ ...f, secondLanguage: e.target.value }))}
+                        >
+                          <option value="">None</option>
+                          {LANGUAGES.map(({ code, label }) => (
+                            <option key={code} value={code}>{label}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </>
+                  )}
+
+                  {/* ── Popup tab ── */}
+                  {settingsDrawerTab === "popup" && (
+                    <>
+                      <p style={{ fontSize: "0.75rem", color: "#9b8e85", marginBottom: "1rem", lineHeight: 1.6 }}>
+                        A welcome overlay pops up the first time a guest visits. Set the message below — leave it blank to disable the popup.
+                      </p>
+                      <div className="sf-group">
+                        <label className="sf-lbl" htmlFor="s-greeting">Welcome Message</label>
+                        <input
+                          id="s-greeting"
+                          type="text"
+                          className="sf-input"
+                          placeholder="We're getting married! Join us on our special day."
+                          value={settingsForm.greeting}
+                          onChange={(e) => setSettingsForm((f) => ({ ...f, greeting: e.target.value }))}
+                        />
+                      </div>
+                      {settingsForm.greeting && (
+                        <div style={{ marginTop: "1rem", padding: "1rem", background: "#f0fdfa", border: "1px solid #99f6e4", borderRadius: "10px" }}>
+                          <div style={{ fontSize: "0.7rem", color: "#0d9488", fontWeight: 600, marginBottom: "0.375rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>Preview</div>
+                          <div style={{ fontSize: "0.85rem", color: "#1c1917", fontStyle: "italic" }}>"{settingsForm.greeting}"</div>
+                        </div>
+                      )}
+                    </>
+                  )}
+
+                  {/* ── Access tab ── */}
+                  {settingsDrawerTab === "access" && (
+                    <>
+                      <p style={{ fontSize: "0.75rem", color: "#9b8e85", marginBottom: "1rem", lineHeight: 1.6 }}>
+                        Add a password to restrict who can view your site. Leave blank to keep it public.
+                      </p>
+                      <div className="sf-group">
+                        <label className="sf-lbl" htmlFor="s-password">Guest Password</label>
+                        <input
+                          id="s-password"
+                          type="text"
+                          className="sf-input"
+                          placeholder="Leave blank for no password"
+                          value={settingsForm.guestPassword}
+                          onChange={(e) => setSettingsForm((f) => ({ ...f, guestPassword: e.target.value }))}
+                        />
+                      </div>
+                    </>
+                  )}
                 </>
               )}
             </div>
