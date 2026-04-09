@@ -253,6 +253,31 @@ export default function SiteEditor() {
   const [domainModalOpen, setDomainModalOpen] = useState(false);
   const [domainTab, setDomainTab] = useState<"free" | "buy">("free");
   const [domainSearch, setDomainSearch] = useState("");
+  const [domainCheckLoading, setDomainCheckLoading] = useState(false);
+  const [domainResult, setDomainResult] = useState<{
+    domain: string; tld: string; available: boolean; price: number | null; supported: boolean;
+  } | null>(null);
+  const [domainCheckError, setDomainCheckError] = useState<string | null>(null);
+
+  async function checkDomainAvailability() {
+    if (!domainSearch.trim()) return;
+    setDomainCheckLoading(true);
+    setDomainResult(null);
+    setDomainCheckError(null);
+    try {
+      const res = await fetch(`/api/domain/check?domain=${encodeURIComponent(domainSearch.trim())}`);
+      const data = await res.json();
+      if (!res.ok) {
+        setDomainCheckError(data.error ?? "Something went wrong.");
+      } else {
+        setDomainResult(data);
+      }
+    } catch {
+      setDomainCheckError("Network error. Please try again.");
+    } finally {
+      setDomainCheckLoading(false);
+    }
+  }
 
   // Settings drawer
   const [settingsOpen, setSettingsOpen]           = useState(false);
@@ -1413,21 +1438,76 @@ export default function SiteEditor() {
                           className="qr-url-input"
                           placeholder="e.g. dannis-naomi.com"
                           value={domainSearch}
-                          onChange={(e) => setDomainSearch(e.target.value)}
+                          onChange={(e) => {
+                            setDomainSearch(e.target.value);
+                            setDomainResult(null);
+                            setDomainCheckError(null);
+                          }}
+                          onKeyDown={(e) => e.key === "Enter" && checkDomainAvailability()}
                           style={{ flex: 1 }}
                         />
-                        <button className="btn-primary-sm" style={{ flexShrink: 0 }}>
-                          Search
+                        <button
+                          className="btn-primary-sm"
+                          style={{ flexShrink: 0 }}
+                          onClick={checkDomainAvailability}
+                          disabled={domainCheckLoading}
+                        >
+                          {domainCheckLoading ? "Checking…" : "Search"}
                         </button>
                       </div>
-                      <div style={{
-                        marginTop: "0.85rem", background: "#f5f0eb", borderRadius: "10px",
-                        padding: "0.85rem 1rem", fontSize: "0.8rem", color: "#9b8e85", textAlign: "center",
-                      }}>
-                        Enter a domain name above to check availability and pricing.
-                      </div>
+
+                      {/* Results */}
+                      {domainCheckError && (
+                        <div style={{
+                          marginTop: "0.85rem", background: "#fff0f0", border: "1px solid #fca5a5",
+                          borderRadius: "10px", padding: "0.75rem 1rem",
+                          fontSize: "0.8rem", color: "#b91c1c",
+                        }}>
+                          {domainCheckError}
+                        </div>
+                      )}
+
+                      {domainResult && !domainCheckError && (
+                        <div style={{
+                          marginTop: "0.85rem", background: "#f5f0eb", borderRadius: "10px",
+                          padding: "0.85rem 1rem", display: "flex", alignItems: "center", gap: "0.75rem",
+                        }}>
+                          <div style={{ flex: 1 }}>
+                            <div style={{ fontSize: "0.88rem", fontWeight: 600, color: "#1c1917" }}>
+                              {domainResult.domain}
+                            </div>
+                            {domainResult.available ? (
+                              <div style={{ fontSize: "0.76rem", color: "#0d9488", marginTop: "2px" }}>
+                                Available
+                                {domainResult.price
+                                  ? ` · $${domainResult.price.toFixed(2)}/yr via Cloudflare`
+                                  : " · pricing unavailable for this TLD"}
+                              </div>
+                            ) : (
+                              <div style={{ fontSize: "0.76rem", color: "#b91c1c", marginTop: "2px" }}>
+                                Unavailable — this domain is already registered
+                              </div>
+                            )}
+                          </div>
+                          {domainResult.available && domainResult.supported && (
+                            <button className="btn-primary-sm" style={{ flexShrink: 0 }}>
+                              Purchase
+                            </button>
+                          )}
+                        </div>
+                      )}
+
+                      {!domainResult && !domainCheckError && (
+                        <div style={{
+                          marginTop: "0.85rem", background: "#f5f0eb", borderRadius: "10px",
+                          padding: "0.85rem 1rem", fontSize: "0.8rem", color: "#9b8e85", textAlign: "center",
+                        }}>
+                          Enter a domain name above to check availability and pricing.
+                        </div>
+                      )}
+
                       <p style={{ fontSize: "0.74rem", color: "#9b8e85", marginTop: "0.75rem" }}>
-                        Domains are registered via Cloudflare. Pricing starts at ~$10/yr depending on the extension.
+                        Domains are registered via Cloudflare at cost. Pricing starts at ~$9/yr for .com.
                       </p>
                     </div>
                   )}
