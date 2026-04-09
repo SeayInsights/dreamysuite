@@ -8,6 +8,7 @@ const handler = createRequestHandler(
 export interface Env {
   DB: D1Database;
   KV: KVNamespace;
+  R2: R2Bucket;
   AUTH_SECRET: string;
   APP_URL: string;
 }
@@ -18,6 +19,17 @@ export default {
     env: Env,
     ctx: ExecutionContext
   ): Promise<Response> {
-    return handler(request, { cloudflare: { env, ctx } });
+    try {
+      return await handler(request, { cloudflare: { env, ctx } });
+    } catch (err) {
+      const msg = err instanceof Error
+        ? `${err.name}: ${err.message}\n${err.stack ?? ""}`
+        : String(err);
+      console.error("[worker crash]", msg);
+      return new Response(
+        `<pre style="font-family:monospace;padding:2rem;white-space:pre-wrap">${msg}</pre>`,
+        { status: 500, headers: { "content-type": "text/html" } }
+      );
+    }
   },
 } satisfies ExportedHandler<Env>;

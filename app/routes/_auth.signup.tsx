@@ -51,8 +51,10 @@ export async function action({ request, context }: Route.ActionArgs) {
     });
 
     return new Response(null, { status: 302, headers });
-  } catch {
-    return { error: "Something went wrong. Please try again." };
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error("[signup error]", msg);
+    return { error: msg };
   }
 }
 

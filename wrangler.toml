@@ -23,3 +23,7 @@ database_id = "db07b9de-1e33-4b16-af0b-df7e4e444a54"
 binding = "KV"
 id = "8fb116b82a3f4b5d8de3195ebe28df04"
 preview_id = "8fb116b82a3f4b5d8de3195ebe28df04"
+
+[[r2_buckets]]
+binding = "R2"
+bucket_name = "dreamysuite-assets"

@@ -9,6 +9,35 @@ export default [
   // Better Auth API handler
   route("api/auth/*", "routes/api.auth.$.ts"),
 
+  // Public site data (no auth)
+  route("api/public/:siteSlug", "routes/api.public.$siteSlug.ts"),
+
+  // Site pages API
+  route("api/sites/:id/pages", "routes/api.sites.$id.pages.ts"),
+  route("api/sites/:id/pages/:pageId", "routes/api.sites.$id.pages.$pageId.ts"),
+
+  // Site blocks API
+  route("api/sites/:id/blocks", "routes/api.sites.$id.blocks.ts"),
+  route("api/sites/:id/blocks/:blockId", "routes/api.sites.$id.blocks.$blockId.ts"),
+
+  // Site photos API
+  route("api/sites/:id/photos", "routes/api.sites.$id.photos.ts"),
+  route("api/sites/:id/photos/:photoId", "routes/api.sites.$id.photos.$photoId.ts"),
+
+  // Site guests API
+  route("api/sites/:id/guests", "routes/api.sites.$id.guests.ts"),
+  route("api/sites/:id/guests/:guestId", "routes/api.sites.$id.guests.$guestId.ts"),
+
+  // Site settings API
+  route("api/sites/:id/settings", "routes/api.sites.$id.settings.ts"),
+
+  // Site templates API
+  route("api/sites/:id/templates", "routes/api.sites.$id.templates.ts"),
+  route("api/sites/:id/templates/:templateId", "routes/api.sites.$id.templates.$templateId.ts"),
+
+  // Site analytics API
+  route("api/sites/:id/analytics", "routes/api.sites.$id.analytics.ts"),
+
   // Auth pages (unauthenticated)
   layout("routes/_auth.tsx", [
     route("login", "routes/_auth.login.tsx"),

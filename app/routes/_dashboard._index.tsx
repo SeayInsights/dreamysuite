@@ -1,21 +1,43 @@
-import { Link } from "react-router";
+import { Link, useLoaderData } from "react-router";
+import { createAuth } from "~/lib/auth.server";
+import type { Route } from "./+types/_dashboard._index";
+import "~/lib/context";
+
+interface Site {
+  id: string;
+  name: string;
+  eventType: string | null;
+  status: "published" | "draft";
+  customDomain: string | null;
+  slug: string;
+  previewColor: string;
+  updatedAt: number;
+}
 
 export function meta() {
   return [{ title: "My Sites — DreamySuite" }];
 }
 
-// Placeholder site data — will be replaced with D1 queries
-const MOCK_SITES: Array<{
-  id: string;
-  name: string;
-  type: string;
-  status: "published" | "draft";
-  updatedAt: string;
-  previewColor: string;
-}> = [];
+export async function loader({ request, context }: Route.LoaderArgs) {
+  const auth = createAuth(context.cloudflare.env);
+  const session = await auth.api.getSession({ headers: request.headers });
+  if (!session) {
+    const { redirect } = await import("react-router");
+    throw redirect("/login");
+  }
+
+  const result = await context.cloudflare.env.DB
+    .prepare(
+      "SELECT id, name, eventType, status, customDomain, slug, previewColor, updatedAt FROM site WHERE userId = ? ORDER BY updatedAt DESC"
+    )
+    .bind(session.user.id)
+    .all<Site>();
+
+  return { sites: result.results };
+}
 
 export default function DashboardIndex() {
-  const sites = MOCK_SITES;
+  const { sites } = useLoaderData<typeof loader>();
 
   return (
     <div style={{ padding: "2rem 2.5rem", maxWidth: "960px" }}>
@@ -85,7 +107,6 @@ export default function DashboardIndex() {
         </Link>
       </div>
 
-      {/* Site grid or empty state */}
       {sites.length === 0 ? (
         <EmptyState />
       ) : (
@@ -116,7 +137,6 @@ function EmptyState() {
         border: "1px solid #e8e4e0",
       }}
     >
-      {/* Builder illustration */}
       <div
         style={{
           width: "72px",
@@ -144,7 +164,6 @@ function EmptyState() {
           <path d="M12 13h4M12 16h2" />
         </svg>
       </div>
-
       <h2
         style={{
           fontSize: "1.125rem",
@@ -167,7 +186,6 @@ function EmptyState() {
       >
         Choose a template, add your content, and publish — no code required.
       </p>
-
       <Link
         to="/sites/new"
         style={{
@@ -181,7 +199,6 @@ function EmptyState() {
           fontSize: "0.9rem",
           fontWeight: 600,
           textDecoration: "none",
-          transition: "background 0.15s",
         }}
         onMouseOver={(e) =>
           ((e.currentTarget as HTMLAnchorElement).style.background = "#0f766e")
@@ -190,16 +207,7 @@ function EmptyState() {
           ((e.currentTarget as HTMLAnchorElement).style.background = "#0d9488")
         }
       >
-        <svg
-          width="14"
-          height="14"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
           <path d="M12 5v14M5 12h14" />
         </svg>
         Create a site
@@ -208,16 +216,12 @@ function EmptyState() {
   );
 }
 
-function SiteCard({
-  site,
-}: {
-  site: (typeof MOCK_SITES)[number];
-}) {
+function SiteCard({ site }: { site: Site }) {
+  const label = site.customDomain ?? `${site.slug}.dreamysuite.com`;
+  const relativeTime = formatRelative(site.updatedAt);
+
   return (
-    <Link
-      to={`/sites/${site.id}`}
-      style={{ textDecoration: "none" }}
-    >
+    <Link to={`/sites/${site.id}`} style={{ textDecoration: "none" }}>
       <div
         style={{
           background: "white",
@@ -238,11 +242,10 @@ function SiteCard({
           el.style.borderColor = "#e8e4e0";
         }}
       >
-        {/* Preview */}
         <div
           style={{
             height: "120px",
-            background: site.previewColor,
+            background: site.previewColor ?? "#0d9488",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
@@ -262,30 +265,14 @@ function SiteCard({
             <path d="M3 9h18M9 21V9" />
           </svg>
         </div>
-
-        {/* Info */}
         <div style={{ padding: "0.875rem 1rem" }}>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "flex-start",
-              justifyContent: "space-between",
-              gap: "0.5rem",
-            }}
-          >
-            <div>
-              <p
-                style={{
-                  fontSize: "0.875rem",
-                  fontWeight: 600,
-                  color: "#1c1917",
-                  marginBottom: "0.2rem",
-                }}
-              >
+          <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "0.5rem" }}>
+            <div style={{ minWidth: 0 }}>
+              <p style={{ fontSize: "0.875rem", fontWeight: 600, color: "#1c1917", marginBottom: "0.2rem" }}>
                 {site.name}
               </p>
-              <p style={{ fontSize: "0.75rem", color: "#9b8e85" }}>
-                {site.type} · {site.updatedAt}
+              <p style={{ fontSize: "0.75rem", color: "#9b8e85", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                {label} · {relativeTime}
               </p>
             </div>
             <span
@@ -294,10 +281,8 @@ function SiteCard({
                 fontWeight: 600,
                 padding: "0.2rem 0.5rem",
                 borderRadius: "4px",
-                background:
-                  site.status === "published" ? "#f0fdfa" : "#f0ede8",
-                color:
-                  site.status === "published" ? "#0f766e" : "#9b8e85",
+                background: site.status === "published" ? "#f0fdfa" : "#f0ede8",
+                color: site.status === "published" ? "#0f766e" : "#9b8e85",
                 textTransform: "uppercase",
                 letterSpacing: "0.04em",
                 flexShrink: 0,
@@ -310,4 +295,12 @@ function SiteCard({
       </div>
     </Link>
   );
+}
+
+function formatRelative(ts: number): string {
+  const diff = Math.floor((Date.now() - ts) / 1000);
+  if (diff < 60) return "just now";
+  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+  return `${Math.floor(diff / 86400)}d ago`;
 }

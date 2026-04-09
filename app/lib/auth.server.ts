@@ -3,10 +3,7 @@ import type { Env } from "./context";
 
 export function createAuth(env: Env) {
   return betterAuth({
-    database: {
-      db: env.DB,
-      type: "sqlite",
-    },
+    database: env.DB,
     emailAndPassword: {
       enabled: true,
       requireEmailVerification: false,
