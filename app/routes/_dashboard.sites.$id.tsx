@@ -250,6 +250,9 @@ export default function SiteEditor() {
   const [eventType, setEventType]         = useState(site.eventType ?? "wedding");
   const [savingType, setSavingType]       = useState(false);
   const [customDomainInput, setCustomDomainInput] = useState(site.customDomain ?? "");
+  const [domainModalOpen, setDomainModalOpen] = useState(false);
+  const [domainTab, setDomainTab] = useState<"free" | "buy">("free");
+  const [domainSearch, setDomainSearch] = useState("");
 
   // Settings drawer
   const [settingsOpen, setSettingsOpen]           = useState(false);
@@ -282,7 +285,7 @@ export default function SiteEditor() {
 
   const siteUrl = site.customDomain
     ? `https://${site.customDomain}`
-    : `https://${site.slug}.dreamysuite.com`;
+    : `https://dreamysuite.com/${site.slug}`;
 
   const previewWidth = previewDevice === "mobile" ? "390px" : "100%";
 
@@ -1304,19 +1307,133 @@ export default function SiteEditor() {
                   <em>{site.slug}.dreamysuite.com</em>.
                 </p>
               </div>
-              <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
-                <input
-                  type="text"
-                  className="qr-url-input"
-                  placeholder="yourdomain.com"
-                  value={customDomainInput}
-                  onChange={(e) => setCustomDomainInput(e.target.value)}
-                  style={{ flex: 1, minWidth: "180px" }}
-                  aria-label="Custom domain"
-                />
-                <button className="btn-primary-sm">Connect Domain</button>
-              </div>
+              {site.customDomain ? (
+                <div style={{ display: "flex", gap: "8px", alignItems: "center", flexWrap: "wrap" }}>
+                  <span style={{ fontSize: "0.82rem", color: "#0d9488", fontWeight: 600 }}>
+                    ✓ {site.customDomain}
+                  </span>
+                  <button className="btn-ghost" style={{ fontSize: "0.78rem" }} onClick={() => setDomainModalOpen(true)}>
+                    Change
+                  </button>
+                </div>
+              ) : (
+                <button className="btn-primary-sm" onClick={() => setDomainModalOpen(true)}>
+                  Connect Domain
+                </button>
+              )}
             </div>
+
+            {/* Domain Picker Modal */}
+            {domainModalOpen && (
+              <div
+                style={{
+                  position: "fixed", inset: 0, zIndex: 9999,
+                  background: "rgba(0,0,0,0.45)", display: "flex",
+                  alignItems: "center", justifyContent: "center", padding: "1rem",
+                }}
+                onClick={() => setDomainModalOpen(false)}
+              >
+                <div
+                  style={{
+                    background: "#fff", borderRadius: "16px", width: "100%", maxWidth: "480px",
+                    padding: "1.5rem", boxShadow: "0 20px 60px rgba(0,0,0,0.18)",
+                  }}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.25rem" }}>
+                    <h3 style={{ fontSize: "1rem", fontWeight: 700, color: "#1c1917", margin: 0 }}>
+                      Choose Your Website Address
+                    </h3>
+                    <button
+                      onClick={() => setDomainModalOpen(false)}
+                      style={{ background: "none", border: "none", cursor: "pointer", fontSize: "1.2rem", color: "#9b8e85" }}
+                      aria-label="Close"
+                    >
+                      ×
+                    </button>
+                  </div>
+
+                  {/* Tabs */}
+                  <div style={{ display: "flex", gap: "0.5rem", marginBottom: "1.25rem" }}>
+                    {(["free", "buy"] as const).map((tab) => (
+                      <button
+                        key={tab}
+                        onClick={() => setDomainTab(tab)}
+                        style={{
+                          flex: 1, padding: "0.5rem", borderRadius: "8px", border: "none",
+                          cursor: "pointer", fontSize: "0.82rem", fontWeight: 600,
+                          background: domainTab === tab ? "#0d9488" : "#f5f0eb",
+                          color: domainTab === tab ? "#fff" : "#6b5e56",
+                          transition: "all 0.15s",
+                        }}
+                      >
+                        {tab === "free" ? "Free Link" : "Buy a Domain"}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Free tab */}
+                  {domainTab === "free" && (
+                    <div>
+                      <p style={{ fontSize: "0.82rem", color: "#6b5e56", marginBottom: "1rem" }}>
+                        Your site is instantly available at this free address — no setup needed.
+                      </p>
+                      <div style={{
+                        background: "#f5f0eb", borderRadius: "10px", padding: "0.85rem 1rem",
+                        display: "flex", alignItems: "center", justifyContent: "space-between", gap: "0.5rem",
+                      }}>
+                        <span style={{ fontSize: "0.85rem", color: "#1c1917", fontWeight: 500 }}>
+                          dreamysuite.com/<strong>{site.slug}</strong>
+                        </span>
+                        <button
+                          className="btn-primary-sm"
+                          onClick={() => {
+                            navigator.clipboard.writeText(`https://dreamysuite.com/${site.slug}`);
+                          }}
+                          style={{ flexShrink: 0 }}
+                        >
+                          Copy
+                        </button>
+                      </div>
+                      <p style={{ fontSize: "0.74rem", color: "#9b8e85", marginTop: "0.75rem" }}>
+                        This is your default link. No changes needed to use it.
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Buy tab */}
+                  {domainTab === "buy" && (
+                    <div>
+                      <p style={{ fontSize: "0.82rem", color: "#6b5e56", marginBottom: "1rem" }}>
+                        Search for a domain and purchase it directly. It will automatically connect to your site.
+                      </p>
+                      <div style={{ display: "flex", gap: "8px" }}>
+                        <input
+                          type="text"
+                          className="qr-url-input"
+                          placeholder="e.g. dannis-naomi.com"
+                          value={domainSearch}
+                          onChange={(e) => setDomainSearch(e.target.value)}
+                          style={{ flex: 1 }}
+                        />
+                        <button className="btn-primary-sm" style={{ flexShrink: 0 }}>
+                          Search
+                        </button>
+                      </div>
+                      <div style={{
+                        marginTop: "0.85rem", background: "#f5f0eb", borderRadius: "10px",
+                        padding: "0.85rem 1rem", fontSize: "0.8rem", color: "#9b8e85", textAlign: "center",
+                      }}>
+                        Enter a domain name above to check availability and pricing.
+                      </div>
+                      <p style={{ fontSize: "0.74rem", color: "#9b8e85", marginTop: "0.75rem" }}>
+                        Domains are registered via Cloudflare. Pricing starts at ~$10/yr depending on the extension.
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
 
             {/* Canva */}
             <div className="setup-section">
