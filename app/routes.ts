@@ -35,6 +35,9 @@ export default [
   route("api/sites/:id/templates", "routes/api.sites.$id.templates.ts"),
   route("api/sites/:id/templates/:templateId", "routes/api.sites.$id.templates.$templateId.ts"),
 
+  // Site content API (i18n editor)
+  route("api/sites/:id/content", "routes/api.sites.$id.content.ts"),
+
   // Site analytics API
   route("api/sites/:id/analytics", "routes/api.sites.$id.analytics.ts"),
 

@@ -4,7 +4,7 @@ import "~/lib/context";
 
 async function requireSiteOwnership(
   request: Request,
-  context: Route.ActionArgs["context"],
+  context: Route.ActionArgs["context"] | Route.LoaderArgs["context"],
   siteId: string
 ) {
   const auth = createAuth(context.cloudflare.env);
@@ -27,6 +27,33 @@ function jsonResponse(data: unknown, status = 200) {
     status,
     headers: { "content-type": "application/json" },
   });
+}
+
+export async function loader({ request, context, params }: Route.LoaderArgs) {
+  const { id: siteId, photoId } = params;
+  const check = await requireSiteOwnership(request, context, siteId);
+  if ("error" in check) {
+    return new Response(JSON.stringify(check), { status: check.status, headers: { "content-type": "application/json" } });
+  }
+
+  const photo = await context.cloudflare.env.DB
+    .prepare("SELECT r2Key, mimeType FROM photo WHERE id = ? AND siteId = ?")
+    .bind(photoId, siteId)
+    .first<{ r2Key: string; mimeType: string }>();
+
+  if (!photo) {
+    return new Response("Not found", { status: 404 });
+  }
+
+  const object = await context.cloudflare.env.R2.get(photo.r2Key);
+  if (!object) {
+    return new Response("Not found in storage", { status: 404 });
+  }
+
+  const headers = new Headers();
+  headers.set("content-type", photo.mimeType || "image/jpeg");
+  headers.set("cache-control", "private, max-age=3600");
+  return new Response(object.body, { headers });
 }
 
 export async function action({ request, context, params }: Route.ActionArgs) {

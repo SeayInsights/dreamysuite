@@ -661,6 +661,43 @@ function renderBlock(block: ParsedBlock, settings: SiteSettingRow | null): strin
       return `<div class="block-spacer" style="height:${height}px" aria-hidden="true"></div>`;
     }
 
+    case "photo-split": {
+      const photo = (cfg.photo as Record<string, unknown> | undefined) ?? {};
+      const photoUrl = String(photo.url ?? "");
+      const photoSide = String(cfg.photoSide ?? "left");
+      const cropVal = escHtml(String(photo.crop ?? "center"));
+      const wPx = photo.widthPx ? `${Number(photo.widthPx)}px` : "auto";
+      const hPx = photo.heightPx ? `${Number(photo.heightPx)}px` : "auto";
+      const components = (cfg.components as Array<Record<string, unknown>>) ?? [];
+
+      const imgEl = photoUrl
+        ? `<div class="ps-photo" style="flex-shrink:0;">
+             <img src="${escHtml(photoUrl)}" alt="Photo" loading="lazy"
+               style="width:${wPx};height:${hPx};max-width:100%;object-fit:cover;object-position:${cropVal};border-radius:8px;" />
+           </div>`
+        : "";
+
+      const compsHtml = components.map((c) => {
+        if (c.type === "text") {
+          const h = c.heading ? `<h3 style="margin:0 0 0.6rem;">${escHtml(String(c.heading))}</h3>` : "";
+          const b = c.body
+            ? `<p style="margin:0;line-height:1.75;">${escHtml(String(c.body)).replace(/\n\n/g, "</p><p style='margin:0.8rem 0 0;line-height:1.75;'>").replace(/\n/g, "<br>")}</p>`
+            : "";
+          return `<div class="ps-comp-text">${h}${b}</div>`;
+        }
+        return "";
+      }).join("");
+
+      const photoFirst = photoSide !== "right";
+      const flex = photoFirst
+        ? `${imgEl}<div class="ps-content" style="flex:1;min-width:200px;">${compsHtml}</div>`
+        : `<div class="ps-content" style="flex:1;min-width:200px;">${compsHtml}</div>${imgEl}`;
+
+      return `<section class="block block-photo-split">
+        <div style="display:flex;gap:2rem;align-items:center;flex-wrap:wrap;">${flex}</div>
+      </section>`;
+    }
+
     default:
       return `<section class="block block-unknown">${placeholder(`This block (${escHtml(block.type)}) is not yet supported.`)}</section>`;
   }

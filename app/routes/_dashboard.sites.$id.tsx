@@ -109,6 +109,7 @@ interface SiteSettings {
   navBrandColor: string;
   navLinkColor: string;
   navHighlightColor: string;
+  navItemsConfig: string | null;
 }
 
 interface AnalyticsData {
@@ -152,21 +153,28 @@ const EVENT_TYPES = [
 ];
 
 const BLOCK_TYPES = [
-  { type: "home-hero",     label: "Hero",          color: "#0d9488" },
-  { type: "text",          label: "Text",          color: "#6b7280" },
-  { type: "images",        label: "Images",        color: "#ec4899" },
-  { type: "video",         label: "Video",         color: "#ef4444" },
-  { type: "countdown",     label: "Countdown",     color: "#f59e0b" },
-  { type: "header",        label: "Header",        color: "#8b5cf6" },
-  { type: "schedule",      label: "Schedule",      color: "#d97706" },
-  { type: "faq",           label: "Q & A",         color: "#0ea5e9" },
-  { type: "rsvp",          label: "RSVP",          color: "#0d9488" },
-  { type: "spacer",        label: "Spacer",        color: "#d4cec8" },
-  { type: "registry-card", label: "Registry",      color: "#e86c4a" },
-  { type: "hotel-card",    label: "Hotel",         color: "#3b82f6" },
-  { type: "venue-map",     label: "Venue Map",     color: "#10b981" },
-  { type: "youtube",       label: "YouTube",       color: "#ef4444" },
+  { type: "home-hero",     label: "Hero",             color: "#0d9488" },
+  { type: "text",          label: "Text",             color: "#6b7280" },
+  { type: "photo-split",   label: "Photo + Content",  color: "#4F8EDB" },
+  { type: "images",        label: "Images",           color: "#ec4899" },
+  { type: "video",         label: "Video",            color: "#ef4444" },
+  { type: "countdown",     label: "Countdown",        color: "#f59e0b" },
+  { type: "header",        label: "Header",           color: "#8b5cf6" },
+  { type: "schedule",      label: "Schedule",         color: "#d97706" },
+  { type: "faq",           label: "Q & A",            color: "#0ea5e9" },
+  { type: "rsvp",          label: "RSVP",             color: "#0d9488" },
+  { type: "spacer",        label: "Spacer",           color: "#d4cec8" },
+  { type: "registry-card", label: "Registry",         color: "#e86c4a" },
+  { type: "hotel-card",    label: "Hotel",            color: "#3b82f6" },
+  { type: "venue-map",     label: "Venue Map",        color: "#10b981" },
+  { type: "youtube",       label: "YouTube",          color: "#ef4444" },
 ];
+
+const LANG_FLAGS: Record<string, string> = {
+  en: "🇺🇸", vi: "🇻🇳", es: "🇪🇸", fr: "🇫🇷",
+  "zh-CN": "🇨🇳", "zh-TW": "🇹🇼", ko: "🇰🇷", ja: "🇯🇵",
+  de: "🇩🇪", pt: "🇧🇷", it: "🇮🇹", th: "🇹🇭", tl: "🇵🇭", hi: "🇮🇳", ar: "🇸🇦",
+};
 
 const HEADING_FONTS = ["Georgia", "Playfair Display", "Inter", "Lato", "Merriweather", "Cormorant Garamond"];
 const BODY_FONTS    = ["Inter", "Lato", "Georgia", "Source Sans 3", "Open Sans"];
@@ -255,6 +263,16 @@ export default function SiteEditor() {
   const [photos, setPhotos]               = useState<Photo[]>([]);
   const [photosLoading, setPhotosLoading] = useState(false);
   const [uploading, setUploading]         = useState(false);
+
+  // Content tab state
+  const [contentByPage, setContentByPage] = useState<Record<string, Record<string, Record<string, unknown>>>>({});
+  const [contentLang, setContentLang]     = useState<"main" | "second">("main");
+  const [contentLoading, setContentLoading] = useState(false);
+  const [contentSaving, setContentSaving]   = useState(false);
+
+  // Photo picker (for photo-split inline editor)
+  const [photoPickerOpen, setPhotoPickerOpen] = useState(false);
+  const [photoPickerTarget, setPhotoPickerTarget] = useState<((url: string) => void) | null>(null);
 
   // Guests section state
   const [guests, setGuests]                 = useState<Guest[]>([]);
@@ -514,6 +532,59 @@ export default function SiteEditor() {
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
+  const fetchContent = useCallback(async () => {
+    setContentLoading(true);
+    try {
+      const data = await apiFetch("/content") as { content: Array<{ pageSlug: string; lang: string; content: Record<string, unknown> }> };
+      const byPage: Record<string, Record<string, Record<string, unknown>>> = {};
+      for (const row of data.content) {
+        if (!byPage[row.pageSlug]) byPage[row.pageSlug] = {};
+        byPage[row.pageSlug][row.lang] = row.content;
+      }
+      setContentByPage(byPage);
+    } catch (err) {
+      toast(err instanceof Error ? err.message : "Failed to load content", true);
+    } finally {
+      setContentLoading(false);
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  async function handleSaveContent() {
+    if (!activePage) return;
+    setContentSaving(true);
+    const slug = activePage.slug;
+    const mainLang = settingsForm.mainLanguage || "en";
+    const secondLang = settingsForm.secondLanguage;
+    const toSave: Array<{ lang: string; content: Record<string, unknown> }> = [
+      { lang: mainLang, content: contentByPage[slug]?.[mainLang] ?? {} },
+    ];
+    if (secondLang) toSave.push({ lang: secondLang, content: contentByPage[slug]?.[secondLang] ?? {} });
+    try {
+      await Promise.all(toSave.map(({ lang, content }) =>
+        apiFetch("/content", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ pageSlug: slug, lang, content }),
+        })
+      ));
+      toast("Content saved");
+    } catch (err) {
+      toast(err instanceof Error ? err.message : "Failed to save content", true);
+    } finally {
+      setContentSaving(false);
+    }
+  }
+
+  function setContentField(slug: string, lang: string, key: string, value: unknown) {
+    setContentByPage((prev) => ({
+      ...prev,
+      [slug]: {
+        ...(prev[slug] ?? {}),
+        [lang]: { ...((prev[slug] ?? {})[lang] ?? {}), [key]: value },
+      },
+    }));
+  }
+
   const fetchAnalytics = useCallback(async () => {
     setAnalyticsLoading(true);
     try {
@@ -551,6 +622,13 @@ export default function SiteEditor() {
   useEffect(() => {
     if (section === "site-setup" && !settings) fetchSettings();
   }, [section]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    if (section === "website" && activeTab === "content") {
+      if (!settings) fetchSettings();
+      fetchContent();
+    }
+  }, [section, activeTab, activePage?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (activePage) fetchBlocks(activePage.id);
@@ -1157,6 +1235,89 @@ export default function SiteEditor() {
                                     <button onClick={()=>setField('events',[...scheduleEvts,{name:'',date:'',time:'',location:'',description:''}])} className="btn-ghost" style={{fontSize:'0.76rem',width:'100%'}}>+ Add Event</button>
                                   </>)}
 
+                                  {block.type === 'photo-split' && (() => {
+                                    const photo = (cfg.photo as Record<string,unknown>|undefined) ?? {};
+                                    const comps = Array.isArray(cfg.components) ? (cfg.components as Record<string,unknown>[]) : [];
+                                    const photoSide = String(cfg.photoSide ?? 'left');
+                                    const wPx = String(photo.widthPx ?? '');
+                                    const hPx = String(photo.heightPx ?? '');
+                                    const arFree = !wPx && !hPx;
+                                    const setPhoto = (k: string, v: unknown) => setField('photo', {...photo, [k]: v});
+                                    const [focalX, focalY] = (() => {
+                                      const raw = String(photo.crop ?? 'center');
+                                      if (raw === 'top') return [50, 0];
+                                      if (raw === 'bottom') return [50, 100];
+                                      const pts = raw.replace(/%/g,'').trim().split(/\s+/);
+                                      return [parseFloat(pts[0])||50, parseFloat(pts[1]??pts[0])||50];
+                                    })();
+                                    return (<>
+                                      <div className="sf-group">
+                                        <label className="sf-lbl">Photo URL</label>
+                                        <input className="sf-input" value={String(photo.url??'')} onChange={e=>setPhoto('url',e.target.value)} placeholder="https://… or pick from library" />
+                                        <button className="btn-ghost" style={{width:'100%',fontSize:'0.74rem',marginTop:'4px'}}
+                                          onClick={()=>{
+                                            if(photos.length===0) fetchPhotos();
+                                            setPhotoPickerTarget(()=>(url:string)=>setPhoto('url',url));
+                                            setPhotoPickerOpen(true);
+                                          }}>Pick from Library</button>
+                                      </div>
+                                      <div className="sf-group">
+                                        <label className="sf-lbl" style={{marginBottom:'4px'}}>Photo Position <span style={{fontWeight:400,color:'#b0a99f',fontSize:'0.68rem'}}>drag to reposition</span></label>
+                                        <div
+                                          style={{position:'relative',width:'100%',paddingTop:'60%',background:'#f0ede8',borderRadius:'6px',overflow:'hidden',cursor:'crosshair',border:'1px solid #e0dbd4',userSelect:'none',touchAction:'none'}}
+                                          onPointerDown={e=>{e.currentTarget.setPointerCapture(e.pointerId);const r=e.currentTarget.getBoundingClientRect();const x=Math.round((e.clientX-r.left)/r.width*100);const y=Math.round((e.clientY-r.top)/r.height*100);setPhoto('crop',`${x}% ${y}%`);}}
+                                          onPointerMove={e=>{if(!e.currentTarget.hasPointerCapture(e.pointerId))return;const r=e.currentTarget.getBoundingClientRect();const x=Math.round((e.clientX-r.left)/r.width*100);const y=Math.round((e.clientY-r.top)/r.height*100);setPhoto('crop',`${x}% ${y}%`);}}
+                                        >
+                                          {photo.url
+                                            ? <img src={String(photo.url)} style={{position:'absolute',inset:0,width:'100%',height:'100%',objectFit:'cover',pointerEvents:'none'}} alt="" />
+                                            : <div style={{position:'absolute',inset:0,display:'flex',alignItems:'center',justifyContent:'center',color:'#b0a99f',fontSize:'0.78rem'}}>Pick a photo first</div>}
+                                          <div style={{position:'absolute',width:'16px',height:'16px',borderRadius:'50%',background:'white',border:'2.5px solid #E75850',boxShadow:'0 1px 5px rgba(0,0,0,0.35)',transform:'translate(-50%,-50%)',pointerEvents:'none',left:`${focalX}%`,top:`${focalY}%`,display:photo.url?'block':'none'}} />
+                                        </div>
+                                      </div>
+                                      <div className="sf-group">
+                                        <label className="sf-lbl">Photo Size (px)</label>
+                                        <div style={{display:'flex',alignItems:'center',gap:'6px',flexWrap:'wrap'}}>
+                                          <span style={{fontSize:'0.72rem',color:'#9b8e85'}}>W</span>
+                                          <input type="number" className="sf-input" style={{width:'56px',textAlign:'center'}} value={arFree?'':wPx} disabled={arFree} onChange={e=>setPhoto('widthPx',e.target.value||'')} />
+                                          <span style={{fontSize:'0.72rem',color:'#9b8e85'}}>H</span>
+                                          <input type="number" className="sf-input" style={{width:'56px',textAlign:'center'}} value={arFree?'':hPx} disabled={arFree} onChange={e=>setPhoto('heightPx',e.target.value||'')} />
+                                          <span style={{fontSize:'0.68rem',color:'#b0a99f'}}>px</span>
+                                          <label style={{display:'flex',alignItems:'center',gap:'4px',fontSize:'0.75rem',color:'#6b5e56',cursor:'pointer'}}>
+                                            <input type="checkbox" checked={arFree} onChange={e=>{if(e.target.checked){setField('photo',{...photo,widthPx:'',heightPx:''});}else{setField('photo',{...photo,widthPx:'250',heightPx:'400'});}}} />
+                                            Free
+                                          </label>
+                                        </div>
+                                      </div>
+                                      <div className="sf-group">
+                                        <span className="sf-lbl">Photo Side</span>
+                                        <div style={{display:'flex',gap:'4px'}}>
+                                          {(['left','right'] as const).map(s=>(
+                                            <button key={s} onClick={()=>setField('photoSide',s)} style={{padding:'4px 14px',borderRadius:'20px',border:'1.5px solid',borderColor:photoSide===s?'var(--color-accent)':'#e0dbd4',background:photoSide===s?'var(--color-accent)':'#fff',color:photoSide===s?'#fff':'#6b5e56',fontSize:'0.75rem',cursor:'pointer',textTransform:'capitalize'}}>{s}</button>
+                                          ))}
+                                        </div>
+                                      </div>
+                                      <div style={{margin:'8px 0 6px',fontSize:'0.7rem',fontWeight:700,textTransform:'uppercase',letterSpacing:'0.08em',color:'#9b8e85'}}>Other Side</div>
+                                      {comps.map((c,ci)=>(
+                                        <div key={ci} style={{border:'1px solid #e0dbd4',borderRadius:'8px',padding:'0.65rem',marginBottom:'0.5rem'}}>
+                                          <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'0.4rem'}}>
+                                            <span style={{fontSize:'0.7rem',fontWeight:600,color:'#9b8e85',textTransform:'capitalize'}}>{String(c.type??'Component')}</span>
+                                            <button onClick={()=>setField('components',comps.filter((_,j)=>j!==ci))} style={{background:'none',border:'none',cursor:'pointer',color:'#ccc',fontSize:'0.8rem'}}>×</button>
+                                          </div>
+                                          {c.type==='text'&&(<>
+                                            <div className="sf-group" style={{marginBottom:'0.35rem'}}><label className="sf-lbl" style={{fontSize:'0.68rem'}}>Heading (optional)</label><input className="sf-input" style={{padding:'5px 8px',fontSize:'0.78rem'}} value={String(c.heading??'')} onChange={e=>{const n=[...comps];n[ci]={...n[ci],heading:e.target.value};setField('components',n);}}/></div>
+                                            <div className="sf-group"><label className="sf-lbl" style={{fontSize:'0.68rem'}}>Body</label><textarea className="sf-input" rows={3} style={{padding:'5px 8px',fontSize:'0.78rem',resize:'vertical'}} value={String(c.body??'')} onChange={e=>{const n=[...comps];n[ci]={...n[ci],body:e.target.value};setField('components',n);}}/></div>
+                                          </>)}
+                                        </div>
+                                      ))}
+                                      <div style={{display:'flex',gap:'6px',alignItems:'center'}}>
+                                        <select className="sf-input" id="ps-add-type-inline" style={{flex:1,fontSize:'0.78rem'}}>
+                                          <option value="text">Text</option>
+                                        </select>
+                                        <button className="btn-ghost" style={{whiteSpace:'nowrap',fontSize:'0.78rem'}} onClick={()=>{const sel=document.getElementById('ps-add-type-inline') as unknown as HTMLSelectElement|null;const type=sel?.value||'text';setField('components',[...comps,{type,heading:'',body:''}]);}}>+ Add</button>
+                                      </div>
+                                    </>);
+                                  })()}
+
                                   {block.type === 'faq' && (<>
                                     <div className="sf-group"><label className="sf-lbl">Intro Text</label><input className="sf-input" value={String(cfg.intro??'')} onChange={e=>setField('intro',e.target.value)}/></div>
                                     {faqItms.map((item,i)=>(
@@ -1269,44 +1430,209 @@ export default function SiteEditor() {
                 </div>
               )}
 
-              {/* Content tab */}
-              {activeTab === "content" && (
-                <div className="left-tab-panel" style={{ padding: "0.75rem" }}>
-                  {!activePage ? (
+              {/* Content tab — i18n editor */}
+              {activeTab === "content" && (() => {
+                if (!activePage) return (
+                  <div className="left-tab-panel" style={{ padding: "0.75rem" }}>
                     <p style={{ fontSize: "0.78rem", color: "#9b8e85" }}>Select a page to edit content.</p>
-                  ) : blocks.length === 0 ? (
-                    <p style={{ fontSize: "0.78rem", color: "#9b8e85", lineHeight: 1.6 }}>
-                      No blocks on <strong>{activePage.label}</strong> yet. Add blocks in the Blocks tab.
-                    </p>
-                  ) : (
-                    <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem" }}>
-                      {blocks.map((block) => {
-                        const cfg = (() => { try { return JSON.parse(block.config || "{}") as Record<string, unknown>; } catch { return {} as Record<string, unknown>; } })();
-                        const preview = (cfg.title ?? cfg.heading ?? cfg.text ?? cfg.contentKey ?? cfg.imageSlot ?? cfg.item_name ?? cfg.url ?? cfg.vimeoId ?? "") as string;
-                        return (
-                          <div
-                            key={block.id}
-                            style={{ border: "1px solid #e0dbd4", borderRadius: "8px", padding: "0.55rem 0.75rem", cursor: "pointer", background: block.isVisible ? "#fafaf9" : "#f5f3f0", opacity: block.isVisible ? 1 : 0.6 }}
-                            onClick={() => handleEditBlock(block)}
-                            role="button"
-                            aria-label={`Edit ${blockLabel(block.type)} block`}
+                  </div>
+                );
+                const mainLang = settingsForm.mainLanguage || "en";
+                const secondLang = settingsForm.secondLanguage;
+                const curLangCode = contentLang === "main" ? mainLang : (secondLang || mainLang);
+                const pageContent = contentByPage[activePage.slug]?.[curLangCode] ?? {} as Record<string, unknown>;
+                const cf = (key: string) => String(pageContent[key] ?? "");
+                const onChange = (key: string, val: unknown) => setContentField(activePage.slug, curLangCode, key, val);
+                const slug = activePage.slug;
+
+                // Parse countdown for home page
+                const rawTarget = cf("countdown_target");
+                const ctMatch = rawTarget.match(/^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2})/);
+                const ctDateVal = ctMatch ? ctMatch[1] : "";
+                const ctTzMatch = rawTarget.match(/([+-]\d{2}:\d{2})$/);
+                const ctTzVal = ctTzMatch ? ctTzMatch[1] : "";
+
+                const schedEvents = Array.isArray(pageContent.events) ? (pageContent.events as Record<string, unknown>[]) : [];
+                const faqQuestions = Array.isArray(pageContent.questions) ? (pageContent.questions as Record<string, unknown>[]) : [];
+
+                const fieldStyle: React.CSSProperties = { display: "flex", flexDirection: "column", gap: "4px", marginBottom: "0.75rem" };
+                const lblStyle: React.CSSProperties = { fontSize: "0.72rem", color: "#6b5e56", fontWeight: 500 };
+                const inputStyle: React.CSSProperties = { border: "1px solid #e0dbd4", borderRadius: "7px", padding: "7px 10px", fontSize: "0.82rem", color: "#1c1917", background: "#fff", outline: "none", width: "100%", boxSizing: "border-box" };
+                const taStyle: React.CSSProperties = { ...inputStyle, minHeight: "80px", resize: "vertical" };
+                const sectionHeadStyle: React.CSSProperties = { fontSize: "0.68rem", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "#9b8e85", margin: "0 0 0.75rem" };
+
+                return (
+                  <div style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}>
+                    {/* Language switcher */}
+                    <div style={{ padding: "0.75rem 0.75rem 0", flexShrink: 0 }}>
+                      <div style={{ display: "flex", gap: "6px", marginBottom: secondLang ? "0.5rem" : 0 }}>
+                        <button
+                          onClick={() => setContentLang("main")}
+                          style={{ padding: "5px 12px", borderRadius: "20px", border: "1.5px solid", borderColor: contentLang === "main" ? "var(--color-accent)" : "#e0dbd4", background: contentLang === "main" ? "var(--color-accent)" : "#fff", color: contentLang === "main" ? "#fff" : "#6b5e56", fontSize: "0.78rem", cursor: "pointer", fontWeight: contentLang === "main" ? 600 : 400 }}
+                        >
+                          {LANG_FLAGS[mainLang] ?? "🏳️"} {LANGUAGES.find(l => l.code === mainLang)?.label ?? mainLang}
+                        </button>
+                        {secondLang && (
+                          <button
+                            onClick={() => setContentLang("second")}
+                            style={{ padding: "5px 12px", borderRadius: "20px", border: "1.5px solid", borderColor: contentLang === "second" ? "var(--color-accent)" : "#e0dbd4", background: contentLang === "second" ? "var(--color-accent)" : "#fff", color: contentLang === "second" ? "#fff" : "#6b5e56", fontSize: "0.78rem", cursor: "pointer", fontWeight: contentLang === "second" ? 600 : 400 }}
                           >
-                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                              <span style={{ fontSize: "0.78rem", fontWeight: 600, color: "#1c1917" }}>{blockLabel(block.type)}</span>
-                              <span style={{ fontSize: "0.68rem", color: "#9b8e85" }}>Edit →</span>
-                            </div>
-                            {preview && (
-                              <p style={{ fontSize: "0.7rem", color: "#9b8e85", margin: "0.2rem 0 0", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                                {preview}
-                              </p>
-                            )}
-                          </div>
-                        );
-                      })}
+                            {LANG_FLAGS[secondLang] ?? "🏳️"} {LANGUAGES.find(l => l.code === secondLang)?.label ?? secondLang}
+                          </button>
+                        )}
+                      </div>
                     </div>
-                  )}
-                </div>
-              )}
+
+                    {/* Scrollable content area */}
+                    <div style={{ flex: 1, overflowY: "auto", padding: "0.75rem" }}>
+                      {contentLoading ? (
+                        <p style={{ fontSize: "0.78rem", color: "#b0a99f", textAlign: "center", padding: "2rem 0" }}>Loading…</p>
+                      ) : (
+                        <>
+                          {/* HOME */}
+                          {slug === "home" && (<>
+                            <div style={{ border: "1px solid #e8e4e0", borderRadius: "10px", padding: "1rem", marginBottom: "0.75rem" }}>
+                              <p style={sectionHeadStyle}>Couple &amp; Date</p>
+                              <div style={fieldStyle}><label style={lblStyle}>Couple Names</label><input style={inputStyle} value={cf("couple")} onChange={e => onChange("couple", e.target.value)} placeholder="Jane & John" /></div>
+                              <div style={fieldStyle}><label style={lblStyle}>Wedding Date</label><input style={inputStyle} value={cf("date")} onChange={e => onChange("date", e.target.value)} placeholder="Sunday, October 12, 2025" /></div>
+                              <div style={fieldStyle}><label style={lblStyle}>Location</label><input style={inputStyle} value={cf("location")} onChange={e => onChange("location", e.target.value)} placeholder="Grand Ballroom, New York" /></div>
+                              <div style={fieldStyle}><label style={lblStyle}>RSVP Button Text</label><input style={inputStyle} value={cf("cta")} onChange={e => onChange("cta", e.target.value)} placeholder="RSVP" /></div>
+                              <div style={fieldStyle}>
+                                <label style={lblStyle}>Countdown Date &amp; Time</label>
+                                <div style={{ display: "flex", gap: "8px", alignItems: "flex-start", flexWrap: "wrap" }}>
+                                  <input type="datetime-local" style={{ ...inputStyle, flex: 1, minWidth: "150px" }} value={ctDateVal}
+                                    onChange={e => {
+                                      const dt = e.target.value;
+                                      const tz = ctTzVal || "+00:00";
+                                      onChange("countdown_target", dt ? `${dt}:00${tz}` : "");
+                                    }} />
+                                  <div style={{ display: "flex", flexDirection: "column", gap: "2px", flexShrink: 0 }}>
+                                    <span style={{ fontSize: "0.62rem", color: "#b0a99f", textTransform: "uppercase", letterSpacing: "0.05em" }}>UTC offset</span>
+                                    <input style={{ ...inputStyle, width: "88px" }} value={ctTzVal} placeholder="+07:00"
+                                      onChange={e => {
+                                        const tz = e.target.value;
+                                        onChange("countdown_target", ctDateVal ? `${ctDateVal}:00${tz}` : "");
+                                      }} />
+                                  </div>
+                                </div>
+                                <p style={{ fontSize: "0.67rem", color: "#b0a99f", margin: "3px 0 0" }}>Vietnam: +07:00 · UTC: +00:00 · US Eastern: -05:00</p>
+                              </div>
+                            </div>
+                            <div style={{ border: "1px solid #e8e4e0", borderRadius: "10px", padding: "1rem", marginBottom: "0.75rem" }}>
+                              <p style={sectionHeadStyle}>Welcome Section</p>
+                              <div style={fieldStyle}><label style={lblStyle}>Welcome Title</label><input style={inputStyle} value={cf("welcome_title")} onChange={e => onChange("welcome_title", e.target.value)} placeholder="Welcome to our wedding!" /></div>
+                              <div style={fieldStyle}><label style={lblStyle}>Welcome Body</label><textarea style={taStyle} value={cf("welcome_body")} onChange={e => onChange("welcome_body", e.target.value)} /></div>
+                            </div>
+                          </>)}
+
+                          {/* STORY */}
+                          {slug === "story" && (
+                            <div style={{ border: "1px solid #e8e4e0", borderRadius: "10px", padding: "1rem", marginBottom: "0.75rem" }}>
+                              <p style={sectionHeadStyle}>Story Text</p>
+                              <div style={fieldStyle}><label style={lblStyle}>Story Body <span style={{ fontWeight: 400, color: "#b0a99f" }}>(paragraphs separated by blank lines)</span></label><textarea style={{ ...taStyle, minHeight: "140px" }} value={cf("body")} onChange={e => onChange("body", e.target.value)} /></div>
+                            </div>
+                          )}
+
+                          {/* ACCOMMODATIONS */}
+                          {slug === "accommodations" && (
+                            <div style={{ border: "1px solid #e8e4e0", borderRadius: "10px", padding: "1rem", marginBottom: "0.75rem" }}>
+                              <p style={sectionHeadStyle}>Accommodations</p>
+                              <div style={fieldStyle}><label style={lblStyle}>Intro Paragraph</label><textarea style={taStyle} value={cf("intro")} onChange={e => onChange("intro", e.target.value)} /></div>
+                              <div style={fieldStyle}><label style={lblStyle}>Hotel / Resort Name</label><input style={inputStyle} value={cf("hotel_name")} onChange={e => onChange("hotel_name", e.target.value)} /></div>
+                              <div style={fieldStyle}><label style={lblStyle}>Hotel Description</label><textarea style={taStyle} value={cf("hotel_description")} onChange={e => onChange("hotel_description", e.target.value)} /></div>
+                              <div style={fieldStyle}><label style={lblStyle}>Room Block Note</label><input style={inputStyle} value={cf("room_block_note")} onChange={e => onChange("room_block_note", e.target.value)} /></div>
+                            </div>
+                          )}
+
+                          {/* REGISTRY */}
+                          {slug === "registry" && (
+                            <div style={{ border: "1px solid #e8e4e0", borderRadius: "10px", padding: "1rem", marginBottom: "0.75rem" }}>
+                              <p style={sectionHeadStyle}>Registry</p>
+                              <div style={fieldStyle}><label style={lblStyle}>Intro Text</label><textarea style={taStyle} value={cf("intro")} onChange={e => onChange("intro", e.target.value)} /></div>
+                              <div style={fieldStyle}><label style={lblStyle}>Item Name</label><input style={inputStyle} value={cf("item_name")} onChange={e => onChange("item_name", e.target.value)} /></div>
+                              <div style={fieldStyle}><label style={lblStyle}>Item Description</label><textarea style={taStyle} value={cf("item_description")} onChange={e => onChange("item_description", e.target.value)} /></div>
+                              <div style={fieldStyle}><label style={lblStyle}>Button Text</label><input style={inputStyle} value={cf("cta")} onChange={e => onChange("cta", e.target.value)} placeholder="Contribute" /></div>
+                            </div>
+                          )}
+
+                          {/* SCHEDULE */}
+                          {slug === "schedule" && (
+                            <div style={{ border: "1px solid #e8e4e0", borderRadius: "10px", padding: "1rem", marginBottom: "0.75rem" }}>
+                              <p style={sectionHeadStyle}>Schedule Events</p>
+                              {schedEvents.map((ev, i) => (
+                                <div key={i} style={{ border: "1px solid #f0ede8", borderRadius: "8px", padding: "0.75rem", marginBottom: "0.6rem" }}>
+                                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem" }}>
+                                    <span style={{ fontSize: "0.72rem", fontWeight: 600, color: "#9b8e85" }}>Event {i + 1}</span>
+                                    <button onClick={() => onChange("events", schedEvents.filter((_, j) => j !== i))} style={{ background: "none", border: "none", cursor: "pointer", color: "#ccc", fontSize: "0.8rem" }}>×</button>
+                                  </div>
+                                  {(["name", "date", "time", "location", "description"] as const).map(f => (
+                                    <div key={f} style={{ ...fieldStyle, marginBottom: "0.4rem" }}>
+                                      <label style={{ ...lblStyle, textTransform: "capitalize" }}>{f}</label>
+                                      {f === "description"
+                                        ? <textarea style={{ ...taStyle, minHeight: "54px" }} value={String(ev[f] ?? "")} onChange={e => { const next = [...schedEvents]; next[i] = { ...next[i], [f]: e.target.value }; onChange("events", next); }} />
+                                        : <input style={inputStyle} value={String(ev[f] ?? "")} onChange={e => { const next = [...schedEvents]; next[i] = { ...next[i], [f]: e.target.value }; onChange("events", next); }} />}
+                                    </div>
+                                  ))}
+                                </div>
+                              ))}
+                              <button onClick={() => onChange("events", [...schedEvents, { name: "", date: "", time: "", location: "", description: "" }])} className="btn-ghost" style={{ fontSize: "0.76rem", width: "100%" }}>+ Add Event</button>
+                            </div>
+                          )}
+
+                          {/* FAQ */}
+                          {slug === "faq" && (
+                            <div style={{ border: "1px solid #e8e4e0", borderRadius: "10px", padding: "1rem", marginBottom: "0.75rem" }}>
+                              <p style={sectionHeadStyle}>FAQ</p>
+                              <div style={fieldStyle}><label style={lblStyle}>Intro Text</label><input style={inputStyle} value={cf("intro")} onChange={e => onChange("intro", e.target.value)} /></div>
+                              {faqQuestions.map((q, i) => (
+                                <div key={i} style={{ border: "1px solid #f0ede8", borderRadius: "8px", padding: "0.75rem", marginBottom: "0.6rem" }}>
+                                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem" }}>
+                                    <span style={{ fontSize: "0.72rem", fontWeight: 600, color: "#9b8e85" }}>Q {i + 1}</span>
+                                    <button onClick={() => onChange("questions", faqQuestions.filter((_, j) => j !== i))} style={{ background: "none", border: "none", cursor: "pointer", color: "#ccc", fontSize: "0.8rem" }}>×</button>
+                                  </div>
+                                  <div style={{ ...fieldStyle, marginBottom: "0.4rem" }}><label style={lblStyle}>Question</label><input style={inputStyle} value={String(q.q ?? "")} onChange={e => { const next = [...faqQuestions]; next[i] = { ...next[i], q: e.target.value }; onChange("questions", next); }} /></div>
+                                  <div style={fieldStyle}><label style={lblStyle}>Answer</label><textarea style={{ ...taStyle, minHeight: "54px" }} value={String(q.a ?? "")} onChange={e => { const next = [...faqQuestions]; next[i] = { ...next[i], a: e.target.value }; onChange("questions", next); }} /></div>
+                                </div>
+                              ))}
+                              <button onClick={() => onChange("questions", [...faqQuestions, { q: "", a: "" }])} className="btn-ghost" style={{ fontSize: "0.76rem", width: "100%" }}>+ Add Question</button>
+                            </div>
+                          )}
+
+                          {/* RSVP */}
+                          {slug === "rsvp" && (
+                            <div style={{ border: "1px solid #e8e4e0", borderRadius: "10px", padding: "1rem", marginBottom: "0.75rem" }}>
+                              <p style={sectionHeadStyle}>RSVP</p>
+                              <div style={fieldStyle}><label style={lblStyle}>Form Heading</label><input style={inputStyle} value={cf("heading")} onChange={e => onChange("heading", e.target.value)} placeholder="Join us" /></div>
+                              <div style={fieldStyle}><label style={lblStyle}>Confirmation Message</label><textarea style={taStyle} value={cf("confirm_text")} onChange={e => onChange("confirm_text", e.target.value)} placeholder="Thank you! We'll see you there." /></div>
+                            </div>
+                          )}
+
+                          {/* GENERIC (travel, custom pages, etc.) */}
+                          {!["home","story","accommodations","registry","schedule","faq","rsvp"].includes(slug) && (
+                            <div style={{ border: "1px solid #e8e4e0", borderRadius: "10px", padding: "1rem", marginBottom: "0.75rem" }}>
+                              <p style={sectionHeadStyle}>{activePage.label}</p>
+                              <div style={fieldStyle}><label style={lblStyle}>Page Heading</label><input style={inputStyle} value={cf("heading")} onChange={e => onChange("heading", e.target.value)} /></div>
+                              <div style={fieldStyle}><label style={lblStyle}>Body Text</label><textarea style={{ ...taStyle, minHeight: "120px" }} value={cf("body")} onChange={e => onChange("body", e.target.value)} /></div>
+                            </div>
+                          )}
+                        </>
+                      )}
+                    </div>
+
+                    {/* Save button (sticky bottom) */}
+                    <div style={{ padding: "0.75rem", flexShrink: 0, borderTop: "1px solid #f0ede8" }}>
+                      <button
+                        className="btn-primary-sm"
+                        style={{ width: "100%", padding: "0.65rem", fontSize: "0.85rem", background: "#E75850", borderColor: "#E75850" }}
+                        onClick={handleSaveContent}
+                        disabled={contentSaving}
+                      >
+                        {contentSaving ? "Saving…" : "Save Content"}
+                      </button>
+                    </div>
+                  </div>
+                );
+              })()}
 
             </div>
 
@@ -1385,22 +1711,12 @@ export default function SiteEditor() {
                 ) : (
                   photos.map((photo) => (
                     <div key={photo.id} className="lib-item" style={{ position: "relative" }}>
-                      <div
-                        style={{
-                          width: "100%",
-                          aspectRatio: "1",
-                          background: "#f0ede8",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          fontSize: "0.65rem",
-                          color: "#b0a99f",
-                          overflow: "hidden",
-                        }}
+                      <img
+                        src={`/api/sites/${site.id}/photos/${photo.id}`}
+                        alt={photo.filename}
                         title={photo.filename}
-                      >
-                        {photo.filename}
-                      </div>
+                        style={{ width: "100%", aspectRatio: "1", objectFit: "cover", display: "block", background: "#f0ede8" }}
+                      />
                       <button
                         onClick={() => handleDeletePhoto(photo.id)}
                         aria-label={`Delete photo ${photo.filename}`}
@@ -2064,6 +2380,44 @@ export default function SiteEditor() {
         </div>
       )}
 
+      {/* ── Photo picker modal ──────────────────────────────── */}
+      {photoPickerOpen && (
+        <div className="overlay-bg" onClick={() => setPhotoPickerOpen(false)} role="dialog" aria-modal="true" aria-label="Pick a photo">
+          <div className="overlay-box" onClick={(e) => e.stopPropagation()} style={{ maxWidth: "560px", maxHeight: "80vh", display: "flex", flexDirection: "column" }}>
+            <button className="overlay-close" onClick={() => setPhotoPickerOpen(false)} aria-label="Close">×</button>
+            <h2 style={{ marginBottom: "0.75rem" }}>Photo Library</h2>
+            {photosLoading ? (
+              <p style={{ fontSize: "0.82rem", color: "#b0a99f", textAlign: "center", padding: "2rem 0" }}>Loading…</p>
+            ) : photos.length === 0 ? (
+              <p style={{ fontSize: "0.82rem", color: "#9b8e85" }}>No photos yet. Upload photos in the Photos section first.</p>
+            ) : (
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(120px, 1fr))", gap: "8px", overflowY: "auto", flex: 1 }}>
+                {photos.map((photo) => (
+                  <button
+                    key={photo.id}
+                    onClick={() => {
+                      if (photoPickerTarget) {
+                        photoPickerTarget(`/api/sites/${site.id}/photos/${photo.id}`);
+                      }
+                      setPhotoPickerOpen(false);
+                      setPhotoPickerTarget(null);
+                    }}
+                    style={{ border: "2px solid #e0dbd4", borderRadius: "8px", overflow: "hidden", padding: 0, cursor: "pointer", background: "none", aspectRatio: "1" }}
+                    aria-label={`Select ${photo.filename}`}
+                  >
+                    <img
+                      src={`/api/sites/${site.id}/photos/${photo.id}`}
+                      alt={photo.filename}
+                      style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+                    />
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* ── Add Block modal ──────────────────────────────────── */}
       {addBlockOpen && (
         <div
@@ -2221,8 +2575,88 @@ export default function SiteEditor() {
                 <button onClick={() => setField("items", [...faqItems, { q: "", a: "" }])} className="btn-ghost" style={{ fontSize: "0.76rem", width: "100%" }}>+ Add Q&A</button>
               </>)}
 
+              {/* photo-split */}
+              {t === "photo-split" && (() => {
+                const photo = (cfg.photo as Record<string,unknown>|undefined) ?? {};
+                const comps = Array.isArray(cfg.components) ? (cfg.components as Record<string,unknown>[]) : [];
+                const photoSide = String(cfg.photoSide ?? "left");
+                const setPhoto = (k: string, v: unknown) => setField("photo", { ...photo, [k]: v });
+                const [focalX, focalY] = (() => {
+                  const raw = String(photo.crop ?? "center");
+                  if (raw === "top") return [50, 0];
+                  if (raw === "bottom") return [50, 100];
+                  const pts = raw.replace(/%/g,"").trim().split(/\s+/);
+                  return [parseFloat(pts[0])||50, parseFloat(pts[1]??pts[0])||50];
+                })();
+                const arFree = !photo.widthPx && !photo.heightPx;
+                return (<>
+                  <div className="sf-group">
+                    <label className="sf-lbl">Photo URL</label>
+                    <input className="sf-input" value={String(photo.url??"")} onChange={e=>setPhoto("url",e.target.value)} placeholder="https://…" />
+                    <button className="btn-ghost" style={{width:"100%",fontSize:"0.74rem",marginTop:"4px"}}
+                      onClick={()=>{
+                        if(photos.length===0) fetchPhotos();
+                        setPhotoPickerTarget(()=>(url:string)=>setPhoto("url",url));
+                        setPhotoPickerOpen(true);
+                      }}>Pick from Library</button>
+                  </div>
+                  <div className="sf-group">
+                    <label className="sf-lbl" style={{marginBottom:"4px"}}>Photo Position <span style={{fontWeight:400,color:"#b0a99f",fontSize:"0.68rem"}}>drag to reposition</span></label>
+                    <div style={{position:"relative",width:"100%",paddingTop:"56%",background:"#f0ede8",borderRadius:"6px",overflow:"hidden",cursor:"crosshair",border:"1px solid #e0dbd4",userSelect:"none",touchAction:"none"}}
+                      onPointerDown={e=>{e.currentTarget.setPointerCapture(e.pointerId);const r=e.currentTarget.getBoundingClientRect();const x=Math.round((e.clientX-r.left)/r.width*100);const y=Math.round((e.clientY-r.top)/r.height*100);setPhoto("crop",`${x}% ${y}%`);}}
+                      onPointerMove={e=>{if(!e.currentTarget.hasPointerCapture(e.pointerId))return;const r=e.currentTarget.getBoundingClientRect();const x=Math.round((e.clientX-r.left)/r.width*100);const y=Math.round((e.clientY-r.top)/r.height*100);setPhoto("crop",`${x}% ${y}%`);}}>
+                      {photo.url
+                        ? <img src={String(photo.url)} style={{position:"absolute",inset:0,width:"100%",height:"100%",objectFit:"cover",pointerEvents:"none"}} alt="" />
+                        : <div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center",color:"#b0a99f",fontSize:"0.78rem"}}>Pick a photo first</div>}
+                      <div style={{position:"absolute",width:"16px",height:"16px",borderRadius:"50%",background:"white",border:"2.5px solid #E75850",boxShadow:"0 1px 5px rgba(0,0,0,0.35)",transform:"translate(-50%,-50%)",pointerEvents:"none",left:`${focalX}%`,top:`${focalY}%`,display:photo.url?"block":"none"}} />
+                    </div>
+                  </div>
+                  <div className="sf-group">
+                    <label className="sf-lbl">Photo Size (px)</label>
+                    <div style={{display:"flex",alignItems:"center",gap:"6px",flexWrap:"wrap"}}>
+                      <span style={{fontSize:"0.72rem",color:"#9b8e85"}}>W</span>
+                      <input type="number" className="sf-input" style={{width:"60px",textAlign:"center"}} value={arFree?"":String(photo.widthPx??"")} disabled={arFree} onChange={e=>setPhoto("widthPx",e.target.value||"")} />
+                      <span style={{fontSize:"0.72rem",color:"#9b8e85"}}>H</span>
+                      <input type="number" className="sf-input" style={{width:"60px",textAlign:"center"}} value={arFree?"":String(photo.heightPx??"")} disabled={arFree} onChange={e=>setPhoto("heightPx",e.target.value||"")} />
+                      <span style={{fontSize:"0.68rem",color:"#b0a99f"}}>px</span>
+                      <label style={{display:"flex",alignItems:"center",gap:"4px",fontSize:"0.75rem",color:"#6b5e56",cursor:"pointer"}}>
+                        <input type="checkbox" checked={arFree} onChange={e=>{if(e.target.checked){setField("photo",{...photo,widthPx:"",heightPx:""});}else{setField("photo",{...photo,widthPx:"250",heightPx:"400"});}}} />
+                        Free
+                      </label>
+                    </div>
+                  </div>
+                  <div className="sf-group">
+                    <span className="sf-lbl">Photo Side</span>
+                    <div style={{display:"flex",gap:"4px"}}>
+                      {(["left","right"] as const).map(s=>(
+                        <button key={s} onClick={()=>setField("photoSide",s)} style={{padding:"4px 16px",borderRadius:"20px",border:"1.5px solid",borderColor:photoSide===s?"var(--color-accent)":"#e0dbd4",background:photoSide===s?"var(--color-accent)":"#fff",color:photoSide===s?"#fff":"#6b5e56",fontSize:"0.75rem",cursor:"pointer",textTransform:"capitalize"}}>{s}</button>
+                      ))}
+                    </div>
+                  </div>
+                  <div style={{margin:"12px 0 8px",fontSize:"0.7rem",fontWeight:700,textTransform:"uppercase",letterSpacing:"0.08em",color:"#9b8e85"}}>Other Side</div>
+                  {comps.map((c,ci)=>(
+                    <div key={ci} style={{border:"1px solid #e0dbd4",borderRadius:"8px",padding:"0.75rem",marginBottom:"0.6rem"}}>
+                      <div style={{display:"flex",justifyContent:"space-between",marginBottom:"0.5rem"}}>
+                        <span style={{fontSize:"0.72rem",fontWeight:600,color:"#9b8e85",textTransform:"capitalize"}}>{String(c.type??"Component")}</span>
+                        <button onClick={()=>setField("components",comps.filter((_,j)=>j!==ci))} style={{background:"none",border:"none",cursor:"pointer",color:"#ccc",fontSize:"0.8rem"}}>×</button>
+                      </div>
+                      {c.type==="text"&&(<>
+                        <div className="sf-group" style={{marginBottom:"0.35rem"}}><label className="sf-lbl" style={{fontSize:"0.68rem"}}>Heading (optional)</label><input className="sf-input" value={String(c.heading??"")} onChange={e=>{const n=[...comps];n[ci]={...n[ci],heading:e.target.value};setField("components",n);}}/></div>
+                        <div className="sf-group"><label className="sf-lbl" style={{fontSize:"0.68rem"}}>Body</label><textarea className="sf-input" rows={4} style={{resize:"vertical"}} value={String(c.body??"")} onChange={e=>{const n=[...comps];n[ci]={...n[ci],body:e.target.value};setField("components",n);}}/></div>
+                      </>)}
+                    </div>
+                  ))}
+                  <div style={{display:"flex",gap:"6px",alignItems:"center",marginBottom:"0.5rem"}}>
+                    <select className="sf-input" id="ps-add-type-modal" style={{flex:1,fontSize:"0.78rem"}}>
+                      <option value="text">Text</option>
+                    </select>
+                    <button className="btn-ghost" style={{whiteSpace:"nowrap",fontSize:"0.78rem"}} onClick={()=>{const sel=document.getElementById("ps-add-type-modal") as unknown as HTMLSelectElement|null;const type=sel?.value||"text";setField("components",[...comps,{type,heading:"",body:""}]);}}>+ Add</button>
+                  </div>
+                </>);
+              })()}
+
               {/* fallback: raw JSON for unknown types */}
-              {!["home-hero","header","text","video","countdown","images","youtube","spacer","registry-card","hotel-card","venue-map","schedule","faq"].includes(t) && (
+              {!["home-hero","header","text","video","countdown","images","youtube","spacer","registry-card","hotel-card","venue-map","schedule","faq","photo-split"].includes(t) && (
                 <textarea
                   style={{ width: "100%", minHeight: "200px", fontFamily: "monospace", fontSize: "0.78rem", border: "1px solid #e0dbd4", borderRadius: "8px", padding: "0.75rem", background: "#fafaf9", color: "#1c1917", resize: "vertical", boxSizing: "border-box" }}
                   value={JSON.stringify(cfg, null, 2)}
