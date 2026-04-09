@@ -94,6 +94,8 @@ interface SiteSettings {
   bodyFont: string;
   accentColor: string;
   bgColor: string;
+  songPages: string | null;
+  songResetPages: string | null;
 }
 
 interface AnalyticsData {
@@ -166,6 +168,7 @@ const LANGUAGES     = [
   { code: "zh", label: "Chinese" },
   { code: "ko", label: "Korean" },
   { code: "ar", label: "Arabic" },
+  { code: "vi", label: "Vietnamese" },
 ];
 
 // ── Toast hook ────────────────────────────────────────────────────────────────
@@ -221,6 +224,9 @@ export default function SiteEditor() {
   const [blocksLoading, setBlocksLoading] = useState(false);
   const [pageDropOpen, setPageDropOpen]   = useState(false);
   const [addBlockOpen, setAddBlockOpen]   = useState(false);
+  const [blockEditOpen, setBlockEditOpen]     = useState(false);
+  const [editingBlock, setEditingBlock]       = useState<Block | null>(null);
+  const [blockConfigText, setBlockConfigText] = useState("");
 
   // Style tab
   const [styleHeadingFont, setStyleHeadingFont] = useState("Georgia");
@@ -296,11 +302,11 @@ export default function SiteEditor() {
     setDomainCheckError(null);
     try {
       const res = await fetch(`/api/domain/check?domain=${encodeURIComponent(domainSearch.trim())}`);
-      const data = await res.json();
+      const data = await res.json() as { error?: string; domain?: string; tld?: string; available?: boolean; price?: number | null; supported?: boolean };
       if (!res.ok) {
         setDomainCheckError(data.error ?? "Something went wrong.");
       } else {
-        setDomainResult(data);
+        setDomainResult(data as { domain: string; tld: string; available: boolean; price: number | null; supported: boolean });
       }
     } catch {
       setDomainCheckError("Network error. Please try again.");
@@ -327,6 +333,10 @@ export default function SiteEditor() {
     headingFont: "Georgia",
     bodyFont: "Inter",
     accentColor: "#0d9488",
+    bgColor: "#ffffff",
+    isLive: 0 as 0 | 1,
+    songPages: "[]",
+    songResetPages: "[]",
   });
 
   // Analytics section state
@@ -443,6 +453,10 @@ export default function SiteEditor() {
         headingFont:    data.settings.headingFont     ?? "Georgia",
         bodyFont:       data.settings.bodyFont        ?? "Inter",
         accentColor:    data.settings.accentColor     ?? "#0d9488",
+        bgColor:        data.settings.bgColor         ?? "#ffffff",
+        isLive:         (data.settings.isLive ?? 0) as 0 | 1,
+        songPages:      data.settings.songPages       ?? "[]",
+        songResetPages: data.settings.songResetPages  ?? "[]",
       });
       setStyleHeadingFont(data.settings.headingFont ?? "Georgia");
       setStyleBodyFont(data.settings.bodyFont ?? "Inter");
@@ -573,6 +587,63 @@ export default function SiteEditor() {
       toast("Block deleted");
     } catch (err) {
       toast(err instanceof Error ? err.message : "Failed to delete block", true);
+    }
+  }
+
+  function handleEditBlock(block: Block) {
+    setEditingBlock(block);
+    try {
+      setBlockConfigText(JSON.stringify(JSON.parse(block.config || "{}"), null, 2));
+    } catch {
+      setBlockConfigText(block.config || "{}");
+    }
+    setBlockEditOpen(true);
+  }
+
+  async function handleSaveBlockConfig() {
+    if (!editingBlock) return;
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(blockConfigText);
+    } catch {
+      toast("Invalid JSON — fix the config before saving", true);
+      return;
+    }
+    try {
+      await apiFetch(`/blocks/${editingBlock.id}`, {
+        method: "PUT",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ config: JSON.stringify(parsed) }),
+      });
+      if (activePage) await fetchBlocks(activePage.id);
+      setBlockEditOpen(false);
+      toast("Block config saved");
+    } catch (err) {
+      toast(err instanceof Error ? err.message : "Failed to save block config", true);
+    }
+  }
+
+  async function handleReorderPage(pageId: string, direction: "up" | "down") {
+    const idx = pages.findIndex((p) => p.id === pageId);
+    if (idx === -1) return;
+    const swapIdx = direction === "up" ? idx - 1 : idx + 1;
+    if (swapIdx < 0 || swapIdx >= pages.length) return;
+    const reordered = [...pages];
+    [reordered[idx], reordered[swapIdx]] = [reordered[swapIdx], reordered[idx]];
+    setPages(reordered);
+    try {
+      await Promise.all(
+        reordered.map((p, i) =>
+          fetch(`/api/sites/${site.id}/pages/${p.id}`, {
+            method: "PUT",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({ sortOrder: i }),
+          })
+        )
+      );
+      toast("Page order saved");
+    } catch {
+      toast("Failed to save page order", true);
     }
   }
 
@@ -833,15 +904,33 @@ export default function SiteEditor() {
                   </button>
                   {pageDropOpen && pages.length > 0 && (
                     <div className="page-selector-dropdown" role="listbox">
-                      {pages.map((p) => (
+                      {pages.map((p, idx) => (
                         <div
                           key={p.id}
                           className={`page-sel-row${activePage?.id === p.id ? " active" : ""}`}
                           role="option"
                           aria-selected={activePage?.id === p.id}
-                          onClick={() => { setActivePage(p); setPageDropOpen(false); }}
                         >
-                          {p.label}
+                          <span
+                            style={{ flex: 1, cursor: "pointer", padding: "2px 0" }}
+                            onClick={() => { setActivePage(p); setPageDropOpen(false); }}
+                          >
+                            {p.label}
+                          </span>
+                          <button
+                            onClick={(e) => { e.stopPropagation(); handleReorderPage(p.id, "up"); }}
+                            disabled={idx === 0}
+                            title="Move up"
+                            aria-label={`Move ${p.label} up`}
+                            style={{ background: "none", border: "none", cursor: idx === 0 ? "default" : "pointer", color: idx === 0 ? "#d4cec8" : "#6b7280", fontSize: "0.65rem", padding: "0 2px", lineHeight: 1 }}
+                          >▲</button>
+                          <button
+                            onClick={(e) => { e.stopPropagation(); handleReorderPage(p.id, "down"); }}
+                            disabled={idx === pages.length - 1}
+                            title="Move down"
+                            aria-label={`Move ${p.label} down`}
+                            style={{ background: "none", border: "none", cursor: idx === pages.length - 1 ? "default" : "pointer", color: idx === pages.length - 1 ? "#d4cec8" : "#6b7280", fontSize: "0.65rem", padding: "0 2px", lineHeight: 1 }}
+                          >▼</button>
                         </div>
                       ))}
                     </div>
@@ -902,6 +991,14 @@ export default function SiteEditor() {
                                 </button>
                                 <button
                                   className="bact"
+                                  title="Edit block config"
+                                  aria-label="Edit block config"
+                                  onClick={() => handleEditBlock(block)}
+                                >
+                                  ✎
+                                </button>
+                                <button
+                                  className="bact"
                                   title="Delete block"
                                   aria-label="Delete block"
                                   onClick={() => handleDeleteBlock(block.id)}
@@ -940,32 +1037,10 @@ export default function SiteEditor() {
             {/* Right panel — preview */}
             <div className="builder-right">
               <div className="preview-toolbar">
-                <div style={{ display: "flex", gap: "6px", marginRight: "auto", flexWrap: "wrap" }}>
-                  {pagesLoading ? (
-                    <span style={{ fontSize: "0.75rem", color: "#b0a99f" }}>Loading pages…</span>
-                  ) : pages.length === 0 ? (
-                    <span style={{ fontSize: "0.75rem", color: "#b0a99f" }}>No pages yet</span>
-                  ) : (
-                    pages.map((p) => (
-                      <button
-                        key={p.id}
-                        onClick={() => setActivePage(p)}
-                        style={{
-                          background: activePage?.id === p.id ? "#0d9488" : "none",
-                          color: activePage?.id === p.id ? "#fff" : "#9b8e85",
-                          border: "1px solid",
-                          borderColor: activePage?.id === p.id ? "#0d9488" : "#e0dbd4",
-                          borderRadius: "6px",
-                          padding: "3px 10px",
-                          fontSize: "0.75rem",
-                          cursor: "pointer",
-                          whiteSpace: "nowrap",
-                        }}
-                      >
-                        {p.label}
-                      </button>
-                    ))
-                  )}
+                <div style={{ display: "flex", gap: "6px", marginRight: "auto", alignItems: "center" }}>
+                  <span style={{ fontSize: "0.75rem", color: "#9b8e85" }}>
+                    {activePage ? activePage.label : (pagesLoading ? "Loading…" : "No pages")}
+                  </span>
                 </div>
                 <div className="device-toggle">
                   <button
@@ -981,7 +1056,7 @@ export default function SiteEditor() {
               <div className="preview-wrap">
                 <iframe
                   className="preview-iframe"
-                  src={activePage ? `${previewUrl}/${activePage.slug === "home" ? "" : activePage.slug}` : previewUrl}
+                  src={previewUrl}
                   title="Page preview"
                   style={{ width: previewWidth }}
                 />
@@ -1748,6 +1823,47 @@ export default function SiteEditor() {
         </div>
       )}
 
+      {/* ── Block Config Editor ─────────────────────────────── */}
+      {blockEditOpen && editingBlock && (
+        <div
+          className="overlay-bg"
+          onClick={() => setBlockEditOpen(false)}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Edit block config"
+        >
+          <div className="overlay-box" onClick={(e) => e.stopPropagation()} style={{ maxWidth: "540px" }}>
+            <button
+              className="overlay-close"
+              onClick={() => setBlockEditOpen(false)}
+              aria-label="Close"
+            >
+              ×
+            </button>
+            <h2 style={{ marginBottom: "0.25rem" }}>Edit Block</h2>
+            <p style={{ fontSize: "0.78rem", color: "#9b8e85", marginBottom: "1rem" }}>
+              {blockLabel(editingBlock.type)} · <span style={{ fontFamily: "monospace", fontSize: "0.72rem" }}>{editingBlock.id}</span>
+            </p>
+            <textarea
+              style={{
+                width: "100%", minHeight: "300px", fontFamily: "monospace",
+                fontSize: "0.78rem", border: "1px solid #e0dbd4", borderRadius: "8px",
+                padding: "0.75rem", background: "#fafaf9", color: "#1c1917",
+                resize: "vertical", boxSizing: "border-box",
+              }}
+              value={blockConfigText}
+              onChange={(e) => setBlockConfigText(e.target.value)}
+              aria-label="Block configuration JSON"
+              spellCheck={false}
+            />
+            <div style={{ display: "flex", gap: "8px", justifyContent: "flex-end", marginTop: "1rem" }}>
+              <button className="btn-ghost" onClick={() => setBlockEditOpen(false)}>Cancel</button>
+              <button className="btn-primary-sm" onClick={handleSaveBlockConfig}>Save Config</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ── Settings drawer ──────────────────────────────────── */}
       {settingsOpen && (
         <>
@@ -1856,6 +1972,13 @@ export default function SiteEditor() {
                           <span style={{ fontSize: "0.78rem", color: "#9b8e85" }}>{settingsForm.accentColor}</span>
                         </div>
                       </div>
+                      <div className="sf-group">
+                        <label className="sf-lbl" htmlFor="s-bg-color">Background Color</label>
+                        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                          <input id="s-bg-color" type="color" value={settingsForm.bgColor} onChange={(e) => setSettingsForm((f) => ({ ...f, bgColor: e.target.value }))} style={{ width: "36px", height: "36px", border: "1px solid #e0dbd4", borderRadius: "6px", cursor: "pointer" }} aria-label="Background color picker" />
+                          <span style={{ fontSize: "0.78rem", color: "#9b8e85" }}>{settingsForm.bgColor}</span>
+                        </div>
+                      </div>
                     </>
                   )}
 
@@ -1868,6 +1991,58 @@ export default function SiteEditor() {
                         <label className="sf-lbl" htmlFor="s-music">Music URL</label>
                         <input id="s-music" type="url" className="sf-input" placeholder="https://youtube.com/watch?v=…" value={settingsForm.musicUrl} onChange={(e) => setSettingsForm((f) => ({ ...f, musicUrl: e.target.value }))} />
                       </div>
+                      {pages.length > 0 && (
+                        <>
+                          <div className="sf-group" style={{ marginTop: "1.25rem" }}>
+                            <label className="sf-lbl">Play music on these pages</label>
+                            <p style={{ fontSize: "0.72rem", color: "#b0a99f", margin: "4px 0 8px", lineHeight: 1.5 }}>
+                              Music starts when a guest lands on any checked page. Leave all unchecked to play on every page.
+                            </p>
+                            {pages.map((p) => {
+                              const arr: string[] = (() => { try { return JSON.parse(settingsForm.songPages || "[]"); } catch { return []; } })();
+                              const checked = arr.includes(p.id);
+                              return (
+                                <label key={p.id} style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "6px", cursor: "pointer", fontSize: "0.8rem", color: "#1c1917" }}>
+                                  <input
+                                    type="checkbox"
+                                    checked={checked}
+                                    onChange={() => {
+                                      const next = checked ? arr.filter((id) => id !== p.id) : [...arr, p.id];
+                                      setSettingsForm((f) => ({ ...f, songPages: JSON.stringify(next) }));
+                                    }}
+                                    style={{ width: "14px", height: "14px", accentColor: "#0d9488" }}
+                                  />
+                                  {p.label}
+                                </label>
+                              );
+                            })}
+                          </div>
+                          <div className="sf-group" style={{ marginTop: "1rem" }}>
+                            <label className="sf-lbl">Restart music on these pages</label>
+                            <p style={{ fontSize: "0.72rem", color: "#b0a99f", margin: "4px 0 8px", lineHeight: 1.5 }}>
+                              Music restarts from the beginning when a guest navigates to any checked page.
+                            </p>
+                            {pages.map((p) => {
+                              const arr: string[] = (() => { try { return JSON.parse(settingsForm.songResetPages || "[]"); } catch { return []; } })();
+                              const checked = arr.includes(p.id);
+                              return (
+                                <label key={p.id} style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "6px", cursor: "pointer", fontSize: "0.8rem", color: "#1c1917" }}>
+                                  <input
+                                    type="checkbox"
+                                    checked={checked}
+                                    onChange={() => {
+                                      const next = checked ? arr.filter((id) => id !== p.id) : [...arr, p.id];
+                                      setSettingsForm((f) => ({ ...f, songResetPages: JSON.stringify(next) }));
+                                    }}
+                                    style={{ width: "14px", height: "14px", accentColor: "#0d9488" }}
+                                  />
+                                  {p.label}
+                                </label>
+                              );
+                            })}
+                          </div>
+                        </>
+                      )}
                     </>
                   )}
 
@@ -1912,7 +2087,34 @@ export default function SiteEditor() {
 
                   {settingsDrawerTab === "access" && (
                     <>
-                      <p style={{ fontSize: "0.75rem", color: "#9b8e85", marginBottom: "1rem", lineHeight: 1.6 }}>
+                      <div className="sf-group">
+                        <label className="sf-lbl">Site Visibility</label>
+                        <div style={{ display: "flex", alignItems: "center", gap: "10px", marginTop: "4px" }}>
+                          <button
+                            type="button"
+                            onClick={() => setSettingsForm((f) => ({ ...f, isLive: f.isLive ? 0 : 1 }))}
+                            style={{
+                              position: "relative", width: "44px", height: "24px", borderRadius: "12px",
+                              background: settingsForm.isLive ? "#0d9488" : "#e0dbd4",
+                              border: "none", cursor: "pointer", flexShrink: 0, transition: "background 0.2s",
+                            }}
+                            aria-pressed={!!settingsForm.isLive}
+                            aria-label="Toggle site live"
+                          >
+                            <span style={{
+                              position: "absolute", top: "3px",
+                              left: settingsForm.isLive ? "23px" : "3px",
+                              width: "18px", height: "18px",
+                              borderRadius: "50%", background: "#fff",
+                              transition: "left 0.2s", boxShadow: "0 1px 4px rgba(0,0,0,0.2)",
+                            }} />
+                          </button>
+                          <span style={{ fontSize: "0.8rem", color: settingsForm.isLive ? "#0d9488" : "#9b8e85", fontWeight: 500 }}>
+                            {settingsForm.isLive ? "Published — visible to guests" : "Draft — only you can see this"}
+                          </span>
+                        </div>
+                      </div>
+                      <p style={{ fontSize: "0.75rem", color: "#9b8e85", margin: "1.25rem 0 1rem", lineHeight: 1.6 }}>
                         Add a password to restrict who can view your site. Leave blank to keep it public.
                       </p>
                       <div className="sf-group">
