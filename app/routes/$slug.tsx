@@ -476,7 +476,10 @@ function renderBlock(
 
     case "countdown": {
       const targetDate =
-        (cfg.date as string | undefined) ?? settings?.eventDate ?? "";
+        (pageContent?.countdown_target as string | undefined) ??
+        (cfg.date as string | undefined) ??
+        (cfg.countdownDate as string | undefined) ??
+        settings?.eventDate ?? "";
       const label = (cfg.label as string | undefined) ?? "Until we say I do";
       return `
         <section class="block block-countdown" aria-label="Countdown">
@@ -863,8 +866,8 @@ function buildHtml(
 
   const allBlocks = pages.flatMap((p) => p.blocks);
   const countdownData = allBlocks
-    .filter((b) => b.type === "countdown" && typeof b.config.date === "string")
-    .map((b) => ({ id: b.id, date: b.config.date as string }));
+    .filter((b) => b.type === "countdown" && typeof (b.config.date ?? b.config.countdownDate) === "string")
+    .map((b) => ({ id: b.id, date: (b.config.date ?? b.config.countdownDate) as string }));
 
   // Build nav bar (only if there are multiple pages, all visible)
   const visiblePages = pages.filter((p) => p.isVisible !== 0);

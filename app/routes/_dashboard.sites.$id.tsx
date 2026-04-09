@@ -247,6 +247,8 @@ export default function SiteEditor() {
   const [pages, setPages]                 = useState<Page[]>([]);
   const [activePage, setActivePage]       = useState<Page | null>(null);
   const [blocks, setBlocks]               = useState<Block[]>([]);
+  const [blockHistory, setBlockHistory]   = useState<Block[][]>([]);
+  const [blockFuture, setBlockFuture]     = useState<Block[][]>([]);
   const [pagesLoading, setPagesLoading]   = useState(false);
   const [blocksLoading, setBlocksLoading] = useState(false);
   const [pageDropOpen, setPageDropOpen]   = useState(false);
@@ -661,6 +663,7 @@ export default function SiteEditor() {
           const { oldIndex, newIndex } = evt;
           if (oldIndex === undefined || newIndex === undefined || oldIndex === newIndex) return;
           setBlocks((prev) => {
+            pushHistory(prev);
             const reordered = [...prev];
             const [moved] = reordered.splice(oldIndex, 1);
             reordered.splice(newIndex, 0, moved);
@@ -686,6 +689,33 @@ export default function SiteEditor() {
     };
   }, [section, activeTab, blocks.length]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // ── Undo / Redo ─────────────────────────────────────────────────────────────
+
+  function pushHistory(prev: Block[]) {
+    setBlockHistory((h) => [...h.slice(-19), prev]);
+    setBlockFuture([]);
+  }
+
+  function handleUndo() {
+    setBlockHistory((h) => {
+      if (h.length === 0) return h;
+      const restored = h[h.length - 1];
+      setBlockFuture((f) => [blocks, ...f.slice(0, 19)]);
+      setBlocks(restored);
+      return h.slice(0, -1);
+    });
+  }
+
+  function handleRedo() {
+    setBlockFuture((f) => {
+      if (f.length === 0) return f;
+      const restored = f[0];
+      setBlockHistory((h) => [...h.slice(-19), blocks]);
+      setBlocks(restored);
+      return f.slice(1);
+    });
+  }
+
   // ── Mutations ───────────────────────────────────────────────────────────────
 
   async function handleAddBlock(type: string) {
@@ -704,6 +734,36 @@ export default function SiteEditor() {
     setAddBlockOpen(false);
   }
 
+  async function handleTogglePageVisibility(page: Page) {
+    try {
+      const updated = await apiFetch(`/pages/${page.id}`, {
+        method: "PUT",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ isVisible: page.isVisible === 0 }),
+      }) as { page: Page };
+      setPages((prev) => prev.map((p) => (p.id === page.id ? updated.page : p)));
+      if (activePage?.id === page.id) setActivePage(updated.page);
+      toast(updated.page.isVisible ? "Page visible" : "Page hidden");
+    } catch (err) {
+      toast(err instanceof Error ? err.message : "Failed to update page", true);
+    }
+  }
+
+  async function handleTogglePageLock(page: Page) {
+    try {
+      const updated = await apiFetch(`/pages/${page.id}`, {
+        method: "PUT",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ isLocked: page.isLocked === 0 }),
+      }) as { page: Page };
+      setPages((prev) => prev.map((p) => (p.id === page.id ? updated.page : p)));
+      if (activePage?.id === page.id) setActivePage(updated.page);
+      toast(updated.page.isLocked ? "Page locked" : "Page unlocked");
+    } catch (err) {
+      toast(err instanceof Error ? err.message : "Failed to update page", true);
+    }
+  }
+
   async function handleToggleBlockVisibility(block: Block) {
     try {
       await apiFetch(`/blocks/${block.id}`, {
@@ -719,6 +779,7 @@ export default function SiteEditor() {
   }
 
   async function handleDeleteBlock(blockId: string) {
+    pushHistory(blocks);
     try {
       await apiFetch(`/blocks/${blockId}`, { method: "DELETE" });
       if (activePage) await fetchBlocks(activePage.id);
@@ -1032,12 +1093,12 @@ export default function SiteEditor() {
               Guest Preview
             </button>
             <div className="section-topbar-divider" />
-            <button className="btn-ghost" disabled aria-label="Undo">
+            <button className="btn-ghost" onClick={handleUndo} disabled={blockHistory.length === 0} title="Undo" aria-label="Undo">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <path d="M3 7v6h6"/><path d="M3 13A9 9 0 1 0 5.5 5.5L3 8"/>
               </svg>
             </button>
-            <button className="btn-ghost" disabled aria-label="Redo">
+            <button className="btn-ghost" onClick={handleRedo} disabled={blockFuture.length === 0} title="Redo" aria-label="Redo">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <path d="M21 7v6h-6"/><path d="M21 13A9 9 0 1 1 18.5 5.5L21 8"/>
               </svg>
@@ -1101,8 +1162,38 @@ export default function SiteEditor() {
                     </div>
                   )}
                 </div>
-                <button className="page-act-btn vis-on" title="Visible" aria-label="Toggle page visibility">👁</button>
-                <button className="page-act-btn" title="Lock" aria-label="Toggle page lock">🔒</button>
+                <button
+                  className={`page-act-btn${activePage && activePage.isVisible !== 0 ? " vis-on" : ""}`}
+                  title={activePage && activePage.isVisible !== 0 ? "Hide page" : "Show page"}
+                  aria-label="Toggle page visibility"
+                  onClick={() => activePage && handleTogglePageVisibility(activePage)}
+                >
+                  {activePage && activePage.isVisible !== 0 ? (
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+                    </svg>
+                  ) : (
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/>
+                    </svg>
+                  )}
+                </button>
+                <button
+                  className={`page-act-btn${activePage && activePage.isLocked !== 0 ? " vis-on" : ""}`}
+                  title={activePage && activePage.isLocked !== 0 ? "Unlock page" : "Lock page"}
+                  aria-label="Toggle page lock"
+                  onClick={() => activePage && handleTogglePageLock(activePage)}
+                >
+                  {activePage && activePage.isLocked !== 0 ? (
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                      <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                    </svg>
+                  ) : (
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                      <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/>
+                    </svg>
+                  )}
+                </button>
               </div>
 
               {/* Tab strip */}
@@ -1378,7 +1469,7 @@ export default function SiteEditor() {
                                         <span className="sf-lbl">Photo Side</span>
                                         <div style={{display:'flex',gap:'4px'}}>
                                           {(['left','right'] as const).map(s=>(
-                                            <button key={s} onClick={()=>setField('photoSide',s)} style={{padding:'4px 14px',borderRadius:'20px',border:'1.5px solid',borderColor:photoSide===s?'var(--color-accent)':'#e0dbd4',background:photoSide===s?'var(--color-accent)':'#fff',color:photoSide===s?'#fff':'#6b5e56',fontSize:'0.75rem',cursor:'pointer',textTransform:'capitalize'}}>{s}</button>
+                                            <button key={s} onClick={()=>setField('photoSide',s)} style={{padding:'4px 14px',borderRadius:'20px',border:'1.5px solid',borderColor:photoSide===s?'#0d9488':'#e0dbd4',background:photoSide===s?'#0d9488':'#fff',color:photoSide===s?'#fff':'#6b5e56',fontSize:'0.75rem',cursor:'pointer',textTransform:'capitalize'}}>{s}</button>
                                           ))}
                                         </div>
                                       </div>
@@ -1480,7 +1571,7 @@ export default function SiteEditor() {
                                       <div style={{display:'flex',gap:'4px',alignItems:'center'}}>
                                         {(['none','color'] as const).map(opt=>(
                                           <button key={opt} onClick={()=>setField('background', opt==='none' ? null : {type:'color',value:bgColor})}
-                                            style={{padding:'3px 10px',borderRadius:'20px',border:'1.5px solid',borderColor:bgMode===opt?'var(--color-accent)':'#e0dbd4',background:bgMode===opt?'var(--color-accent)':'#fff',color:bgMode===opt?'#fff':'#6b5e56',fontSize:'0.73rem',cursor:'pointer'}}>
+                                            style={{padding:'3px 10px',borderRadius:'20px',border:'1.5px solid',borderColor:bgMode===opt?'#0d9488':'#e0dbd4',background:bgMode===opt?'#0d9488':'#fff',color:bgMode===opt?'#fff':'#6b5e56',fontSize:'0.73rem',cursor:'pointer'}}>
                                             {opt==='none'?'None':'Color'}
                                           </button>
                                         ))}
@@ -1489,7 +1580,7 @@ export default function SiteEditor() {
                                       <div style={{display:'flex',gap:'4px',alignItems:'center'}}>
                                         {(['default','custom'] as const).map(opt=>(
                                           <button key={opt} onClick={()=>setField('textColor', opt==='default' ? null : tcVal)}
-                                            style={{padding:'3px 10px',borderRadius:'20px',border:'1.5px solid',borderColor:tcMode===opt?'var(--color-accent)':'#e0dbd4',background:tcMode===opt?'var(--color-accent)':'#fff',color:tcMode===opt?'#fff':'#6b5e56',fontSize:'0.73rem',cursor:'pointer'}}>
+                                            style={{padding:'3px 10px',borderRadius:'20px',border:'1.5px solid',borderColor:tcMode===opt?'#0d9488':'#e0dbd4',background:tcMode===opt?'#0d9488':'#fff',color:tcMode===opt?'#fff':'#6b5e56',fontSize:'0.73rem',cursor:'pointer'}}>
                                             {opt==='default'?'Default':'Custom'}
                                           </button>
                                         ))}
@@ -1503,7 +1594,7 @@ export default function SiteEditor() {
                                     <div style={{display:'flex',gap:'4px'}}>
                                       {(['show','none'] as const).map(opt=>(
                                         <button key={opt} onClick={()=>setField('hideBorder', opt==='none')}
-                                          style={{padding:'3px 10px',borderRadius:'20px',border:'1.5px solid',borderColor:borderMode===opt?'var(--color-accent)':'#e0dbd4',background:borderMode===opt?'var(--color-accent)':'#fff',color:borderMode===opt?'#fff':'#6b5e56',fontSize:'0.73rem',cursor:'pointer'}}>
+                                          style={{padding:'3px 10px',borderRadius:'20px',border:'1.5px solid',borderColor:borderMode===opt?'#0d9488':'#e0dbd4',background:borderMode===opt?'#0d9488':'#fff',color:borderMode===opt?'#fff':'#6b5e56',fontSize:'0.73rem',cursor:'pointer'}}>
                                           {opt==='show'?'Show':'None'}
                                         </button>
                                       ))}
@@ -2765,7 +2856,7 @@ export default function SiteEditor() {
                     <span className="sf-lbl">Photo Side</span>
                     <div style={{display:"flex",gap:"4px"}}>
                       {(["left","right"] as const).map(s=>(
-                        <button key={s} onClick={()=>setField("photoSide",s)} style={{padding:"4px 16px",borderRadius:"20px",border:"1.5px solid",borderColor:photoSide===s?"var(--color-accent)":"#e0dbd4",background:photoSide===s?"var(--color-accent)":"#fff",color:photoSide===s?"#fff":"#6b5e56",fontSize:"0.75rem",cursor:"pointer",textTransform:"capitalize"}}>{s}</button>
+                        <button key={s} onClick={()=>setField("photoSide",s)} style={{padding:"4px 16px",borderRadius:"20px",border:"1.5px solid",borderColor:photoSide===s?"#0d9488":"#e0dbd4",background:photoSide===s?"#0d9488":"#fff",color:photoSide===s?"#fff":"#6b5e56",fontSize:"0.75rem",cursor:"pointer",textTransform:"capitalize"}}>{s}</button>
                       ))}
                     </div>
                   </div>
