@@ -275,9 +275,13 @@ export default function SiteEditor() {
   const blocksRef = useRef<Block[]>(blocks);
   blocksRef.current = blocks;
 
+  // previewUrl is always relative so the designer iframe uses DreamySuite's
+  // own renderer, regardless of whether a custom domain is configured.
+  const previewUrl = `/${site.slug}`;
+  // siteUrl is the public-facing URL (used for links and QR codes).
   const siteUrl = site.customDomain
     ? `https://${site.customDomain}`
-    : `/${site.slug}`;
+    : `https://${site.slug}.dreamysuite.com`;
 
   const previewWidth = previewDevice === "mobile" ? "390px" : "100%";
 
@@ -787,7 +791,7 @@ export default function SiteEditor() {
             <div className="hub-preview-wrap">
               <iframe
                 className="hub-preview-iframe"
-                src={siteUrl}
+                src={previewUrl}
                 title="Site preview"
                 style={{ width: previewWidth }}
               />
@@ -1039,7 +1043,7 @@ export default function SiteEditor() {
               <div className="preview-wrap">
                 <iframe
                   className="preview-iframe"
-                  src={activePage ? `${siteUrl}/${activePage.slug === "home" ? "" : activePage.slug}` : siteUrl}
+                  src={activePage ? `${previewUrl}/${activePage.slug === "home" ? "" : activePage.slug}` : previewUrl}
                   title="Page preview"
                   style={{ width: previewWidth }}
                 />

@@ -878,11 +878,7 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
   });
 }
 
-// ── Component ─────────────────────────────────────────────────────────────────
-// The loader always returns a raw Response, so React Router never reaches the
-// component in a normal request. This export satisfies the route module
-// contract and acts as a fallback for any framework-level rendering path.
-
-export default function SiteRenderer() {
-  return null;
-}
+// Resource route — no component export. React Router v7 sends the loader's
+// Response directly as the HTTP response without component rendering or
+// turbo-stream serialization. Adding a component export would cause RR to
+// attempt hydration serialization of the raw Response, throwing an error.
