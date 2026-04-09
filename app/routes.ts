@@ -47,5 +47,9 @@ export default [
   // Protected dashboard
   layout("routes/_dashboard.tsx", [
     index("routes/_dashboard._index.tsx"),
+    route("sites/new", "routes/_dashboard.sites.new.tsx"),
   ]),
+
+  // Site editor (standalone, handles its own auth)
+  route("sites/:id", "routes/sites.$id.tsx"),
 ] satisfies RouteConfig;
