@@ -922,6 +922,10 @@ function showPage(pageId) {
   if (section) { section.classList.add('active'); window.scrollTo({top:0,behavior:'smooth'}); }
   document.querySelectorAll('[data-page="' + pageId + '"]').forEach(function(b){ b.classList.add('active'); });
 }
+(function(){
+  var pid = new URLSearchParams(location.search).get('_page');
+  if (pid) showPage(pid);
+})();
 </script>`
     : "";
 

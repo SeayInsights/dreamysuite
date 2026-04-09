@@ -400,7 +400,7 @@ export default function SiteEditor() {
   const blocksRef = useRef<Block[]>(blocks);
   blocksRef.current = blocks;
 
-  const previewUrl = `/${site.slug}`;
+  const previewUrl = activePage ? `/${site.slug}?_page=${activePage.id}` : `/${site.slug}`;
   const siteUrl = site.customDomain
     ? `https://${site.customDomain}`
     : `https://${site.slug}.dreamysuite.com`;
@@ -1019,13 +1019,29 @@ export default function SiteEditor() {
             <span className="section-topbar-title">Website</span>
             <div className="section-topbar-spacer" />
             <button className="settings-gear-btn" onClick={() => setSettingsOpen(true)}>
-              ⚙ Settings
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M4.93 4.93l1.41 1.41M19.07 19.07l-1.41-1.41M4.93 19.07l1.41-1.41M12 2v2M12 20v2M2 12h2M20 12h2"/>
+              </svg>
+              Settings
             </button>
             <div className="section-topbar-divider" />
-            <button className="btn-ghost">👁 Guest Preview</button>
+            <button className="btn-ghost" aria-label="Guest Preview">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+              </svg>
+              Guest Preview
+            </button>
             <div className="section-topbar-divider" />
-            <button className="btn-ghost" disabled>↩</button>
-            <button className="btn-ghost" disabled>↪</button>
+            <button className="btn-ghost" disabled aria-label="Undo">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M3 7v6h6"/><path d="M3 13A9 9 0 1 0 5.5 5.5L3 8"/>
+              </svg>
+            </button>
+            <button className="btn-ghost" disabled aria-label="Redo">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M21 7v6h-6"/><path d="M21 13A9 9 0 1 1 18.5 5.5L21 8"/>
+              </svg>
+            </button>
             <div className="section-topbar-divider" />
             <button className="btn-ghost" onClick={() => setSection("templates")}>Save Template</button>
             <div className="section-topbar-divider" />
@@ -1770,6 +1786,7 @@ export default function SiteEditor() {
               </div>
               <div className="preview-wrap">
                 <iframe
+                  key={activePage?.id ?? "no-page"}
                   className="preview-iframe"
                   src={previewUrl}
                   title="Page preview"
@@ -2136,10 +2153,10 @@ export default function SiteEditor() {
                     </h3>
                     <button
                       onClick={() => setDomainModalOpen(false)}
-                      style={{ background: "none", border: "none", cursor: "pointer", fontSize: "1.2rem", color: "#9b8e85" }}
+                      className="overlay-close"
                       aria-label="Close"
                     >
-                      ×
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                     </button>
                   </div>
 
@@ -2429,7 +2446,7 @@ export default function SiteEditor() {
                 onClick={() => setGuestModalOpen(false)}
                 aria-label="Close dialog"
               >
-                ×
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
               </button>
             </div>
             <div className="gl-modal-body">
@@ -2497,8 +2514,12 @@ export default function SiteEditor() {
       {photoPickerOpen && (
         <div className="overlay-bg" onClick={() => setPhotoPickerOpen(false)} role="dialog" aria-modal="true" aria-label="Pick a photo">
           <div className="overlay-box" onClick={(e) => e.stopPropagation()} style={{ maxWidth: "560px", maxHeight: "80vh", display: "flex", flexDirection: "column" }}>
-            <button className="overlay-close" onClick={() => setPhotoPickerOpen(false)} aria-label="Close">×</button>
-            <h2 style={{ marginBottom: "0.75rem" }}>Photo Library</h2>
+            <div className="overlay-box-header">
+              <h2>Photo Library</h2>
+              <button className="overlay-close" onClick={() => setPhotoPickerOpen(false)} aria-label="Close">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </button>
+            </div>
             {photosLoading ? (
               <p style={{ fontSize: "0.82rem", color: "#b0a99f", textAlign: "center", padding: "2rem 0" }}>Loading…</p>
             ) : photos.length === 0 ? (
@@ -2541,14 +2562,12 @@ export default function SiteEditor() {
           aria-label="Add tile"
         >
           <div className="overlay-box" onClick={(e) => e.stopPropagation()}>
-            <button
-              className="overlay-close"
-              onClick={() => setAddBlockOpen(false)}
-              aria-label="Close dialog"
-            >
-              ×
-            </button>
-            <h2>Add Tile</h2>
+            <div className="overlay-box-header">
+              <h2>Add Tile</h2>
+              <button className="overlay-close" onClick={() => setAddBlockOpen(false)} aria-label="Close dialog">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </button>
+            </div>
             <div className="block-type-grid">
               {BLOCK_TYPES.map(({ type, label, color }) => (
                 <button
@@ -2575,8 +2594,12 @@ export default function SiteEditor() {
         return (
           <div className="overlay-bg" onClick={() => setBlockEditOpen(false)} role="dialog" aria-modal="true" aria-label="Edit block">
             <div className="overlay-box" onClick={(e) => e.stopPropagation()} style={{ maxWidth: "520px", maxHeight: "85vh", overflowY: "auto" }}>
-              <button className="overlay-close" onClick={() => setBlockEditOpen(false)} aria-label="Close">×</button>
-              <h2 style={{ marginBottom: "0.25rem" }}>Edit {blockLabel(t)}</h2>
+              <div className="overlay-box-header">
+                <h2>Edit {blockLabel(t)}</h2>
+                <button className="overlay-close" onClick={() => setBlockEditOpen(false)} aria-label="Close">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+              </div>
 
               {/* home-hero */}
               {t === "home-hero" && (<>
@@ -2823,9 +2846,9 @@ export default function SiteEditor() {
               <button
                 onClick={() => setSettingsOpen(false)}
                 aria-label="Close settings"
-                style={{ background: "none", border: "none", fontSize: "1.3rem", cursor: "pointer", color: "#b0a99f" }}
+                className="overlay-close"
               >
-                ×
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
               </button>
             </div>
 

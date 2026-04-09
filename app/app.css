@@ -27,3 +27,14 @@ body {
 * {
   box-sizing: border-box;
 }
+
+/* Global focus-visible fallback for keyboard navigation */
+:focus-visible {
+  outline: 2px solid #0d9488;
+  outline-offset: 2px;
+}
+
+/* Remove default focus outline only when focus-visible is managed by component */
+:focus:not(:focus-visible) {
+  outline: none;
+}

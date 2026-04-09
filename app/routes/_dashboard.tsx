@@ -119,17 +119,30 @@ export default function DashboardLayout() {
                 style={{
                   display: "flex",
                   alignItems: "center",
-                  gap: "0.5rem",
+                  gap: "0.4rem",
                   padding: "0.45rem 0.625rem",
                   borderRadius: "6px",
                   fontSize: "0.78rem",
                   color: "#9b8e85",
                   textDecoration: "none",
                   marginBottom: "0.75rem",
-                  transition: "color 0.1s",
+                  transition: "color 0.15s, background 0.15s",
+                }}
+                onMouseOver={(e) => {
+                  const el = e.currentTarget as HTMLAnchorElement;
+                  el.style.color = "#1c1917";
+                  el.style.background = "#f0ede8";
+                }}
+                onMouseOut={(e) => {
+                  const el = e.currentTarget as HTMLAnchorElement;
+                  el.style.color = "#9b8e85";
+                  el.style.background = "transparent";
                 }}
               >
-                ← My Sites
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M19 12H5M12 5l-7 7 7 7" />
+                </svg>
+                My Sites
               </Link>
 
               <p
@@ -167,6 +180,24 @@ export default function DashboardLayout() {
                     textAlign: "left",
                     fontWeight: currentSection === key ? 600 : 400,
                     marginBottom: "2px",
+                    transition: "background 0.15s, color 0.15s",
+                    outline: "none",
+                  }}
+                  onMouseOver={(e) => {
+                    if (currentSection !== key) {
+                      (e.currentTarget as HTMLButtonElement).style.background = "#f0ede8";
+                    }
+                  }}
+                  onMouseOut={(e) => {
+                    if (currentSection !== key) {
+                      (e.currentTarget as HTMLButtonElement).style.background = "transparent";
+                    }
+                  }}
+                  onFocus={(e) => {
+                    (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 0 0 3px rgba(13,148,136,0.2)";
+                  }}
+                  onBlur={(e) => {
+                    (e.currentTarget as HTMLButtonElement).style.boxShadow = "none";
                   }}
                 >
                   {label}
@@ -289,9 +320,25 @@ export default function DashboardLayout() {
                 background: "white",
                 textDecoration: "none",
                 whiteSpace: "nowrap",
+                transition: "border-color 0.15s, background 0.15s, color 0.15s",
+              }}
+              onMouseOver={(e) => {
+                const el = e.currentTarget as HTMLAnchorElement;
+                el.style.borderColor = "#bbb";
+                el.style.background = "#fafaf8";
+              }}
+              onMouseOut={(e) => {
+                const el = e.currentTarget as HTMLAnchorElement;
+                el.style.borderColor = "#e0dbd4";
+                el.style.background = "white";
               }}
             >
-              Open Site ↗
+              Open Site
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                <polyline points="15 3 21 3 21 9" />
+                <line x1="10" y1="14" x2="21" y2="3" />
+              </svg>
             </a>
             <button
               onClick={handlePublish}
@@ -364,7 +411,7 @@ function NavLink({
         fontSize: "0.85rem",
         color: "#44403c",
         textDecoration: "none",
-        transition: "background 0.1s, color 0.1s",
+        transition: "background 0.15s, color 0.15s",
         marginBottom: "2px",
       }}
       onMouseOver={(e) => {
@@ -376,6 +423,13 @@ function NavLink({
         const el = e.currentTarget as HTMLAnchorElement;
         el.style.background = "transparent";
         el.style.color = "#44403c";
+      }}
+      onFocus={(e) => {
+        (e.currentTarget as HTMLAnchorElement).style.boxShadow = "0 0 0 3px rgba(13,148,136,0.2)";
+        (e.currentTarget as HTMLAnchorElement).style.outline = "none";
+      }}
+      onBlur={(e) => {
+        (e.currentTarget as HTMLAnchorElement).style.boxShadow = "none";
       }}
     >
       <span style={{ color: "#9b8e85", flexShrink: 0 }}>{icons[icon]}</span>
