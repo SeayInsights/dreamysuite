@@ -31,7 +31,7 @@ export default function DashboardLayout() {
   const siteMatch = matches.find((m) => (m.params as Record<string, string>).id);
   const site = (siteMatch?.data as { site?: SiteData } | undefined)?.site;
 
-  const currentSection = searchParams.get("s") ?? "hub";
+  const currentSection = searchParams.get("s") ?? "website";
 
   const siteUrl = site
     ? (site.customDomain
@@ -58,7 +58,6 @@ export default function DashboardLayout() {
   }
 
   const editorNavItems = [
-    { key: "hub",       label: "Hub" },
     { key: "website",   label: "Website" },
     { key: "photos",    label: "Photos" },
     { key: "guestlist", label: "Guest List" },

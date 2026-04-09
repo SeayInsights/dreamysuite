@@ -125,7 +125,7 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
-type Section = "hub" | "website" | "photos" | "guestlist" | "templates" | "site-setup" | "analytics";
+type Section = "website" | "photos" | "guestlist" | "templates" | "site-setup" | "analytics";
 
 const EVENT_TYPES = [
   { type: "wedding",     icon: "💍", label: "Wedding" },
@@ -205,7 +205,7 @@ export default function SiteEditor() {
 
   // Section state via URL param
   const [searchParams, setSearchParams] = useSearchParams();
-  const section = (searchParams.get("s") ?? "hub") as Section;
+  const section = (searchParams.get("s") ?? "website") as Section;
   function setSection(s: Section) {
     setSearchParams((prev) => { prev.set("s", s); return prev; });
   }
@@ -732,32 +732,6 @@ export default function SiteEditor() {
 
   return (
     <div style={{ flex: 1, display: "flex", flexDirection: "column", minHeight: 0, overflow: "hidden" }}>
-
-      {/* ── HUB ──────────────────────────────────────────────── */}
-      {section === "hub" && (
-        <div style={{ flex: 1, display: "flex", flexDirection: "column", minHeight: 0, background: "#e8e2da" }}>
-          <div className="hub-preview-bar">
-            <div className="device-toggle">
-              <button
-                className={`device-btn${previewDevice === "mobile" ? " active" : ""}`}
-                onClick={() => setPreviewDevice("mobile")}
-              >Mobile</button>
-              <button
-                className={`device-btn${previewDevice === "desktop" ? " active" : ""}`}
-                onClick={() => setPreviewDevice("desktop")}
-              >Desktop</button>
-            </div>
-          </div>
-          <div className="hub-preview-wrap">
-            <iframe
-              className="hub-preview-iframe"
-              src={siteUrl}
-              title="Site preview"
-              style={{ width: previewWidth }}
-            />
-          </div>
-        </div>
-      )}
 
       {/* ── WEBSITE EDITOR ──────────────────────────────────── */}
       {section === "website" && (
