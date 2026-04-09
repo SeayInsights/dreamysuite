@@ -74,6 +74,9 @@ interface PageWithBlocks extends PageRow {
   blocks: ParsedBlock[];
 }
 
+// contentMap[pageSlug][lang] = parsed content object
+type ContentMap = Map<string, Map<string, Record<string, unknown>>>;
+
 // ── HTML helpers ──────────────────────────────────────────────────────────────
 
 function escHtml(str: string): string {
@@ -415,21 +418,23 @@ function buildStyles(settings: SiteSettingRow | null): string {
 
 // ── Block renderers ───────────────────────────────────────────────────────────
 
-function renderBlock(block: ParsedBlock, settings: SiteSettingRow | null): string {
+function renderBlock(
+  block: ParsedBlock,
+  settings: SiteSettingRow | null,
+  pageContent?: Record<string, unknown>
+): string {
   const cfg = block.config;
   const accent = settings?.accentColor ?? "#0d9488";
+  // Helper: get value from content tab data, falling back to block config, then fallback
+  const cnt = (contentKey: string, cfgKey?: string, fallback = "") =>
+    String(pageContent?.[contentKey] ?? (cfgKey ? cfg[cfgKey] : undefined) ?? fallback);
 
   switch (block.type) {
     case "home-hero":
     case "couple": {
-      const title =
-        (cfg.title as string | undefined) ??
-        settings?.eventName ??
-        "Our Special Day";
-      const date =
-        (cfg.date as string | undefined) ?? settings?.eventDate ?? "";
-      const location =
-        (cfg.location as string | undefined) ?? settings?.eventLocation ?? "";
+      const title = cnt("couple", "coupleNames", settings?.eventName ?? "Our Special Day");
+      const date = cnt("date", "dateText", settings?.eventDate ?? "");
+      const location = cnt("location", "locationText", settings?.eventLocation ?? "");
       return `
         <section class="block block-home-hero" aria-label="Hero">
           <div class="hero-inner">
@@ -443,28 +448,28 @@ function renderBlock(block: ParsedBlock, settings: SiteSettingRow | null): strin
     }
 
     case "header": {
-      const text =
-        (cfg.text as string | undefined) ??
-        (cfg.heading as string | undefined) ??
-        (cfg.title as string | undefined) ??
-        (cfg.titleKey as string | undefined) ??
-        "";
+      const text = cnt("title", "title", cnt("heading", "heading", cnt("text", "text", "Section")));
       return `
         <section class="block block-header">
-          <h2 class="section-heading">${escHtml(text || "Section")}</h2>
+          <h2 class="section-heading">${escHtml(text)}</h2>
           <div class="section-rule" aria-hidden="true"></div>
         </section>`;
     }
 
     case "text": {
-      const content =
-        (cfg.text as string | undefined) ??
-        (cfg.content as string | undefined) ??
-        "";
+      // contentKey lets a text block pull from the content tab by key
+      const contentKey = cfg.contentKey as string | undefined;
+      const heading = contentKey
+        ? String(pageContent?.[`${contentKey}_heading`] ?? cfg.heading ?? "")
+        : String(cfg.heading ?? "");
+      const body = contentKey
+        ? String(pageContent?.[contentKey] ?? cfg.body ?? "")
+        : String(cfg.body ?? cfg.text ?? cfg.content ?? "");
       return `
         <section class="block block-text">
+          ${heading ? `<h2 class="section-heading">${escHtml(heading)}</h2><div class="section-rule" aria-hidden="true"></div>` : ""}
           <div class="text-body">
-            ${content ? `<p>${escHtml(content)}</p>` : placeholder("Story text will appear here once added.")}
+            ${body ? `<p>${escHtml(body)}</p>` : placeholder("Story text will appear here once added.")}
           </div>
         </section>`;
     }
@@ -845,9 +850,11 @@ function buildCountdownScript(
 function buildHtml(
   site: SiteRow,
   settings: SiteSettingRow | null,
-  pages: PageWithBlocks[]
+  pages: PageWithBlocks[],
+  contentMap: ContentMap
 ): string {
-  const lang = escHtml(settings?.mainLanguage ?? "en");
+  const mainLang = settings?.mainLanguage ?? "en";
+  const lang = escHtml(mainLang);
   const eventTitle = settings?.eventName ?? site.name;
   const eventDate = settings?.eventDate ?? null;
   const eventLocation = settings?.eventLocation ?? null;
@@ -887,44 +894,24 @@ function buildHtml(
   // Page sections with show/hide
   const pageSectionsHtml = visiblePages
     .map((page, i) => {
-      // Implicit hero: first page, no hero-type block
-      const heroTypes = new Set(["home-hero", "couple", "video"]);
-      const hasHeroBlock = page.blocks.some((b) => heroTypes.has(b.type));
-      const implicitHero =
-        i === 0 && !hasHeroBlock
-          ? `<section class="block block-home-hero" aria-label="Hero">
-              <div class="hero-inner">
-                <p class="hero-eyebrow">We&#39;re getting married</p>
-                <h1 class="hero-title">${escHtml(eventTitle)}</h1>
-                ${eventDate ? `<p class="hero-date">${escHtml(eventDate)}</p>` : ""}
-                ${eventLocation ? `<p class="hero-location">${escHtml(eventLocation)}</p>` : ""}
-                <div class="hero-divider" aria-hidden="true">&#10038;</div>
-              </div>
-            </section>`
-          : "";
+      // Get content for this page in the main language (fall back to first available lang)
+      const pageContentByLang = contentMap.get(page.slug);
+      const pageContent = pageContentByLang?.get(mainLang)
+        ?? (pageContentByLang ? [...pageContentByLang.values()][0] : undefined);
       const blocksHtml = page.blocks
-        .map((block) => renderBlock(block, settings))
+        .map((block) => renderBlock(block, settings, pageContent))
         .join("\n");
       const sectionClass = hasMultiplePages
         ? `page-section${i === 0 ? " active" : ""}`
         : "page-section active";
-      return `<div class="${sectionClass}" id="page-${escHtml(page.id)}">${implicitHero}<div class="site-wrapper">${blocksHtml}</div></div>`;
+      return `<div class="${sectionClass}" id="page-${escHtml(page.id)}"><div class="site-wrapper">${blocksHtml}</div></div>`;
     })
     .join("\n");
 
-  // Single-page fallback (no pages at all)
-  const fallbackHtml =
-    visiblePages.length === 0
-      ? `<section class="block block-home-hero" aria-label="Hero">
-          <div class="hero-inner">
-            <p class="hero-eyebrow">We&#39;re getting married</p>
-            <h1 class="hero-title">${escHtml(eventTitle)}</h1>
-            ${eventDate ? `<p class="hero-date">${escHtml(eventDate)}</p>` : ""}
-            ${eventLocation ? `<p class="hero-location">${escHtml(eventLocation)}</p>` : ""}
-            <div class="hero-divider" aria-hidden="true">&#10038;</div>
-          </div>
-        </section>`
-      : "";
+  // No-pages fallback — site exists but has no pages yet
+  const fallbackHtml = visiblePages.length === 0
+    ? `<div class="site-wrapper"><p style="text-align:center;padding:4rem 1rem;color:var(--muted);font-style:italic;">This site has no published content yet.</p></div>`
+    : "";
 
   const navScript = hasMultiplePages
     ? `<script>
@@ -1118,9 +1105,23 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
     blocks: blocksByPage.get(page.id) ?? [],
   }));
 
+  // Load content tab data from site_content table
+  const contentResult = await db
+    .prepare("SELECT pageSlug, lang, content FROM site_content WHERE siteId = ?")
+    .bind(site.id)
+    .all<{ pageSlug: string; lang: string; content: string }>();
+
+  const contentMap: ContentMap = new Map();
+  for (const row of contentResult.results) {
+    if (!contentMap.has(row.pageSlug)) contentMap.set(row.pageSlug, new Map());
+    try {
+      contentMap.get(row.pageSlug)!.set(row.lang, JSON.parse(row.content) as Record<string, unknown>);
+    } catch { /* skip malformed */ }
+  }
+
   // Return a raw HTML Response — the site has its own full document with
   // inlined CSS and does not participate in the app shell.
-  return new Response(buildHtml(site, settings ?? null, pages), {
+  return new Response(buildHtml(site, settings ?? null, pages, contentMap), {
     status: 200,
     headers: {
       "content-type": "text/html; charset=utf-8",

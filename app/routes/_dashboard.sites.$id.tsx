@@ -641,38 +641,50 @@ export default function SiteEditor() {
   }, [settingsOpen]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // SortableJS — drag-to-reorder blocks
+  // Depends on blocks.length so it re-initializes after blocks are added/removed,
+  // ensuring blockListRef.current is populated when the effect runs.
   useEffect(() => {
     if (section !== "website" || activeTab !== "tiles") return;
-    if (!blockListRef.current) return;
-    const siteId = site.id;
-    const sortable = Sortable.create(blockListRef.current, {
-      handle: ".drag-handle",
-      animation: 150,
-      ghostClass: "bl-drag-ghost",
-      onEnd(evt) {
-        const { oldIndex, newIndex } = evt;
-        if (oldIndex === undefined || newIndex === undefined || oldIndex === newIndex) return;
-        setBlocks((prev) => {
-          const reordered = [...prev];
-          const [moved] = reordered.splice(oldIndex, 1);
-          reordered.splice(newIndex, 0, moved);
-          Promise.all(
-            reordered.map((b, i) =>
-              fetch(`/api/sites/${siteId}/blocks/${b.id}`, {
-                method: "PUT",
-                headers: { "content-type": "application/json" },
-                body: JSON.stringify({ sortOrder: i }),
-              })
+    // Wait one frame to guarantee React has committed the block list to the DOM.
+    let sortable: ReturnType<typeof Sortable.create> | null = null;
+    const frame = requestAnimationFrame(() => {
+      if (!blockListRef.current) return;
+      const siteId = site.id;
+      sortable = Sortable.create(blockListRef.current, {
+        handle: ".drag-handle",
+        draggable: ".bl-card-wrap",
+        animation: 150,
+        ghostClass: "bl-drag-ghost",
+        chosenClass: "bl-sortable-chosen",
+        forceFallback: false,
+        onEnd(evt) {
+          const { oldIndex, newIndex } = evt;
+          if (oldIndex === undefined || newIndex === undefined || oldIndex === newIndex) return;
+          setBlocks((prev) => {
+            const reordered = [...prev];
+            const [moved] = reordered.splice(oldIndex, 1);
+            reordered.splice(newIndex, 0, moved);
+            Promise.all(
+              reordered.map((b, i) =>
+                fetch(`/api/sites/${siteId}/blocks/${b.id}`, {
+                  method: "PUT",
+                  headers: { "content-type": "application/json" },
+                  body: JSON.stringify({ sortOrder: i }),
+                })
+              )
             )
-          )
-            .then(() => toast("Block order saved"))
-            .catch(() => toast("Failed to save order", true));
-          return reordered;
-        });
-      },
+              .then(() => toast("Tile order saved"))
+              .catch(() => toast("Failed to save order", true));
+            return reordered;
+          });
+        },
+      });
     });
-    return () => sortable.destroy();
-  }, [section, activeTab]); // eslint-disable-line react-hooks/exhaustive-deps
+    return () => {
+      cancelAnimationFrame(frame);
+      sortable?.destroy();
+    };
+  }, [section, activeTab, blocks.length]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Mutations ───────────────────────────────────────────────────────────────
 
@@ -685,9 +697,9 @@ export default function SiteEditor() {
         body: JSON.stringify({ pageId: activePage.id, type, config: {}, sortOrder: blocks.length }),
       });
       await fetchBlocks(activePage.id);
-      toast(`${type} block added`);
+      toast(`${type} tile added`);
     } catch (err) {
-      toast(err instanceof Error ? err.message : "Failed to add block", true);
+      toast(err instanceof Error ? err.message : "Failed to add tile", true);
     }
     setAddBlockOpen(false);
   }
@@ -700,9 +712,9 @@ export default function SiteEditor() {
         body: JSON.stringify({ isVisible: block.isVisible === 0 }),
       });
       if (activePage) await fetchBlocks(activePage.id);
-      toast("Block updated");
+      toast("Tile updated");
     } catch (err) {
-      toast(err instanceof Error ? err.message : "Failed to update block", true);
+      toast(err instanceof Error ? err.message : "Failed to update tile", true);
     }
   }
 
@@ -710,9 +722,9 @@ export default function SiteEditor() {
     try {
       await apiFetch(`/blocks/${blockId}`, { method: "DELETE" });
       if (activePage) await fetchBlocks(activePage.id);
-      toast("Block deleted");
+      toast("Tile deleted");
     } catch (err) {
-      toast(err instanceof Error ? err.message : "Failed to delete block", true);
+      toast(err instanceof Error ? err.message : "Failed to delete tile", true);
     }
   }
 
@@ -750,9 +762,9 @@ export default function SiteEditor() {
       });
       if (activePage) await fetchBlocks(activePage.id);
       setBlockEditOpen(false);
-      toast("Block config saved");
+      toast("Tile config saved");
     } catch (err) {
-      toast(err instanceof Error ? err.message : "Failed to save block config", true);
+      toast(err instanceof Error ? err.message : "Failed to save tile config", true);
     }
   }
 
@@ -1086,7 +1098,7 @@ export default function SiteEditor() {
                     onClick={() => setActiveTab(t)}
                     aria-selected={activeTab === t}
                   >
-                    {t.charAt(0).toUpperCase() + t.slice(1)}
+                    {t === "tiles" ? "Tiles" : "Content"}
                   </button>
                 ))}
               </div>
@@ -1096,13 +1108,13 @@ export default function SiteEditor() {
                 <div className="left-tab-panel" style={{ padding: "0.75rem 1rem" }}>
                   {blocksLoading ? (
                     <p style={{ fontSize: "0.75rem", color: "#b0a99f", textAlign: "center", padding: "2rem 0.5rem" }}>
-                      Loading blocks…
+                      Loading tiles…
                     </p>
                   ) : (
                     <>
                       {blocks.length === 0 && (
                         <p style={{ fontSize: "0.7rem", color: "#b0a99f", textAlign: "center", padding: "2rem 0.5rem", lineHeight: 1.6 }}>
-                          No blocks yet.<br />Add your first block to start building.
+                          No tiles yet.<br />Add your first tile to start building.
                         </p>
                       )}
                       <div ref={blockListRef} style={{ marginBottom: "0.5rem" }}>
@@ -1138,11 +1150,11 @@ export default function SiteEditor() {
                                 <div className="bl-acts" onClick={e => e.stopPropagation()}>
                                   <button className={`bact${block.isVisible !== 0 ? ' vis-on' : ''}`}
                                     title={block.isVisible !== 0 ? 'Hide' : 'Show'}
-                                    aria-label={block.isVisible !== 0 ? 'Hide block' : 'Show block'}
+                                    aria-label={block.isVisible !== 0 ? 'Hide tile' : 'Show tile'}
                                     onClick={() => handleToggleBlockVisibility(block)}>
                                     {block.isVisible !== 0 ? '●' : '○'}
                                   </button>
-                                  <button className="bact" title="Delete block" aria-label="Delete block"
+                                  <button className="bact" title="Delete tile" aria-label="Delete tile"
                                     onClick={() => handleDeleteBlock(block.id)}>✕</button>
                                 </div>
                               </div>
@@ -1524,9 +1536,9 @@ export default function SiteEditor() {
                     className="add-block-btn"
                     onClick={() => setAddBlockOpen(true)}
                     disabled={!activePage}
-                    aria-label="Add a new block"
+                    aria-label="Add a new tile"
                   >
-                    + Add Block
+                    + Add Tile
                   </button>
                 </div>
               )}
@@ -2526,7 +2538,7 @@ export default function SiteEditor() {
           onClick={() => setAddBlockOpen(false)}
           role="dialog"
           aria-modal="true"
-          aria-label="Add block"
+          aria-label="Add tile"
         >
           <div className="overlay-box" onClick={(e) => e.stopPropagation()}>
             <button
@@ -2536,14 +2548,14 @@ export default function SiteEditor() {
             >
               ×
             </button>
-            <h2>Add Block</h2>
+            <h2>Add Tile</h2>
             <div className="block-type-grid">
               {BLOCK_TYPES.map(({ type, label, color }) => (
                 <button
                   key={type}
                   className="block-type-tile"
                   onClick={() => handleAddBlock(type)}
-                  aria-label={`Add ${label} block`}
+                  aria-label={`Add ${label} tile`}
                 >
                   <div className="block-type-stripe" style={{ background: color }} />
                   <div className="block-type-name">{label}</div>
