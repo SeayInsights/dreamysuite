@@ -96,6 +96,19 @@ interface SiteSettings {
   bgColor: string;
   songPages: string | null;
   songResetPages: string | null;
+  headingColor: string | null;
+  bodyColor: string | null;
+  siteTextColor: string | null;
+  siteBorderColor: string | null;
+  buttonStyle: string;
+  buttonBorderWidth: string;
+  headingFontVi: string | null;
+  bodyFontVi: string | null;
+  navBg: string;
+  navPosition: string;
+  navBrandColor: string;
+  navLinkColor: string;
+  navHighlightColor: string;
 }
 
 interface AnalyticsData {
@@ -158,17 +171,21 @@ const BLOCK_TYPES = [
 const HEADING_FONTS = ["Georgia", "Playfair Display", "Inter", "Lato", "Merriweather", "Cormorant Garamond"];
 const BODY_FONTS    = ["Inter", "Lato", "Georgia", "Source Sans 3", "Open Sans"];
 const LANGUAGES     = [
-  { code: "en", label: "English" },
-  { code: "es", label: "Spanish" },
-  { code: "fr", label: "French" },
-  { code: "de", label: "German" },
-  { code: "pt", label: "Portuguese" },
-  { code: "it", label: "Italian" },
-  { code: "ja", label: "Japanese" },
-  { code: "zh", label: "Chinese" },
-  { code: "ko", label: "Korean" },
-  { code: "ar", label: "Arabic" },
-  { code: "vi", label: "Vietnamese" },
+  { code: "en",    label: "English" },
+  { code: "vi",    label: "Vietnamese (Tiếng Việt)" },
+  { code: "es",    label: "Spanish (Español)" },
+  { code: "fr",    label: "French (Français)" },
+  { code: "zh-CN", label: "Chinese Simplified (简体中文)" },
+  { code: "zh-TW", label: "Chinese Traditional (繁體中文)" },
+  { code: "ko",    label: "Korean (한국어)" },
+  { code: "ja",    label: "Japanese (日本語)" },
+  { code: "de",    label: "German (Deutsch)" },
+  { code: "pt",    label: "Portuguese (Português)" },
+  { code: "it",    label: "Italian (Italiano)" },
+  { code: "th",    label: "Thai (ภาษาไทย)" },
+  { code: "tl",    label: "Tagalog (Filipino)" },
+  { code: "hi",    label: "Hindi (हिन्दी)" },
+  { code: "ar",    label: "Arabic (العربية)" },
 ];
 
 // ── Toast hook ────────────────────────────────────────────────────────────────
@@ -224,9 +241,9 @@ export default function SiteEditor() {
   const [blocksLoading, setBlocksLoading] = useState(false);
   const [pageDropOpen, setPageDropOpen]   = useState(false);
   const [addBlockOpen, setAddBlockOpen]   = useState(false);
-  const [blockEditOpen, setBlockEditOpen]     = useState(false);
-  const [editingBlock, setEditingBlock]       = useState<Block | null>(null);
-  const [blockConfigText, setBlockConfigText] = useState("");
+  const [blockEditOpen, setBlockEditOpen]       = useState(false);
+  const [editingBlock, setEditingBlock]         = useState<Block | null>(null);
+  const [blockConfigFields, setBlockConfigFields] = useState<Record<string, unknown>>({});
 
   // Style tab
   const [styleHeadingFont, setStyleHeadingFont] = useState("Georgia");
@@ -317,7 +334,7 @@ export default function SiteEditor() {
 
   // Settings drawer
   const [settingsOpen, setSettingsOpen]           = useState(false);
-  const [settingsDrawerTab, setSettingsDrawerTab] = useState<"info" | "style" | "access" | "music" | "language" | "popup">("info");
+  const [settingsDrawerTab, setSettingsDrawerTab] = useState<"info" | "style" | "nav" | "access" | "music" | "language" | "popup">("info");
   const [settings, setSettings]                   = useState<SiteSettings | null>(null);
   const [settingsLoading, setSettingsLoading]     = useState(false);
   const [savingSettings, setSavingSettings]       = useState(false);
@@ -337,6 +354,19 @@ export default function SiteEditor() {
     isLive: 0 as 0 | 1,
     songPages: "[]",
     songResetPages: "[]",
+    headingColor: "#1c1917",
+    bodyColor: "#1c1917",
+    siteTextColor: "",
+    siteBorderColor: "#e8e2da",
+    buttonStyle: "filled",
+    buttonBorderWidth: "1.5px",
+    headingFontVi: "",
+    bodyFontVi: "",
+    navBg: "white",
+    navPosition: "fixed",
+    navBrandColor: "#1c1917",
+    navLinkColor: "#6b6560",
+    navHighlightColor: "#0d9488",
   });
 
   // Analytics section state
@@ -453,10 +483,23 @@ export default function SiteEditor() {
         headingFont:    data.settings.headingFont     ?? "Georgia",
         bodyFont:       data.settings.bodyFont        ?? "Inter",
         accentColor:    data.settings.accentColor     ?? "#0d9488",
-        bgColor:        data.settings.bgColor         ?? "#ffffff",
-        isLive:         (data.settings.isLive ?? 0) as 0 | 1,
-        songPages:      data.settings.songPages       ?? "[]",
-        songResetPages: data.settings.songResetPages  ?? "[]",
+        bgColor:            data.settings.bgColor            ?? "#ffffff",
+        isLive:             (data.settings.isLive ?? 0) as 0 | 1,
+        songPages:          data.settings.songPages          ?? "[]",
+        songResetPages:     data.settings.songResetPages     ?? "[]",
+        headingColor:       data.settings.headingColor       ?? "#1c1917",
+        bodyColor:          data.settings.bodyColor          ?? "#1c1917",
+        siteTextColor:      data.settings.siteTextColor      ?? "",
+        siteBorderColor:    data.settings.siteBorderColor    ?? "#e8e2da",
+        buttonStyle:        data.settings.buttonStyle        ?? "filled",
+        buttonBorderWidth:  data.settings.buttonBorderWidth  ?? "1.5px",
+        headingFontVi:      data.settings.headingFontVi      ?? "",
+        bodyFontVi:         data.settings.bodyFontVi         ?? "",
+        navBg:              data.settings.navBg              ?? "white",
+        navPosition:        data.settings.navPosition        ?? "fixed",
+        navBrandColor:      data.settings.navBrandColor      ?? "#1c1917",
+        navLinkColor:       data.settings.navLinkColor       ?? "#6b6560",
+        navHighlightColor:  data.settings.navHighlightColor  ?? "#0d9488",
       });
       setStyleHeadingFont(data.settings.headingFont ?? "Georgia");
       setStyleBodyFont(data.settings.bodyFont ?? "Inter");
@@ -593,27 +636,20 @@ export default function SiteEditor() {
   function handleEditBlock(block: Block) {
     setEditingBlock(block);
     try {
-      setBlockConfigText(JSON.stringify(JSON.parse(block.config || "{}"), null, 2));
+      setBlockConfigFields(JSON.parse(block.config || "{}") as Record<string, unknown>);
     } catch {
-      setBlockConfigText(block.config || "{}");
+      setBlockConfigFields({});
     }
     setBlockEditOpen(true);
   }
 
   async function handleSaveBlockConfig() {
     if (!editingBlock) return;
-    let parsed: unknown;
-    try {
-      parsed = JSON.parse(blockConfigText);
-    } catch {
-      toast("Invalid JSON — fix the config before saving", true);
-      return;
-    }
     try {
       await apiFetch(`/blocks/${editingBlock.id}`, {
         method: "PUT",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ config: JSON.stringify(parsed) }),
+        body: JSON.stringify({ config: JSON.stringify(blockConfigFields) }),
       });
       if (activePage) await fetchBlocks(activePage.id);
       setBlockEditOpen(false);
@@ -621,6 +657,10 @@ export default function SiteEditor() {
     } catch (err) {
       toast(err instanceof Error ? err.message : "Failed to save block config", true);
     }
+  }
+
+  function setField(key: string, val: unknown) {
+    setBlockConfigFields((f) => ({ ...f, [key]: val }));
   }
 
   async function handleReorderPage(pageId: string, direction: "up" | "down") {
@@ -1824,45 +1864,145 @@ export default function SiteEditor() {
       )}
 
       {/* ── Block Config Editor ─────────────────────────────── */}
-      {blockEditOpen && editingBlock && (
-        <div
-          className="overlay-bg"
-          onClick={() => setBlockEditOpen(false)}
-          role="dialog"
-          aria-modal="true"
-          aria-label="Edit block config"
-        >
-          <div className="overlay-box" onClick={(e) => e.stopPropagation()} style={{ maxWidth: "540px" }}>
-            <button
-              className="overlay-close"
-              onClick={() => setBlockEditOpen(false)}
-              aria-label="Close"
-            >
-              ×
-            </button>
-            <h2 style={{ marginBottom: "0.25rem" }}>Edit Block</h2>
-            <p style={{ fontSize: "0.78rem", color: "#9b8e85", marginBottom: "1rem" }}>
-              {blockLabel(editingBlock.type)} · <span style={{ fontFamily: "monospace", fontSize: "0.72rem" }}>{editingBlock.id}</span>
-            </p>
-            <textarea
-              style={{
-                width: "100%", minHeight: "300px", fontFamily: "monospace",
-                fontSize: "0.78rem", border: "1px solid #e0dbd4", borderRadius: "8px",
-                padding: "0.75rem", background: "#fafaf9", color: "#1c1917",
-                resize: "vertical", boxSizing: "border-box",
-              }}
-              value={blockConfigText}
-              onChange={(e) => setBlockConfigText(e.target.value)}
-              aria-label="Block configuration JSON"
-              spellCheck={false}
-            />
-            <div style={{ display: "flex", gap: "8px", justifyContent: "flex-end", marginTop: "1rem" }}>
-              <button className="btn-ghost" onClick={() => setBlockEditOpen(false)}>Cancel</button>
-              <button className="btn-primary-sm" onClick={handleSaveBlockConfig}>Save Config</button>
+      {blockEditOpen && editingBlock && (() => {
+        const cfg = blockConfigFields;
+        const t = editingBlock.type;
+        const scheduleEvents = Array.isArray(cfg.events) ? (cfg.events as {name:string;date:string;time:string;location:string;description:string}[]) : [];
+        const faqItems = Array.isArray(cfg.items) ? (cfg.items as {q:string;a:string}[]) : [];
+        return (
+          <div className="overlay-bg" onClick={() => setBlockEditOpen(false)} role="dialog" aria-modal="true" aria-label="Edit block">
+            <div className="overlay-box" onClick={(e) => e.stopPropagation()} style={{ maxWidth: "520px", maxHeight: "85vh", overflowY: "auto" }}>
+              <button className="overlay-close" onClick={() => setBlockEditOpen(false)} aria-label="Close">×</button>
+              <h2 style={{ marginBottom: "0.25rem" }}>Edit {blockLabel(t)}</h2>
+
+              {/* home-hero */}
+              {t === "home-hero" && (<>
+                <div className="sf-group"><label className="sf-lbl">Couple Names</label><input className="sf-input" value={String(cfg.coupleNames ?? "")} onChange={e => setField("coupleNames", e.target.value)} placeholder="Jane & John" /></div>
+                <div className="sf-group"><label className="sf-lbl">Date Text</label><input className="sf-input" value={String(cfg.dateText ?? "")} onChange={e => setField("dateText", e.target.value)} placeholder="October 12, 2025" /></div>
+                <div className="sf-group"><label className="sf-lbl">Location Text</label><input className="sf-input" value={String(cfg.locationText ?? "")} onChange={e => setField("locationText", e.target.value)} placeholder="Grand Ballroom, New York" /></div>
+                <div className="sf-group"><label className="sf-lbl">RSVP Button Text</label><input className="sf-input" value={String(cfg.cta ?? "")} onChange={e => setField("cta", e.target.value)} placeholder="RSVP Now" /></div>
+              </>)}
+
+              {/* header */}
+              {t === "header" && (
+                <div className="sf-group"><label className="sf-lbl">Page Title</label><input className="sf-input" value={String(cfg.title ?? "")} onChange={e => setField("title", e.target.value)} placeholder="Our Story" /></div>
+              )}
+
+              {/* text */}
+              {t === "text" && (<>
+                <div className="sf-group"><label className="sf-lbl">Heading</label><input className="sf-input" value={String(cfg.heading ?? "")} onChange={e => setField("heading", e.target.value)} placeholder="Section heading…" /></div>
+                <div className="sf-group"><label className="sf-lbl">Body</label><textarea className="sf-input" rows={5} value={String(cfg.body ?? "")} onChange={e => setField("body", e.target.value)} placeholder="Your text here…" style={{ resize: "vertical" }} /></div>
+                <div className="sf-group"><label className="sf-lbl">Content Key <span style={{ fontWeight: 400, color: "#b0a99f" }}>(advanced)</span></label><input className="sf-input" value={String(cfg.contentKey ?? "")} onChange={e => setField("contentKey", e.target.value)} placeholder="story / home-welcome / accommodations / registry" /></div>
+              </>)}
+
+              {/* video */}
+              {t === "video" && (<>
+                <div className="sf-group"><label className="sf-lbl">Video URL (YouTube / Vimeo)</label><input className="sf-input" type="url" value={String(cfg.url ?? "")} onChange={e => setField("url", e.target.value)} placeholder="https://youtube.com/watch?v=…" /></div>
+                <div className="sf-group"><label className="sf-lbl">Height (CSS)</label><input className="sf-input" value={String(cfg.height ?? "100dvh")} onChange={e => setField("height", e.target.value)} placeholder="100dvh" /></div>
+              </>)}
+
+              {/* countdown */}
+              {t === "countdown" && (
+                <div className="sf-group"><label className="sf-lbl">Countdown To</label><input className="sf-input" type="datetime-local" value={String(cfg.countdownDate ?? "")} onChange={e => setField("countdownDate", e.target.value)} /></div>
+              )}
+
+              {/* images */}
+              {t === "images" && (
+                <div className="sf-group"><label className="sf-lbl">Image Slot Name</label><input className="sf-input" value={String(cfg.imageSlot ?? "")} onChange={e => setField("imageSlot", e.target.value)} placeholder="home" /></div>
+              )}
+
+              {/* youtube */}
+              {t === "youtube" && (<>
+                <div className="sf-group"><label className="sf-lbl">YouTube URL or Video ID</label><input className="sf-input" value={String(cfg.url ?? "")} onChange={e => setField("url", e.target.value)} placeholder="https://youtube.com/watch?v=…" /></div>
+                <div className="sf-group"><label className="sf-lbl">Title</label><input className="sf-input" value={String(cfg.title ?? "")} onChange={e => setField("title", e.target.value)} placeholder="Our highlight reel" /></div>
+              </>)}
+
+              {/* spacer */}
+              {t === "spacer" && (
+                <div className="sf-group"><label className="sf-lbl">Height (CSS value)</label><input className="sf-input" value={String(cfg.height ?? "4rem")} onChange={e => setField("height", e.target.value)} placeholder="4rem" /></div>
+              )}
+
+              {/* registry-card */}
+              {t === "registry-card" && (<>
+                <div className="sf-group"><label className="sf-lbl">Registry Name</label><input className="sf-input" value={String(cfg.item_name ?? "")} onChange={e => setField("item_name", e.target.value)} placeholder="Honeymoon Fund" /></div>
+                <div className="sf-group"><label className="sf-lbl">Description</label><textarea className="sf-input" rows={3} value={String(cfg.item_description ?? "")} onChange={e => setField("item_description", e.target.value)} style={{ resize: "vertical" }} /></div>
+                <div className="sf-group"><label className="sf-lbl">Link URL</label><input className="sf-input" type="url" value={String(cfg.link_url ?? "")} onChange={e => setField("link_url", e.target.value)} placeholder="https://paypal.me/…" /></div>
+                <div className="sf-group"><label className="sf-lbl">Button Text</label><input className="sf-input" value={String(cfg.cta ?? "")} onChange={e => setField("cta", e.target.value)} placeholder="Contribute" /></div>
+              </>)}
+
+              {/* hotel-card */}
+              {t === "hotel-card" && (<>
+                <div className="sf-group"><label className="sf-lbl">Hotel / Venue Name</label><input className="sf-input" value={String(cfg.name ?? "")} onChange={e => setField("name", e.target.value)} placeholder="Grand Resort & Spa" /></div>
+                <div className="sf-group"><label className="sf-lbl">Description</label><textarea className="sf-input" rows={3} value={String(cfg.description ?? "")} onChange={e => setField("description", e.target.value)} style={{ resize: "vertical" }} /></div>
+                <div className="sf-group"><label className="sf-lbl">Room Block Note</label><input className="sf-input" value={String(cfg.room_note ?? "")} onChange={e => setField("room_note", e.target.value)} placeholder="Use code WEDDING for 15% off" /></div>
+                <div className="sf-group"><label className="sf-lbl">Google Maps URL</label><input className="sf-input" type="url" value={String(cfg.map_url ?? "")} onChange={e => setField("map_url", e.target.value)} /></div>
+              </>)}
+
+              {/* venue-map */}
+              {t === "venue-map" && (<>
+                <div className="sf-group"><label className="sf-lbl">Search Query</label><input className="sf-input" value={String(cfg.query ?? "")} onChange={e => setField("query", e.target.value)} placeholder="Grand Ballroom New York" /></div>
+                <div className="sf-group"><label className="sf-lbl">Map Height (px)</label><input className="sf-input" type="number" value={String(cfg.height ?? "360")} onChange={e => setField("height", Number(e.target.value))} placeholder="360" /></div>
+              </>)}
+
+              {/* schedule */}
+              {t === "schedule" && (<>
+                {scheduleEvents.map((evt, i) => (
+                  <div key={i} style={{ border: "1px solid #e0dbd4", borderRadius: "8px", padding: "0.75rem", marginBottom: "0.75rem" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem" }}>
+                      <span style={{ fontSize: "0.72rem", fontWeight: 600, color: "#9b8e85" }}>Event {i + 1}</span>
+                      <button onClick={() => setField("events", scheduleEvents.filter((_, j) => j !== i))} style={{ background: "none", border: "none", cursor: "pointer", color: "#ccc", fontSize: "0.8rem" }}>✕</button>
+                    </div>
+                    {(["name", "date", "time", "location", "description"] as const).map((f) => (
+                      <div key={f} className="sf-group" style={{ marginBottom: "0.35rem" }}>
+                        <label className="sf-lbl" style={{ textTransform: "capitalize", fontSize: "0.68rem" }}>{f}</label>
+                        <input className="sf-input" style={{ padding: "5px 8px", fontSize: "0.78rem" }} value={String((evt as Record<string,unknown>)[f] ?? "")} onChange={(e) => { const next = [...scheduleEvents]; (next[i] as Record<string,unknown>)[f] = e.target.value; setField("events", next); }} />
+                      </div>
+                    ))}
+                  </div>
+                ))}
+                <button onClick={() => setField("events", [...scheduleEvents, { name: "", date: "", time: "", location: "", description: "" }])} className="btn-ghost" style={{ fontSize: "0.76rem", width: "100%" }}>+ Add Event</button>
+              </>)}
+
+              {/* faq */}
+              {t === "faq" && (<>
+                <div className="sf-group"><label className="sf-lbl">Intro Text <span style={{ fontWeight: 400, color: "#b0a99f" }}>(optional)</span></label><input className="sf-input" value={String(cfg.intro ?? "")} onChange={e => setField("intro", e.target.value)} placeholder="Answers to common questions…" /></div>
+                {faqItems.map((item, i) => (
+                  <div key={i} style={{ border: "1px solid #e0dbd4", borderRadius: "8px", padding: "0.75rem", marginBottom: "0.75rem" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem" }}>
+                      <span style={{ fontSize: "0.72rem", fontWeight: 600, color: "#9b8e85" }}>Q&A {i + 1}</span>
+                      <button onClick={() => setField("items", faqItems.filter((_, j) => j !== i))} style={{ background: "none", border: "none", cursor: "pointer", color: "#ccc", fontSize: "0.8rem" }}>✕</button>
+                    </div>
+                    <div className="sf-group" style={{ marginBottom: "0.35rem" }}>
+                      <label className="sf-lbl" style={{ fontSize: "0.68rem" }}>Question</label>
+                      <input className="sf-input" style={{ padding: "5px 8px", fontSize: "0.78rem" }} value={item.q ?? ""} onChange={(e) => { const next = [...faqItems]; next[i] = { ...next[i], q: e.target.value }; setField("items", next); }} />
+                    </div>
+                    <div className="sf-group">
+                      <label className="sf-lbl" style={{ fontSize: "0.68rem" }}>Answer</label>
+                      <textarea className="sf-input" rows={2} style={{ padding: "5px 8px", fontSize: "0.78rem", resize: "vertical" }} value={item.a ?? ""} onChange={(e) => { const next = [...faqItems]; next[i] = { ...next[i], a: e.target.value }; setField("items", next); }} />
+                    </div>
+                  </div>
+                ))}
+                <button onClick={() => setField("items", [...faqItems, { q: "", a: "" }])} className="btn-ghost" style={{ fontSize: "0.76rem", width: "100%" }}>+ Add Q&A</button>
+              </>)}
+
+              {/* fallback: raw JSON for unknown types */}
+              {!["home-hero","header","text","video","countdown","images","youtube","spacer","registry-card","hotel-card","venue-map","schedule","faq"].includes(t) && (
+                <textarea
+                  style={{ width: "100%", minHeight: "200px", fontFamily: "monospace", fontSize: "0.78rem", border: "1px solid #e0dbd4", borderRadius: "8px", padding: "0.75rem", background: "#fafaf9", color: "#1c1917", resize: "vertical", boxSizing: "border-box" }}
+                  value={JSON.stringify(cfg, null, 2)}
+                  onChange={(e) => { try { setBlockConfigFields(JSON.parse(e.target.value) as Record<string,unknown>); } catch { /* keep editing */ } }}
+                  spellCheck={false}
+                />
+              )}
+
+              <div style={{ display: "flex", gap: "8px", justifyContent: "flex-end", marginTop: "1.25rem" }}>
+                <button className="btn-ghost" onClick={() => setBlockEditOpen(false)}>Cancel</button>
+                <button className="btn-primary-sm" onClick={handleSaveBlockConfig}>Save</button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* ── Settings drawer ──────────────────────────────────── */}
       {settingsOpen && (
@@ -1907,7 +2047,7 @@ export default function SiteEditor() {
             </div>
 
             <div style={{ display: "flex", borderBottom: "1px solid #eae5df", flexShrink: 0, overflowX: "auto" }}>
-              {(["info", "style", "music", "language", "popup", "access"] as const).map((tab) => (
+              {(["info", "style", "nav", "music", "language", "popup", "access"] as const).map((tab) => (
                 <button
                   key={tab}
                   onClick={() => setSettingsDrawerTab(tab)}
@@ -1924,7 +2064,7 @@ export default function SiteEditor() {
                     textTransform: "capitalize",
                   }}
                 >
-                  {tab === "info" ? "Event Info" : tab}
+                  {tab === "info" ? "Event Info" : tab === "nav" ? "Navigation" : tab}
                 </button>
               ))}
             </div>
@@ -1953,30 +2093,125 @@ export default function SiteEditor() {
 
                   {settingsDrawerTab === "style" && (
                     <>
+                      {/* Typography */}
+                      <div style={{ fontSize: "0.72rem", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: "#9b8e85", marginBottom: "0.6rem" }}>Typography</div>
                       <div className="sf-group">
-                        <label className="sf-lbl" htmlFor="s-heading-font">Heading Font</label>
-                        <select id="s-heading-font" className="sf-input" value={settingsForm.headingFont} onChange={(e) => setSettingsForm((f) => ({ ...f, headingFont: e.target.value }))}>
-                          {HEADING_FONTS.map((f) => <option key={f}>{f}</option>)}
-                        </select>
-                      </div>
-                      <div className="sf-group">
-                        <label className="sf-lbl" htmlFor="s-body-font">Body Font</label>
-                        <select id="s-body-font" className="sf-input" value={settingsForm.bodyFont} onChange={(e) => setSettingsForm((f) => ({ ...f, bodyFont: e.target.value }))}>
-                          {BODY_FONTS.map((f) => <option key={f}>{f}</option>)}
-                        </select>
-                      </div>
-                      <div className="sf-group">
-                        <label className="sf-lbl" htmlFor="s-accent">Accent Color</label>
-                        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                          <input id="s-accent" type="color" value={settingsForm.accentColor} onChange={(e) => setSettingsForm((f) => ({ ...f, accentColor: e.target.value }))} style={{ width: "36px", height: "36px", border: "1px solid #e0dbd4", borderRadius: "6px", cursor: "pointer" }} aria-label="Accent color picker" />
-                          <span style={{ fontSize: "0.78rem", color: "#9b8e85" }}>{settingsForm.accentColor}</span>
+                        <label className="sf-lbl">Heading Font</label>
+                        <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                          <select className="sf-input" style={{ flex: 1 }} value={settingsForm.headingFont} onChange={(e) => setSettingsForm((f) => ({ ...f, headingFont: e.target.value }))}>
+                            {HEADING_FONTS.map((fn) => <option key={fn}>{fn}</option>)}
+                          </select>
+                          <input type="color" value={settingsForm.headingColor} onChange={(e) => setSettingsForm((f) => ({ ...f, headingColor: e.target.value }))} style={{ width: "36px", height: "36px", border: "1px solid #e0dbd4", borderRadius: "6px", cursor: "pointer", flexShrink: 0 }} title="Heading color" />
                         </div>
                       </div>
                       <div className="sf-group">
-                        <label className="sf-lbl" htmlFor="s-bg-color">Background Color</label>
+                        <label className="sf-lbl">Body Font</label>
+                        <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                          <select className="sf-input" style={{ flex: 1 }} value={settingsForm.bodyFont} onChange={(e) => setSettingsForm((f) => ({ ...f, bodyFont: e.target.value }))}>
+                            {BODY_FONTS.map((fn) => <option key={fn}>{fn}</option>)}
+                          </select>
+                          <input type="color" value={settingsForm.bodyColor} onChange={(e) => setSettingsForm((f) => ({ ...f, bodyColor: e.target.value }))} style={{ width: "36px", height: "36px", border: "1px solid #e0dbd4", borderRadius: "6px", cursor: "pointer", flexShrink: 0 }} title="Body text color" />
+                        </div>
+                      </div>
+                      <div style={{ marginTop: "0.5rem", paddingTop: "0.5rem", borderTop: "1px solid #f0ede8" }}>
+                        <div style={{ fontSize: "0.7rem", color: "#c4956a", fontWeight: 500, marginBottom: "0.4rem" }}>Vietnamese overrides</div>
+                        <div className="sf-group" style={{ marginBottom: "0.4rem" }}>
+                          <label className="sf-lbl" style={{ fontSize: "0.7rem" }}>Heading (VI)</label>
+                          <select className="sf-input" style={{ padding: "5px 8px", fontSize: "0.78rem" }} value={settingsForm.headingFontVi} onChange={(e) => setSettingsForm((f) => ({ ...f, headingFontVi: e.target.value }))}>
+                            <option value="">Same as English</option>
+                            {HEADING_FONTS.map((fn) => <option key={fn}>{fn}</option>)}
+                          </select>
+                        </div>
+                        <div className="sf-group">
+                          <label className="sf-lbl" style={{ fontSize: "0.7rem" }}>Body (VI)</label>
+                          <select className="sf-input" style={{ padding: "5px 8px", fontSize: "0.78rem" }} value={settingsForm.bodyFontVi} onChange={(e) => setSettingsForm((f) => ({ ...f, bodyFontVi: e.target.value }))}>
+                            <option value="">Same as English</option>
+                            {BODY_FONTS.map((fn) => <option key={fn}>{fn}</option>)}
+                          </select>
+                        </div>
+                      </div>
+
+                      {/* Button */}
+                      <div style={{ fontSize: "0.72rem", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: "#9b8e85", margin: "1.1rem 0 0.6rem" }}>Button</div>
+                      <div className="sf-group">
+                        <label className="sf-lbl">Accent Color</label>
                         <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                          <input id="s-bg-color" type="color" value={settingsForm.bgColor} onChange={(e) => setSettingsForm((f) => ({ ...f, bgColor: e.target.value }))} style={{ width: "36px", height: "36px", border: "1px solid #e0dbd4", borderRadius: "6px", cursor: "pointer" }} aria-label="Background color picker" />
-                          <span style={{ fontSize: "0.78rem", color: "#9b8e85" }}>{settingsForm.bgColor}</span>
+                          <input type="color" value={settingsForm.accentColor} onChange={(e) => setSettingsForm((f) => ({ ...f, accentColor: e.target.value }))} style={{ width: "36px", height: "36px", border: "1px solid #e0dbd4", borderRadius: "6px", cursor: "pointer" }} />
+                          <div style={{ flex: 1, padding: "6px 14px", borderRadius: "4px", fontSize: "0.78rem", textAlign: "center", background: settingsForm.buttonStyle === "filled" ? settingsForm.accentColor : "transparent", color: settingsForm.buttonStyle === "filled" ? "#fff" : settingsForm.accentColor, border: `${settingsForm.buttonBorderWidth || "1.5px"} solid ${settingsForm.accentColor}` }}>Preview</div>
+                        </div>
+                      </div>
+                      <div className="sf-group">
+                        <label className="sf-lbl">Style</label>
+                        <div style={{ display: "flex", gap: "6px" }}>
+                          {(["filled", "outline"] as const).map((s) => (
+                            <button key={s} onClick={() => setSettingsForm((f) => ({ ...f, buttonStyle: s }))} style={{ flex: 1, padding: "5px 0", fontSize: "0.78rem", borderRadius: "6px", border: "1px solid", borderColor: settingsForm.buttonStyle === s ? "#0d9488" : "#e0dbd4", background: settingsForm.buttonStyle === s ? "#f0fdfa" : "#fff", color: settingsForm.buttonStyle === s ? "#0d9488" : "#6b5e56", cursor: "pointer", fontWeight: settingsForm.buttonStyle === s ? 600 : 400 }}>
+                              {s.charAt(0).toUpperCase() + s.slice(1)}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="sf-group">
+                        <label className="sf-lbl">Border Width</label>
+                        <select className="sf-input" value={settingsForm.buttonBorderWidth} onChange={(e) => setSettingsForm((f) => ({ ...f, buttonBorderWidth: e.target.value }))}>
+                          <option value="none">None</option>
+                          <option value="1px">Thin 1px</option>
+                          <option value="1.5px">Default 1.5px</option>
+                          <option value="2px">Bold 2px</option>
+                        </select>
+                      </div>
+
+                      {/* Site Colors */}
+                      <div style={{ fontSize: "0.72rem", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: "#9b8e85", margin: "1.1rem 0 0.6rem" }}>Site Colors</div>
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem" }}>
+                        <div>
+                          <div style={{ fontSize: "0.72rem", color: "#9b8e85", marginBottom: "4px" }}>Background</div>
+                          <input type="color" value={settingsForm.bgColor} onChange={(e) => setSettingsForm((f) => ({ ...f, bgColor: e.target.value }))} style={{ width: "100%", height: "34px", border: "1px solid #e0dbd4", borderRadius: "6px", cursor: "pointer" }} />
+                        </div>
+                        <div>
+                          <div style={{ fontSize: "0.72rem", color: "#9b8e85", marginBottom: "4px" }}>Text</div>
+                          <input type="color" value={settingsForm.siteTextColor || "#1c1917"} onChange={(e) => setSettingsForm((f) => ({ ...f, siteTextColor: e.target.value }))} style={{ width: "100%", height: "34px", border: "1px solid #e0dbd4", borderRadius: "6px", cursor: "pointer" }} />
+                        </div>
+                        <div style={{ gridColumn: "1 / -1" }}>
+                          <div style={{ fontSize: "0.72rem", color: "#9b8e85", marginBottom: "4px" }}>Borders / Dividers</div>
+                          <input type="color" value={settingsForm.siteBorderColor || "#e8e2da"} onChange={(e) => setSettingsForm((f) => ({ ...f, siteBorderColor: e.target.value }))} style={{ width: "100%", height: "34px", border: "1px solid #e0dbd4", borderRadius: "6px", cursor: "pointer" }} />
+                        </div>
+                      </div>
+                    </>
+                  )}
+
+                  {settingsDrawerTab === "nav" && (
+                    <>
+                      <div style={{ fontSize: "0.72rem", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: "#9b8e85", marginBottom: "0.6rem" }}>Background</div>
+                      <div style={{ display: "flex", gap: "6px", marginBottom: "1rem" }}>
+                        {(["white", "transparent", "custom"] as const).map((opt) => (
+                          <button key={opt} onClick={() => setSettingsForm((f) => ({ ...f, navBg: opt }))} style={{ flex: 1, padding: "5px 0", fontSize: "0.78rem", borderRadius: "6px", border: "1px solid", borderColor: settingsForm.navBg === opt ? "#0d9488" : "#e0dbd4", background: settingsForm.navBg === opt ? "#f0fdfa" : "#fff", color: settingsForm.navBg === opt ? "#0d9488" : "#6b5e56", cursor: "pointer", fontWeight: settingsForm.navBg === opt ? 600 : 400, textTransform: "capitalize" }}>
+                            {opt}
+                          </button>
+                        ))}
+                      </div>
+
+                      <div style={{ fontSize: "0.72rem", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: "#9b8e85", marginBottom: "0.6rem" }}>Position</div>
+                      <div style={{ display: "flex", gap: "6px", marginBottom: "1rem" }}>
+                        {(["fixed", "scroll-away"] as const).map((opt) => (
+                          <button key={opt} onClick={() => setSettingsForm((f) => ({ ...f, navPosition: opt }))} style={{ flex: 1, padding: "5px 0", fontSize: "0.78rem", borderRadius: "6px", border: "1px solid", borderColor: settingsForm.navPosition === opt ? "#0d9488" : "#e0dbd4", background: settingsForm.navPosition === opt ? "#f0fdfa" : "#fff", color: settingsForm.navPosition === opt ? "#0d9488" : "#6b5e56", cursor: "pointer", fontWeight: settingsForm.navPosition === opt ? 600 : 400 }}>
+                            {opt === "fixed" ? "Fixed" : "Scroll Away"}
+                          </button>
+                        ))}
+                      </div>
+
+                      <div style={{ fontSize: "0.72rem", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: "#9b8e85", marginBottom: "0.6rem" }}>Nav Colors</div>
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem" }}>
+                        <div>
+                          <div style={{ fontSize: "0.72rem", color: "#9b8e85", marginBottom: "4px" }}>Couple Name</div>
+                          <input type="color" value={settingsForm.navBrandColor} onChange={(e) => setSettingsForm((f) => ({ ...f, navBrandColor: e.target.value }))} style={{ width: "100%", height: "34px", border: "1px solid #e0dbd4", borderRadius: "6px", cursor: "pointer" }} />
+                        </div>
+                        <div>
+                          <div style={{ fontSize: "0.72rem", color: "#9b8e85", marginBottom: "4px" }}>Nav Links</div>
+                          <input type="color" value={settingsForm.navLinkColor} onChange={(e) => setSettingsForm((f) => ({ ...f, navLinkColor: e.target.value }))} style={{ width: "100%", height: "34px", border: "1px solid #e0dbd4", borderRadius: "6px", cursor: "pointer" }} />
+                        </div>
+                        <div style={{ gridColumn: "1 / -1" }}>
+                          <div style={{ fontSize: "0.72rem", color: "#9b8e85", marginBottom: "4px" }}>Highlight / Active</div>
+                          <input type="color" value={settingsForm.navHighlightColor} onChange={(e) => setSettingsForm((f) => ({ ...f, navHighlightColor: e.target.value }))} style={{ width: "100%", height: "34px", border: "1px solid #e0dbd4", borderRadius: "6px", cursor: "pointer" }} />
                         </div>
                       </div>
                     </>
@@ -1991,58 +2226,41 @@ export default function SiteEditor() {
                         <label className="sf-lbl" htmlFor="s-music">Music URL</label>
                         <input id="s-music" type="url" className="sf-input" placeholder="https://youtube.com/watch?v=…" value={settingsForm.musicUrl} onChange={(e) => setSettingsForm((f) => ({ ...f, musicUrl: e.target.value }))} />
                       </div>
-                      {pages.length > 0 && (
-                        <>
-                          <div className="sf-group" style={{ marginTop: "1.25rem" }}>
-                            <label className="sf-lbl">Play music on these pages</label>
-                            <p style={{ fontSize: "0.72rem", color: "#b0a99f", margin: "4px 0 8px", lineHeight: 1.5 }}>
-                              Music starts when a guest lands on any checked page. Leave all unchecked to play on every page.
-                            </p>
+                      {pages.length > 0 && (() => {
+                        const songArr: string[] = (() => { try { return JSON.parse(settingsForm.songPages || "[]"); } catch { return []; } })();
+                        const resetArr: string[] = (() => { try { return JSON.parse(settingsForm.songResetPages || "[]"); } catch { return []; } })();
+                        return (
+                          <div style={{ marginTop: "1.25rem" }}>
+                            <div style={{ display: "grid", gridTemplateColumns: "1fr 80px 90px", gap: "4px 0", alignItems: "center", paddingBottom: "4px", borderBottom: "1px solid #f0ede8", marginBottom: "6px" }}>
+                              <span style={{ fontSize: "0.66rem", fontWeight: 700, letterSpacing: "0.09em", textTransform: "uppercase", color: "#9b8e85" }}>Page</span>
+                              <span style={{ fontSize: "0.66rem", fontWeight: 700, letterSpacing: "0.09em", textTransform: "uppercase", color: "#9b8e85", textAlign: "center", display: "block" }}>Show Player</span>
+                              <span style={{ fontSize: "0.66rem", fontWeight: 700, letterSpacing: "0.09em", textTransform: "uppercase", color: "#9b8e85", textAlign: "center", display: "block" }}>Restart Song</span>
+                            </div>
                             {pages.map((p) => {
-                              const arr: string[] = (() => { try { return JSON.parse(settingsForm.songPages || "[]"); } catch { return []; } })();
-                              const checked = arr.includes(p.id);
+                              const showChecked = songArr.includes(p.id);
+                              const resetChecked = resetArr.includes(p.id);
                               return (
-                                <label key={p.id} style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "6px", cursor: "pointer", fontSize: "0.8rem", color: "#1c1917" }}>
-                                  <input
-                                    type="checkbox"
-                                    checked={checked}
-                                    onChange={() => {
-                                      const next = checked ? arr.filter((id) => id !== p.id) : [...arr, p.id];
-                                      setSettingsForm((f) => ({ ...f, songPages: JSON.stringify(next) }));
-                                    }}
-                                    style={{ width: "14px", height: "14px", accentColor: "#0d9488" }}
-                                  />
-                                  {p.label}
-                                </label>
+                                <div key={p.id} style={{ display: "grid", gridTemplateColumns: "1fr 80px 90px", alignItems: "center", padding: "5px 0", borderBottom: "1px solid #f9f6f2" }}>
+                                  <span style={{ fontSize: "0.8rem", color: "#1c1917" }}>{p.label}</span>
+                                  <div style={{ textAlign: "center" }}>
+                                    <input type="checkbox" checked={showChecked}
+                                      onChange={() => { const next = showChecked ? songArr.filter(id => id !== p.id) : [...songArr, p.id]; setSettingsForm(f => ({ ...f, songPages: JSON.stringify(next) })); }}
+                                      style={{ width: "14px", height: "14px", accentColor: "#0d9488", cursor: "pointer" }} />
+                                  </div>
+                                  <div style={{ textAlign: "center" }}>
+                                    <input type="checkbox" checked={resetChecked}
+                                      onChange={() => { const next = resetChecked ? resetArr.filter(id => id !== p.id) : [...resetArr, p.id]; setSettingsForm(f => ({ ...f, songResetPages: JSON.stringify(next) })); }}
+                                      style={{ width: "14px", height: "14px", accentColor: "#0d9488", cursor: "pointer" }} />
+                                  </div>
+                                </div>
                               );
                             })}
-                          </div>
-                          <div className="sf-group" style={{ marginTop: "1rem" }}>
-                            <label className="sf-lbl">Restart music on these pages</label>
-                            <p style={{ fontSize: "0.72rem", color: "#b0a99f", margin: "4px 0 8px", lineHeight: 1.5 }}>
-                              Music restarts from the beginning when a guest navigates to any checked page.
+                            <p style={{ fontSize: "0.68rem", color: "#b0a99f", marginTop: "8px", lineHeight: 1.5 }}>
+                              Leave all unchecked to play on every page. Restart replays from the beginning on entry.
                             </p>
-                            {pages.map((p) => {
-                              const arr: string[] = (() => { try { return JSON.parse(settingsForm.songResetPages || "[]"); } catch { return []; } })();
-                              const checked = arr.includes(p.id);
-                              return (
-                                <label key={p.id} style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "6px", cursor: "pointer", fontSize: "0.8rem", color: "#1c1917" }}>
-                                  <input
-                                    type="checkbox"
-                                    checked={checked}
-                                    onChange={() => {
-                                      const next = checked ? arr.filter((id) => id !== p.id) : [...arr, p.id];
-                                      setSettingsForm((f) => ({ ...f, songResetPages: JSON.stringify(next) }));
-                                    }}
-                                    style={{ width: "14px", height: "14px", accentColor: "#0d9488" }}
-                                  />
-                                  {p.label}
-                                </label>
-                              );
-                            })}
                           </div>
-                        </>
-                      )}
+                        );
+                      })()}
                     </>
                   )}
 

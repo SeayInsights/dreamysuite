@@ -45,6 +45,19 @@ const DEFAULTS = {
   bgColor: "#ffffff",
   songPages: null,
   songResetPages: null,
+  headingColor: null,
+  bodyColor: null,
+  siteTextColor: null,
+  siteBorderColor: null,
+  buttonStyle: "filled",
+  buttonBorderWidth: "1.5px",
+  headingFontVi: null,
+  bodyFontVi: null,
+  navBg: "white",
+  navPosition: "fixed",
+  navBrandColor: "#1C1917",
+  navLinkColor: "#6B6560",
+  navHighlightColor: "#0d9488",
 };
 
 export async function loader({ request, context, params }: Route.LoaderArgs) {
@@ -87,6 +100,9 @@ export async function action({ request, context, params }: Route.ActionArgs) {
     "mainLanguage", "secondLanguage", "guestPassword", "isLive",
     "headingFont", "bodyFont", "accentColor", "bgColor",
     "songPages", "songResetPages",
+    "headingColor", "bodyColor", "siteTextColor", "siteBorderColor",
+    "buttonStyle", "buttonBorderWidth", "headingFontVi", "bodyFontVi",
+    "navBg", "navPosition", "navBrandColor", "navLinkColor", "navHighlightColor",
   ];
 
   const fields: string[] = [];
@@ -111,8 +127,8 @@ export async function action({ request, context, params }: Route.ActionArgs) {
     const merged = { ...DEFAULTS, ...Object.fromEntries(ALLOWED_FIELDS.filter(f => f in body).map(f => [f, f === "isLive" ? (body[f] ? 1 : 0) : body[f]])) };
     await context.cloudflare.env.DB
       .prepare(
-        `INSERT INTO site_setting (siteId, eventName, eventDate, eventLocation, greeting, musicUrl, mainLanguage, secondLanguage, guestPassword, isLive, headingFont, bodyFont, accentColor, bgColor, songPages, songResetPages, updatedAt)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+        `INSERT INTO site_setting (siteId, eventName, eventDate, eventLocation, greeting, musicUrl, mainLanguage, secondLanguage, guestPassword, isLive, headingFont, bodyFont, accentColor, bgColor, songPages, songResetPages, headingColor, bodyColor, siteTextColor, siteBorderColor, buttonStyle, buttonBorderWidth, headingFontVi, bodyFontVi, navBg, navPosition, navBrandColor, navLinkColor, navHighlightColor, updatedAt)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
       )
       .bind(
         siteId,
@@ -131,6 +147,19 @@ export async function action({ request, context, params }: Route.ActionArgs) {
         merged.bgColor,
         merged.songPages,
         merged.songResetPages,
+        merged.headingColor,
+        merged.bodyColor,
+        merged.siteTextColor,
+        merged.siteBorderColor,
+        merged.buttonStyle,
+        merged.buttonBorderWidth,
+        merged.headingFontVi,
+        merged.bodyFontVi,
+        merged.navBg,
+        merged.navPosition,
+        merged.navBrandColor,
+        merged.navLinkColor,
+        merged.navHighlightColor,
         now
       )
       .run();
