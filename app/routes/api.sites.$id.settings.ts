@@ -58,6 +58,7 @@ const DEFAULTS = {
   navBrandColor: "#1C1917",
   navLinkColor: "#6B6560",
   navHighlightColor: "#0d9488",
+  navItemsConfig: null,
 };
 
 export async function loader({ request, context, params }: Route.LoaderArgs) {
@@ -103,6 +104,7 @@ export async function action({ request, context, params }: Route.ActionArgs) {
     "headingColor", "bodyColor", "siteTextColor", "siteBorderColor",
     "buttonStyle", "buttonBorderWidth", "headingFontVi", "bodyFontVi",
     "navBg", "navPosition", "navBrandColor", "navLinkColor", "navHighlightColor",
+    "navItemsConfig",
   ];
 
   const fields: string[] = [];
@@ -127,8 +129,8 @@ export async function action({ request, context, params }: Route.ActionArgs) {
     const merged = { ...DEFAULTS, ...Object.fromEntries(ALLOWED_FIELDS.filter(f => f in body).map(f => [f, f === "isLive" ? (body[f] ? 1 : 0) : body[f]])) };
     await context.cloudflare.env.DB
       .prepare(
-        `INSERT INTO site_setting (siteId, eventName, eventDate, eventLocation, greeting, musicUrl, mainLanguage, secondLanguage, guestPassword, isLive, headingFont, bodyFont, accentColor, bgColor, songPages, songResetPages, headingColor, bodyColor, siteTextColor, siteBorderColor, buttonStyle, buttonBorderWidth, headingFontVi, bodyFontVi, navBg, navPosition, navBrandColor, navLinkColor, navHighlightColor, updatedAt)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+        `INSERT INTO site_setting (siteId, eventName, eventDate, eventLocation, greeting, musicUrl, mainLanguage, secondLanguage, guestPassword, isLive, headingFont, bodyFont, accentColor, bgColor, songPages, songResetPages, headingColor, bodyColor, siteTextColor, siteBorderColor, buttonStyle, buttonBorderWidth, headingFontVi, bodyFontVi, navBg, navPosition, navBrandColor, navLinkColor, navHighlightColor, navItemsConfig, updatedAt)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
       )
       .bind(
         siteId,
@@ -160,6 +162,7 @@ export async function action({ request, context, params }: Route.ActionArgs) {
         merged.navBrandColor,
         merged.navLinkColor,
         merged.navHighlightColor,
+        merged.navItemsConfig,
         now
       )
       .run();

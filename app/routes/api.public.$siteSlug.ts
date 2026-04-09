@@ -131,6 +131,22 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
     ? { ...settings, guestPassword: undefined }
     : null;
 
+  // Build navConfig from flat setting columns + per-page entrance config
+  const s = settings as Record<string, unknown> | null;
+  let navItems: Array<{ key: string; entrance?: string }> = [];
+  try {
+    if (s?.navItemsConfig) navItems = JSON.parse(s.navItemsConfig as string);
+  } catch { /* keep empty */ }
+
+  const navConfig = {
+    background:     (s?.navBg       as string | undefined) ?? "white",
+    style:          (s?.navPosition as string | undefined) ?? "fixed",
+    brandColor:     (s?.navBrandColor     as string | undefined) ?? "#1C1917",
+    linkColor:      (s?.navLinkColor      as string | undefined) ?? "#6B6560",
+    highlightColor: (s?.navHighlightColor as string | undefined) ?? "#0d9488",
+    items: navItems,
+  };
+
   return jsonResponse({
     site: {
       id: site.id,
@@ -144,5 +160,6 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
     pages: pagesWithBlocks,
     settings: publicSettings,
     content,
+    navConfig,
   });
 }
