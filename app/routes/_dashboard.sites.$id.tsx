@@ -338,9 +338,10 @@ export default function SiteEditor() {
   const blocksRef = useRef<Block[]>(blocks);
   blocksRef.current = blocks;
 
+  const previewUrl = `/${site.slug}`;
   const siteUrl = site.customDomain
     ? `https://${site.customDomain}`
-    : `/${site.slug}`;
+    : `https://${site.slug}.dreamysuite.com`;
 
   const previewWidth = previewDevice === "mobile" ? "390px" : "100%";
 
@@ -1026,7 +1027,7 @@ export default function SiteEditor() {
               <div className="preview-wrap">
                 <iframe
                   className="preview-iframe"
-                  src={activePage ? `${siteUrl}/${activePage.slug === "home" ? "" : activePage.slug}` : siteUrl}
+                  src={activePage ? `${previewUrl}/${activePage.slug === "home" ? "" : activePage.slug}` : previewUrl}
                   title="Page preview"
                   style={{ width: previewWidth }}
                 />
