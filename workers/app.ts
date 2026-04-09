@@ -11,6 +11,8 @@ export interface Env {
   R2: R2Bucket;
   AUTH_SECRET: string;
   APP_URL: string;
+  CF_ACCOUNT_ID: string;
+  CF_API_TOKEN: string;
 }
 
 export default {

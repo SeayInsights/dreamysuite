@@ -258,6 +258,36 @@ export default function SiteEditor() {
     domain: string; tld: string; available: boolean; price: number | null; supported: boolean;
   } | null>(null);
   const [domainCheckError, setDomainCheckError] = useState<string | null>(null);
+  const [domainPurchasing, setDomainPurchasing] = useState(false);
+  const [domainPurchaseError, setDomainPurchaseError] = useState<string | null>(null);
+
+  async function handleDomainPurchase() {
+    if (!domainResult) return;
+    setDomainPurchasing(true);
+    setDomainPurchaseError(null);
+    try {
+      const res = await fetch("/api/domain/purchase", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ domain: domainResult.domain, siteId: site.id }),
+      });
+      const data = await res.json() as { success?: boolean; domain?: string; error?: { message?: string } | string };
+      if (!res.ok) {
+        const msg =
+          typeof data.error === "object"
+            ? (data.error?.message ?? "Purchase failed.")
+            : (data.error ?? "Purchase failed.");
+        setDomainPurchaseError(msg as string);
+      } else {
+        // Reload the page so the loader re-fetches the updated customDomain
+        window.location.reload();
+      }
+    } catch {
+      setDomainPurchaseError("Network error. Please try again.");
+    } finally {
+      setDomainPurchasing(false);
+    }
+  }
 
   async function checkDomainAvailability() {
     if (!domainSearch.trim()) return;
@@ -1490,10 +1520,25 @@ export default function SiteEditor() {
                             )}
                           </div>
                           {domainResult.available && domainResult.supported && (
-                            <button className="btn-primary-sm" style={{ flexShrink: 0 }}>
-                              Purchase
+                            <button
+                              className="btn-primary-sm"
+                              style={{ flexShrink: 0 }}
+                              onClick={handleDomainPurchase}
+                              disabled={domainPurchasing}
+                            >
+                              {domainPurchasing ? "Purchasing…" : "Purchase"}
                             </button>
                           )}
+                        </div>
+                      )}
+
+                      {domainPurchaseError && (
+                        <div style={{
+                          marginTop: "0.85rem", background: "#fff0f0", border: "1px solid #fca5a5",
+                          borderRadius: "10px", padding: "0.75rem 1rem",
+                          fontSize: "0.8rem", color: "#b91c1c",
+                        }}>
+                          {domainPurchaseError}
                         </div>
                       )}
 
