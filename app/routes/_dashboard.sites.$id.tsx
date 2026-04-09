@@ -168,6 +168,8 @@ const BLOCK_TYPES = [
   { type: "hotel-card",    label: "Hotel",            color: "#3b82f6" },
   { type: "venue-map",     label: "Venue Map",        color: "#10b981" },
   { type: "youtube",       label: "YouTube",          color: "#ef4444" },
+  { type: "tidbits",       label: "Fun Facts",        color: "#a855f7" },
+  { type: "travel-section",label: "Travel Card",      color: "#06b6d4" },
 ];
 
 const LANG_FLAGS: Record<string, string> = {
@@ -1170,14 +1172,19 @@ export default function SiteEditor() {
 
                                   {block.type === 'video' && (<>
                                     <div className="sf-group"><label className="sf-lbl">Vimeo URL or ID</label><input className="sf-input" value={String(cfg.vimeoId??'')} onChange={e=>setField('vimeoId',e.target.value)} placeholder="https://vimeo.com/123456789 (blank = default)"/></div>
-                                    <div className="sf-group"><label className="sf-lbl">Block Height</label>
-                                      <div style={{display:'flex',gap:'6px',flexWrap:'wrap'}}>
-                                        {(['50dvh','75dvh','100dvh','100vh'] as const).map((h,i)=>(<button key={h} onClick={()=>setField('height',h)} style={{padding:'4px 12px',borderRadius:'20px',border:'1.5px solid',borderColor:((cfg.height??'100dvh')===h)?'var(--color-accent)':'#e0dbd4',background:((cfg.height??'100dvh')===h)?'var(--color-accent)':'#fff',color:((cfg.height??'100dvh')===h)?'#fff':'#6b5e56',fontSize:'0.75rem',cursor:'pointer'}}>{['Short','Medium','Tall','Full'][i]}</button>))}
+                                    <div className="sf-group">
+                                      <label className="sf-lbl">Block Height</label>
+                                      <div className="bsel-row" style={{marginTop:'4px'}}>
+                                        {(['40vh','60vh','80vh','100dvh'] as const).map((h,i)=>(
+                                          <button key={h} className={`bsel-btn${((cfg.height??'100dvh')===h)?' active':''}`} onClick={()=>setField('height',h)}>{['40vh','60vh','80vh','Full'][i]}</button>
+                                        ))}
                                       </div>
                                     </div>
-                                    <div className="sf-group" style={{display:'flex',alignItems:'center',gap:'8px'}}>
-                                      <label style={{fontSize:'0.75rem',color:'#6b5e56',flex:1}}>Show countdown clock</label>
-                                      <input type="checkbox" checked={!!cfg.showCountdown} onChange={e=>setField('showCountdown',e.target.checked)} style={{width:'16px',height:'16px',accentColor:'var(--color-accent)',cursor:'pointer'}}/>
+                                    <div className="sf-group">
+                                      <label className="style-toggle">
+                                        <input type="checkbox" checked={!!cfg.showCountdown} onChange={e=>setField('showCountdown',e.target.checked)} />
+                                        Show countdown clock
+                                      </label>
                                     </div>
                                   </>)}
 
@@ -1185,9 +1192,60 @@ export default function SiteEditor() {
                                     <div className="sf-group"><label className="sf-lbl">Countdown To</label><input className="sf-input" type="datetime-local" value={String(cfg.countdownDate??'')} onChange={e=>setField('countdownDate',e.target.value)}/></div>
                                   )}
 
-                                  {block.type === 'images' && (
+                                  {block.type === 'images' && (<>
                                     <div className="sf-group"><label className="sf-lbl">Image Slot Name</label><input className="sf-input" value={String(cfg.imageSlot??'')} onChange={e=>setField('imageSlot',e.target.value)} placeholder="home"/></div>
-                                  )}
+                                    <div className="sf-group">
+                                      <label className="sf-lbl">Layout</label>
+                                      <div className="layout-tiles">
+                                        {([
+                                          {id:'masonry',name:'Masonry',desc:'Pinterest style'},
+                                          {id:'featured-grid',name:'Featured',desc:'1 large + grid'},
+                                          {id:'filmstrip',name:'Film Strip',desc:'Horizontal scroll'},
+                                          {id:'full-bleed',name:'Full Bleed',desc:'Edge to edge'},
+                                          {id:'grid-2',name:'2-Col Grid',desc:'Even 2 columns'},
+                                          {id:'grid-3',name:'3-Col Grid',desc:'Even 3 columns'},
+                                          {id:'text-beside',name:'Text+Photo',desc:'Side by side'},
+                                        ]).map(l=>(
+                                          <div key={l.id} className={`layout-tile${(cfg.layout??'grid-3')===l.id?' active':''}`} onClick={()=>setField('layout',l.id)}>
+                                            <div className="layout-tile-name">{l.name}</div>
+                                            <div className="layout-tile-desc">{l.desc}</div>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    </div>
+                                    <div className="sf-group">
+                                      <label className="sf-lbl">Photo Appearance</label>
+                                      <div className="appear-grid">
+                                        <div className="appear-field">
+                                          <div className="appear-fld-lbl">Border Radius</div>
+                                          <div className="appear-ctrl">
+                                            <div className="bsel-row">
+                                              {(['0px','4px','8px','12px','50%'] as const).map(r=>(
+                                                <button key={r} className={`bsel-btn${(cfg.photoRadius??'8px')===r?' active':''}`} onClick={()=>setField('photoRadius',r)}>{r==='50%'?'●':r}</button>
+                                              ))}
+                                            </div>
+                                          </div>
+                                        </div>
+                                        <div className="appear-field">
+                                          <div className="appear-fld-lbl">Border Width</div>
+                                          <div className="appear-ctrl">
+                                            <div className="bsel-row">
+                                              {(['0','1px','2px','3px'] as const).map(w=>(
+                                                <button key={w} className={`bsel-btn${(cfg.photoBorder??'0')===w?' active':''}`} onClick={()=>setField('photoBorder',w)}>{w==='0'?'None':w}</button>
+                                              ))}
+                                            </div>
+                                          </div>
+                                        </div>
+                                        <div className="appear-field full-w">
+                                          <div className="appear-fld-lbl">Border Color</div>
+                                          <div className="appear-ctrl">
+                                            <input type="color" className="clr-swatch" value={String(cfg.photoBorderColor??'#e0dbd4')} onChange={e=>setField('photoBorderColor',e.target.value)} />
+                                            <span style={{fontSize:'0.72rem',color:'#9b8e85'}}>{String(cfg.photoBorderColor??'#e0dbd4')}</span>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </>)}
 
                                   {block.type === 'youtube' && (<>
                                     <div className="sf-group"><label className="sf-lbl">YouTube URL or Video ID</label><input className="sf-input" value={String(cfg.url??'')} onChange={e=>setField('url',e.target.value)} placeholder="https://youtube.com/watch?v=…"/></div>
@@ -1339,6 +1397,49 @@ export default function SiteEditor() {
                                     <button onClick={()=>setField('items',[...faqItms,{q:'',a:''}])} className="btn-ghost" style={{fontSize:'0.76rem',width:'100%'}}>+ Add Q&A</button>
                                   </>)}
 
+                                  {block.type === 'tidbits' && (<>
+                                    <div className="sf-group">
+                                      <label className="sf-lbl">Grid Columns</label>
+                                      <div className="bsel-row" style={{marginTop:'4px'}}>
+                                        {(['auto','2','3'] as const).map(c=>(
+                                          <button key={c} className={`bsel-btn${(cfg.columns??'auto')===c?' active':''}`} onClick={()=>setField('columns',c)}>{c==='auto'?'Auto':c+' Col'}</button>
+                                        ))}
+                                      </div>
+                                    </div>
+                                    <div className="sf-group">
+                                      <label className="sf-lbl">Card Style</label>
+                                      <div className="bsel-row" style={{marginTop:'4px'}}>
+                                        {(['card','flat','bordered'] as const).map(s=>(
+                                          <button key={s} className={`bsel-btn${(cfg.cardStyle??'card')===s?' active':''}`} onClick={()=>setField('cardStyle',s)}>{s[0].toUpperCase()+s.slice(1)}</button>
+                                        ))}
+                                      </div>
+                                    </div>
+                                    <div className="sf-group">
+                                      <label className="style-toggle">
+                                        <input type="checkbox" checked={cfg.showTitle !== false} onChange={e=>setField('showTitle',e.target.checked)} />
+                                        Show section title
+                                      </label>
+                                    </div>
+                                    {(Array.isArray(cfg.items) ? cfg.items as Record<string,unknown>[] : []).map((item,i,arr)=>(
+                                      <div key={i} style={{border:'1px solid #e0dbd4',borderRadius:'8px',padding:'0.75rem',marginBottom:'0.5rem'}}>
+                                        <div style={{display:'flex',justifyContent:'space-between',marginBottom:'0.5rem'}}>
+                                          <span style={{fontSize:'0.72rem',fontWeight:600,color:'#9b8e85'}}>Fact {i+1}</span>
+                                          <button onClick={()=>setField('items',arr.filter((_,j)=>j!==i))} style={{background:'none',border:'none',cursor:'pointer',color:'#ccc',fontSize:'0.8rem'}}>✕</button>
+                                        </div>
+                                        <div className="sf-group" style={{marginBottom:'0.35rem'}}><label className="sf-lbl" style={{fontSize:'0.68rem'}}>Icon / Emoji</label><input className="sf-input" style={{padding:'5px 8px',fontSize:'0.78rem'}} value={String(item.icon??'')} onChange={e=>{const next=[...arr];next[i]={...next[i],icon:e.target.value};setField('items',next);}}/></div>
+                                        <div className="sf-group" style={{marginBottom:'0.35rem'}}><label className="sf-lbl" style={{fontSize:'0.68rem'}}>Title</label><input className="sf-input" style={{padding:'5px 8px',fontSize:'0.78rem'}} value={String(item.title??'')} onChange={e=>{const next=[...arr];next[i]={...next[i],title:e.target.value};setField('items',next);}}/></div>
+                                        <div className="sf-group"><label className="sf-lbl" style={{fontSize:'0.68rem'}}>Body</label><textarea className="sf-input" rows={2} style={{padding:'5px 8px',fontSize:'0.78rem',resize:'vertical'}} value={String(item.body??'')} onChange={e=>{const next=[...arr];next[i]={...next[i],body:e.target.value};setField('items',next);}}/></div>
+                                      </div>
+                                    ))}
+                                    <button onClick={()=>setField('items',[...(Array.isArray(cfg.items)?cfg.items:[]),{icon:'✨',title:'',body:''}])} className="btn-ghost" style={{fontSize:'0.76rem',width:'100%'}}>+ Add Fact</button>
+                                  </>)}
+
+                                  {block.type === 'travel-section' && (<>
+                                    <div className="sf-group"><label className="sf-lbl">Section Title</label><input className="sf-input" value={String(cfg.title??'')} onChange={e=>setField('title',e.target.value)} placeholder="Getting There"/></div>
+                                    <div className="sf-group"><label className="sf-lbl">Intro Text</label><textarea className="sf-input" rows={3} value={String(cfg.intro??'')} onChange={e=>setField('intro',e.target.value)} style={{resize:'vertical'}}/></div>
+                                    <p style={{fontSize:'0.7rem',color:'#9b8e85',margin:'0 0 0.5rem',lineHeight:1.4}}>Travel details (flights, hotels, visa info) are edited in the Content tab.</p>
+                                  </>)}
+
                                   {/* APPEARANCE section */}
                                   <div className="bl-section-label">APPEARANCE</div>
 
@@ -1464,18 +1565,18 @@ export default function SiteEditor() {
                 return (
                   <div style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}>
                     {/* Language switcher */}
-                    <div style={{ padding: "0.75rem 0.75rem 0", flexShrink: 0 }}>
-                      <div style={{ display: "flex", gap: "6px", marginBottom: secondLang ? "0.5rem" : 0 }}>
+                    <div className="cnt-lang-toggle">
+                      <div className="cnt-lang-pills">
                         <button
+                          className={`cnt-lang-pill${contentLang === "main" ? " active" : ""}`}
                           onClick={() => setContentLang("main")}
-                          style={{ padding: "5px 12px", borderRadius: "20px", border: "1.5px solid", borderColor: contentLang === "main" ? "var(--color-accent)" : "#e0dbd4", background: contentLang === "main" ? "var(--color-accent)" : "#fff", color: contentLang === "main" ? "#fff" : "#6b5e56", fontSize: "0.78rem", cursor: "pointer", fontWeight: contentLang === "main" ? 600 : 400 }}
                         >
                           {LANG_FLAGS[mainLang] ?? "🏳️"} {LANGUAGES.find(l => l.code === mainLang)?.label ?? mainLang}
                         </button>
                         {secondLang && (
                           <button
+                            className={`cnt-lang-pill${contentLang === "second" ? " active" : ""}`}
                             onClick={() => setContentLang("second")}
-                            style={{ padding: "5px 12px", borderRadius: "20px", border: "1.5px solid", borderColor: contentLang === "second" ? "var(--color-accent)" : "#e0dbd4", background: contentLang === "second" ? "var(--color-accent)" : "#fff", color: contentLang === "second" ? "#fff" : "#6b5e56", fontSize: "0.78rem", cursor: "pointer", fontWeight: contentLang === "second" ? 600 : 400 }}
                           >
                             {LANG_FLAGS[secondLang] ?? "🏳️"} {LANGUAGES.find(l => l.code === secondLang)?.label ?? secondLang}
                           </button>

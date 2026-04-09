@@ -338,6 +338,70 @@ function buildStyles(settings: SiteSettingRow | null): string {
     }
     .greeting-close:hover { opacity: 0.88; }
 
+    /* ── Nav bar ── */
+    .site-nav {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(255,255,255,0.96);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border-bottom: 1px solid var(--border);
+      padding: 0;
+    }
+    .site-nav-inner {
+      max-width: var(--max-width);
+      margin: 0 auto;
+      padding: 0 1.25rem;
+      display: flex;
+      align-items: center;
+      gap: 0;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .site-nav-inner::-webkit-scrollbar { display: none; }
+    .site-nav-brand {
+      font-family: var(--heading-font);
+      font-size: 1rem;
+      font-weight: normal;
+      color: var(--text);
+      text-decoration: none;
+      white-space: nowrap;
+      padding: 0.875rem 0;
+      margin-right: 1.5rem;
+      flex-shrink: 0;
+    }
+    .site-nav-links {
+      display: flex;
+      list-style: none;
+      gap: 0;
+      margin: 0;
+      padding: 0;
+      flex: 1;
+    }
+    .site-nav-links li { flex-shrink: 0; }
+    .site-nav-link {
+      display: block;
+      padding: 0.875rem 0.875rem;
+      font-size: 0.85rem;
+      letter-spacing: 0.03em;
+      color: var(--muted);
+      text-decoration: none;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      white-space: nowrap;
+      background: none;
+      border-top: none;
+      border-left: none;
+      border-right: none;
+      font-family: var(--body-font);
+      transition: color 0.15s, border-color 0.15s;
+    }
+    .site-nav-link:hover { color: var(--text); }
+    .site-nav-link.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+    /* ── Page sections ── */
+    .page-section { display: none; }
+    .page-section.active { display: block; }
+
     /* ── Responsive ── */
     @media (max-width: 600px) {
       .block { padding: 2.5rem 0; }
@@ -656,6 +720,42 @@ function renderBlock(block: ParsedBlock, settings: SiteSettingRow | null): strin
         </section>`;
     }
 
+    case "tidbits": {
+      const items = cfg.items as Array<{ icon?: string; title?: string; body?: string }> | undefined;
+      const cols = String(cfg.columns ?? "auto");
+      const colsCss = cols === "2" ? "repeat(2,1fr)" : cols === "3" ? "repeat(3,1fr)" : "repeat(auto-fill,minmax(200px,1fr))";
+      const cardStyle = String(cfg.cardStyle ?? "card");
+      const cardCss = cardStyle === "flat"
+        ? "padding:1.25rem;text-align:center;"
+        : cardStyle === "bordered"
+        ? `border:1px solid var(--border);border-radius:12px;padding:1.25rem;text-align:center;`
+        : `background:#fff;border:1px solid var(--border);border-radius:12px;padding:1.25rem;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,0.05);`;
+      return `
+        <section class="block block-tidbits" aria-label="Fun facts">
+          ${cfg.showTitle !== false ? `<h2 class="section-heading">Fun Facts</h2><div class="section-rule" aria-hidden="true"></div>` : ""}
+          ${items && items.length > 0
+            ? `<div style="display:grid;grid-template-columns:${colsCss};gap:1rem;">
+                 ${items.map(it => `<div style="${cardCss}">
+                   ${it.icon ? `<div style="font-size:2rem;margin-bottom:0.5rem;">${escHtml(it.icon)}</div>` : ""}
+                   ${it.title ? `<strong style="display:block;margin-bottom:0.375rem;">${escHtml(it.title)}</strong>` : ""}
+                   ${it.body ? `<p style="color:var(--muted);font-size:0.9375rem;margin:0;">${escHtml(it.body)}</p>` : ""}
+                 </div>`).join("")}
+               </div>`
+            : placeholder("Fun facts will appear here once added.")}
+        </section>`;
+    }
+
+    case "travel-section": {
+      const title = (cfg.title as string | undefined) ?? "Getting There";
+      const intro = (cfg.intro as string | undefined) ?? "";
+      return `
+        <section class="block block-travel" aria-label="Travel information">
+          <h2 class="section-heading">${escHtml(title)}</h2>
+          <div class="section-rule" aria-hidden="true"></div>
+          ${intro ? `<div class="text-body"><p>${escHtml(intro)}</p></div>` : ""}
+        </section>`;
+    }
+
     case "spacer": {
       const height = Math.max(0, Math.min(400, Number(cfg.height ?? 60)));
       return `<div class="block-spacer" style="height:${height}px" aria-hidden="true"></div>`;
@@ -755,30 +855,88 @@ function buildHtml(
   const accent = settings?.accentColor ?? "#0d9488";
 
   const allBlocks = pages.flatMap((p) => p.blocks);
-  // Treat couple/home-hero/video as hero-type blocks that replace the implicit hero
-  const heroTypes = new Set(["home-hero", "couple", "video"]);
-  const hasHeroBlock = allBlocks.some((b) => heroTypes.has(b.type));
-
   const countdownData = allBlocks
     .filter((b) => b.type === "countdown" && typeof b.config.date === "string")
     .map((b) => ({ id: b.id, date: b.config.date as string }));
 
-  // Implicit hero only when no recognized hero block is present
-  const implicitHero = hasHeroBlock
-    ? ""
-    : `<section class="block block-home-hero" aria-label="Hero">
-        <div class="hero-inner">
-          <p class="hero-eyebrow">We&#39;re getting married</p>
-          <h1 class="hero-title">${escHtml(eventTitle)}</h1>
-          ${eventDate ? `<p class="hero-date">${escHtml(eventDate)}</p>` : ""}
-          ${eventLocation ? `<p class="hero-location">${escHtml(eventLocation)}</p>` : ""}
-          <div class="hero-divider" aria-hidden="true">&#10038;</div>
-        </div>
-      </section>`;
+  // Build nav bar (only if there are multiple pages, all visible)
+  const visiblePages = pages.filter((p) => p.isVisible !== 0);
+  const hasMultiplePages = visiblePages.length > 1;
 
-  const blocksHtml = allBlocks
-    .map((block) => renderBlock(block, settings))
+  // Nav labels: use page label, fall back to slug with initial cap
+  function pageLabel(p: PageRow): string {
+    return escHtml(p.label || p.slug.charAt(0).toUpperCase() + p.slug.slice(1));
+  }
+
+  const navHtml = hasMultiplePages
+    ? `<nav class="site-nav" aria-label="Site navigation">
+        <div class="site-nav-inner">
+          <a class="site-nav-brand" href="#" onclick="return false;">${escHtml(eventTitle)}</a>
+          <ul class="site-nav-links" role="list">
+            ${visiblePages
+              .map(
+                (p, i) =>
+                  `<li><button class="site-nav-link${i === 0 ? " active" : ""}" data-page="${escHtml(p.id)}" onclick="showPage('${escHtml(p.id)}')">${pageLabel(p)}</button></li>`
+              )
+              .join("")}
+          </ul>
+        </div>
+      </nav>`
+    : "";
+
+  // Page sections with show/hide
+  const pageSectionsHtml = visiblePages
+    .map((page, i) => {
+      // Implicit hero: first page, no hero-type block
+      const heroTypes = new Set(["home-hero", "couple", "video"]);
+      const hasHeroBlock = page.blocks.some((b) => heroTypes.has(b.type));
+      const implicitHero =
+        i === 0 && !hasHeroBlock
+          ? `<section class="block block-home-hero" aria-label="Hero">
+              <div class="hero-inner">
+                <p class="hero-eyebrow">We&#39;re getting married</p>
+                <h1 class="hero-title">${escHtml(eventTitle)}</h1>
+                ${eventDate ? `<p class="hero-date">${escHtml(eventDate)}</p>` : ""}
+                ${eventLocation ? `<p class="hero-location">${escHtml(eventLocation)}</p>` : ""}
+                <div class="hero-divider" aria-hidden="true">&#10038;</div>
+              </div>
+            </section>`
+          : "";
+      const blocksHtml = page.blocks
+        .map((block) => renderBlock(block, settings))
+        .join("\n");
+      const sectionClass = hasMultiplePages
+        ? `page-section${i === 0 ? " active" : ""}`
+        : "page-section active";
+      return `<div class="${sectionClass}" id="page-${escHtml(page.id)}">${implicitHero}<div class="site-wrapper">${blocksHtml}</div></div>`;
+    })
     .join("\n");
+
+  // Single-page fallback (no pages at all)
+  const fallbackHtml =
+    visiblePages.length === 0
+      ? `<section class="block block-home-hero" aria-label="Hero">
+          <div class="hero-inner">
+            <p class="hero-eyebrow">We&#39;re getting married</p>
+            <h1 class="hero-title">${escHtml(eventTitle)}</h1>
+            ${eventDate ? `<p class="hero-date">${escHtml(eventDate)}</p>` : ""}
+            ${eventLocation ? `<p class="hero-location">${escHtml(eventLocation)}</p>` : ""}
+            <div class="hero-divider" aria-hidden="true">&#10038;</div>
+          </div>
+        </section>`
+      : "";
+
+  const navScript = hasMultiplePages
+    ? `<script>
+function showPage(pageId) {
+  document.querySelectorAll('.page-section').forEach(function(s){ s.classList.remove('active'); });
+  document.querySelectorAll('.site-nav-link').forEach(function(b){ b.classList.remove('active'); });
+  var section = document.getElementById('page-' + pageId);
+  if (section) { section.classList.add('active'); window.scrollTo({top:0,behavior:'smooth'}); }
+  document.querySelectorAll('[data-page="' + pageId + '"]').forEach(function(b){ b.classList.add('active'); });
+}
+</script>`
+    : "";
 
   const greetingHtml = greeting
     ? `<div class="greeting-overlay" id="greeting-overlay" role="dialog" aria-modal="true" aria-label="Welcome message">
@@ -809,10 +967,10 @@ function buildHtml(
 </head>
 <body>
   ${greetingHtml}
-  ${implicitHero}
-  <div class="site-wrapper">
-    ${blocksHtml}
-  </div>
+  ${navHtml}
+  ${fallbackHtml}
+  ${pageSectionsHtml}
+  ${navScript}
   ${buildCountdownScript(countdownData)}
 </body>
 </html>`;

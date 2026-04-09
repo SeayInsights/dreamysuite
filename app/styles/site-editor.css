@@ -237,3 +237,46 @@ body { background:#fff !important; }
 .overlay-box { background:#fff; border-radius:12px; width:min(480px,95vw); padding:1.5rem; max-height:90vh; overflow-y:auto; box-shadow:0 8px 40px rgba(0,0,0,0.15); }
 .overlay-box h2 { font-size:0.95rem; font-weight:600; margin:0 0 1rem; color:#1c1917; }
 .overlay-close { background:none; border:none; font-size:1.3rem; cursor:pointer; color:#b0a99f; float:right; }
+
+/* ── Sortable drag states ─────────────────────────────── */
+.bl-sortable-ghost { opacity:0.3; border-color:#0d9488 !important; background:#f0fdfa !important; }
+.bl-sortable-chosen { box-shadow:0 4px 18px rgba(0,0,0,0.1) !important; z-index:10; }
+.bl-sortable-drag { opacity:1 !important; }
+
+/* ── Language switcher pills ──────────────────────────── */
+.cnt-lang-toggle { display:flex; flex-direction:column; align-items:center; gap:8px; position:sticky; top:0; background:#fff; z-index:2; padding:0.75rem 0; border-bottom:1.5px solid #eae5df; margin-bottom:16px; }
+.cnt-lang-pills { display:flex; gap:3px; background:#f5f0ec; border-radius:8px; padding:3px; }
+.cnt-lang-pill { background:transparent; border:none; border-radius:6px; padding:5px 16px; font-size:0.8rem; font-weight:500; color:#6b6560; cursor:pointer; transition:background 0.15s,color 0.15s; white-space:nowrap; }
+.cnt-lang-pill.active { background:#fff; color:#1c1917; box-shadow:0 1px 3px rgba(0,0,0,0.1); }
+
+/* ── Layout tiles (images block) ──────────────────────── */
+.layout-tiles { display:grid; grid-template-columns:repeat(3,1fr); gap:4px; margin-top:4px; }
+.layout-tile { border:1.5px solid #e0dbd4; border-radius:6px; padding:6px 4px; text-align:center; cursor:pointer; background:#fff; transition:all 0.1s; }
+.layout-tile:hover { border-color:#ccc; }
+.layout-tile.active { border-color:#0d9488; background:#f0fdfa; }
+.layout-tile-name { font-size:0.68rem; font-weight:500; color:#1c1917; }
+.layout-tile-desc { font-size:0.58rem; color:#b0a99f; }
+
+/* ── Appearance / settings grid ───────────────────────── */
+.appear-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:4px; }
+.appear-field.full-w { grid-column:1/-1; }
+.appear-fld-lbl { font-size:0.64rem; letter-spacing:0.08em; text-transform:uppercase; color:#b0a99f; margin-bottom:3px; }
+.appear-ctrl { display:flex; align-items:center; gap:3px; }
+
+/* ── Color pill / swatch ──────────────────────────────── */
+.clr-pill { border:1px solid #e0dbd4; border-radius:4px; padding:2px 7px; font-size:0.7rem; cursor:pointer; background:#fff; color:#9b8e85; transition:all 0.1s; white-space:nowrap; }
+.clr-pill:hover { border-color:#ccc; }
+.clr-pill.active { border-color:#0d9488; color:#0d9488; background:#f0fdfa; font-weight:600; }
+.clr-swatch { width:24px; height:24px; border:1px solid #e0dbd4; border-radius:4px; cursor:pointer; padding:1px; flex-shrink:0; }
+.clr-swatch.off { opacity:0.3; pointer-events:none; }
+
+/* ── Photo cards (images block) ───────────────────────── */
+.photo-card { display:flex; gap:8px; padding:8px; border:1px solid #ebe6e0; border-radius:7px; margin-bottom:5px; background:#fff; }
+.photo-card-thumb { width:54px; height:54px; object-fit:cover; border-radius:5px; flex-shrink:0; }
+.photo-card-body { flex:1; min-width:0; display:flex; flex-direction:column; gap:3px; }
+
+/* ── Block-select buttons (bsel) ──────────────────────── */
+.bsel-row { display:flex; gap:2px; flex-wrap:wrap; }
+.bsel-btn { border:1px solid #e0dbd4; border-radius:3px; padding:1px 5px; font-size:0.66rem; cursor:pointer; background:#fff; color:#6b6560; line-height:1.5; white-space:nowrap; }
+.bsel-btn:hover { border-color:#ccc; }
+.bsel-btn.active { border-color:#0d9488; background:#f0fdfa; color:#0d9488; font-weight:600; }
