@@ -761,6 +761,32 @@ function buildHtml(
 </html>`;
 }
 
+// ── Coming soon page ──────────────────────────────────────────────────────────
+
+function comingSoonHtml(siteName: string): string {
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>${escHtml(siteName)}</title>
+  <style>
+    body{margin:0;font-family:Georgia,serif;background:#faf8f5;color:#292524;
+         display:flex;align-items:center;justify-content:center;min-height:100vh;}
+    .wrap{text-align:center;padding:2rem;}
+    h1{font-size:2rem;margin:0 0 0.5rem;font-weight:normal;}
+    p{color:#78716c;margin:0.5rem 0;}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>${escHtml(siteName)}</h1>
+    <p>This site is not yet published. Check back soon!</p>
+  </div>
+</body>
+</html>`;
+}
+
 // ── 404 page ──────────────────────────────────────────────────────────────────
 
 function notFoundHtml(): string {
@@ -807,13 +833,15 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
   }
 
   let site: SiteRow | null = null;
+  let isOwner = false;
 
-  // Owners can preview any status; visitors only see published sites.
+  // Owners can preview regardless of isLive; visitors only see published + live sites.
   if (viewerUserId) {
     site = await db
       .prepare("SELECT * FROM site WHERE slug = ? AND userId = ?")
       .bind(slug, viewerUserId)
       .first<SiteRow>();
+    if (site) isOwner = true;
   }
 
   if (!site) {
@@ -834,6 +862,14 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
     .prepare("SELECT * FROM site_setting WHERE siteId = ?")
     .bind(site.id)
     .first<SiteSettingRow>();
+
+  // Non-owners cannot view a site that hasn't been marked live.
+  if (!isOwner && !settings?.isLive) {
+    return new Response(comingSoonHtml(site.name), {
+      status: 200,
+      headers: { "content-type": "text/html; charset=utf-8" },
+    });
+  }
 
   const pagesResult = await db
     .prepare(

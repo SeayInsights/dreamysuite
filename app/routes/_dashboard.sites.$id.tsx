@@ -213,7 +213,7 @@ export default function SiteEditor() {
   const [previewDevice, setPreviewDevice] = useState<"mobile" | "desktop">("desktop");
 
   // Website section state
-  const [activeTab, setActiveTab]         = useState<"tiles" | "content" | "style">("tiles");
+  const [activeTab, setActiveTab]         = useState<"tiles" | "content">("tiles");
   const [pages, setPages]                 = useState<Page[]>([]);
   const [activePage, setActivePage]       = useState<Page | null>(null);
   const [blocks, setBlocks]               = useState<Block[]>([]);
@@ -853,7 +853,7 @@ export default function SiteEditor() {
 
               {/* Tab strip */}
               <div className="left-tab-strip">
-                {(["tiles", "content", "style"] as const).map((t) => (
+                {(["tiles", "content"] as const).map((t) => (
                   <button
                     key={t}
                     className={`left-tab${activeTab === t ? " active" : ""}`}
@@ -935,52 +935,6 @@ export default function SiteEditor() {
                 </div>
               )}
 
-              {/* Style tab */}
-              {activeTab === "style" && (
-                <div className="left-tab-panel" style={{ padding: "1rem" }}>
-                  <div className="sf-group">
-                    <label className="sf-lbl" htmlFor="heading-font">Heading Font</label>
-                    <select
-                      id="heading-font"
-                      className="sf-input"
-                      value={styleHeadingFont}
-                      onChange={(e) => setStyleHeadingFont(e.target.value)}
-                    >
-                      {HEADING_FONTS.map((f) => <option key={f}>{f}</option>)}
-                    </select>
-                  </div>
-                  <div className="sf-group">
-                    <label className="sf-lbl" htmlFor="body-font">Body Font</label>
-                    <select
-                      id="body-font"
-                      className="sf-input"
-                      value={styleBodyFont}
-                      onChange={(e) => setStyleBodyFont(e.target.value)}
-                    >
-                      {BODY_FONTS.map((f) => <option key={f}>{f}</option>)}
-                    </select>
-                  </div>
-                  <div className="sf-group">
-                    <label className="sf-lbl" htmlFor="accent-color">Accent Color</label>
-                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                      <input
-                        id="accent-color"
-                        type="color"
-                        value={styleAccent}
-                        onChange={(e) => setStyleAccent(e.target.value)}
-                        style={{ width: "36px", height: "36px", border: "1px solid #e0dbd4", borderRadius: "6px", cursor: "pointer" }}
-                        aria-label="Accent color picker"
-                      />
-                      <span style={{ fontSize: "0.78rem", color: "#9b8e85" }}>{styleAccent}</span>
-                    </div>
-                  </div>
-                  <div className="floating-save">
-                    <button className="btn-primary-sm" style={{ width: "100%" }} onClick={handleSaveStyle}>
-                      Save Style
-                    </button>
-                  </div>
-                </div>
-              )}
             </div>
 
             {/* Right panel — preview */}
