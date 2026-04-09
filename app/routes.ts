@@ -44,12 +44,10 @@ export default [
     route("signup", "routes/_auth.signup.tsx"),
   ]),
 
-  // Protected dashboard
+  // Protected dashboard — includes site editor as nested route
   layout("routes/_dashboard.tsx", [
     index("routes/_dashboard._index.tsx"),
     route("sites/new", "routes/_dashboard.sites.new.tsx"),
+    route("sites/:id", "routes/_dashboard.sites.$id.tsx"),
   ]),
-
-  // Site editor (standalone, handles its own auth)
-  route("sites/:id", "routes/sites.$id.tsx"),
 ] satisfies RouteConfig;

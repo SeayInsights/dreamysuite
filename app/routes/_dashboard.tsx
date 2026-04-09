@@ -1,4 +1,5 @@
-import { Link, Outlet, redirect, useLoaderData } from "react-router";
+import { Link, Outlet, redirect, useLoaderData, useMatches, useSearchParams } from "react-router";
+import { useState, useCallback } from "react";
 import { createAuth } from "~/lib/auth.server";
 import type { Route } from "./+types/_dashboard";
 import "~/lib/context";
@@ -10,12 +11,64 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   return { user: session.user };
 }
 
+interface SiteData {
+  name: string;
+  slug: string;
+  customDomain?: string | null;
+}
+
 export default function DashboardLayout() {
   const { user } = useLoaderData<typeof loader>();
+  const matches = useMatches();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [publishing, setPublishing] = useState(false);
+
+  // Detect editor mode
+  const siteMatch = matches.find((m) => (m.params as Record<string, string>).id);
+  const siteId = (siteMatch?.params as Record<string, string>)?.id;
+  const site = (siteMatch?.data as { site?: SiteData } | undefined)?.site;
+  const isEditor = Boolean(siteId && site);
+
+  const currentSection = searchParams.get("s") ?? "hub";
+
+  const siteUrl = site
+    ? (site.customDomain
+        ? `https://${site.customDomain}`
+        : `https://${site.slug}.dreamysuite.com`)
+    : "#";
+
+  const handlePublish = useCallback(async () => {
+    if (!siteId) return;
+    setPublishing(true);
+    try {
+      await fetch(`/api/sites/${siteId}/settings`, {
+        method: "PUT",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ isLive: 1 }),
+      });
+    } finally {
+      setPublishing(false);
+    }
+  }, [siteId]);
+
+  function setSection(s: string) {
+    setSearchParams((prev) => { prev.set("s", s); return prev; });
+  }
+
+  const editorNavItems = [
+    { key: "hub",       label: "Hub" },
+    { key: "website",   label: "Website" },
+    { key: "photos",    label: "Photos" },
+    { key: "guestlist", label: "Guest List" },
+    { key: "templates", label: "Templates" },
+    { key: "site-setup",label: "Site Setup" },
+    { key: "analytics", label: "Analytics" },
+  ] as const;
 
   return (
-    <div style={{ display: "flex", minHeight: "100vh", background: "#faf8f5" }}>
-      {/* Sidebar */}
+    <div style={{ display: "flex", height: "100vh", overflow: "hidden", background: "#faf8f5" }}>
+
+      {/* ── Sidebar ────────────────────────────────────────── */}
       <aside
         style={{
           width: "240px",
@@ -24,24 +77,13 @@ export default function DashboardLayout() {
           borderRight: "1px solid #e8e4e0",
           display: "flex",
           flexDirection: "column",
-          padding: "0",
         }}
       >
         {/* Logo */}
-        <div
-          style={{
-            padding: "1.25rem 1.25rem 1rem",
-            borderBottom: "1px solid #e8e4e0",
-          }}
-        >
+        <div style={{ padding: "1.25rem 1.25rem 1rem", borderBottom: "1px solid #e8e4e0" }}>
           <Link
             to="/"
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "0.5rem",
-              textDecoration: "none",
-            }}
+            style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem", textDecoration: "none" }}
           >
             <span
               style={{
@@ -55,73 +97,118 @@ export default function DashboardLayout() {
                 flexShrink: 0,
               }}
             >
-              <svg
-                width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="white"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <rect x="3" y="3" width="18" height="18" rx="2" />
                 <path d="M3 9h18M9 21V9" />
               </svg>
             </span>
-            <span
-              style={{
-                fontSize: "1rem",
-                fontWeight: 700,
-                color: "#1c1917",
-                letterSpacing: "-0.02em",
-              }}
-            >
+            <span style={{ fontSize: "1rem", fontWeight: 700, color: "#1c1917", letterSpacing: "-0.02em" }}>
               DreamySuite
             </span>
           </Link>
         </div>
 
         {/* Nav */}
-        <nav style={{ flex: 1, padding: "0.75rem 0.75rem" }}>
-          <p
-            style={{
-              fontSize: "0.7rem",
-              fontWeight: 600,
-              color: "#9b8e85",
-              textTransform: "uppercase",
-              letterSpacing: "0.06em",
-              padding: "0 0.5rem",
-              marginBottom: "0.375rem",
-              marginTop: "0.5rem",
-            }}
-          >
-            Workspace
-          </p>
-          <NavLink to="/" icon="grid">
-            My Sites
-          </NavLink>
-          <NavLink to="/templates" icon="layout">
-            Templates
-          </NavLink>
+        <nav style={{ flex: 1, padding: "0.75rem", overflowY: "auto" }}>
+          {isEditor ? (
+            /* ── Editor mode nav ── */
+            <>
+              <Link
+                to="/"
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "0.5rem",
+                  padding: "0.45rem 0.625rem",
+                  borderRadius: "6px",
+                  fontSize: "0.78rem",
+                  color: "#9b8e85",
+                  textDecoration: "none",
+                  marginBottom: "0.75rem",
+                  transition: "color 0.1s",
+                }}
+              >
+                ← My Sites
+              </Link>
 
-          <p
-            style={{
-              fontSize: "0.7rem",
-              fontWeight: 600,
-              color: "#9b8e85",
-              textTransform: "uppercase",
-              letterSpacing: "0.06em",
-              padding: "0 0.5rem",
-              marginBottom: "0.375rem",
-              marginTop: "1.25rem",
-            }}
-          >
-            Account
-          </p>
-          <NavLink to="/settings" icon="settings">
-            Settings
-          </NavLink>
+              <p
+                style={{
+                  fontSize: "0.7rem",
+                  fontWeight: 600,
+                  color: "#9b8e85",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.06em",
+                  padding: "0 0.5rem",
+                  marginBottom: "0.375rem",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {site?.name}
+              </p>
+
+              {editorNavItems.map(({ key, label }) => (
+                <button
+                  key={key}
+                  onClick={() => setSection(key)}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    width: "100%",
+                    padding: "0.5rem 0.625rem",
+                    borderRadius: "6px",
+                    fontSize: "0.85rem",
+                    color: currentSection === key ? "#0d9488" : "#44403c",
+                    background: currentSection === key ? "#f0fdfa" : "transparent",
+                    border: "none",
+                    cursor: "pointer",
+                    textAlign: "left",
+                    fontWeight: currentSection === key ? 600 : 400,
+                    marginBottom: "2px",
+                  }}
+                >
+                  {label}
+                </button>
+              ))}
+            </>
+          ) : (
+            /* ── Workspace mode nav ── */
+            <>
+              <p
+                style={{
+                  fontSize: "0.7rem",
+                  fontWeight: 600,
+                  color: "#9b8e85",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.06em",
+                  padding: "0 0.5rem",
+                  marginBottom: "0.375rem",
+                  marginTop: "0.5rem",
+                }}
+              >
+                Workspace
+              </p>
+              <NavLink to="/" icon="grid">My Sites</NavLink>
+              <NavLink to="/templates" icon="layout">Templates</NavLink>
+
+              <p
+                style={{
+                  fontSize: "0.7rem",
+                  fontWeight: 600,
+                  color: "#9b8e85",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.06em",
+                  padding: "0 0.5rem",
+                  marginBottom: "0.375rem",
+                  marginTop: "1.25rem",
+                }}
+              >
+                Account
+              </p>
+              <NavLink to="/settings" icon="settings">Settings</NavLink>
+            </>
+          )}
         </nav>
 
         {/* User */}
@@ -152,37 +239,85 @@ export default function DashboardLayout() {
             {user.name?.[0]?.toUpperCase() ?? user.email[0].toUpperCase()}
           </div>
           <div style={{ minWidth: 0 }}>
-            <p
-              style={{
-                fontSize: "0.8rem",
-                fontWeight: 600,
-                color: "#1c1917",
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                whiteSpace: "nowrap",
-              }}
-            >
+            <p style={{ fontSize: "0.8rem", fontWeight: 600, color: "#1c1917", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
               {user.name ?? "Account"}
             </p>
-            <p
-              style={{
-                fontSize: "0.7rem",
-                color: "#9b8e85",
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                whiteSpace: "nowrap",
-              }}
-            >
+            <p style={{ fontSize: "0.7rem", color: "#9b8e85", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
               {user.email}
             </p>
           </div>
         </div>
       </aside>
 
-      {/* Main */}
-      <main style={{ flex: 1, overflow: "auto" }}>
-        <Outlet />
-      </main>
+      {/* ── Main column ────────────────────────────────────── */}
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0, overflow: "hidden" }}>
+
+        {/* Editor top bar */}
+        {isEditor && (
+          <div
+            style={{
+              height: "48px",
+              background: "white",
+              borderBottom: "1px solid #e8e4e0",
+              display: "flex",
+              alignItems: "center",
+              padding: "0 1.25rem",
+              gap: "0.625rem",
+              flexShrink: 0,
+            }}
+          >
+            <span style={{ fontSize: "0.75rem", color: "#9b8e85" }}>DreamySuite</span>
+            <span style={{ fontSize: "0.75rem", color: "#d4cec8" }}>/</span>
+            <span style={{ fontSize: "0.85rem", fontWeight: 600, color: "#1c1917", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: "240px" }}>
+              {site?.name}
+            </span>
+            <div style={{ flex: 1 }} />
+            <a
+              href={siteUrl}
+              target="_blank"
+              rel="noreferrer"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "4px",
+                padding: "0.35rem 0.85rem",
+                borderRadius: "6px",
+                fontSize: "0.78rem",
+                color: "#44403c",
+                border: "1px solid #e0dbd4",
+                background: "white",
+                textDecoration: "none",
+                whiteSpace: "nowrap",
+              }}
+            >
+              Open Site ↗
+            </a>
+            <button
+              onClick={handlePublish}
+              disabled={publishing}
+              style={{
+                padding: "0.35rem 0.9rem",
+                borderRadius: "6px",
+                fontSize: "0.78rem",
+                fontWeight: 600,
+                color: "white",
+                background: "#0d9488",
+                border: "none",
+                cursor: publishing ? "not-allowed" : "pointer",
+                opacity: publishing ? 0.7 : 1,
+                whiteSpace: "nowrap",
+              }}
+            >
+              {publishing ? "Publishing…" : "Publish"}
+            </button>
+          </div>
+        )}
+
+        {/* Content */}
+        <main style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+          <Outlet />
+        </main>
+      </div>
     </div>
   );
 }
