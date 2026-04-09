@@ -356,7 +356,8 @@ function renderBlock(block: ParsedBlock, settings: SiteSettingRow | null): strin
   const accent = settings?.accentColor ?? "#0d9488";
 
   switch (block.type) {
-    case "home-hero": {
+    case "home-hero":
+    case "couple": {
       const title =
         (cfg.title as string | undefined) ??
         settings?.eventName ??
@@ -381,6 +382,8 @@ function renderBlock(block: ParsedBlock, settings: SiteSettingRow | null): strin
       const text =
         (cfg.text as string | undefined) ??
         (cfg.heading as string | undefined) ??
+        (cfg.title as string | undefined) ??
+        (cfg.titleKey as string | undefined) ??
         "";
       return `
         <section class="block block-header">
@@ -523,6 +526,7 @@ function renderBlock(block: ParsedBlock, settings: SiteSettingRow | null): strin
 
     case "images": {
       const urls = cfg.urls as string[] | undefined;
+      const imageSlot = cfg.imageSlot as string | undefined;
       return `
         <section class="block block-images" aria-label="Photo gallery">
           ${
@@ -530,7 +534,7 @@ function renderBlock(block: ParsedBlock, settings: SiteSettingRow | null): strin
               ? `<div class="image-grid">
                    ${urls.map((u, i) => `<img src="${escHtml(u)}" alt="Wedding photo ${i + 1}" loading="lazy" class="gallery-img" />`).join("")}
                  </div>`
-              : placeholder("Photos will appear here once uploaded.")
+              : placeholder(imageSlot ? `Photos for "${escHtml(imageSlot)}" will appear here.` : "Photos will appear here once uploaded.")
           }
         </section>`;
     }
@@ -700,13 +704,15 @@ function buildHtml(
   const accent = settings?.accentColor ?? "#0d9488";
 
   const allBlocks = pages.flatMap((p) => p.blocks);
-  const hasHeroBlock = allBlocks.some((b) => b.type === "home-hero");
+  // Treat couple/home-hero/video as hero-type blocks that replace the implicit hero
+  const heroTypes = new Set(["home-hero", "couple", "video"]);
+  const hasHeroBlock = allBlocks.some((b) => heroTypes.has(b.type));
 
   const countdownData = allBlocks
     .filter((b) => b.type === "countdown" && typeof b.config.date === "string")
     .map((b) => ({ id: b.id, date: b.config.date as string }));
 
-  // Implicit hero when no home-hero block is present
+  // Implicit hero only when no recognized hero block is present
   const implicitHero = hasHeroBlock
     ? ""
     : `<section class="block block-home-hero" aria-label="Hero">
