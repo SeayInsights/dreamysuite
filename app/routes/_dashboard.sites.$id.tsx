@@ -881,6 +881,7 @@ export default function SiteEditor() {
           })
         )
       );
+      setPreviewKey((k) => k + 1);
       toast("Layout saved");
     } catch (err) {
       toast(err instanceof Error ? err.message : "Failed to save layout", true);
@@ -1386,12 +1387,9 @@ export default function SiteEditor() {
                                   <p className="bl-config-title">{blockLabel(block.type)}</p>
 
                                   {/* Block-type specific fields */}
-                                  {block.type === 'home-hero' && (<>
-                                    <div className="sf-group"><label className="sf-lbl">Couple Names</label><input className="sf-input" value={String(cfg.coupleNames??'')} onChange={e=>setField('coupleNames',e.target.value)} placeholder="Jane & John"/></div>
-                                    <div className="sf-group"><label className="sf-lbl">Date Text</label><input className="sf-input" value={String(cfg.dateText??'')} onChange={e=>setField('dateText',e.target.value)} placeholder="October 12, 2025"/></div>
-                                    <div className="sf-group"><label className="sf-lbl">Location Text</label><input className="sf-input" value={String(cfg.locationText??'')} onChange={e=>setField('locationText',e.target.value)} placeholder="Grand Ballroom"/></div>
-                                    <div className="sf-group"><label className="sf-lbl">RSVP Button Text</label><input className="sf-input" value={String(cfg.cta??'')} onChange={e=>setField('cta',e.target.value)} placeholder="RSVP Now"/></div>
-                                  </>)}
+                                  {block.type === 'home-hero' && (
+                                    <p style={{ fontSize: "0.72rem", color: "#9b8e85", margin: "0.25rem 0 0.5rem", lineHeight: 1.5 }}>Couple names, date &amp; location come from Site Settings.</p>
+                                  )}
 
                                   {block.type === 'header' && (
                                     <div className="sf-group"><label className="sf-lbl">Page Title</label><input className="sf-input" value={String(cfg.title??'')} onChange={e=>setField('title',e.target.value)} placeholder="Our Story"/></div>
@@ -1421,6 +1419,15 @@ export default function SiteEditor() {
                                     </div>
                                   </>)}
 
+                                  {block.type === 'countdown' && (<>
+                                    <p style={{ fontSize: "0.72rem", color: "#9b8e85", margin: "0.25rem 0 0.5rem", lineHeight: 1.5 }}>Countdown date is set in Site Settings → Event Date.</p>
+                                    <div className="sf-group">
+                                      <label className="style-toggle">
+                                        <input type="checkbox" checked={!!cfg.showRsvpButton} onChange={e => setField('showRsvpButton', e.target.checked)} />
+                                        Show RSVP button below countdown
+                                      </label>
+                                    </div>
+                                  </>)}
 
                                   {block.type === 'images' && (<>
                                     <div className="sf-group"><label className="sf-lbl">Image Slot Name</label><input className="sf-input" value={String(cfg.imageSlot??'')} onChange={e=>setField('imageSlot',e.target.value)} placeholder="home"/></div>
@@ -1815,13 +1822,6 @@ export default function SiteEditor() {
                         <>
                           {/* HOME */}
                           {slug === "home" && (<>
-                            <div style={{ border: "1px solid #e8e4e0", borderRadius: "10px", padding: "1rem", marginBottom: "0.75rem" }}>
-                              <p style={sectionHeadStyle}>Couple &amp; Date</p>
-                              <div style={fieldStyle}><label style={lblStyle}>Couple Names</label><input style={inputStyle} value={cf("couple")} onChange={e => onChange("couple", e.target.value)} placeholder="Jane & John" /></div>
-                              <div style={fieldStyle}><label style={lblStyle}>Wedding Date</label><input style={inputStyle} value={cf("date")} onChange={e => onChange("date", e.target.value)} placeholder="Sunday, October 12, 2025" /></div>
-                              <div style={fieldStyle}><label style={lblStyle}>Location</label><input style={inputStyle} value={cf("location")} onChange={e => onChange("location", e.target.value)} placeholder="Grand Ballroom, New York" /></div>
-                              <div style={fieldStyle}><label style={lblStyle}>RSVP Button Text</label><input style={inputStyle} value={cf("cta")} onChange={e => onChange("cta", e.target.value)} placeholder="RSVP" /></div>
-                            </div>
                             <div style={{ border: "1px solid #e8e4e0", borderRadius: "10px", padding: "1rem", marginBottom: "0.75rem" }}>
                               <p style={sectionHeadStyle}>Welcome Section</p>
                               <div style={fieldStyle}><label style={lblStyle}>Welcome Title</label><input style={inputStyle} value={cf("welcome_title")} onChange={e => onChange("welcome_title", e.target.value)} placeholder="Welcome to our wedding!" /></div>
@@ -2925,12 +2925,9 @@ export default function SiteEditor() {
               </div>
 
               {/* home-hero */}
-              {t === "home-hero" && (<>
-                <div className="sf-group"><label className="sf-lbl">Couple Names</label><input className="sf-input" value={String(cfg.coupleNames ?? "")} onChange={e => setField("coupleNames", e.target.value)} placeholder="Jane & John" /></div>
-                <div className="sf-group"><label className="sf-lbl">Date Text</label><input className="sf-input" value={String(cfg.dateText ?? "")} onChange={e => setField("dateText", e.target.value)} placeholder="October 12, 2025" /></div>
-                <div className="sf-group"><label className="sf-lbl">Location Text</label><input className="sf-input" value={String(cfg.locationText ?? "")} onChange={e => setField("locationText", e.target.value)} placeholder="Grand Ballroom, New York" /></div>
-                <div className="sf-group"><label className="sf-lbl">RSVP Button Text</label><input className="sf-input" value={String(cfg.cta ?? "")} onChange={e => setField("cta", e.target.value)} placeholder="RSVP Now" /></div>
-              </>)}
+              {t === "home-hero" && (
+                <p style={{ fontSize: "0.72rem", color: "#9b8e85", margin: "0.25rem 0 0.5rem", lineHeight: 1.5 }}>Couple names, date &amp; location are pulled from Site Settings.</p>
+              )}
 
               {/* header */}
               {t === "header" && (
@@ -2951,9 +2948,15 @@ export default function SiteEditor() {
               </>)}
 
               {/* countdown */}
-              {t === "countdown" && (
+              {t === "countdown" && (<>
                 <p style={{ fontSize: "0.72rem", color: "#9b8e85", margin: "0.25rem 0 0.5rem", lineHeight: 1.5 }}>Countdown date is set in Site Settings → Event Date.</p>
-              )}
+                <div className="sf-group">
+                  <label className="style-toggle">
+                    <input type="checkbox" checked={!!cfg.showRsvpButton} onChange={e => setField("showRsvpButton", e.target.checked)} />
+                    Show RSVP button below countdown
+                  </label>
+                </div>
+              </>)}
 
               {/* images */}
               {t === "images" && (

@@ -610,6 +610,7 @@ function renderBlock(
                  </div>`
               : placeholder("Set a target date to show the countdown.")
           }
+          ${cfg.showRsvpButton ? `<div style="text-align:center;margin-top:2rem"><a href="#rsvp" class="rsvp-submit" style="background:${escHtml(accent)};text-decoration:none;display:inline-block">RSVP Now</a></div>` : ""}
         </section>`;
     }
 
