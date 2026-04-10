@@ -52,6 +52,8 @@ interface SiteSettingRow {
   navItemsConfig: string | null;    // JSON string
   buttonStyle: string | null;
   buttonBorderWidth: string | null;
+  animation: string | null;
+  bgImage: string | null;
 }
 
 interface PageRow {
@@ -135,6 +137,9 @@ function buildStyles(settings: SiteSettingRow | null): BuiltStyles {
   const bg = settings?.bgColor ?? "#ffffff";
   const navPosition = settings?.navPosition ?? null;
   const isFixed = navPosition === "fixed";
+  const bgImage = settings?.bgImage ?? null;
+  // Escape a URL for safe use inside CSS url('...')
+  const escapedBgImageUrl = bgImage ? bgImage.replace(/\\/g, "\\\\").replace(/'/g, "\\'") : null;
 
   // Google Fonts link tag
   const fontsNeeded = [headingFont, bodyFont]
@@ -170,6 +175,7 @@ function buildStyles(settings: SiteSettingRow | null): BuiltStyles {
     html { scroll-behavior: smooth; }
     body {
       background: var(--bg);
+      ${escapedBgImageUrl ? `background-image: url('${escapedBgImageUrl}'); background-size: cover; background-position: center; background-attachment: fixed;` : ""}
       color: var(--site-text);
       font-family: var(--body-font);
       font-size: 1rem;
@@ -177,6 +183,17 @@ function buildStyles(settings: SiteSettingRow | null): BuiltStyles {
       -webkit-font-smoothing: antialiased;
       ${isFixed ? "padding-top: 4rem;" : ""}
     }
+
+    /* ── Entrance animations ── */
+    @keyframes envelope-in { from { opacity:0; transform:translateY(40px); } to { opacity:1; transform:translateY(0); } }
+    .anim-envelope .page-section.active { animation: envelope-in 0.7s cubic-bezier(0.22,1,0.36,1) both; }
+
+    @keyframes storybook-in { from { opacity:0; transform:scale(0.96); } to { opacity:1; transform:scale(1); } }
+    .anim-storybook .page-section.active { animation: storybook-in 0.6s ease both; }
+
+    @keyframes doors-open { from { transform:scaleX(1); } to { transform:scaleX(0); } }
+    .anim-doors-left { position:fixed; top:0; left:0; width:50%; height:100%; background:var(--accent); transform-origin:left; animation: doors-open 0.8s ease-in-out 0.2s both; pointer-events:none; z-index:999; }
+    .anim-doors-right { position:fixed; top:0; right:0; width:50%; height:100%; background:var(--accent); transform-origin:right; animation: doors-open 0.8s ease-in-out 0.2s both; pointer-events:none; z-index:999; }
 
     /* ── Layout ── */
     .site-wrapper { max-width: var(--max-width); margin: 0 auto; padding: 0 1.25rem; }
@@ -1036,6 +1053,19 @@ function showPage(pageId) {
 
   const { fonts: fontsTag, css: siteCss } = buildStyles(settings);
 
+  // Animation
+  const animation = settings?.animation ?? null;
+  const bodyAnimClass = animation === "envelope"
+    ? " anim-envelope"
+    : animation === "storybook"
+    ? " anim-storybook"
+    : animation === "doors"
+    ? " anim-doors"
+    : "";
+  const doorsHtml = animation === "doors"
+    ? `<div class="anim-doors-left" aria-hidden="true"></div><div class="anim-doors-right" aria-hidden="true"></div>`
+    : "";
+
   // Music player
   const musicUrl = settings?.musicUrl ?? null;
   let musicPlayerHtml = "";
@@ -1090,7 +1120,8 @@ function toggleMusic() {
   ${fontsTag}
   <style>${siteCss}</style>
 </head>
-<body>
+<body class="${bodyAnimClass.trim()}">
+  ${doorsHtml}
   ${greetingHtml}
   ${navHtml}
   ${fallbackHtml}

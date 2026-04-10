@@ -110,6 +110,8 @@ interface SiteSettings {
   navLinkColor: string;
   navHighlightColor: string;
   navItemsConfig: string | null;
+  animation: string | null;
+  bgImage: string | null;
 }
 
 interface AnalyticsData {
@@ -393,6 +395,8 @@ export default function SiteEditor() {
     navLinkColor: "#6b6560",
     navHighlightColor: "#0d9488",
     navItemsConfig: "[]",
+    animation: "",
+    bgImage: "",
   });
 
   // CSV import state
@@ -531,6 +535,8 @@ export default function SiteEditor() {
         navLinkColor:       data.settings.navLinkColor       ?? "#6b6560",
         navHighlightColor:  data.settings.navHighlightColor  ?? "#0d9488",
         navItemsConfig:     data.settings.navItemsConfig     ?? "[]",
+        animation:          data.settings.animation          ?? "",
+        bgImage:            data.settings.bgImage            ?? "",
       });
       setStyleHeadingFont(data.settings.headingFont ?? "Georgia");
       setStyleBodyFont(data.settings.bodyFont ?? "Inter");
@@ -3326,6 +3332,77 @@ export default function SiteEditor() {
                           <div style={{ fontSize: "0.72rem", color: "#9b8e85", marginBottom: "4px" }}>Borders / Dividers</div>
                           <input type="color" value={settingsForm.siteBorderColor || "#e8e2da"} onChange={(e) => setSettingsForm((f) => ({ ...f, siteBorderColor: e.target.value }))} style={{ width: "100%", height: "34px", border: "1px solid #e0dbd4", borderRadius: "6px", cursor: "pointer" }} />
                         </div>
+                      </div>
+
+                      {/* Entrance Animation */}
+                      <div style={{ fontSize: "0.72rem", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: "#9b8e85", margin: "1.1rem 0 0.6rem" }}>Entrance Animation</div>
+                      <div className="sf-group">
+                        <label className="sf-lbl" htmlFor="s-animation">Animation</label>
+                        <select
+                          id="s-animation"
+                          className="sf-input"
+                          value={settingsForm.animation ?? ""}
+                          onChange={(e) => setSettingsForm((f) => ({ ...f, animation: e.target.value }))}
+                        >
+                          <option value="">None</option>
+                          <option value="envelope">Envelope</option>
+                          <option value="storybook">Storybook</option>
+                          <option value="doors">Doors</option>
+                        </select>
+                        <p style={{ fontSize: "0.7rem", color: "#9b8e85", marginTop: "4px", lineHeight: 1.5 }}>
+                          Envelope: content slides up. Storybook: content fades from scale. Doors: curtain panels open.
+                        </p>
+                      </div>
+
+                      {/* Background Image */}
+                      <div style={{ fontSize: "0.72rem", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: "#9b8e85", margin: "1.1rem 0 0.6rem" }}>Background Image</div>
+                      <div className="sf-group">
+                        {settingsForm.bgImage ? (
+                          <div style={{ marginBottom: "0.75rem" }}>
+                            <img
+                              src={settingsForm.bgImage}
+                              alt="Background image preview"
+                              style={{ width: "100%", height: "80px", objectFit: "cover", borderRadius: "6px", border: "1px solid #e0dbd4", display: "block", marginBottom: "6px" }}
+                            />
+                            <button
+                              type="button"
+                              className="btn-ghost"
+                              style={{ fontSize: "0.74rem", color: "#c42a22", borderColor: "#fde8e7", width: "100%" }}
+                              onClick={() => setSettingsForm((f) => ({ ...f, bgImage: "" }))}
+                            >
+                              Remove background image
+                            </button>
+                          </div>
+                        ) : null}
+                        <label className="sf-lbl">Upload image (JPG, PNG, WEBP, GIF — max 10 MB)</label>
+                        <input
+                          type="file"
+                          accept="image/jpeg,image/png,image/webp,image/gif"
+                          style={{ fontSize: "0.78rem", color: "#1c1917" }}
+                          aria-label="Upload background image"
+                          onChange={async (e) => {
+                            const file = e.target.files?.[0];
+                            if (!file) return;
+                            if (file.size > 10 * 1024 * 1024) {
+                              toast("File exceeds 10 MB limit", true);
+                              return;
+                            }
+                            try {
+                              const fd = new FormData();
+                              fd.append("file", file);
+                              const res = await fetch(`/api/sites/${site.id}/photos`, { method: "POST", body: fd });
+                              if (!res.ok) {
+                                const body = await res.json() as { error?: { message?: string } };
+                                throw new Error(body?.error?.message ?? "Upload failed");
+                              }
+                              const data = await res.json() as { photo: { id: string } };
+                              const url = `/api/sites/${site.id}/photos/${data.photo.id}`;
+                              setSettingsForm((f) => ({ ...f, bgImage: url }));
+                            } catch (err) {
+                              toast(err instanceof Error ? err.message : "Upload failed", true);
+                            }
+                          }}
+                        />
                       </div>
                     </>
                   )}
