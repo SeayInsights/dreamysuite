@@ -1821,26 +1821,6 @@ export default function SiteEditor() {
                               <div style={fieldStyle}><label style={lblStyle}>Wedding Date</label><input style={inputStyle} value={cf("date")} onChange={e => onChange("date", e.target.value)} placeholder="Sunday, October 12, 2025" /></div>
                               <div style={fieldStyle}><label style={lblStyle}>Location</label><input style={inputStyle} value={cf("location")} onChange={e => onChange("location", e.target.value)} placeholder="Grand Ballroom, New York" /></div>
                               <div style={fieldStyle}><label style={lblStyle}>RSVP Button Text</label><input style={inputStyle} value={cf("cta")} onChange={e => onChange("cta", e.target.value)} placeholder="RSVP" /></div>
-                              <div style={fieldStyle}>
-                                <label style={lblStyle}>Countdown Date &amp; Time</label>
-                                <div style={{ display: "flex", gap: "8px", alignItems: "flex-start", flexWrap: "wrap" }}>
-                                  <input type="datetime-local" style={{ ...inputStyle, flex: 1, minWidth: "150px" }} value={ctDateVal}
-                                    onChange={e => {
-                                      const dt = e.target.value;
-                                      const tz = ctTzVal || "+00:00";
-                                      onChange("countdown_target", dt ? `${dt}:00${tz}` : "");
-                                    }} />
-                                  <div style={{ display: "flex", flexDirection: "column", gap: "2px", flexShrink: 0 }}>
-                                    <span style={{ fontSize: "0.62rem", color: "#b0a99f", textTransform: "uppercase", letterSpacing: "0.05em" }}>UTC offset</span>
-                                    <input style={{ ...inputStyle, width: "88px" }} value={ctTzVal} placeholder="+07:00"
-                                      onChange={e => {
-                                        const tz = e.target.value;
-                                        onChange("countdown_target", ctDateVal ? `${ctDateVal}:00${tz}` : "");
-                                      }} />
-                                  </div>
-                                </div>
-                                <p style={{ fontSize: "0.67rem", color: "#b0a99f", margin: "3px 0 0" }}>Vietnam: +07:00 · UTC: +00:00 · US Eastern: -05:00</p>
-                              </div>
                             </div>
                             <div style={{ border: "1px solid #e8e4e0", borderRadius: "10px", padding: "1rem", marginBottom: "0.75rem" }}>
                               <p style={sectionHeadStyle}>Welcome Section</p>
@@ -2972,7 +2952,7 @@ export default function SiteEditor() {
 
               {/* countdown */}
               {t === "countdown" && (
-                <div className="sf-group"><label className="sf-lbl">Countdown To</label><input className="sf-input" type="datetime-local" value={String(cfg.countdownDate ?? "")} onChange={e => setField("countdownDate", e.target.value)} /></div>
+                <p style={{ fontSize: "0.72rem", color: "#9b8e85", margin: "0.25rem 0 0.5rem", lineHeight: 1.5 }}>Countdown date is set in Site Settings → Event Date.</p>
               )}
 
               {/* images */}

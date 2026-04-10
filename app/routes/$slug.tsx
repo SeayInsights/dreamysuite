@@ -1026,7 +1026,7 @@ function buildHtml(
     .filter((b) => b.type === "countdown")
     .map((b) => ({
       id: b.id,
-      date: String(b.config.date ?? b.config.countdownDate ?? settings?.eventDate ?? ""),
+      date: String(settings?.eventDate ?? ""),
     }))
     .filter((b) => b.date !== "");
 
