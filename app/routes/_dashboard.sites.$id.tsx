@@ -1513,8 +1513,16 @@ export default function SiteEditor() {
                                         <input className="sf-input" value={cfg.rsvpButtonText ?? 'RSVP Now'} onChange={e => setField('rsvpButtonText', e.target.value)} />
                                       </div>
                                       <div className="sf-group">
-                                        <label className="sf-lbl">Button Color</label>
+                                        <label className="sf-lbl">Button Background</label>
                                         <input type="color" value={cfg.rsvpButtonColor ?? ''} onChange={e => setField('rsvpButtonColor', e.target.value)} />
+                                      </div>
+                                      <div className="sf-group">
+                                        <label className="sf-lbl">Button Text Color</label>
+                                        <input type="color" value={cfg.rsvpButtonTextColor ?? '#ffffff'} onChange={e => setField('rsvpButtonTextColor', e.target.value)} />
+                                      </div>
+                                      <div className="sf-group">
+                                        <label className="sf-lbl">Button Border Color</label>
+                                        <input type="color" value={cfg.rsvpButtonBorderColor ?? ''} onChange={e => setField('rsvpButtonBorderColor', e.target.value)} />
                                       </div>
                                     </>)}
                                   </>)}

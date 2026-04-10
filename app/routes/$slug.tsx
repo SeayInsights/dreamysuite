@@ -271,41 +271,52 @@ function buildStyles(settings: SiteSettingRow | null): BuiltStyles {
     .envfs-seal {
       position:absolute; top:78%; left:50%;
       transform:translate(-50%,-50%);
-      width:clamp(62px,8vw,98px); height:clamp(62px,8vw,98px); border-radius:50%;
-      /* Realistic wax: specular highlight + deep radial gradient */
+      width:clamp(70px,9vw,110px); height:clamp(70px,9vw,110px); border-radius:50%;
+      /* Gold wax: specular gloss + warm amber depth */
       background:
-        radial-gradient(circle at 30% 22%, rgba(255,210,190,0.52) 0%, transparent 36%),
-        radial-gradient(circle at 50% 55%,
-          var(--seal-color,#8b1a2f) 0%,
-          color-mix(in srgb,var(--seal-color,#8b1a2f) 60%,#0a0000) 55%,
-          color-mix(in srgb,var(--seal-color,#8b1a2f) 36%,#000) 100%);
+        radial-gradient(circle at 28% 22%, rgba(255,248,200,0.72) 0%, transparent 34%),
+        radial-gradient(circle at 68% 72%, rgba(140,80,0,0.35) 0%, transparent 38%),
+        radial-gradient(circle at 50% 50%,
+          var(--seal-color,#d4a843) 0%,
+          color-mix(in srgb,var(--seal-color,#d4a843) 72%,#5a3000) 45%,
+          color-mix(in srgb,var(--seal-color,#d4a843) 48%,#2a1000) 80%,
+          color-mix(in srgb,var(--seal-color,#d4a843) 30%,#000) 100%);
       box-shadow:
-        0 6px 30px rgba(0,0,0,0.68),
-        0 2px 8px rgba(0,0,0,0.4),
-        inset 0 3px 6px rgba(255,205,185,0.22),
-        inset 0 -4px 8px rgba(0,0,0,0.44),
-        inset 0 0 16px rgba(0,0,0,0.28);
+        0 8px 36px rgba(0,0,0,0.62),
+        0 2px 10px rgba(0,0,0,0.38),
+        inset 0 4px 7px rgba(255,248,180,0.38),
+        inset 0 -5px 9px rgba(80,40,0,0.5),
+        inset 0 0 18px rgba(0,0,0,0.18);
       display:flex; align-items:center; justify-content:center;
       z-index:25; pointer-events:none; overflow:hidden;
       animation:envfs-seal-pulse 2.4s ease-in-out infinite;
     }
-    /* Inner concentric ring — characteristic of real wax seals */
+    /* Edge rim — slight raised border like real wax */
     .envfs-seal::before {
-      content:''; position:absolute; inset:11%; border-radius:50%;
-      border:1.5px solid rgba(255,220,200,0.24);
-      box-shadow:inset 0 1px 3px rgba(0,0,0,0.32),0 1px 2px rgba(255,200,180,0.08);
+      content:''; position:absolute; inset:0; border-radius:50%;
+      border:3px solid rgba(180,120,10,0.28);
+      box-shadow:inset 0 0 8px rgba(255,220,100,0.15),inset 0 2px 4px rgba(0,0,0,0.2);
+      pointer-events:none;
+    }
+    /* Inner design circle */
+    .envfs-seal::after {
+      content:''; position:absolute; inset:12%; border-radius:50%;
+      border:1px solid rgba(255,230,140,0.22);
       pointer-events:none;
     }
     .envfs-seal-text {
       font-family:var(--heading-font,'Georgia',serif);
-      font-size:clamp(0.56rem,1.4vw,0.88rem); letter-spacing:0.07em; line-height:1.3;
+      /* Large italic initial — like a calligraphic stamp */
+      font-size:clamp(1.6rem,5vw,2.8rem);
+      font-style:italic; font-weight:normal;
+      letter-spacing:-0.02em; line-height:1;
       text-align:center; position:relative; z-index:1;
-      color:rgba(255,238,224,0.9);
-      /* Carved-into-wax look */
+      color:rgba(70,38,0,0.78);
+      /* Embossed look: lighter top edge, darker shadow below */
       text-shadow:
-        0 1px 2px rgba(255,255,255,0.14),
-        0 -1px 3px rgba(0,0,0,0.6),
-        0 2px 5px rgba(0,0,0,0.44);
+        0 1px 1px rgba(255,230,150,0.5),
+        0 -1px 2px rgba(0,0,0,0.35),
+        0 2px 6px rgba(80,40,0,0.45);
     }
     /* Cue text */
     .envfs-cue {
@@ -908,7 +919,7 @@ function renderBlock(
                  </div>`
               : placeholder("Set a target date to show the countdown.")
           }
-          ${cfg.showRsvpButton ? `<div style="text-align:center;margin-top:2rem"><a href="#rsvp" class="rsvp-submit" style="background:${escHtml(String(cfg.rsvpButtonColor ?? accent))};text-decoration:none;display:inline-block">${escHtml(String(cfg.rsvpButtonText ?? "RSVP Now"))}</a></div>` : ""}
+          ${cfg.showRsvpButton ? `<div style="text-align:center;margin-top:2rem"><a href="#rsvp" class="rsvp-submit" style="background:${escHtml(String(cfg.rsvpButtonColor ?? accent))};color:${escHtml(String(cfg.rsvpButtonTextColor ?? "#fff"))};${cfg.rsvpButtonBorderColor ? `border:2px solid ${escHtml(String(cfg.rsvpButtonBorderColor))};` : ""}text-decoration:none;display:inline-block">${escHtml(String(cfg.rsvpButtonText ?? "RSVP Now"))}</a></div>` : ""}
         </section>`;
     }
 
