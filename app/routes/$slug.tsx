@@ -40,6 +40,18 @@ interface SiteSettingRow {
   accentColor: string | null;
   bgColor: string | null;
   updatedAt: number;
+  headingColor: string | null;
+  bodyColor: string | null;
+  siteTextColor: string | null;
+  siteBorderColor: string | null;
+  navBg: string | null;
+  navPosition: string | null;       // "fixed" | "scroll-away" | null
+  navBrandColor: string | null;
+  navLinkColor: string | null;
+  navHighlightColor: string | null;
+  navItemsConfig: string | null;    // JSON string
+  buttonStyle: string | null;
+  buttonBorderWidth: string | null;
 }
 
 interface PageRow {
@@ -101,13 +113,39 @@ function mediaPlaceholder(label: string): string {
 
 // ── CSS ───────────────────────────────────────────────────────────────────────
 
-function buildStyles(settings: SiteSettingRow | null): string {
+// System fonts that do not need a Google Fonts import
+const SYSTEM_FONTS = new Set(["Georgia", "Inter"]);
+
+// Google Fonts config: name → URL family param segment
+const GFONTS_MAP: Record<string, string> = {
+  "Playfair Display": "Playfair+Display:wght@400;600",
+  "Cormorant Garamond": "Cormorant+Garamond:wght@400;600",
+  "EB Garamond": "EB+Garamond:wght@400;600",
+};
+
+interface BuiltStyles {
+  fonts: string;
+  css: string;
+}
+
+function buildStyles(settings: SiteSettingRow | null): BuiltStyles {
   const accent = settings?.accentColor ?? "#0d9488";
   const headingFont = settings?.headingFont ?? "Georgia";
   const bodyFont = settings?.bodyFont ?? "Inter";
   const bg = settings?.bgColor ?? "#ffffff";
+  const navPosition = settings?.navPosition ?? null;
+  const isFixed = navPosition === "fixed";
 
-  return `
+  // Google Fonts link tag
+  const fontsNeeded = [headingFont, bodyFont]
+    .filter((f) => !SYSTEM_FONTS.has(f) && GFONTS_MAP[f])
+    .filter((f, i, arr) => arr.indexOf(f) === i); // dedupe
+  const fontsTag =
+    fontsNeeded.length > 0
+      ? `<link rel="preconnect" href="https://fonts.googleapis.com" />\n  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />\n  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?${fontsNeeded.map((f) => `family=${GFONTS_MAP[f]}`).join("&")}&display=swap" />`
+      : "";
+
+  const css = `
     :root {
       --accent: ${escHtml(accent)};
       --heading-font: ${escHtml(headingFont)}, Georgia, serif;
@@ -118,17 +156,26 @@ function buildStyles(settings: SiteSettingRow | null): string {
       --border: #e7e5e4;
       --radius: 12px;
       --max-width: 820px;
+      --heading-color: ${escHtml(settings?.headingColor ?? "var(--text)")};
+      --body-color: ${escHtml(settings?.bodyColor ?? "var(--muted)")};
+      --site-text: ${escHtml(settings?.siteTextColor ?? "var(--text)")};
+      --site-border: ${escHtml(settings?.siteBorderColor ?? "var(--border)")};
+      --nav-bg: ${escHtml(settings?.navBg ?? "rgba(255,255,255,0.96)")};
+      --nav-brand: ${escHtml(settings?.navBrandColor ?? "var(--text)")};
+      --nav-link: ${escHtml(settings?.navLinkColor ?? "var(--muted)")};
+      --nav-highlight: ${escHtml(settings?.navHighlightColor ?? "var(--accent)")};
     }
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     html { scroll-behavior: smooth; }
     body {
       background: var(--bg);
-      color: var(--text);
+      color: var(--site-text);
       font-family: var(--body-font);
       font-size: 1rem;
       line-height: 1.7;
       -webkit-font-smoothing: antialiased;
+      ${isFixed ? "padding-top: 4rem;" : ""}
     }
 
     /* ── Layout ── */
@@ -169,7 +216,7 @@ function buildStyles(settings: SiteSettingRow | null): string {
       font-size: clamp(1.5rem, 3.5vw, 2rem);
       font-weight: normal;
       text-align: center;
-      color: var(--text);
+      color: var(--heading-color);
       margin-bottom: 0.75rem;
     }
     .section-rule {
@@ -180,7 +227,7 @@ function buildStyles(settings: SiteSettingRow | null): string {
     }
 
     /* ── Text ── */
-    .text-body { max-width: 640px; margin: 0 auto; text-align: center; color: var(--muted); font-size: 1.0625rem; }
+    .text-body { max-width: 640px; margin: 0 auto; text-align: center; color: var(--body-color); font-size: 1.0625rem; }
 
     /* ── Countdown ── */
     .block-countdown { text-align: center; }
@@ -343,11 +390,11 @@ function buildStyles(settings: SiteSettingRow | null): string {
 
     /* ── Nav bar ── */
     .site-nav {
-      position: sticky; top: 0; z-index: 100;
-      background: rgba(255,255,255,0.96);
+      ${isFixed ? "position: fixed; top: 0; width: 100%; z-index: 100;" : "position: sticky; top: 0; z-index: 100;"}
+      background: var(--nav-bg);
       backdrop-filter: blur(8px);
       -webkit-backdrop-filter: blur(8px);
-      border-bottom: 1px solid var(--border);
+      border-bottom: 1px solid var(--site-border);
       padding: 0;
     }
     .site-nav-inner {
@@ -365,7 +412,7 @@ function buildStyles(settings: SiteSettingRow | null): string {
       font-family: var(--heading-font);
       font-size: 1rem;
       font-weight: normal;
-      color: var(--text);
+      color: var(--nav-brand);
       text-decoration: none;
       white-space: nowrap;
       padding: 0.875rem 0;
@@ -386,7 +433,7 @@ function buildStyles(settings: SiteSettingRow | null): string {
       padding: 0.875rem 0.875rem;
       font-size: 0.85rem;
       letter-spacing: 0.03em;
-      color: var(--muted);
+      color: var(--nav-link);
       text-decoration: none;
       cursor: pointer;
       border-bottom: 2px solid transparent;
@@ -398,12 +445,37 @@ function buildStyles(settings: SiteSettingRow | null): string {
       font-family: var(--body-font);
       transition: color 0.15s, border-color 0.15s;
     }
-    .site-nav-link:hover { color: var(--text); }
-    .site-nav-link.active { color: var(--accent); border-bottom-color: var(--accent); }
+    .site-nav-link:hover { color: var(--nav-brand); }
+    .site-nav-link.active { color: var(--nav-highlight); border-bottom-color: var(--nav-highlight); }
 
     /* ── Page sections ── */
     .page-section { display: none; }
     .page-section.active { display: block; }
+
+    /* ── Music player ── */
+    .music-player {
+      position: fixed;
+      bottom: 1.5rem;
+      right: 1.5rem;
+      z-index: 200;
+    }
+    .music-btn {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      font-size: 1.25rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.18);
+      transition: opacity 0.15s, transform 0.15s;
+    }
+    .music-btn:hover { opacity: 0.88; transform: scale(1.07); }
+    .music-btn.playing { background: var(--accent); opacity: 1; }
 
     /* ── Responsive ── */
     @media (max-width: 600px) {
@@ -414,6 +486,8 @@ function buildStyles(settings: SiteSettingRow | null): string {
       .timeline-time { min-width: unset; }
     }
   `;
+
+  return { fonts: fontsTag, css };
 }
 
 // ── Block renderers ───────────────────────────────────────────────────────────
@@ -954,6 +1028,52 @@ function showPage(pageId) {
     .filter(Boolean)
     .join(" \u00b7 ");
 
+  const { fonts: fontsTag, css: siteCss } = buildStyles(settings);
+
+  // Music player
+  const musicUrl = settings?.musicUrl ?? null;
+  let musicPlayerHtml = "";
+  let musicScript = "";
+  if (musicUrl) {
+    // Parse YouTube video ID from both youtube.com/watch?v=ID and youtu.be/ID
+    let videoId: string | null = null;
+    try {
+      const u = new URL(musicUrl);
+      if (u.hostname === "youtu.be") {
+        videoId = u.pathname.slice(1).split("?")[0] || null;
+      } else if (u.hostname.includes("youtube.com")) {
+        videoId = u.searchParams.get("v");
+      }
+    } catch {
+      // not a valid URL — skip
+    }
+    if (videoId) {
+      const vid = escHtml(videoId);
+      musicPlayerHtml = `
+  <div class="music-player" id="music-player">
+    <iframe id="yt-player" src="https://www.youtube.com/embed/${vid}?enablejsapi=1&autoplay=0&loop=1&playlist=${vid}" allow="autoplay" style="display:none" title="Background music"></iframe>
+    <button class="music-btn" id="music-btn" aria-label="Play background music" onclick="toggleMusic()">&#9834;</button>
+  </div>`;
+      musicScript = `<script>
+function toggleMusic() {
+  var iframe = document.getElementById('yt-player');
+  var btn = document.getElementById('music-btn');
+  if (!iframe) return;
+  var playing = btn.classList.contains('playing');
+  if (playing) {
+    iframe.contentWindow.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*');
+    btn.classList.remove('playing');
+    btn.setAttribute('aria-label', 'Play background music');
+  } else {
+    iframe.contentWindow.postMessage('{"event":"command","func":"playVideo","args":""}', '*');
+    btn.classList.add('playing');
+    btn.setAttribute('aria-label', 'Pause background music');
+  }
+}
+</script>`;
+    }
+  }
+
   return `<!DOCTYPE html>
 <html lang="${lang}">
 <head>
@@ -961,15 +1081,18 @@ function showPage(pageId) {
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>${pageTitle}</title>
   <meta name="description" content="${escHtml(metaDesc)}" />
-  <style>${buildStyles(settings)}</style>
+  ${fontsTag}
+  <style>${siteCss}</style>
 </head>
 <body>
   ${greetingHtml}
   ${navHtml}
   ${fallbackHtml}
   ${pageSectionsHtml}
+  ${musicPlayerHtml}
   ${navScript}
   ${buildCountdownScript(countdownData)}
+  ${musicScript}
 </body>
 </html>`;
 }
@@ -1082,6 +1205,95 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
       status: 200,
       headers: { "content-type": "text/html; charset=utf-8" },
     });
+  }
+
+  // Password gate — non-owners must supply the correct ?pw= query param.
+  if (!isOwner && settings?.guestPassword) {
+    const url = new URL(request.url);
+    const pw = url.searchParams.get("pw");
+    if (pw !== settings.guestPassword) {
+      const accent = settings.accentColor ?? "#0d9488";
+      const siteName = settings.eventName ?? site.name;
+      const gateHtml = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>${escHtml(siteName)}</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: Georgia, serif;
+      background: #faf8f5;
+      color: #292524;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100dvh;
+      padding: 1.5rem;
+    }
+    .gate-wrap {
+      text-align: center;
+      max-width: 360px;
+      width: 100%;
+    }
+    h1 {
+      font-size: 1.75rem;
+      font-weight: normal;
+      margin-bottom: 0.5rem;
+    }
+    p {
+      color: #78716c;
+      margin-bottom: 1.75rem;
+      font-size: 0.9375rem;
+    }
+    .gate-form {
+      display: flex;
+      flex-direction: column;
+      gap: 0.875rem;
+    }
+    .gate-input {
+      width: 100%;
+      border: 1px solid #e7e5e4;
+      border-radius: 6px;
+      padding: 0.625rem 0.875rem;
+      font-family: inherit;
+      font-size: 1rem;
+      color: #292524;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    .gate-input:focus { border-color: ${escHtml(accent)}; }
+    .gate-btn {
+      padding: 0.75rem 2rem;
+      border: none;
+      border-radius: 6px;
+      background: ${escHtml(accent)};
+      color: #fff;
+      font-family: inherit;
+      font-size: 0.9375rem;
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+    .gate-btn:hover { opacity: 0.88; }
+  </style>
+</head>
+<body>
+  <div class="gate-wrap">
+    <h1>${escHtml(siteName)}</h1>
+    <p>This site is password protected. Please enter the password to continue.</p>
+    <form class="gate-form" method="get">
+      <input class="gate-input" type="password" name="pw" placeholder="Enter password" aria-label="Site password" required />
+      <button class="gate-btn" type="submit">Enter</button>
+    </form>
+  </div>
+</body>
+</html>`;
+      return new Response(gateHtml, {
+        status: 401,
+        headers: { "content-type": "text/html; charset=utf-8" },
+      });
+    }
   }
 
   const pagesResult = await db
