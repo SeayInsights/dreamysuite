@@ -62,7 +62,7 @@ export async function action({ request, context, params }: Route.ActionArgs) {
     const fields: string[] = [];
     const values: unknown[] = [];
 
-    if (body.config !== undefined) { fields.push("config = ?"); values.push(JSON.stringify(body.config)); }
+    if (body.config !== undefined) { fields.push("config = ?"); values.push(body.config); }
     if (body.sortOrder !== undefined) { fields.push("sortOrder = ?"); values.push(body.sortOrder); }
     if (body.isVisible !== undefined) { fields.push("isVisible = ?"); values.push(body.isVisible ? 1 : 0); }
 

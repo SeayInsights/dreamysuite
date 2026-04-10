@@ -113,6 +113,8 @@ interface SiteSettings {
   animation: string | null;
   bgImage: string | null;
   envelopeColor: string | null;
+  sealInitials: string;
+  cardColor: string;
 }
 
 interface AnalyticsData {
@@ -400,6 +402,8 @@ export default function SiteEditor() {
     animation: "",
     bgImage: "",
     envelopeColor: "",
+    sealInitials: "",
+    cardColor: "",
   });
 
   // CSV import state
@@ -541,6 +545,8 @@ export default function SiteEditor() {
         animation:          data.settings.animation          ?? "",
         bgImage:            data.settings.bgImage            ?? "",
         envelopeColor:      data.settings.envelopeColor      ?? "",
+        sealInitials:       data.settings.sealInitials       ?? "",
+        cardColor:          data.settings.cardColor          ?? "",
       });
       setStyleHeadingFont(data.settings.headingFont ?? "Georgia");
       setStyleBodyFont(data.settings.bodyFont ?? "Inter");
@@ -3296,21 +3302,20 @@ export default function SiteEditor() {
                       </div>
 
                       {/* Site Colors */}
-                      <div style={{ fontSize: "0.72rem", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: "#9b8e85", margin: "1.1rem 0 0.6rem" }}>Site Colors</div>
-                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem" }}>
-                        <div>
-                          <div style={{ fontSize: "0.72rem", color: "#9b8e85", marginBottom: "4px" }}>Background</div>
-                          <input type="color" value={settingsForm.bgColor} onChange={(e) => setSettingsForm((f) => ({ ...f, bgColor: e.target.value }))} style={{ width: "100%", height: "34px", border: "1px solid #e0dbd4", borderRadius: "6px", cursor: "pointer" }} />
+                      <div style={{ fontSize: "0.72rem", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: "#9b8e85", margin: "1.1rem 0 0.4rem" }}>Site Colors</div>
+                      {[
+                        { label: "Background", key: "bgColor" as const, def: "#ffffff" },
+                        { label: "Text", key: "siteTextColor" as const, def: "#1c1917" },
+                        { label: "Borders / Dividers", key: "siteBorderColor" as const, def: "#e8e2da" },
+                      ].map(({ label, key, def }) => (
+                        <div key={key} style={{ display: "flex", alignItems: "center", gap: "10px", padding: "6px 0", borderBottom: "1px solid #f5f2ee" }}>
+                          <input type="color" value={settingsForm[key] || def}
+                            onChange={(e) => setSettingsForm((f) => ({ ...f, [key]: e.target.value }))}
+                            style={{ width: "26px", height: "26px", borderRadius: "5px", border: "1px solid #e0dbd4", cursor: "pointer", padding: "1px", flexShrink: 0 }} />
+                          <span style={{ fontSize: "0.8rem", color: "#6b5e56", flex: 1 }}>{label}</span>
+                          <code style={{ fontSize: "0.72rem", color: "#a09690", fontFamily: "monospace" }}>{(settingsForm[key] || def).toUpperCase()}</code>
                         </div>
-                        <div>
-                          <div style={{ fontSize: "0.72rem", color: "#9b8e85", marginBottom: "4px" }}>Text</div>
-                          <input type="color" value={settingsForm.siteTextColor || "#1c1917"} onChange={(e) => setSettingsForm((f) => ({ ...f, siteTextColor: e.target.value }))} style={{ width: "100%", height: "34px", border: "1px solid #e0dbd4", borderRadius: "6px", cursor: "pointer" }} />
-                        </div>
-                        <div style={{ gridColumn: "1 / -1" }}>
-                          <div style={{ fontSize: "0.72rem", color: "#9b8e85", marginBottom: "4px" }}>Borders / Dividers</div>
-                          <input type="color" value={settingsForm.siteBorderColor || "#e8e2da"} onChange={(e) => setSettingsForm((f) => ({ ...f, siteBorderColor: e.target.value }))} style={{ width: "100%", height: "34px", border: "1px solid #e0dbd4", borderRadius: "6px", cursor: "pointer" }} />
-                        </div>
-                      </div>
+                      ))}
 
                       {/* Entrance Animation */}
                       <div style={{ fontSize: "0.72rem", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: "#9b8e85", margin: "1.1rem 0 0.6rem" }}>Entrance Animation</div>
@@ -3397,30 +3402,39 @@ export default function SiteEditor() {
                       {/* Envelope color — shown only when envelope animation is selected */}
                       {settingsForm.animation === "envelope" && (
                         <>
-                          <div style={{ fontSize: "0.72rem", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: "#9b8e85", margin: "1.1rem 0 0.6rem" }}>Envelope Colors</div>
-                          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem" }}>
-                            <div>
-                              <div style={{ fontSize: "0.72rem", color: "#9b8e85", marginBottom: "4px" }}>Envelope</div>
-                              <input
-                                type="color"
-                                value={settingsForm.envelopeColor || "#f5ede0"}
-                                onChange={(e) => setSettingsForm((f) => ({ ...f, envelopeColor: e.target.value }))}
-                                style={{ width: "100%", height: "34px", border: "1px solid #e0dbd4", borderRadius: "6px", cursor: "pointer" }}
-                                title="Envelope color"
-                              />
+                          <div style={{ fontSize: "0.72rem", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: "#9b8e85", margin: "1.1rem 0 0.5rem" }}>Envelope Colors</div>
+                          {[
+                            { label: "Envelope paper", key: "envelopeColor" as const, def: "#f5ede0" },
+                            { label: "Wax seal", key: "accentColor" as const, def: "#0d9488" },
+                          ].map(({ label, key, def }) => (
+                            <div key={key} style={{ display: "flex", alignItems: "center", gap: "10px", padding: "6px 0", borderBottom: "1px solid #f5f2ee" }}>
+                              <input type="color" value={settingsForm[key] || def}
+                                onChange={(e) => setSettingsForm((f) => ({ ...f, [key]: e.target.value }))}
+                                style={{ width: "26px", height: "26px", borderRadius: "5px", border: "1px solid #e0dbd4", cursor: "pointer", padding: "1px", flexShrink: 0 }} />
+                              <span style={{ fontSize: "0.8rem", color: "#6b5e56", flex: 1 }}>{label}</span>
+                              <code style={{ fontSize: "0.72rem", color: "#a09690", fontFamily: "monospace" }}>{(settingsForm[key] || def).toUpperCase()}</code>
                             </div>
-                            <div>
-                              <div style={{ fontSize: "0.72rem", color: "#9b8e85", marginBottom: "4px" }}>Wax Seal</div>
-                              <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                                <input
-                                  type="color"
-                                  value={settingsForm.accentColor}
-                                  onChange={(e) => setSettingsForm((f) => ({ ...f, accentColor: e.target.value }))}
-                                  style={{ width: "100%", height: "34px", border: "1px solid #e0dbd4", borderRadius: "6px", cursor: "pointer" }}
-                                  title="Wax seal color (uses accent color)"
-                                />
-                              </div>
-                              <div style={{ fontSize: "0.65rem", color: "#b0a99f", marginTop: "3px" }}>Uses accent color</div>
+                          ))}
+                          <div style={{ marginTop: "0.9rem" }}>
+                            <div style={{ fontSize: "0.72rem", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: "#9b8e85", marginBottom: "0.5rem" }}>Invitation Card</div>
+                            <div style={{ display: "flex", alignItems: "center", gap: "10px", padding: "6px 0", borderBottom: "1px solid #f5f2ee" }}>
+                              <input type="color" value={settingsForm.cardColor || "#fffef9"}
+                                onChange={(e) => setSettingsForm((f) => ({ ...f, cardColor: e.target.value }))}
+                                style={{ width: "26px", height: "26px", borderRadius: "5px", border: "1px solid #e0dbd4", cursor: "pointer", padding: "1px", flexShrink: 0 }} />
+                              <span style={{ fontSize: "0.8rem", color: "#6b5e56", flex: 1 }}>Card background</span>
+                              <code style={{ fontSize: "0.72rem", color: "#a09690", fontFamily: "monospace" }}>{(settingsForm.cardColor || "#fffef9").toUpperCase()}</code>
+                            </div>
+                            <div className="sf-group" style={{ marginTop: "0.75rem" }}>
+                              <label className="sf-lbl">Wax Seal Initials</label>
+                              <input
+                                className="sf-input"
+                                type="text"
+                                maxLength={6}
+                                placeholder="D · N  (auto from names if blank)"
+                                value={settingsForm.sealInitials}
+                                onChange={(e) => setSettingsForm((f) => ({ ...f, sealInitials: e.target.value }))}
+                              />
+                              <div style={{ fontSize: "0.68rem", color: "#b0a99f", marginTop: "3px" }}>Leave blank to auto-extract from event name</div>
                             </div>
                           </div>
                         </>
@@ -3499,21 +3513,20 @@ export default function SiteEditor() {
                         ))}
                       </div>
 
-                      <div style={{ fontSize: "0.72rem", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: "#9b8e85", marginBottom: "0.6rem" }}>Nav Colors</div>
-                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem" }}>
-                        <div>
-                          <div style={{ fontSize: "0.72rem", color: "#9b8e85", marginBottom: "4px" }}>Couple Name</div>
-                          <input type="color" value={settingsForm.navBrandColor} onChange={(e) => setSettingsForm((f) => ({ ...f, navBrandColor: e.target.value }))} style={{ width: "100%", height: "34px", border: "1px solid #e0dbd4", borderRadius: "6px", cursor: "pointer" }} />
+                      <div style={{ fontSize: "0.72rem", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: "#9b8e85", marginBottom: "0.4rem" }}>Nav Colors</div>
+                      {[
+                        { label: "Couple name", key: "navBrandColor" as const, def: "#1c1917" },
+                        { label: "Nav links", key: "navLinkColor" as const, def: "#6b6560" },
+                        { label: "Highlight / Active", key: "navHighlightColor" as const, def: "#0d9488" },
+                      ].map(({ label, key, def }) => (
+                        <div key={key} style={{ display: "flex", alignItems: "center", gap: "10px", padding: "6px 0", borderBottom: "1px solid #f5f2ee" }}>
+                          <input type="color" value={settingsForm[key] || def}
+                            onChange={(e) => setSettingsForm((f) => ({ ...f, [key]: e.target.value }))}
+                            style={{ width: "26px", height: "26px", borderRadius: "5px", border: "1px solid #e0dbd4", cursor: "pointer", padding: "1px", flexShrink: 0 }} />
+                          <span style={{ fontSize: "0.8rem", color: "#6b5e56", flex: 1 }}>{label}</span>
+                          <code style={{ fontSize: "0.72rem", color: "#a09690", fontFamily: "monospace" }}>{(settingsForm[key] || def).toUpperCase()}</code>
                         </div>
-                        <div>
-                          <div style={{ fontSize: "0.72rem", color: "#9b8e85", marginBottom: "4px" }}>Nav Links</div>
-                          <input type="color" value={settingsForm.navLinkColor} onChange={(e) => setSettingsForm((f) => ({ ...f, navLinkColor: e.target.value }))} style={{ width: "100%", height: "34px", border: "1px solid #e0dbd4", borderRadius: "6px", cursor: "pointer" }} />
-                        </div>
-                        <div style={{ gridColumn: "1 / -1" }}>
-                          <div style={{ fontSize: "0.72rem", color: "#9b8e85", marginBottom: "4px" }}>Highlight / Active</div>
-                          <input type="color" value={settingsForm.navHighlightColor} onChange={(e) => setSettingsForm((f) => ({ ...f, navHighlightColor: e.target.value }))} style={{ width: "100%", height: "34px", border: "1px solid #e0dbd4", borderRadius: "6px", cursor: "pointer" }} />
-                        </div>
-                      </div>
+                      ))}
 
                     </>
                   )}

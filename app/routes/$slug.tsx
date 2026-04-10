@@ -55,6 +55,8 @@ interface SiteSettingRow {
   animation: string | null;
   bgImage: string | null;
   envelopeColor: string | null;
+  sealInitials: string | null;
+  cardColor: string | null;
 }
 
 interface PageRow {
@@ -230,7 +232,7 @@ function buildStyles(settings: SiteSettingRow | null): BuiltStyles {
     }
     .env-letter {
       position:absolute; bottom:4px; left:10px; right:10px; height:85%;
-      background:#fffef9; border-radius:2px;
+      background:var(--card-color,#fffef9); border-radius:2px;
       box-shadow:0 2px 10px rgba(0,0,0,0.1);
       display:flex; flex-direction:column; align-items:center; justify-content:center;
       gap:0.4rem; padding:1rem; z-index:1; pointer-events:none;
@@ -256,13 +258,14 @@ function buildStyles(settings: SiteSettingRow | null): BuiltStyles {
     .env-seal {
       position:absolute; top:48%; left:50%;
       transform:translateX(-50%) translateY(-50%);
-      width:50px; height:50px; border-radius:50%;
+      width:80px; height:80px; border-radius:50%;
       background:radial-gradient(circle at 35% 35%,var(--seal-color,var(--accent,#0d9488)),color-mix(in srgb,var(--seal-color,var(--accent,#0d9488)) 60%,#000));
       display:flex; align-items:center; justify-content:center;
-      color:white; font-size:1.3rem;
+      color:white; font-size:1.1rem;
       box-shadow:0 3px 10px rgba(0,0,0,0.35); z-index:10; pointer-events:none;
       animation:seal-glow 2.2s ease-in-out infinite;
     }
+    .env-seal-text { font-family:var(--heading-font,'Georgia',serif); letter-spacing:0.04em; line-height:1.2; text-align:center; }
     .env-inner-glow {
       position:absolute; inset:0; z-index:9; pointer-events:none; border-radius:3px;
       background:radial-gradient(ellipse at 50% 25%,rgba(255,235,180,0.92),rgba(255,210,120,0.5) 40%,transparent 72%);
@@ -1161,27 +1164,38 @@ function buildIntroHtml(
   animation: string | null,
   eventTitle: string,
   eventDate: string | null,
-  envelopeColor: string | null
+  envelopeColor: string | null,
+  sealInitials: string | null,
+  cardColor: string | null
 ): string {
   if (!animation || animation === "none") return "";
   const title = escHtml(eventTitle);
   const date = eventDate ? escHtml(eventDate) : "";
 
+  function extractInitials(title: string): string {
+    const parts = title.split(/\s*[&+]\s*|\s+and\s+/i).map((s) => s.trim()).filter(Boolean);
+    if (parts.length >= 2) return parts.map((p) => p.charAt(0).toUpperCase()).join(" · ");
+    if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
+    return "&#10086;";
+  }
+  const sealText = sealInitials ? escHtml(sealInitials) : extractInitials(title);
+
   if (animation === "envelope") {
     const envStyle = envelopeColor ? ` style="--env-color:${escHtml(envelopeColor)}"` : "";
+    const letterStyle = cardColor ? ` style="--card-color:${escHtml(cardColor)}"` : "";
     return `<div id="intro-overlay" class="intro-overlay intro-env" role="button" tabindex="0" aria-label="Click to open invitation">
   <div class="env-scene">
     <div class="env-body"${envStyle}>
       <div class="env-left-fold"></div>
       <div class="env-right-fold"></div>
       <div class="env-bottom-fold"></div>
-      <div class="env-letter">
+      <div class="env-letter"${letterStyle}>
         <p class="env-letter-name">${title}</p>
         ${date ? `<p class="env-letter-date">${date}</p>` : ""}
       </div>
       <div class="env-inner-glow"></div>
       <div class="env-flap"></div>
-      <div class="env-seal"><span>&#10086;</span></div>
+      <div class="env-seal"><span class="env-seal-text">${sealText}</span></div>
     </div>
     <p class="env-cue">&#8212; click to open &#8212;</p>
   </div>
@@ -1338,7 +1352,9 @@ function showPage(pageId) {
   // Animation
   const animation = settings?.animation ?? null;
   const envelopeColor = settings?.envelopeColor ?? null;
-  const introHtml = buildIntroHtml(animation, eventTitle, eventDate, envelopeColor);
+  const sealInitials = settings?.sealInitials ?? null;
+  const cardColor = settings?.cardColor ?? null;
+  const introHtml = buildIntroHtml(animation, eventTitle, eventDate, envelopeColor, sealInitials, cardColor);
   const gsapCdn = introHtml
     ? `<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>`
     : "";
