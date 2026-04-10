@@ -211,6 +211,7 @@ Each block gets a dedicated editor in the Content tab:
 Common UI pattern for all four:
 - `+` button at bottom to add a new row
 - Trash icon per row to delete
+- Rows are drag-reorderable
 - Content stored in `site_content` table keyed by `(siteId, pageSlug, lang)`
 
 ### Data Migration
