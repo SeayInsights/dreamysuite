@@ -185,15 +185,15 @@ function buildStyles(settings: SiteSettingRow | null): BuiltStyles {
     }
 
     /* ── Entrance animations ── */
-    @keyframes envelope-in { from { opacity:0; transform:translateY(40px); } to { opacity:1; transform:translateY(0); } }
-    .anim-envelope .page-section.active { animation: envelope-in 0.7s cubic-bezier(0.22,1,0.36,1) both; }
+    @keyframes envelope-in { from { opacity:0; transform:translateY(48px); } to { opacity:1; transform:translateY(0); } }
+    .anim-envelope .page-section.active { animation: envelope-in 0.9s cubic-bezier(0.22,1,0.36,1) 0.15s both; }
 
-    @keyframes storybook-in { from { opacity:0; transform:scale(0.96); } to { opacity:1; transform:scale(1); } }
-    .anim-storybook .page-section.active { animation: storybook-in 0.6s ease both; }
+    @keyframes storybook-in { from { opacity:0; transform:scale(0.95); } to { opacity:1; transform:scale(1); } }
+    .anim-storybook .page-section.active { animation: storybook-in 0.75s ease 0.15s both; }
 
     @keyframes doors-open { from { transform:scaleX(1); } to { transform:scaleX(0); } }
-    .anim-doors-left { position:fixed; top:0; left:0; width:50%; height:100%; background:var(--accent); transform-origin:left; animation: doors-open 0.8s ease-in-out 0.2s both; pointer-events:none; z-index:999; }
-    .anim-doors-right { position:fixed; top:0; right:0; width:50%; height:100%; background:var(--accent); transform-origin:right; animation: doors-open 0.8s ease-in-out 0.2s both; pointer-events:none; z-index:999; }
+    .anim-doors-left { position:fixed; top:0; left:0; width:50%; height:100%; background:var(--accent); transform-origin:left; animation: doors-open 0.9s ease-in-out 0.1s both; pointer-events:none; z-index:999; }
+    .anim-doors-right { position:fixed; top:0; right:0; width:50%; height:100%; background:var(--accent); transform-origin:right; animation: doors-open 0.9s ease-in-out 0.1s both; pointer-events:none; z-index:999; }
 
     /* ── Layout ── */
     .site-wrapper { max-width: var(--max-width); margin: 0 auto; padding: 0 1.25rem; }
