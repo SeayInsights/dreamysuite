@@ -846,6 +846,7 @@ export default function SiteEditor() {
   async function handleSaveBlockConfig() {
     if (!editingBlock) return;
     try {
+      pushHistory(blocks);
       await apiFetch(`/blocks/${editingBlock.id}`, {
         method: "PUT",
         headers: { "content-type": "application/json" },
@@ -884,6 +885,44 @@ export default function SiteEditor() {
       toast("Page order saved");
     } catch {
       toast("Failed to save page order", true);
+    }
+  }
+
+  async function handleAddPage() {
+    try {
+      await fetch(`/api/sites/${site.id}/pages`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ label: "New Page", slug: "page-" + Date.now() }),
+      });
+      await fetchPages();
+      toast("Page added");
+    } catch {
+      toast("Failed to add page", true);
+    }
+  }
+
+  async function handleDeletePage(pageId: string) {
+    if (pages.length <= 1) {
+      toast("Cannot delete the last page", true);
+      return;
+    }
+    const isActive = activePage?.id === pageId;
+    if (isActive && blocks.length > 0) {
+      if (!window.confirm("This page has tiles. Delete it anyway?")) return;
+    }
+    try {
+      await fetch(`/api/sites/${site.id}/pages/${pageId}`, { method: "DELETE" });
+      const remaining = pages.filter((p) => p.id !== pageId);
+      setPages(remaining);
+      if (isActive) {
+        setActivePage(remaining[0] ?? null);
+        if (remaining[0]) await fetchBlocks(remaining[0].id);
+        else setBlocks([]);
+      }
+      toast("Page deleted");
+    } catch {
+      toast("Failed to delete page", true);
     }
   }
 
@@ -1289,11 +1328,24 @@ export default function SiteEditor() {
                             aria-label={`Move ${p.label} down`}
                             style={{ background: "none", border: "none", cursor: idx === pages.length - 1 ? "default" : "pointer", color: idx === pages.length - 1 ? "#d4cec8" : "#6b7280", fontSize: "0.65rem", padding: "0 2px", lineHeight: 1 }}
                           >▼</button>
+                          <button
+                            onClick={(e) => { e.stopPropagation(); handleDeletePage(p.id); }}
+                            disabled={pages.length <= 1}
+                            title="Delete page"
+                            aria-label={`Delete ${p.label}`}
+                            style={{ background: "none", border: "none", cursor: pages.length <= 1 ? "default" : "pointer", color: pages.length <= 1 ? "#d4cec8" : "#e57373", fontSize: "0.75rem", padding: "0 2px", lineHeight: 1 }}
+                          >×</button>
                         </div>
                       ))}
                     </div>
                   )}
                 </div>
+                <button
+                  onClick={handleAddPage}
+                  title="Add page"
+                  aria-label="Add page"
+                  style={{ background: "none", border: "1px solid #d4cec8", borderRadius: "4px", cursor: "pointer", color: "#6b7280", fontSize: "0.7rem", padding: "2px 7px", lineHeight: 1.6, whiteSpace: "nowrap", flexShrink: 0 }}
+                >+ Add Page</button>
                 <button
                   className={`page-act-btn${activePage && activePage.isVisible !== 0 ? " vis-on" : ""}`}
                   title={activePage && activePage.isVisible !== 0 ? "Hide page" : "Show page"}
@@ -1437,7 +1489,18 @@ export default function SiteEditor() {
                                   </>)}
 
                                   {block.type === 'countdown' && (<>
-                                    <p style={{ fontSize: "0.72rem", color: "#9b8e85", margin: "0.25rem 0 0.5rem", lineHeight: 1.5 }}>Countdown date is set in Site Settings → Event Date.</p>
+                                    <div className="sf-group">
+                                      <label className="sf-lbl">Countdown Date</label>
+                                      <input
+                                        className="sf-input"
+                                        type="date"
+                                        value={String(cfg.date ?? '')}
+                                        onChange={e => setField('date', e.target.value)}
+                                      />
+                                      <p style={{ fontSize: '0.7rem', color: '#9b8e85', margin: '0.25rem 0 0', lineHeight: 1.4 }}>
+                                        Falls back to Site Settings → Event Date if blank.
+                                      </p>
+                                    </div>
                                     <div className="sf-group">
                                       <label className="style-toggle">
                                         <input type="checkbox" checked={!!cfg.showRsvpButton} onChange={e => setField('showRsvpButton', e.target.checked)} />

@@ -667,12 +667,33 @@ function buildStyles(settings: SiteSettingRow | null): BuiltStyles {
       padding: 0;
     }
     .site-nav.nav-pill {
-      border-radius: 999px; margin: 8px 1rem; width: calc(100% - 2rem);
+      border-radius: 999px;
+      width: fit-content;
+      margin: 8px auto;
       box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+      padding: 0 0.25rem;
+    }
+    .site-nav.nav-pill .site-nav-brand {
+      display: none;
     }
     .site-nav.nav-floating {
       border-radius: 14px; margin: 8px 1rem; width: calc(100% - 2rem);
       box-shadow: 0 4px 20px rgba(0,0,0,0.12); border-color: transparent;
+    }
+    .site-nav.nav-floating .site-nav-brand {
+      display: none;
+    }
+    .site-nav-wrap {
+      text-align: center;
+    }
+    .site-nav-brand--outside {
+      display: block;
+      font-family: var(--heading-font);
+      font-size: 1rem;
+      font-weight: normal;
+      color: var(--nav-brand);
+      text-decoration: none;
+      margin: 0.5rem auto 0;
     }
     .site-nav-inner {
       max-width: var(--max-width);
@@ -753,6 +774,35 @@ function buildStyles(settings: SiteSettingRow | null): BuiltStyles {
     }
     .music-btn:hover { opacity: 0.88; transform: scale(1.07); }
     .music-btn.playing { background: var(--accent); opacity: 1; }
+
+    /* ── Language toggle ── */
+    .lang-toggle {
+      position: fixed;
+      bottom: 1.5rem;
+      left: 1.5rem;
+      z-index: 200;
+      display: flex;
+      gap: 0.25rem;
+    }
+    .lang-btn {
+      padding: 0.35rem 0.65rem;
+      border-radius: 999px;
+      border: 1px solid var(--site-border);
+      background: var(--nav-bg);
+      color: var(--nav-link);
+      font-family: var(--body-font);
+      font-size: 0.72rem;
+      letter-spacing: 0.04em;
+      cursor: pointer;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      transition: background 0.15s, color 0.15s;
+    }
+    .lang-btn.active {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+    }
 
     /* ── Responsive ── */
     @media (max-width: 600px) {
@@ -1320,20 +1370,33 @@ function buildHtml(
 
   const navShape = settings?.navShape ?? "";
   const navShapeClass = navShape === "pill" ? " nav-pill" : navShape === "floating" ? " nav-floating" : "";
+  const isPillOrFloating = navShape === "pill" || navShape === "floating";
+  const navLinksHtml = visiblePages
+    .map(
+      (p, i) =>
+        `<li><button class="site-nav-link${i === 0 ? " active" : ""}" data-page="${escHtml(p.id)}" onclick="showPage('${escHtml(p.id)}')">${pageLabel(p)}</button></li>`
+    )
+    .join("");
   const navHtml = hasMultiplePages
-    ? `<nav class="site-nav${navShapeClass}" aria-label="Site navigation">
-        <div class="site-nav-inner">
-          <a class="site-nav-brand" href="#" onclick="return false;">${escHtml(eventTitle)}</a>
-          <ul class="site-nav-links" role="list">
-            ${visiblePages
-              .map(
-                (p, i) =>
-                  `<li><button class="site-nav-link${i === 0 ? " active" : ""}" data-page="${escHtml(p.id)}" onclick="showPage('${escHtml(p.id)}')">${pageLabel(p)}</button></li>`
-              )
-              .join("")}
-          </ul>
-        </div>
-      </nav>`
+    ? isPillOrFloating
+      ? `<div class="site-nav-wrap">
+          <a class="site-nav-brand site-nav-brand--outside" href="#" onclick="return false;">${escHtml(eventTitle)}</a>
+          <nav class="site-nav${navShapeClass}" aria-label="Site navigation">
+            <div class="site-nav-inner">
+              <ul class="site-nav-links" role="list">
+                ${navLinksHtml}
+              </ul>
+            </div>
+          </nav>
+        </div>`
+      : `<nav class="site-nav${navShapeClass}" aria-label="Site navigation">
+          <div class="site-nav-inner">
+            <a class="site-nav-brand" href="#" onclick="return false;">${escHtml(eventTitle)}</a>
+            <ul class="site-nav-links" role="list">
+              ${navLinksHtml}
+            </ul>
+          </div>
+        </nav>`
     : "";
 
   // Page sections with show/hide
@@ -1386,6 +1449,47 @@ function showPage(pageId) {
         </div>
       </div>`
     : "";
+
+  // Language toggle — shown when a second language is configured
+  const secondLang = settings?.secondLanguage ?? null;
+  const langToggleHtml = secondLang
+    ? `<div class="lang-toggle" role="group" aria-label="Language">
+        <button class="lang-btn active" id="lang-btn-main" onclick="switchLang('${escHtml(mainLang)}')">${escHtml(mainLang.toUpperCase())}</button>
+        <button class="lang-btn" id="lang-btn-second" onclick="switchLang('${escHtml(secondLang)}')">${escHtml(secondLang.toUpperCase())}</button>
+      </div>`
+    : "";
+  const langScript = secondLang
+    ? `<script>
+var _currentLang = '${escHtml(mainLang)}';
+var _langContent = {};
+try { _langContent = JSON.parse(document.getElementById('lang-content-data')?.textContent || '{}'); } catch(e){}
+function switchLang(lang) {
+  _currentLang = lang;
+  document.querySelectorAll('.lang-btn').forEach(function(b){ b.classList.remove('active'); });
+  var activeBtn = lang === '${escHtml(mainLang)}' ? document.getElementById('lang-btn-main') : document.getElementById('lang-btn-second');
+  if (activeBtn) activeBtn.classList.add('active');
+  var content = _langContent[lang] || _langContent['${escHtml(mainLang)}'] || {};
+  document.querySelectorAll('[data-lang-field]').forEach(function(el) {
+    var field = el.getAttribute('data-lang-field');
+    if (field && content[field] !== undefined) el.textContent = content[field];
+  });
+}
+</script>`
+    : "";
+
+  // Serialize the per-lang content for client-side switching
+  const langContentJson = secondLang
+    ? (() => {
+        const out: Record<string, Record<string, unknown>> = {};
+        for (const [, langMap] of contentMap) {
+          for (const [lg, data] of langMap) {
+            if (!out[lg]) out[lg] = {};
+            Object.assign(out[lg], data);
+          }
+        }
+        return JSON.stringify(out).replace(/</g, "\\u003c");
+      })()
+    : null;
 
   const pageTitle = `${escHtml(eventTitle)}${eventDate ? ` &middot; ${escHtml(eventDate)}` : ""}`;
   const metaDesc = [eventTitle, eventDate, eventLocation]
@@ -1517,9 +1621,12 @@ function toggleMusic() {
   ${fallbackHtml}
   ${pageSectionsHtml}
   ${musicPlayerHtml}
+  ${langToggleHtml}
+  ${langContentJson ? `<script type="application/json" id="lang-content-data">${langContentJson}</script>` : ""}
   ${navScript}
   ${hasCountdown ? buildCountdownScript() : ""}
   ${musicScript}
+  ${langScript}
   <script>
 function submitRsvp(event, slug, formId, msgId) {
   event.preventDefault();
