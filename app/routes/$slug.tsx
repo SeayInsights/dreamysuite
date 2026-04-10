@@ -927,7 +927,7 @@ function renderBlock(
       const rsvpBorder = cfg.rsvpButtonBorderColor
         ? `border:2px solid ${escHtml(String(cfg.rsvpButtonBorderColor))};` : "";
       return `
-    <section class="block block-countdown" aria-label="Countdown" data-block-id="${escHtml(block.id)}" data-block-type="countdown">
+    <section class="block block-countdown" aria-label="Countdown" data-block-id="${escHtml(block.id)}" data-block-type="${escHtml(block.type)}">
       <p class="countdown-label">${escHtml(label)}</p>
       ${targetDate
         ? `<div class="countdown-units" data-cd-clock data-date="${escHtml(targetDate)}" data-block-id="${escHtml(block.id)}">
@@ -938,9 +938,9 @@ function renderBlock(
            </div>`
         : placeholder("Set an event date in Site Settings to show the countdown.")
       }
-      ${showRsvp
-        ? `<div style="text-align:center;margin-top:2rem"><a href="#rsvp" class="rsvp-submit" style="background:${rsvpBg};color:${rsvpFg};${rsvpBorder}text-decoration:none;display:inline-block">${rsvpText}</a></div>`
-        : ""}
+      <div class="rsvp-wrap" style="text-align:center;margin-top:2rem;${showRsvp ? '' : 'display:none;'}">
+        <a href="#rsvp" class="rsvp-submit" style="background:${rsvpBg};color:${rsvpFg};${rsvpBorder}text-decoration:none;display:inline-block">${rsvpText}</a>
+      </div>
     </section>`;
     }
 
@@ -1078,7 +1078,7 @@ function renderBlock(
 
       if (vimeoId) {
         return `
-        <section class="block block-video" aria-label="Video" data-block-id="${escHtml(block.id)}" data-block-type="video"
+        <section class="block block-video" aria-label="Video" data-block-id="${escHtml(block.id)}" data-block-type="${escHtml(block.type)}"
           style="position:relative;width:100%;height:${escHtml(height)};overflow:hidden;background:#000;">
           <iframe
             src="https://player.vimeo.com/video/${escHtml(vimeoId)}?autoplay=1&muted=1&loop=1&background=1"
@@ -1091,7 +1091,7 @@ function renderBlock(
         </section>`;
       }
       return `
-        <section class="block block-video" aria-label="Video" data-block-id="${escHtml(block.id)}" data-block-type="video" style="position:relative;">
+        <section class="block block-video" aria-label="Video" data-block-id="${escHtml(block.id)}" data-block-type="${escHtml(block.type)}" style="position:relative;">
           ${url ? `<video src="${escHtml(url)}" controls class="media-element" aria-label="Wedding video"></video>` : mediaPlaceholder("Video")}
           ${overlayHtml}
         </section>`;
@@ -1348,7 +1348,7 @@ function buildMessageListenerScript(): string {
     if (type === 'countdown') {
       var labelEl = node.querySelector('.countdown-label');
       if (labelEl && cfg.label != null) labelEl.textContent = String(cfg.label);
-      var rsvpWrap = node.querySelector('.rsvp-submit')?.parentElement;
+      var rsvpWrap = node.querySelector('.rsvp-wrap');
       if (rsvpWrap) rsvpWrap.style.display = cfg.showRsvpButton ? '' : 'none';
     }
 
@@ -1360,7 +1360,9 @@ function buildMessageListenerScript(): string {
       if (overlay && cfg.countdownX != null) overlay.style.transform = 'translateX(' + cfg.countdownX + 'px)';
       if (overlay && cfg.countdownY != null) overlay.style.bottom = cfg.countdownY + 'px';
       // update block height
-      if (cfg.height) node.style.height = cfg.height;
+      if (cfg.height && /^[\d.]+(px|dvh|vh|svh|%)$/.test(String(cfg.height))) {
+        node.style.height = cfg.height;
+      }
     }
 
     if (type === 'text') {
@@ -1384,6 +1386,7 @@ function buildMessageListenerScript(): string {
   }
 
   window.addEventListener('message', function(event) {
+    if (event.origin !== location.origin) return;
     var d = event.data;
     if (!d || typeof d !== 'object') return;
     if (d.type === 'block_config_update') {
