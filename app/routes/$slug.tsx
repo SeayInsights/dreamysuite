@@ -271,14 +271,42 @@ function buildStyles(settings: SiteSettingRow | null): BuiltStyles {
     .envfs-seal {
       position:absolute; top:78%; left:50%;
       transform:translate(-50%,-50%);
-      width:clamp(54px,7vw,84px); height:clamp(54px,7vw,84px); border-radius:50%;
-      background:radial-gradient(circle at 38% 32%,var(--seal-color,var(--accent,#0d9488)),color-mix(in srgb,var(--seal-color,var(--accent,#0d9488)) 52%,#000));
+      width:clamp(62px,8vw,98px); height:clamp(62px,8vw,98px); border-radius:50%;
+      /* Realistic wax: specular highlight + deep radial gradient */
+      background:
+        radial-gradient(circle at 30% 22%, rgba(255,210,190,0.52) 0%, transparent 36%),
+        radial-gradient(circle at 50% 55%,
+          var(--seal-color,#8b1a2f) 0%,
+          color-mix(in srgb,var(--seal-color,#8b1a2f) 60%,#0a0000) 55%,
+          color-mix(in srgb,var(--seal-color,#8b1a2f) 36%,#000) 100%);
+      box-shadow:
+        0 6px 30px rgba(0,0,0,0.68),
+        0 2px 8px rgba(0,0,0,0.4),
+        inset 0 3px 6px rgba(255,205,185,0.22),
+        inset 0 -4px 8px rgba(0,0,0,0.44),
+        inset 0 0 16px rgba(0,0,0,0.28);
       display:flex; align-items:center; justify-content:center;
-      color:rgba(255,245,235,0.95); z-index:25; pointer-events:none;
-      box-shadow:0 4px 20px rgba(0,0,0,0.6),inset 0 1px 3px rgba(255,255,255,0.12);
+      z-index:25; pointer-events:none; overflow:hidden;
       animation:envfs-seal-pulse 2.4s ease-in-out infinite;
     }
-    .envfs-seal-text { font-family:var(--heading-font,'Georgia',serif); font-size:clamp(0.58rem,1.3vw,0.85rem); letter-spacing:0.05em; line-height:1.3; text-align:center; }
+    /* Inner concentric ring — characteristic of real wax seals */
+    .envfs-seal::before {
+      content:''; position:absolute; inset:11%; border-radius:50%;
+      border:1.5px solid rgba(255,220,200,0.24);
+      box-shadow:inset 0 1px 3px rgba(0,0,0,0.32),0 1px 2px rgba(255,200,180,0.08);
+      pointer-events:none;
+    }
+    .envfs-seal-text {
+      font-family:var(--heading-font,'Georgia',serif);
+      font-size:clamp(0.56rem,1.4vw,0.88rem); letter-spacing:0.07em; line-height:1.3;
+      text-align:center; position:relative; z-index:1;
+      color:rgba(255,238,224,0.9);
+      /* Carved-into-wax look */
+      text-shadow:
+        0 1px 2px rgba(255,255,255,0.14),
+        0 -1px 3px rgba(0,0,0,0.6),
+        0 2px 5px rgba(0,0,0,0.44);
+    }
     /* Cue text */
     .envfs-cue {
       position:absolute; bottom:clamp(1.5rem,4vh,2.5rem); left:50%; transform:translateX(-50%);
@@ -1418,6 +1446,7 @@ function openIntro() {
   gsap.to(el, { opacity:0, duration:0.4, onComplete:function(){ el.style.display='none'; } });
   `}
 }
+${animation === "envelope" ? `gsap.set('.envfs-card',{xPercent:-50,yPercent:-50,y:'100vh',opacity:0});` : ""}
 document.getElementById('intro-overlay').addEventListener('click', openIntro);
 document.addEventListener('keydown', function(e){
   if (e.key==='Enter' || e.key===' ') openIntro();
