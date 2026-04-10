@@ -408,7 +408,8 @@ function buildStyles(settings: SiteSettingRow | null): BuiltStyles {
 
     /* ── Layout ── */
     .site-wrapper { max-width: var(--max-width); margin: 0 auto; padding: 0 1.25rem; }
-    .block { padding: 3.5rem 0; }
+    .block { padding: 3.5rem 1.25rem; }
+    .block-images, .block-video { padding-left: 0; padding-right: 0; }
 
     /* ── Hero ── */
     .block-home-hero {
@@ -562,7 +563,7 @@ function buildStyles(settings: SiteSettingRow | null): BuiltStyles {
     /* ── Venue map ── */
     .venue-name { text-align: center; font-family: var(--heading-font); font-size: 1.125rem; font-weight: normal; margin-bottom: 0.375rem; }
     .venue-note { text-align: center; color: var(--muted); font-size: 0.9375rem; margin-bottom: 1.25rem; }
-    .map-wrap { position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: var(--radius); }
+    .map-wrap { position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: var(--radius); max-width: var(--max-width); margin-left: auto; margin-right: auto; }
     .map-iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; }
     .venue-address { text-align: center; color: var(--muted); font-size: 0.875rem; margin-top: 0.75rem; }
 
@@ -1320,7 +1321,7 @@ function buildHtml(
       const sectionClass = hasMultiplePages
         ? `page-section${i === 0 ? " active" : ""}`
         : "page-section active";
-      return `<div class="${sectionClass}" id="page-${escHtml(page.id)}"><div class="site-wrapper">${blocksHtml}</div></div>`;
+      return `<div class="${sectionClass}" id="page-${escHtml(page.id)}">${blocksHtml}</div>`;
     })
     .join("\n");
 
