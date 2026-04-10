@@ -1267,10 +1267,12 @@ function buildCountdownScript(): string {
       mins:  document.getElementById('cd-mins-'  + bid),
       secs:  document.getElementById('cd-secs-'  + bid),
     };
+    var timer;
     function tick() {
       var diff = target.getTime() - Date.now();
       if (diff <= 0) {
         ['days','hours','mins','secs'].forEach(function(k){ if(els[k]) els[k].textContent='0'; });
+        clearInterval(timer);
         return;
       }
       var d = Math.floor(diff / 86400000);
@@ -1278,12 +1280,12 @@ function buildCountdownScript(): string {
       var m = Math.floor((diff % 3600000) / 60000);
       var s = Math.floor((diff % 60000) / 1000);
       if (els.days)  els.days.textContent  = String(d);
-      if (els.hours) els.hours.textContent = String(h);
-      if (els.mins)  els.mins.textContent  = String(m);
-      if (els.secs)  els.secs.textContent  = String(s);
+      if (els.hours) els.hours.textContent = String(h).padStart(2, '0');
+      if (els.mins)  els.mins.textContent  = String(m).padStart(2, '0');
+      if (els.secs)  els.secs.textContent  = String(s).padStart(2, '0');
     }
     tick();
-    setInterval(tick, 1000);
+    timer = setInterval(tick, 1000);
   });
 })();
 </script>`;
