@@ -393,6 +393,10 @@ export default function SiteEditor() {
     navItemsConfig: "[]",
   });
 
+  // CSV import state
+  const csvImportRef = useRef<HTMLInputElement | null>(null);
+  const [importProgress, setImportProgress] = useState<{ done: number; total: number } | null>(null);
+
   // Analytics section state
   const [analytics, setAnalytics]               = useState<AnalyticsData | null>(null);
   const [analyticsLoading, setAnalyticsLoading] = useState(false);
@@ -1023,6 +1027,106 @@ export default function SiteEditor() {
     } finally {
       setSavingSettings(false);
     }
+  }
+
+  async function handleToggleLive() {
+    const newVal: 0 | 1 = settingsForm.isLive ? 0 : 1;
+    setSettingsForm((f) => ({ ...f, isLive: newVal }));
+    try {
+      await apiFetch("/settings", {
+        method: "PUT",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ isLive: newVal }),
+      });
+      toast(newVal ? "Site is now live" : "Site taken offline");
+    } catch (err) {
+      // Roll back optimistic update on error
+      setSettingsForm((f) => ({ ...f, isLive: newVal ? 0 : 1 }));
+      toast(err instanceof Error ? err.message : "Failed to update site status", true);
+    }
+  }
+
+  function handleExportCsv() {
+    const header = "firstName,lastName,party,rsvpStatus,notes";
+    const rows = guests.map((g) => {
+      const escape = (v: string | null | undefined) => {
+        const s = v ?? "";
+        return s.includes(",") || s.includes('"') || s.includes("\n")
+          ? `"${s.replace(/"/g, '""')}"`
+          : s;
+      };
+      return [
+        escape(g.firstName),
+        escape(g.lastName),
+        escape(g.party),
+        escape(g.rsvpStatus),
+        escape(g.notes),
+      ].join(",");
+    });
+    const csv = [header, ...rows].join("\n");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `guests-${site.slug}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast(`Exported ${guests.length} guest${guests.length !== 1 ? "s" : ""}`);
+  }
+
+  async function handleImportCsv(file: File) {
+    const text = await file.text();
+    const lines = text.split(/\r?\n/).filter((l) => l.trim() !== "");
+    if (lines.length < 2) {
+      toast("CSV has no data rows", true);
+      return;
+    }
+
+    // Parse header to find column indices (case-insensitive)
+    const headers = lines[0].split(",").map((h) => h.trim().toLowerCase().replace(/^"|"$/g, ""));
+    const col = (name: string) => headers.indexOf(name);
+    const firstNameIdx   = col("firstname");
+    const lastNameIdx    = col("lastname");
+    const partyIdx       = col("party");
+    const notesIdx       = col("notes");
+
+    if (firstNameIdx === -1) {
+      toast("CSV must have a firstName column", true);
+      return;
+    }
+
+    const dataRows = lines.slice(1);
+    const total = dataRows.length;
+    setImportProgress({ done: 0, total });
+
+    let successCount = 0;
+    for (let i = 0; i < dataRows.length; i++) {
+      // Split respecting quoted fields
+      const cells = dataRows[i].split(",").map((c) => c.trim().replace(/^"|"$/g, ""));
+      const firstName = cells[firstNameIdx]?.trim();
+      if (!firstName) { setImportProgress({ done: i + 1, total }); continue; }
+
+      const body: Record<string, string> = { firstName };
+      if (lastNameIdx !== -1 && cells[lastNameIdx]?.trim()) body.lastName = cells[lastNameIdx].trim();
+      if (partyIdx    !== -1 && cells[partyIdx]?.trim())    body.party    = cells[partyIdx].trim();
+      if (notesIdx    !== -1 && cells[notesIdx]?.trim())    body.notes    = cells[notesIdx].trim();
+
+      try {
+        await apiFetch("/guests", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify(body),
+        });
+        successCount++;
+      } catch {
+        // Skip failed rows silently; report at end
+      }
+      setImportProgress({ done: i + 1, total });
+    }
+
+    setImportProgress(null);
+    await fetchGuests(guestFilter || undefined);
+    toast(`Imported ${successCount} of ${total} guest${total !== 1 ? "s" : ""}`);
   }
 
   async function handleSaveStyle() {
@@ -1986,8 +2090,36 @@ export default function SiteEditor() {
                 + Add Guest
               </button>
               <div className="gl-toolbar-sep" />
-              <button className="gl-btn">↑ Import</button>
-              <button className="gl-btn">↓ Export</button>
+              <button
+                className="gl-btn"
+                onClick={() => csvImportRef.current?.click()}
+                disabled={importProgress !== null}
+                aria-label="Import guests from CSV"
+              >
+                {importProgress
+                  ? `Importing ${importProgress.done}/${importProgress.total}…`
+                  : "↑ Import"}
+              </button>
+              <input
+                ref={csvImportRef}
+                type="file"
+                accept=".csv"
+                style={{ display: "none" }}
+                aria-hidden="true"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) handleImportCsv(file);
+                  e.target.value = "";
+                }}
+              />
+              <button
+                className="gl-btn"
+                onClick={handleExportCsv}
+                disabled={guests.length === 0}
+                aria-label="Export guests to CSV"
+              >
+                ↓ Export
+              </button>
               <div className="gl-toolbar-sep" />
               <select
                 style={{ background: "#fff", border: "1px solid #ddd", color: "#1c1917", padding: "4px 9px", fontSize: "0.75rem", borderRadius: "8px", cursor: "pointer" }}
@@ -2422,6 +2554,48 @@ export default function SiteEditor() {
                 </div>
                 <button className="btn-primary-sm" style={{ marginLeft: "auto" }}>Connect Canva</button>
               </div>
+            </div>
+
+            {/* Site Live Toggle */}
+            <div className="setup-section">
+              <div className="setup-section-head">
+                <h2 className="setup-section-title">Site Status</h2>
+                <p className="setup-section-desc">Control whether guests can view your site.</p>
+              </div>
+              {settingsLoading ? (
+                <p style={{ fontSize: "0.82rem", color: "#b0a99f" }}>Loading…</p>
+              ) : (
+                <div style={{ display: "flex", alignItems: "center", gap: "1rem", flexWrap: "wrap" }}>
+                  <div style={{
+                    display: "inline-flex", alignItems: "center", gap: "8px",
+                    padding: "6px 14px", borderRadius: "20px",
+                    background: settingsForm.isLive ? "#f0fdfa" : "#f5f0eb",
+                    border: `1.5px solid ${settingsForm.isLive ? "#99f6e4" : "#e0dbd4"}`,
+                  }}>
+                    <span style={{
+                      width: "8px", height: "8px", borderRadius: "50%",
+                      background: settingsForm.isLive ? "#0d9488" : "#b0a99f",
+                      flexShrink: 0,
+                    }} />
+                    <span style={{
+                      fontSize: "0.82rem", fontWeight: 600,
+                      color: settingsForm.isLive ? "#0d9488" : "#6b5e56",
+                    }}>
+                      {settingsForm.isLive ? "Site is Live" : "Site is Offline"}
+                    </span>
+                  </div>
+                  <button
+                    className="btn-primary-sm"
+                    onClick={handleToggleLive}
+                    style={settingsForm.isLive
+                      ? { background: "#6b5e56", borderColor: "#6b5e56" }
+                      : undefined}
+                    aria-label={settingsForm.isLive ? "Take site offline" : "Go live"}
+                  >
+                    {settingsForm.isLive ? "Take Offline" : "Go Live"}
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* Advanced Settings */}
