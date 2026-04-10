@@ -916,33 +916,28 @@ function renderBlock(
     case "countdown": {
       const targetDate = settings?.eventDate ?? "";
       const label = (cfg.label as string | undefined) ?? "Until we say I do";
+      const showRsvp = !!cfg.showRsvpButton;
+      const rsvpText = escHtml(String(cfg.rsvpButtonText ?? "RSVP Now"));
+      const rsvpBg = escHtml(String(cfg.rsvpButtonColor ?? accent));
+      const rsvpFg = escHtml(String(cfg.rsvpButtonTextColor ?? "#fff"));
+      const rsvpBorder = cfg.rsvpButtonBorderColor
+        ? `border:2px solid ${escHtml(String(cfg.rsvpButtonBorderColor))};` : "";
       return `
-        <section class="block block-countdown" aria-label="Countdown">
-          <p class="countdown-label">${escHtml(label)}</p>
-          ${
-            targetDate
-              ? `<div class="countdown-units" id="countdown-${escHtml(block.id)}" data-target="${escHtml(targetDate)}">
-                   <div class="countdown-unit">
-                     <span class="countdown-num" id="cd-days-${escHtml(block.id)}">--</span>
-                     <span class="countdown-unit-label">Days</span>
-                   </div>
-                   <div class="countdown-unit">
-                     <span class="countdown-num" id="cd-hrs-${escHtml(block.id)}">--</span>
-                     <span class="countdown-unit-label">Hours</span>
-                   </div>
-                   <div class="countdown-unit">
-                     <span class="countdown-num" id="cd-min-${escHtml(block.id)}">--</span>
-                     <span class="countdown-unit-label">Minutes</span>
-                   </div>
-                   <div class="countdown-unit">
-                     <span class="countdown-num" id="cd-sec-${escHtml(block.id)}">--</span>
-                     <span class="countdown-unit-label">Seconds</span>
-                   </div>
-                 </div>`
-              : placeholder("Set a target date to show the countdown.")
-          }
-          ${cfg.showRsvpButton ? `<div style="text-align:center;margin-top:2rem"><a href="#rsvp" class="rsvp-submit" style="background:${escHtml(String(cfg.rsvpButtonColor ?? accent))};color:${escHtml(String(cfg.rsvpButtonTextColor ?? "#fff"))};${cfg.rsvpButtonBorderColor ? `border:2px solid ${escHtml(String(cfg.rsvpButtonBorderColor))};` : ""}text-decoration:none;display:inline-block">${escHtml(String(cfg.rsvpButtonText ?? "RSVP Now"))}</a></div>` : ""}
-        </section>`;
+    <section class="block block-countdown" aria-label="Countdown" data-block-id="${escHtml(block.id)}" data-block-type="countdown">
+      <p class="countdown-label">${escHtml(label)}</p>
+      ${targetDate
+        ? `<div class="countdown-units" data-cd-clock data-date="${escHtml(targetDate)}" data-block-id="${escHtml(block.id)}">
+             <div class="countdown-unit"><span class="countdown-num" id="cd-days-${escHtml(block.id)}">--</span><span class="countdown-unit-label">Days</span></div>
+             <div class="countdown-unit"><span class="countdown-num" id="cd-hours-${escHtml(block.id)}">--</span><span class="countdown-unit-label">Hours</span></div>
+             <div class="countdown-unit"><span class="countdown-num" id="cd-mins-${escHtml(block.id)}">--</span><span class="countdown-unit-label">Minutes</span></div>
+             <div class="countdown-unit"><span class="countdown-num" id="cd-secs-${escHtml(block.id)}">--</span><span class="countdown-unit-label">Seconds</span></div>
+           </div>`
+        : placeholder("Set an event date in Site Settings to show the countdown.")
+      }
+      ${showRsvp
+        ? `<div style="text-align:center;margin-top:2rem"><a href="#rsvp" class="rsvp-submit" style="background:${rsvpBg};color:${rsvpFg};${rsvpBorder}text-decoration:none;display:inline-block">${rsvpText}</a></div>`
+        : ""}
+    </section>`;
     }
 
     case "schedule": {
@@ -1260,28 +1255,36 @@ function renderBlock(
 function buildCountdownScript(): string {
   return `<script>
 (function(){
-  function pad(n){return String(n).padStart(2,'0');}
-  function tick(){
-    var now=Date.now();
-    document.querySelectorAll('.countdown-units[data-target]').forEach(function(el){
-      var t=el.dataset.target;
-      if(!t)return;
-      var diff=Math.max(0,new Date(t).getTime()-now);
-      var id=el.id.replace('countdown-','');
-      var d=Math.floor(diff/86400000);
-      var h=Math.floor((diff%86400000)/3600000);
-      var m=Math.floor((diff%3600000)/60000);
-      var s=Math.floor((diff%60000)/1000);
-      var ge=function(i){return document.getElementById(i);};
-      var days=ge('cd-days-'+id),hrs=ge('cd-hrs-'+id),mn=ge('cd-min-'+id),sec=ge('cd-sec-'+id);
-      if(days)days.textContent=String(d);
-      if(hrs) hrs.textContent=pad(h);
-      if(mn)  mn.textContent=pad(m);
-      if(sec) sec.textContent=pad(s);
-    });
-  }
-  tick();
-  setInterval(tick,1000);
+  document.querySelectorAll('[data-cd-clock]').forEach(function(container){
+    var raw = container.getAttribute('data-date');
+    if (!raw) return;
+    var target = new Date(raw + 'T00:00:00');
+    if (isNaN(target.getTime())) return;
+    var bid = container.getAttribute('data-block-id') || '';
+    var els = {
+      days:  document.getElementById('cd-days-'  + bid),
+      hours: document.getElementById('cd-hours-' + bid),
+      mins:  document.getElementById('cd-mins-'  + bid),
+      secs:  document.getElementById('cd-secs-'  + bid),
+    };
+    function tick() {
+      var diff = target.getTime() - Date.now();
+      if (diff <= 0) {
+        ['days','hours','mins','secs'].forEach(function(k){ if(els[k]) els[k].textContent='0'; });
+        return;
+      }
+      var d = Math.floor(diff / 86400000);
+      var h = Math.floor((diff % 86400000) / 3600000);
+      var m = Math.floor((diff % 3600000) / 60000);
+      var s = Math.floor((diff % 60000) / 1000);
+      if (els.days)  els.days.textContent  = String(d);
+      if (els.hours) els.hours.textContent = String(h);
+      if (els.mins)  els.mins.textContent  = String(m);
+      if (els.secs)  els.secs.textContent  = String(s);
+    }
+    tick();
+    setInterval(tick, 1000);
+  });
 })();
 </script>`;
 }
