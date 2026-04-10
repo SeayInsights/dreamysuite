@@ -535,7 +535,7 @@ function buildStyles(settings: SiteSettingRow | null): BuiltStyles {
       line-height: 1;
     }
     .countdown-unit-label { font-size: 0.75rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin-top: 0.375rem; }
-    .video-cd-overlay { position:absolute; bottom:120px; left:50%; transform:translateX(var(--cd-x,0px)); z-index:10; text-align:center; color:#fff; pointer-events:none; }
+    .video-cd-overlay { position:absolute; left:50%; z-index:10; text-align:center; color:#fff; pointer-events:none; }
     .video-cd-overlay .countdown-units { justify-content:center; }
     .video-cd-overlay .countdown-num { color:#fff; }
     .video-cd-overlay .countdown-unit-label { color:rgba(255,255,255,0.75); }
@@ -1059,8 +1059,10 @@ function renderBlock(
       const vimeoId = cfg.vimeoId as string | undefined;
       const height = (cfg.height as string | undefined) ?? "100dvh";
       const showCountdown = !!cfg.showCountdown;
-      const cdX = Number(cfg.countdownX ?? 0);
-      const cdY = Number(cfg.countdownY ?? 120);
+      const cdXRaw = Number(cfg.countdownX ?? 0);
+      const cdX = isFinite(cdXRaw) ? cdXRaw : 0;
+      const cdYRaw = Number(cfg.countdownY ?? 120);
+      const cdY = isFinite(cdYRaw) ? cdYRaw : 120;
       const targetDate = settings?.eventDate ?? "";
 
       const overlayHtml = showCountdown && targetDate
@@ -1089,7 +1091,7 @@ function renderBlock(
         </section>`;
       }
       return `
-        <section class="block block-video" aria-label="Video" data-block-id="${escHtml(block.id)}" data-block-type="video">
+        <section class="block block-video" aria-label="Video" data-block-id="${escHtml(block.id)}" data-block-type="video" style="position:relative;">
           ${url ? `<video src="${escHtml(url)}" controls class="media-element" aria-label="Wedding video"></video>` : mediaPlaceholder("Video")}
           ${overlayHtml}
         </section>`;
