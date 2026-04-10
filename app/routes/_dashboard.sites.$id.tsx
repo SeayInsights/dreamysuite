@@ -423,6 +423,7 @@ export default function SiteEditor() {
   // Drag-to-reorder refs
   const blockListRef = useRef<HTMLDivElement | null>(null);
   const blocksRef = useRef<Block[]>(blocks);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
   blocksRef.current = blocks;
 
   const previewUrl = activePage ? `/${site.slug}?_page=${activePage.id}&_t=${previewKey}` : `/${site.slug}?_t=${previewKey}`;
@@ -876,7 +877,23 @@ export default function SiteEditor() {
   }
 
   function setField(key: string, val: unknown) {
-    setBlockConfigFields((f) => ({ ...f, [key]: val }));
+    setBlockConfigFields((f) => {
+      const updated = { ...f, [key]: val };
+      if (iframeRef.current?.contentWindow && expandedBlockId) {
+        iframeRef.current.contentWindow.postMessage(
+          { type: 'block_config_update', blockId: expandedBlockId, config: updated },
+          '*'
+        );
+      }
+      return updated;
+    });
+  }
+
+  function fireSettingsPreview(delta: Record<string, unknown>) {
+    iframeRef.current?.contentWindow?.postMessage(
+      { type: 'site_settings_update', delta },
+      '*'
+    );
   }
 
   async function handleReorderPage(pageId: string, direction: "up" | "down") {
@@ -2078,6 +2095,7 @@ export default function SiteEditor() {
               </div>
               <div className="preview-wrap">
                 <iframe
+                  ref={iframeRef}
                   key={`${activePage?.id ?? "no-page"}-${previewKey}`}
                   className="preview-iframe"
                   src={previewUrl}
@@ -3350,7 +3368,7 @@ export default function SiteEditor() {
                           <select className="sf-input" style={{ flex: 1 }} value={settingsForm.headingFont} onChange={(e) => setSettingsForm((f) => ({ ...f, headingFont: e.target.value }))}>
                             {HEADING_FONTS.map((fn) => <option key={fn}>{fn}</option>)}
                           </select>
-                          <input type="color" value={settingsForm.headingColor} onChange={(e) => setSettingsForm((f) => ({ ...f, headingColor: e.target.value }))} style={{ width: "36px", height: "36px", border: "1px solid #e0dbd4", borderRadius: "6px", cursor: "pointer", flexShrink: 0 }} title="Heading color" />
+                          <input type="color" value={settingsForm.headingColor} onChange={(e) => { setSettingsForm((f) => ({ ...f, headingColor: e.target.value })); fireSettingsPreview({ headingColor: e.target.value }); }} style={{ width: "36px", height: "36px", border: "1px solid #e0dbd4", borderRadius: "6px", cursor: "pointer", flexShrink: 0 }} title="Heading color" />
                         </div>
                       </div>
                       <div className="sf-group">
@@ -3359,7 +3377,7 @@ export default function SiteEditor() {
                           <select className="sf-input" style={{ flex: 1 }} value={settingsForm.bodyFont} onChange={(e) => setSettingsForm((f) => ({ ...f, bodyFont: e.target.value }))}>
                             {BODY_FONTS.map((fn) => <option key={fn}>{fn}</option>)}
                           </select>
-                          <input type="color" value={settingsForm.bodyColor} onChange={(e) => setSettingsForm((f) => ({ ...f, bodyColor: e.target.value }))} style={{ width: "36px", height: "36px", border: "1px solid #e0dbd4", borderRadius: "6px", cursor: "pointer", flexShrink: 0 }} title="Body text color" />
+                          <input type="color" value={settingsForm.bodyColor} onChange={(e) => { setSettingsForm((f) => ({ ...f, bodyColor: e.target.value })); fireSettingsPreview({ bodyColor: e.target.value }); }} style={{ width: "36px", height: "36px", border: "1px solid #e0dbd4", borderRadius: "6px", cursor: "pointer", flexShrink: 0 }} title="Body text color" />
                         </div>
                       </div>
                       <div style={{ marginTop: "0.5rem", paddingTop: "0.5rem", borderTop: "1px solid #f0ede8" }}>
@@ -3385,7 +3403,7 @@ export default function SiteEditor() {
                       <div className="sf-group">
                         <label className="sf-lbl">Accent Color</label>
                         <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                          <input type="color" value={settingsForm.accentColor} onChange={(e) => setSettingsForm((f) => ({ ...f, accentColor: e.target.value }))} style={{ width: "36px", height: "36px", border: "1px solid #e0dbd4", borderRadius: "6px", cursor: "pointer" }} />
+                          <input type="color" value={settingsForm.accentColor} onChange={(e) => { setSettingsForm((f) => ({ ...f, accentColor: e.target.value })); fireSettingsPreview({ accentColor: e.target.value }); }} style={{ width: "36px", height: "36px", border: "1px solid #e0dbd4", borderRadius: "6px", cursor: "pointer" }} />
                           <div style={{ flex: 1, padding: "6px 14px", borderRadius: "4px", fontSize: "0.78rem", textAlign: "center", background: settingsForm.buttonStyle === "filled" ? settingsForm.accentColor : "transparent", color: settingsForm.buttonStyle === "filled" ? "#fff" : settingsForm.accentColor, border: `${settingsForm.buttonBorderWidth || "1.5px"} solid ${settingsForm.accentColor}` }}>Preview</div>
                         </div>
                       </div>
@@ -3418,7 +3436,7 @@ export default function SiteEditor() {
                       ].map(({ label, key, def }) => (
                         <div key={key} style={{ display: "flex", alignItems: "center", gap: "10px", padding: "6px 0", borderBottom: "1px solid #f5f2ee" }}>
                           <input type="color" value={settingsForm[key] || def}
-                            onChange={(e) => setSettingsForm((f) => ({ ...f, [key]: e.target.value }))}
+                            onChange={(e) => { setSettingsForm((f) => ({ ...f, [key]: e.target.value })); fireSettingsPreview({ [key]: e.target.value }); }}
                             style={{ width: "26px", height: "26px", borderRadius: "5px", border: "1px solid #e0dbd4", cursor: "pointer", padding: "1px", flexShrink: 0 }} />
                           <span style={{ fontSize: "0.8rem", color: "#6b5e56", flex: 1 }}>{label}</span>
                           <code style={{ fontSize: "0.72rem", color: "#a09690", fontFamily: "monospace" }}>{(settingsForm[key] || def).toUpperCase()}</code>
@@ -3692,7 +3710,7 @@ export default function SiteEditor() {
                       {settingsForm.navBg !== "white" && settingsForm.navBg !== "glass" && (
                         <div style={{ display: "flex", alignItems: "center", gap: "10px", padding: "6px 0", marginBottom: "1rem", borderBottom: "1px solid #f5f2ee" }}>
                           <input type="color" value={settingsForm.navBg || "#f7f5f0"}
-                            onChange={(e) => setSettingsForm((f) => ({ ...f, navBg: e.target.value }))}
+                            onChange={(e) => { setSettingsForm((f) => ({ ...f, navBg: e.target.value })); fireSettingsPreview({ navBg: e.target.value }); }}
                             style={{ width: "26px", height: "26px", borderRadius: "5px", border: "1px solid #e0dbd4", cursor: "pointer", padding: "1px", flexShrink: 0 }} />
                           <span style={{ fontSize: "0.8rem", color: "#6b5e56", flex: 1 }}>Custom color</span>
                           <code style={{ fontSize: "0.72rem", color: "#a09690", fontFamily: "monospace" }}>{(settingsForm.navBg || "#f7f5f0").toUpperCase()}</code>
@@ -3708,7 +3726,7 @@ export default function SiteEditor() {
                       ].map(({ label, key, def }) => (
                         <div key={key} style={{ display: "flex", alignItems: "center", gap: "10px", padding: "6px 0", borderBottom: "1px solid #f5f2ee" }}>
                           <input type="color" value={settingsForm[key] || def}
-                            onChange={(e) => setSettingsForm((f) => ({ ...f, [key]: e.target.value }))}
+                            onChange={(e) => { setSettingsForm((f) => ({ ...f, [key]: e.target.value })); fireSettingsPreview({ [key]: e.target.value }); }}
                             style={{ width: "26px", height: "26px", borderRadius: "5px", border: "1px solid #e0dbd4", cursor: "pointer", padding: "1px", flexShrink: 0 }} />
                           <span style={{ fontSize: "0.8rem", color: "#6b5e56", flex: 1 }}>{label}</span>
                           <code style={{ fontSize: "0.72rem", color: "#a09690", fontFamily: "monospace" }}>{(settingsForm[key] || def).toUpperCase()}</code>
