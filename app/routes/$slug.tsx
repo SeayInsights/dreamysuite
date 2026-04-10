@@ -535,6 +535,10 @@ function buildStyles(settings: SiteSettingRow | null): BuiltStyles {
       line-height: 1;
     }
     .countdown-unit-label { font-size: 0.75rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin-top: 0.375rem; }
+    .video-cd-overlay { position:absolute; bottom:120px; left:50%; transform:translateX(var(--cd-x,0px)); z-index:10; text-align:center; color:#fff; pointer-events:none; }
+    .video-cd-overlay .countdown-units { justify-content:center; }
+    .video-cd-overlay .countdown-num { color:#fff; }
+    .video-cd-overlay .countdown-unit-label { color:rgba(255,255,255,0.75); }
 
     /* ── Timeline ── */
     .timeline { list-style: none; max-width: 540px; margin: 0 auto; }
@@ -1054,9 +1058,26 @@ function renderBlock(
       const url = cfg.url as string | undefined;
       const vimeoId = cfg.vimeoId as string | undefined;
       const height = (cfg.height as string | undefined) ?? "100dvh";
+      const showCountdown = !!cfg.showCountdown;
+      const cdX = Number(cfg.countdownX ?? 0);
+      const cdY = Number(cfg.countdownY ?? 120);
+      const targetDate = settings?.eventDate ?? "";
+
+      const overlayHtml = showCountdown && targetDate
+        ? `<div class="video-cd-overlay" style="bottom:${cdY}px;transform:translateX(${cdX}px);" data-cd-clock data-date="${escHtml(targetDate)}" data-block-id="${escHtml(block.id)}-overlay">
+             <div class="countdown-units">
+               <div class="countdown-unit"><span class="countdown-num" id="cd-days-${escHtml(block.id)}-overlay">--</span><span class="countdown-unit-label">Days</span></div>
+               <div class="countdown-unit"><span class="countdown-num" id="cd-hours-${escHtml(block.id)}-overlay">--</span><span class="countdown-unit-label">Hours</span></div>
+               <div class="countdown-unit"><span class="countdown-num" id="cd-mins-${escHtml(block.id)}-overlay">--</span><span class="countdown-unit-label">Minutes</span></div>
+               <div class="countdown-unit"><span class="countdown-num" id="cd-secs-${escHtml(block.id)}-overlay">--</span><span class="countdown-unit-label">Seconds</span></div>
+             </div>
+           </div>`
+        : "";
+
       if (vimeoId) {
         return `
-        <section class="block block-video" aria-label="Video" style="position:relative;width:100%;height:${escHtml(height)};overflow:hidden;background:#000;">
+        <section class="block block-video" aria-label="Video" data-block-id="${escHtml(block.id)}" data-block-type="video"
+          style="position:relative;width:100%;height:${escHtml(height)};overflow:hidden;background:#000;">
           <iframe
             src="https://player.vimeo.com/video/${escHtml(vimeoId)}?autoplay=1&muted=1&loop=1&background=1"
             style="position:absolute;top:50%;left:50%;width:177.78vh;min-width:100%;min-height:100%;height:56.25vw;transform:translate(-50%,-50%);border:0;"
@@ -1064,11 +1085,13 @@ function renderBlock(
             allowfullscreen
             title="Wedding video"
           ></iframe>
+          ${overlayHtml}
         </section>`;
       }
       return `
-        <section class="block block-video" aria-label="Video">
+        <section class="block block-video" aria-label="Video" data-block-id="${escHtml(block.id)}" data-block-type="video">
           ${url ? `<video src="${escHtml(url)}" controls class="media-element" aria-label="Wedding video"></video>` : mediaPlaceholder("Video")}
+          ${overlayHtml}
         </section>`;
     }
 
