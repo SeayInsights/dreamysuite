@@ -684,6 +684,10 @@ function renderBlock(
               <input class="form-input" id="rsvp-ln-${escHtml(block.id)}" name="lastName" type="text" placeholder="Last name" autocomplete="family-name" required />
             </div>
             <div class="form-group">
+              <label class="form-label" for="rsvp-email-${escHtml(block.id)}">Email <span style="font-size:0.8em;color:#9b8e85;font-weight:400;">(optional — for confirmation)</span></label>
+              <input class="form-input" id="rsvp-email-${escHtml(block.id)}" name="email" type="email" placeholder="your@email.com" autocomplete="email" />
+            </div>
+            <div class="form-group">
               <label class="form-label">Will you attend?</label>
               <div class="radio-group" role="radiogroup" aria-label="Attendance">
                 <label class="radio-label">
@@ -1205,6 +1209,7 @@ function submitRsvp(event, slug, formId, msgId) {
   var body = {
     firstName: data.get('firstName') || '',
     lastName: data.get('lastName') || '',
+    email: data.get('email') || '',
     attending: data.get('attending') || '',
     notes: data.get('notes') || ''
   };

@@ -206,6 +206,7 @@ export async function action({ request, context, params }: Route.ActionArgs) {
   let lastName: string | undefined;
   let attending: string | undefined;
   let notes: string | undefined;
+  let guestEmail: string | undefined;
 
   const contentType = request.headers.get("content-type") ?? "";
   if (contentType.includes("application/json")) {
@@ -222,6 +223,7 @@ export async function action({ request, context, params }: Route.ActionArgs) {
     lastName = body.lastName;
     attending = body.attending;
     notes = body.notes;
+    guestEmail = body.email || undefined;
   } else {
     // application/x-www-form-urlencoded or multipart/form-data
     let formData: FormData;
@@ -237,6 +239,7 @@ export async function action({ request, context, params }: Route.ActionArgs) {
     lastName = formData.get("lastName")?.toString();
     attending = formData.get("attending")?.toString();
     notes = formData.get("notes")?.toString();
+    guestEmail = formData.get("email")?.toString() || undefined;
   }
 
   // Validate required fields
@@ -305,6 +308,62 @@ export async function action({ request, context, params }: Route.ActionArgs) {
     )
     .bind(attending, notes ?? null, now, now, guest.id)
     .run();
+
+  // Send email notifications via Resend (fire and forget)
+  const resendKey = (context.cloudflare.env as unknown as Record<string, string>).RESEND_API_KEY;
+  if (resendKey) {
+    const ownerInfo = await db
+      .prepare(
+        `SELECT u.email AS ownerEmail, s.name AS siteName, ss.eventName, ss.eventDate
+         FROM site s
+         JOIN user u ON u.id = s.userId
+         LEFT JOIN site_setting ss ON ss.siteId = s.id
+         WHERE s.slug = ?`
+      )
+      .bind(siteSlug)
+      .first<{ ownerEmail: string; siteName: string; eventName: string | null; eventDate: string | null }>();
+
+    if (ownerInfo) {
+      const eventLabel = ownerInfo.eventName || ownerInfo.siteName;
+      const guestName = `${firstNameClean} ${lastNameClean}`;
+      const attendingLabel = attending === "yes" ? "will attend" : "cannot attend";
+      const emailHeaders = {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${resendKey}`,
+      };
+
+      context.cloudflare.ctx.waitUntil((async () => {
+        // Owner notification
+        await fetch("https://api.resend.com/emails", {
+          method: "POST",
+          headers: emailHeaders,
+          body: JSON.stringify({
+            from: "DreamySuite <notifications@dreamysuite.com>",
+            to: [ownerInfo.ownerEmail],
+            subject: `New RSVP: ${guestName} ${attendingLabel}`,
+            html: `<div style="font-family:Georgia,serif;max-width:520px;margin:0 auto;padding:2rem;color:#292524"><h2 style="font-weight:normal;margin:0 0 1rem">${eventLabel}</h2><p><strong>${guestName}</strong> has responded and <strong>${attendingLabel}</strong>.</p>${notes ? `<p style="color:#78716c"><em>Notes: ${notes}</em></p>` : ""}<hr style="border:none;border-top:1px solid #e7e5e4;margin:1.5rem 0"><p style="color:#a8a29e;font-size:0.8rem">Sent via DreamySuite</p></div>`,
+          }),
+        }).catch(() => undefined);
+
+        // Guest confirmation if email provided
+        if (guestEmail) {
+          const confirmMsg = attending === "yes"
+            ? `We're so happy you'll be joining us for <strong>${eventLabel}</strong>!`
+            : `Thank you for letting us know. We're sorry you won't be able to make it to <strong>${eventLabel}</strong>.`;
+          await fetch("https://api.resend.com/emails", {
+            method: "POST",
+            headers: emailHeaders,
+            body: JSON.stringify({
+              from: "DreamySuite <notifications@dreamysuite.com>",
+              to: [guestEmail],
+              subject: attending === "yes" ? `See you there! — ${eventLabel}` : `RSVP confirmed — ${eventLabel}`,
+              html: `<div style="font-family:Georgia,serif;max-width:520px;margin:0 auto;padding:2rem;color:#292524"><h2 style="font-weight:normal;margin:0 0 1rem">${eventLabel}</h2><p>Hi ${firstNameClean},</p><p>${confirmMsg}</p><hr style="border:none;border-top:1px solid #e7e5e4;margin:1.5rem 0"><p style="color:#a8a29e;font-size:0.8rem">Sent via DreamySuite</p></div>`,
+            }),
+          }).catch(() => undefined);
+        }
+      })());
+    }
+  }
 
   // Look up settings for a language-appropriate response message
   const settings = await db
