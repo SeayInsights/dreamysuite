@@ -1452,6 +1452,9 @@ function showPage(pageId) {
   var section = document.getElementById('page-' + pageId);
   if (section) { section.classList.add('active'); window.scrollTo({top:0,behavior:'smooth'}); }
   document.querySelectorAll('[data-page="' + pageId + '"]').forEach(function(b){ b.classList.add('active'); });
+  if (window.parent !== window) {
+    window.parent.postMessage({ type: 'dreamysuite_pageChange', pageId: pageId }, '*');
+  }
 }
 (function(){
   var pid = new URLSearchParams(location.search).get('_page');

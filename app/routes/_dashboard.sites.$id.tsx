@@ -670,6 +670,18 @@ export default function SiteEditor() {
     if (settingsOpen && !settings) fetchSettings();
   }, [settingsOpen]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Sync active page when user clicks a nav link in the preview iframe
+  useEffect(() => {
+    function handleMessage(event: MessageEvent) {
+      if (event.data?.type === "dreamysuite_pageChange") {
+        const page = pages.find((p) => p.id === event.data.pageId);
+        if (page) { setActivePage(page); setPageDropOpen(false); }
+      }
+    }
+    window.addEventListener("message", handleMessage);
+    return () => window.removeEventListener("message", handleMessage);
+  }, [pages]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // SortableJS — drag-to-reorder blocks
   // Depends on blocks.length so it re-initializes after blocks are added/removed,
   // ensuring blockListRef.current is populated when the effect runs.
@@ -889,11 +901,15 @@ export default function SiteEditor() {
   }
 
   async function handleAddPage() {
+    const raw = window.prompt("Page name:");
+    if (!raw || !raw.trim()) return;
+    const label = raw.trim();
+    const slug = label.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") + "-" + Date.now();
     try {
       await fetch(`/api/sites/${site.id}/pages`, {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ label: "New Page", slug: "page-" + Date.now() }),
+        body: JSON.stringify({ label, slug }),
       });
       await fetchPages();
       toast("Page added");
@@ -1285,6 +1301,19 @@ export default function SiteEditor() {
             <div className="builder-left">
               {/* Page selector */}
               <div className="page-selector-row">
+                <button
+                  onClick={handleAddPage}
+                  title="Add page"
+                  aria-label="Add page"
+                  style={{ background: "none", border: "1px solid #d4cec8", borderRadius: "4px", cursor: "pointer", color: "#6b7280", fontSize: "0.85rem", padding: "2px 7px", lineHeight: 1.6, flexShrink: 0 }}
+                >+</button>
+                <button
+                  onClick={() => activePage && handleDeletePage(activePage.id)}
+                  disabled={!activePage || pages.length <= 1}
+                  title="Delete page"
+                  aria-label="Delete active page"
+                  style={{ background: "none", border: "1px solid #d4cec8", borderRadius: "4px", cursor: (!activePage || pages.length <= 1) ? "default" : "pointer", color: (!activePage || pages.length <= 1) ? "#d4cec8" : "#e57373", fontSize: "0.85rem", padding: "2px 7px", lineHeight: 1.6, flexShrink: 0 }}
+                >×</button>
                 <div className="page-selector-wrap">
                   <button
                     className={`page-selector-btn${pageDropOpen ? " open" : ""}`}
@@ -1328,24 +1357,11 @@ export default function SiteEditor() {
                             aria-label={`Move ${p.label} down`}
                             style={{ background: "none", border: "none", cursor: idx === pages.length - 1 ? "default" : "pointer", color: idx === pages.length - 1 ? "#d4cec8" : "#6b7280", fontSize: "0.65rem", padding: "0 2px", lineHeight: 1 }}
                           >▼</button>
-                          <button
-                            onClick={(e) => { e.stopPropagation(); handleDeletePage(p.id); }}
-                            disabled={pages.length <= 1}
-                            title="Delete page"
-                            aria-label={`Delete ${p.label}`}
-                            style={{ background: "none", border: "none", cursor: pages.length <= 1 ? "default" : "pointer", color: pages.length <= 1 ? "#d4cec8" : "#e57373", fontSize: "0.75rem", padding: "0 2px", lineHeight: 1 }}
-                          >×</button>
                         </div>
                       ))}
                     </div>
                   )}
                 </div>
-                <button
-                  onClick={handleAddPage}
-                  title="Add page"
-                  aria-label="Add page"
-                  style={{ background: "none", border: "1px solid #d4cec8", borderRadius: "4px", cursor: "pointer", color: "#6b7280", fontSize: "0.7rem", padding: "2px 7px", lineHeight: 1.6, whiteSpace: "nowrap", flexShrink: 0 }}
-                >+ Add Page</button>
                 <button
                   className={`page-act-btn${activePage && activePage.isVisible !== 0 ? " vis-on" : ""}`}
                   title={activePage && activePage.isVisible !== 0 ? "Hide page" : "Show page"}
