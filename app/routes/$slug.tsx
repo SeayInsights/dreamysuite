@@ -905,7 +905,7 @@ function buildCountdownScript(
       var h=Math.floor((diff%86400000)/3600000);
       var m=Math.floor((diff%3600000)/60000);
       var s=Math.floor((diff%60000)/1000);
-      var el=document.getElementById;
+      var el=document.getElementById.bind(document);
       var days=el('cd-days-'+b.id);
       var hrs =el('cd-hrs-' +b.id);
       var min =el('cd-min-' +b.id);
