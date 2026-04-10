@@ -184,16 +184,25 @@ function buildStyles(settings: SiteSettingRow | null): BuiltStyles {
       ${isFixed ? "padding-top: 4rem;" : ""}
     }
 
-    /* ── Entrance animations ── */
-    @keyframes envelope-in { from { opacity:0; transform:translateY(48px); } to { opacity:1; transform:translateY(0); } }
-    .anim-envelope .page-section.active { animation: envelope-in 0.9s cubic-bezier(0.22,1,0.36,1) 0.15s both; }
-
-    @keyframes storybook-in { from { opacity:0; transform:scale(0.95); } to { opacity:1; transform:scale(1); } }
-    .anim-storybook .page-section.active { animation: storybook-in 0.75s ease 0.15s both; }
-
-    @keyframes doors-open { from { transform:scaleX(1); } to { transform:scaleX(0); } }
-    .anim-doors-left { position:fixed; top:0; left:0; width:50%; height:100%; background:var(--accent); transform-origin:left; animation: doors-open 0.9s ease-in-out 0.1s both; pointer-events:none; z-index:999; }
-    .anim-doors-right { position:fixed; top:0; right:0; width:50%; height:100%; background:var(--accent); transform-origin:right; animation: doors-open 0.9s ease-in-out 0.1s both; pointer-events:none; z-index:999; }
+    /* ── Intro overlay (envelope / storybook / doors) ── */
+    .intro-overlay { position:fixed; inset:0; z-index:9999; display:flex; flex-direction:column; align-items:center; justify-content:center; background:#faf6f0; cursor:pointer; }
+    .intro-envelope-top { position:absolute; top:0; left:0; right:0; height:50%; background:#faf6f0; transform-origin:top; transition:transform 0.7s cubic-bezier(0.4,0,0.2,1), opacity 0.7s; }
+    .intro-envelope-bottom { position:absolute; bottom:0; left:0; right:0; height:50%; background:#faf6f0; transform-origin:bottom; transition:transform 0.7s cubic-bezier(0.4,0,0.2,1), opacity 0.7s; }
+    .intro-overlay.opening .intro-envelope-top { transform:translateY(-100%); }
+    .intro-overlay.opening .intro-envelope-bottom { transform:translateY(100%); }
+    .wax-seal { width:80px; height:80px; border-radius:50%; background:var(--accent); display:flex; align-items:center; justify-content:center; color:white; font-size:2rem; margin-bottom:1.5rem; box-shadow:0 4px 24px rgba(0,0,0,0.15); position:relative; z-index:1; }
+    .intro-title { font-family:var(--heading-font); font-size:clamp(1.5rem,4vw,2.5rem); font-weight:normal; color:#292524; margin-bottom:0.75rem; text-align:center; position:relative; z-index:1; }
+    .intro-hint { font-style:italic; color:#78716c; font-size:0.9rem; letter-spacing:0.05em; position:relative; z-index:1; }
+    .intro-storybook-left { position:absolute; top:0; left:0; width:50%; height:100%; background:#f5f0e8; border-right:1px solid #d4c9b0; display:flex; align-items:center; justify-content:flex-end; padding-right:2rem; transform-origin:left; transition:transform 0.8s cubic-bezier(0.4,0,0.2,1); }
+    .intro-storybook-right { position:absolute; top:0; right:0; width:50%; height:100%; background:#f5f0e8; border-left:1px solid #d4c9b0; display:flex; align-items:center; padding-left:2rem; transform-origin:right; transition:transform 0.8s cubic-bezier(0.4,0,0.2,1); }
+    .intro-overlay.opening .intro-storybook-left { transform:translateX(-100%); }
+    .intro-overlay.opening .intro-storybook-right { transform:translateX(100%); }
+    .intro-book-content { position:relative; z-index:1; text-align:center; pointer-events:none; }
+    .intro-doors-left { position:absolute; top:0; left:0; width:50%; height:100%; background:var(--accent); border-right:1px solid rgba(255,255,255,0.3); display:flex; align-items:center; justify-content:flex-end; padding-right:2rem; transform-origin:left; transition:transform 0.8s cubic-bezier(0.4,0,0.2,1); }
+    .intro-doors-right { position:absolute; top:0; right:0; width:50%; height:100%; background:var(--accent); border-left:1px solid rgba(255,255,255,0.3); display:flex; align-items:center; padding-left:2rem; transform-origin:right; transition:transform 0.8s cubic-bezier(0.4,0,0.2,1); }
+    .intro-overlay.opening .intro-doors-left { transform:translateX(-100%); }
+    .intro-overlay.opening .intro-doors-right { transform:translateX(100%); }
+    .intro-doors-content { position:relative; z-index:1; text-align:center; pointer-events:none; color:#fff; }
 
     /* ── Layout ── */
     .site-wrapper { max-width: var(--max-width); margin: 0 auto; padding: 0 1.25rem; }
@@ -944,6 +953,54 @@ function buildCountdownScript(
 </script>`;
 }
 
+// ── Intro overlay builder ─────────────────────────────────────────────────────
+
+function buildIntroHtml(
+  animation: string | null,
+  eventTitle: string,
+  eventDate: string | null
+): string {
+  if (!animation || animation === "none") return "";
+
+  const title = escHtml(eventTitle);
+  const date = eventDate ? escHtml(eventDate) : "";
+
+  if (animation === "envelope") {
+    return `<div id="intro-overlay" class="intro-overlay" onclick="openIntro()" role="button" tabindex="0" aria-label="Click to open site">
+  <div class="intro-envelope-top" aria-hidden="true"></div>
+  <div class="intro-envelope-bottom" aria-hidden="true"></div>
+  <div class="wax-seal" aria-hidden="true">&#10086;</div>
+  <p class="intro-title">${title}</p>
+  <p class="intro-hint">&#8212; click to open &#8212;</p>
+</div>`;
+  }
+
+  if (animation === "storybook") {
+    return `<div id="intro-overlay" class="intro-overlay" onclick="openIntro()" role="button" tabindex="0" aria-label="Click to open site">
+  <div class="intro-storybook-left" aria-hidden="true"></div>
+  <div class="intro-storybook-right" aria-hidden="true"></div>
+  <div class="intro-book-content">
+    <p class="intro-title">${title}</p>
+    ${date ? `<p class="intro-hint">${date}</p>` : ""}
+    <p class="intro-hint" style="margin-top:0.5rem;">&#8212; open &#8212;</p>
+  </div>
+</div>`;
+  }
+
+  if (animation === "doors") {
+    return `<div id="intro-overlay" class="intro-overlay" onclick="openIntro()" role="button" tabindex="0" aria-label="Click to enter site" style="background:transparent;">
+  <div class="intro-doors-left" aria-hidden="true"></div>
+  <div class="intro-doors-right" aria-hidden="true"></div>
+  <div class="intro-doors-content">
+    <p class="intro-title" style="color:#fff;text-shadow:0 2px 12px rgba(0,0,0,0.25);">${title}</p>
+    <p class="intro-hint" style="color:rgba(255,255,255,0.85);margin-top:0.5rem;">click to enter</p>
+  </div>
+</div>`;
+  }
+
+  return "";
+}
+
 // ── Full-document HTML builder ────────────────────────────────────────────────
 
 function buildHtml(
@@ -1055,15 +1112,19 @@ function showPage(pageId) {
 
   // Animation
   const animation = settings?.animation ?? null;
-  const bodyAnimClass = animation === "envelope"
-    ? " anim-envelope"
-    : animation === "storybook"
-    ? " anim-storybook"
-    : animation === "doors"
-    ? " anim-doors"
-    : "";
-  const doorsHtml = animation === "doors"
-    ? `<div class="anim-doors-left" aria-hidden="true"></div><div class="anim-doors-right" aria-hidden="true"></div>`
+  const introHtml = buildIntroHtml(animation, eventTitle, eventDate);
+  const introScript = introHtml
+    ? `<script>
+function openIntro() {
+  var el = document.getElementById('intro-overlay');
+  if (!el) return;
+  el.classList.add('opening');
+  setTimeout(function() { el.style.display = 'none'; }, 900);
+}
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Enter' || e.key === ' ') openIntro();
+});
+</script>`
     : "";
 
   // Music player
@@ -1120,8 +1181,9 @@ function toggleMusic() {
   ${fontsTag}
   <style>${siteCss}</style>
 </head>
-<body class="${bodyAnimClass.trim()}">
-  ${doorsHtml}
+<body>
+  ${introHtml}
+  ${introScript}
   ${greetingHtml}
   ${navHtml}
   ${fallbackHtml}
