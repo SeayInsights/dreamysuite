@@ -495,7 +495,8 @@ function buildStyles(settings: SiteSettingRow | null): BuiltStyles {
 function renderBlock(
   block: ParsedBlock,
   settings: SiteSettingRow | null,
-  pageContent?: Record<string, unknown>
+  pageContent?: Record<string, unknown>,
+  siteSlug?: string
 ): string {
   const cfg = block.config;
   const accent = settings?.accentColor ?? "#0d9488";
@@ -637,36 +638,40 @@ function renderBlock(
 
     case "rsvp": {
       const formTitle = (cfg.title as string | undefined) ?? "RSVP";
+      const slug = siteSlug ?? "";
+      const formId = `rsvp-form-${escHtml(block.id)}`;
+      const msgId = `rsvp-msg-${escHtml(block.id)}`;
       return `
         <section class="block block-rsvp" aria-label="RSVP">
           <h2 class="section-heading">${escHtml(formTitle)}</h2>
           <div class="section-rule" aria-hidden="true"></div>
-          <form class="rsvp-form" onsubmit="return false;" aria-label="RSVP form">
+          <form class="rsvp-form" id="${formId}" aria-label="RSVP form" onsubmit="submitRsvp(event,'${escHtml(slug)}','${formId}','${msgId}')">
             <div class="form-group">
-              <label class="form-label" for="rsvp-name">Full Name</label>
-              <input class="form-input" id="rsvp-name" name="name" type="text" placeholder="Your name" autocomplete="name" />
+              <label class="form-label" for="rsvp-fn-${escHtml(block.id)}">First Name</label>
+              <input class="form-input" id="rsvp-fn-${escHtml(block.id)}" name="firstName" type="text" placeholder="First name" autocomplete="given-name" required />
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="rsvp-ln-${escHtml(block.id)}">Last Name</label>
+              <input class="form-input" id="rsvp-ln-${escHtml(block.id)}" name="lastName" type="text" placeholder="Last name" autocomplete="family-name" required />
             </div>
             <div class="form-group">
               <label class="form-label">Will you attend?</label>
               <div class="radio-group" role="radiogroup" aria-label="Attendance">
                 <label class="radio-label">
-                  <input type="radio" name="attendance" value="yes" /> Joyfully accepts
+                  <input type="radio" name="attending" value="yes" required /> Joyfully accepts
                 </label>
                 <label class="radio-label">
-                  <input type="radio" name="attendance" value="no" /> Regretfully declines
+                  <input type="radio" name="attending" value="no" /> Regretfully declines
                 </label>
               </div>
             </div>
             <div class="form-group">
-              <label class="form-label" for="rsvp-guests">Number of Guests</label>
-              <input class="form-input form-input--narrow" id="rsvp-guests" name="guests" type="number" min="1" max="10" placeholder="1" />
-            </div>
-            <div class="form-group">
-              <label class="form-label" for="rsvp-notes">Notes or Dietary Restrictions</label>
-              <textarea class="form-input form-textarea" id="rsvp-notes" name="notes" placeholder="Optional"></textarea>
+              <label class="form-label" for="rsvp-notes-${escHtml(block.id)}">Notes or Dietary Restrictions</label>
+              <textarea class="form-input form-textarea" id="rsvp-notes-${escHtml(block.id)}" name="notes" placeholder="Optional"></textarea>
             </div>
             <button class="rsvp-submit" type="submit" style="background:${escHtml(accent)}">Send RSVP</button>
           </form>
+          <div id="${msgId}" role="alert" aria-live="polite" style="display:none;margin-top:1.25rem;text-align:center;font-size:0.9375rem;padding:0.875rem 1rem;border-radius:6px;"></div>
         </section>`;
     }
 
@@ -928,7 +933,8 @@ function buildHtml(
   site: SiteRow,
   settings: SiteSettingRow | null,
   pages: PageWithBlocks[],
-  contentMap: ContentMap
+  contentMap: ContentMap,
+  siteSlug: string
 ): string {
   const mainLang = settings?.mainLanguage ?? "en";
   const lang = escHtml(mainLang);
@@ -980,7 +986,7 @@ function buildHtml(
       const pageContent = pageContentByLang?.get(mainLang)
         ?? (pageContentByLang ? [...pageContentByLang.values()][0] : undefined);
       const blocksHtml = page.blocks
-        .map((block) => renderBlock(block, settings, pageContent))
+        .map((block) => renderBlock(block, settings, pageContent, siteSlug))
         .join("\n");
       const sectionClass = hasMultiplePages
         ? `page-section${i === 0 ? " active" : ""}`
@@ -1093,6 +1099,55 @@ function toggleMusic() {
   ${navScript}
   ${buildCountdownScript(countdownData)}
   ${musicScript}
+  <script>
+function submitRsvp(event, slug, formId, msgId) {
+  event.preventDefault();
+  var form = document.getElementById(formId);
+  var msgEl = document.getElementById(msgId);
+  if (!form || !msgEl) return;
+  var data = new FormData(form);
+  var body = {
+    firstName: data.get('firstName') || '',
+    lastName: data.get('lastName') || '',
+    attending: data.get('attending') || '',
+    notes: data.get('notes') || ''
+  };
+  var submitBtn = form.querySelector('button[type="submit"]');
+  if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Sending\u2026'; }
+  fetch('/api/public/' + encodeURIComponent(slug) + '/rsvp', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify(body)
+  })
+  .then(function(res) { return res.json(); })
+  .then(function(result) {
+    form.style.display = 'none';
+    msgEl.style.display = 'block';
+    if (result.ok) {
+      msgEl.style.background = '#f0fdf4';
+      msgEl.style.color = '#166534';
+      msgEl.style.border = '1px solid #bbf7d0';
+      msgEl.textContent = result.message || 'Thank you! Your RSVP has been received.';
+    } else {
+      form.style.display = 'block';
+      if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Send RSVP'; }
+      msgEl.style.background = '#fef2f2';
+      msgEl.style.color = '#991b1b';
+      msgEl.style.border = '1px solid #fecaca';
+      var msg = (result.error && result.error.message) ? result.error.message : 'Something went wrong. Please try again.';
+      msgEl.textContent = msg;
+    }
+  })
+  .catch(function() {
+    if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Send RSVP'; }
+    msgEl.style.display = 'block';
+    msgEl.style.background = '#fef2f2';
+    msgEl.style.color = '#991b1b';
+    msgEl.style.border = '1px solid #fecaca';
+    msgEl.textContent = 'Network error. Please check your connection and try again.';
+  });
+}
+  </script>
 </body>
 </html>`;
 }
@@ -1344,7 +1399,7 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
 
   // Return a raw HTML Response — the site has its own full document with
   // inlined CSS and does not participate in the app shell.
-  return new Response(buildHtml(site, settings ?? null, pages, contentMap), {
+  return new Response(buildHtml(site, settings ?? null, pages, contentMap, site.slug), {
     status: 200,
     headers: {
       "content-type": "text/html; charset=utf-8",

@@ -11,6 +11,16 @@ function jsonResponse(data: unknown, status = 200) {
   });
 }
 
+function jsonResponseNoCache(data: unknown, status = 200) {
+  return new Response(JSON.stringify(data), {
+    status,
+    headers: {
+      "content-type": "application/json",
+      "cache-control": "no-store",
+    },
+  });
+}
+
 interface SiteRow {
   id: string;
   userId: string;
@@ -162,4 +172,155 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
     content,
     navConfig,
   });
+}
+
+// ── RSVP submission ───────────────────────────────────────────────────────────
+
+interface GuestRow {
+  id: string;
+  siteId: string;
+  firstName: string;
+  lastName: string | null;
+  party: string | null;
+  rsvpStatus: "pending" | "yes" | "no";
+  notes: string | null;
+  rsvpSubmittedAt: number | null;
+  sortOrder: number;
+  createdAt: number;
+  updatedAt: number;
+}
+
+export async function action({ request, context, params }: Route.ActionArgs) {
+  const { siteSlug } = params;
+  const db = context.cloudflare.env.DB;
+
+  if (request.method !== "POST") {
+    return jsonResponseNoCache(
+      { ok: false, error: { code: "METHOD_NOT_ALLOWED", message: "Method not allowed" } },
+      405
+    );
+  }
+
+  // Parse form or JSON body
+  let firstName: string | undefined;
+  let lastName: string | undefined;
+  let attending: string | undefined;
+  let notes: string | undefined;
+
+  const contentType = request.headers.get("content-type") ?? "";
+  if (contentType.includes("application/json")) {
+    let body: Record<string, string>;
+    try {
+      body = await request.json() as Record<string, string>;
+    } catch {
+      return jsonResponseNoCache(
+        { ok: false, error: { code: "BAD_REQUEST", message: "Invalid JSON body" } },
+        400
+      );
+    }
+    firstName = body.firstName;
+    lastName = body.lastName;
+    attending = body.attending;
+    notes = body.notes;
+  } else {
+    // application/x-www-form-urlencoded or multipart/form-data
+    let formData: FormData;
+    try {
+      formData = await request.formData();
+    } catch {
+      return jsonResponseNoCache(
+        { ok: false, error: { code: "BAD_REQUEST", message: "Could not parse form data" } },
+        400
+      );
+    }
+    firstName = formData.get("firstName")?.toString();
+    lastName = formData.get("lastName")?.toString();
+    attending = formData.get("attending")?.toString();
+    notes = formData.get("notes")?.toString();
+  }
+
+  // Validate required fields
+  if (!firstName || !firstName.trim()) {
+    return jsonResponseNoCache(
+      { ok: false, error: { code: "VALIDATION_ERROR", message: "First name is required" } },
+      400
+    );
+  }
+  if (!lastName || !lastName.trim()) {
+    return jsonResponseNoCache(
+      { ok: false, error: { code: "VALIDATION_ERROR", message: "Last name is required" } },
+      400
+    );
+  }
+  if (attending !== "yes" && attending !== "no") {
+    return jsonResponseNoCache(
+      { ok: false, error: { code: "VALIDATION_ERROR", message: "Attending must be yes or no" } },
+      400
+    );
+  }
+
+  const firstNameClean = firstName.trim();
+  const lastNameClean = lastName.trim();
+
+  // Look up the site
+  const site = await db
+    .prepare("SELECT id FROM site WHERE slug = ? AND status = 'published'")
+    .bind(siteSlug)
+    .first<{ id: string }>();
+
+  if (!site) {
+    return jsonResponseNoCache(
+      { ok: false, error: { code: "NOT_FOUND", message: "Site not found" } },
+      404
+    );
+  }
+
+  // Find guest by name (case-insensitive match on firstName + lastName)
+  const guest = await db
+    .prepare(
+      "SELECT * FROM guest WHERE siteId = ? AND LOWER(firstName) = LOWER(?) AND LOWER(COALESCE(lastName,'')) = LOWER(?)"
+    )
+    .bind(site.id, firstNameClean, lastNameClean)
+    .first<GuestRow>();
+
+  if (!guest) {
+    return jsonResponseNoCache(
+      { ok: false, error: { code: "NOT_FOUND", message: "We couldn't find your name on the list" } },
+      404
+    );
+  }
+
+  if (guest.rsvpStatus !== "pending") {
+    return jsonResponseNoCache(
+      { ok: false, error: { code: "ALREADY_SUBMITTED", message: "You've already submitted your RSVP" } },
+      409
+    );
+  }
+
+  // Update the guest record
+  const now = Date.now();
+  await db
+    .prepare(
+      "UPDATE guest SET rsvpStatus = ?, notes = ?, rsvpSubmittedAt = ?, updatedAt = ? WHERE id = ?"
+    )
+    .bind(attending, notes ?? null, now, now, guest.id)
+    .run();
+
+  // Look up settings for a language-appropriate response message
+  const settings = await db
+    .prepare("SELECT mainLanguage FROM site_setting WHERE siteId = ?")
+    .bind(site.id)
+    .first<{ mainLanguage: string | null }>();
+
+  const lang = settings?.mainLanguage ?? "en";
+  const message =
+    attending === "yes"
+      ? lang === "es"
+        ? "Gracias por confirmar tu asistencia. Te esperamos."
+        : "Thank you! We're so happy you'll be joining us."
+      : lang === "es"
+      ? "Gracias por hacernos saber. Lamentamos que no puedas asistir."
+      : "Thank you for letting us know. We're sorry you won't be able to make it.";
+
+  return jsonResponseNoCache({ ok: true, message }, 200);
 }
