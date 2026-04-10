@@ -879,7 +879,7 @@ function renderBlock(
       const date = cnt("date", "dateText", settings?.eventDate ?? "");
       const location = cnt("location", "locationText", settings?.eventLocation ?? "");
       return `
-        <section class="block block-home-hero" aria-label="Hero">
+        <section class="block block-home-hero" aria-label="Hero" data-block-id="${escHtml(block.id)}" data-block-type="${escHtml(block.type)}">
           <div class="hero-inner">
             <p class="hero-eyebrow">We&#39;re getting married</p>
             <h1 class="hero-title" data-lang-field="couple">${escHtml(title)}</h1>
@@ -893,7 +893,7 @@ function renderBlock(
     case "header": {
       const text = cnt("title", "title", cnt("heading", "heading", cnt("text", "text", "Section")));
       return `
-        <section class="block block-header">
+        <section class="block block-header" data-block-id="${escHtml(block.id)}" data-block-type="${escHtml(block.type)}">
           <h2 class="section-heading">${escHtml(text)}</h2>
           <div class="section-rule" aria-hidden="true"></div>
         </section>`;
@@ -909,7 +909,7 @@ function renderBlock(
         ? String(pageContent?.[contentKey] ?? cfg.body ?? "")
         : String(cfg.body ?? cfg.text ?? cfg.content ?? "");
       return `
-        <section class="block block-text">
+        <section class="block block-text" data-block-id="${escHtml(block.id)}" data-block-type="${escHtml(block.type)}">
           ${heading ? `<h2 class="section-heading"${contentKey ? ` data-lang-field="${escHtml(contentKey)}_heading"` : ""}>${escHtml(heading)}</h2><div class="section-rule" aria-hidden="true"></div>` : ""}
           <div class="text-body">
             ${body ? `<p${contentKey ? ` data-lang-field="${escHtml(contentKey)}"` : ""}>${escHtml(body)}</p>` : placeholder("Story text will appear here once added.")}
@@ -949,7 +949,7 @@ function renderBlock(
         | Array<{ time?: string; title?: string; description?: string }>
         | undefined;
       return `
-        <section class="block block-schedule" aria-label="Schedule">
+        <section class="block block-schedule" aria-label="Schedule" data-block-id="${escHtml(block.id)}" data-block-type="${escHtml(block.type)}">
           <h2 class="section-heading">The Day</h2>
           <div class="section-rule" aria-hidden="true"></div>
           ${
@@ -978,7 +978,7 @@ function renderBlock(
         | Array<{ question?: string; answer?: string }>
         | undefined;
       return `
-        <section class="block block-faq" aria-label="Frequently asked questions">
+        <section class="block block-faq" aria-label="Frequently asked questions" data-block-id="${escHtml(block.id)}" data-block-type="${escHtml(block.type)}">
           <h2 class="section-heading">Questions &amp; Answers</h2>
           <div class="section-rule" aria-hidden="true"></div>
           ${
@@ -1002,7 +1002,7 @@ function renderBlock(
       const formId = `rsvp-form-${escHtml(block.id)}`;
       const msgId = `rsvp-msg-${escHtml(block.id)}`;
       return `
-        <section class="block block-rsvp" aria-label="RSVP">
+        <section class="block block-rsvp" aria-label="RSVP" data-block-id="${escHtml(block.id)}" data-block-type="${escHtml(block.type)}">
           <h2 class="section-heading">${escHtml(formTitle)}</h2>
           <div class="section-rule" aria-hidden="true"></div>
           <form class="rsvp-form" id="${formId}" aria-label="RSVP form" onsubmit="submitRsvp(event,'${escHtml(slug)}','${formId}','${msgId}')">
@@ -1043,7 +1043,7 @@ function renderBlock(
       const urls = cfg.urls as string[] | undefined;
       const imageSlot = cfg.imageSlot as string | undefined;
       return `
-        <section class="block block-images" aria-label="Photo gallery">
+        <section class="block block-images" aria-label="Photo gallery" data-block-id="${escHtml(block.id)}" data-block-type="${escHtml(block.type)}">
           ${
             urls && urls.length > 0
               ? `<div class="image-grid">
@@ -1100,7 +1100,7 @@ function renderBlock(
     case "youtube": {
       const videoId = cfg.videoId as string | undefined;
       return `
-        <section class="block block-youtube" aria-label="YouTube video">
+        <section class="block block-youtube" aria-label="YouTube video" data-block-id="${escHtml(block.id)}" data-block-type="${escHtml(block.type)}">
           ${
             videoId
               ? `<div class="video-wrap">
@@ -1123,7 +1123,7 @@ function renderBlock(
       const url = cfg.url as string | undefined;
       const note = cfg.note as string | undefined;
       return `
-        <section class="block block-registry-card" aria-label="Gift registry">
+        <section class="block block-registry-card" aria-label="Gift registry" data-block-id="${escHtml(block.id)}" data-block-type="${escHtml(block.type)}">
           <h2 class="section-heading">Registry</h2>
           <div class="section-rule" aria-hidden="true"></div>
           ${
@@ -1144,7 +1144,7 @@ function renderBlock(
       const url = cfg.url as string | undefined;
       const note = cfg.note as string | undefined;
       return `
-        <section class="block block-hotel-card" aria-label="Hotel and accommodations">
+        <section class="block block-hotel-card" aria-label="Hotel and accommodations" data-block-id="${escHtml(block.id)}" data-block-type="${escHtml(block.type)}">
           <h2 class="section-heading">Hotels &amp; Accommodations</h2>
           <div class="section-rule" aria-hidden="true"></div>
           ${
@@ -1168,7 +1168,7 @@ function renderBlock(
         ? `https://maps.google.com/maps?q=${encodeURIComponent(address)}&output=embed`
         : null;
       return `
-        <section class="block block-venue-map" aria-label="Venue location">
+        <section class="block block-venue-map" aria-label="Venue location" data-block-id="${escHtml(block.id)}" data-block-type="${escHtml(block.type)}">
           <h2 class="section-heading">Venue</h2>
           <div class="section-rule" aria-hidden="true"></div>
           ${name ? `<p class="venue-name">${escHtml(name)}</p>` : ""}
@@ -1203,7 +1203,7 @@ function renderBlock(
         ? `border:1px solid var(--border);border-radius:12px;padding:1.25rem;text-align:center;`
         : `background:#fff;border:1px solid var(--border);border-radius:12px;padding:1.25rem;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,0.05);`;
       return `
-        <section class="block block-tidbits" aria-label="Fun facts">
+        <section class="block block-tidbits" aria-label="Fun facts" data-block-id="${escHtml(block.id)}" data-block-type="${escHtml(block.type)}">
           ${cfg.showTitle !== false ? `<h2 class="section-heading">Fun Facts</h2><div class="section-rule" aria-hidden="true"></div>` : ""}
           ${items && items.length > 0
             ? `<div style="display:grid;grid-template-columns:${colsCss};gap:1rem;">
@@ -1221,7 +1221,7 @@ function renderBlock(
       const title = (cfg.title as string | undefined) ?? "Getting There";
       const intro = (cfg.intro as string | undefined) ?? "";
       return `
-        <section class="block block-travel" aria-label="Travel information">
+        <section class="block block-travel" aria-label="Travel information" data-block-id="${escHtml(block.id)}" data-block-type="${escHtml(block.type)}">
           <h2 class="section-heading">${escHtml(title)}</h2>
           <div class="section-rule" aria-hidden="true"></div>
           ${intro ? `<div class="text-body"><p>${escHtml(intro)}</p></div>` : ""}
@@ -1265,7 +1265,7 @@ function renderBlock(
         ? `${imgEl}<div class="ps-content" style="flex:1;min-width:200px;">${compsHtml}</div>`
         : `<div class="ps-content" style="flex:1;min-width:200px;">${compsHtml}</div>${imgEl}`;
 
-      return `<section class="block block-photo-split">
+      return `<section class="block block-photo-split" data-block-id="${escHtml(block.id)}" data-block-type="${escHtml(block.type)}">
         <div style="display:flex;gap:2rem;align-items:center;flex-wrap:wrap;">${flex}</div>
       </section>`;
     }
@@ -1311,6 +1311,86 @@ function buildCountdownScript(): string {
     }
     tick();
     timer = setInterval(tick, 1000);
+  });
+})();
+</script>`;
+}
+
+// ── postMessage listener script ───────────────────────────────────────────────
+
+function buildMessageListenerScript(): string {
+  return `<script>
+(function(){
+  function applySiteSettings(delta) {
+    var root = document.documentElement;
+    var map = {
+      accentColor: '--accent',
+      bgColor: '--bg',
+      headingColor: '--heading-color',
+      bodyColor: '--body-color',
+      siteTextColor: '--text',
+      siteBorderColor: '--border',
+      navBg: '--nav-bg',
+      navBrandColor: '--nav-brand',
+      navLinkColor: '--nav-link',
+      navHighlightColor: '--nav-highlight',
+    };
+    Object.keys(delta).forEach(function(k) {
+      if (map[k]) root.style.setProperty(map[k], String(delta[k]));
+    });
+  }
+
+  function applyBlockConfig(blockId, cfg) {
+    var node = document.querySelector('[data-block-id="' + blockId + '"]');
+    if (!node) return;
+    var type = node.getAttribute('data-block-type');
+
+    if (type === 'countdown') {
+      var labelEl = node.querySelector('.countdown-label');
+      if (labelEl && cfg.label != null) labelEl.textContent = String(cfg.label);
+      var rsvpWrap = node.querySelector('.rsvp-submit')?.parentElement;
+      if (rsvpWrap) rsvpWrap.style.display = cfg.showRsvpButton ? '' : 'none';
+    }
+
+    if (type === 'video') {
+      // show/hide countdown overlay
+      var overlay = node.querySelector('.video-cd-overlay');
+      if (overlay) overlay.style.display = cfg.showCountdown ? '' : 'none';
+      // update overlay position
+      if (overlay && cfg.countdownX != null) overlay.style.transform = 'translateX(' + cfg.countdownX + 'px)';
+      if (overlay && cfg.countdownY != null) overlay.style.bottom = cfg.countdownY + 'px';
+      // update block height
+      if (cfg.height) node.style.height = cfg.height;
+    }
+
+    if (type === 'text') {
+      var heading = node.querySelector('.section-heading');
+      if (heading && cfg.heading != null) heading.textContent = String(cfg.heading);
+      var body = node.querySelector('.text-body p');
+      if (body && cfg.body != null) body.textContent = String(cfg.body);
+    }
+
+    // Generic: background / text color
+    if (cfg.background && cfg.background.type === 'color') {
+      node.style.setProperty('--block-bg', cfg.background.value || '');
+    } else if (cfg.background === null) {
+      node.style.removeProperty('--block-bg');
+    }
+    if (cfg.textColor) {
+      node.style.setProperty('--block-text', cfg.textColor);
+    } else if (cfg.textColor === null) {
+      node.style.removeProperty('--block-text');
+    }
+  }
+
+  window.addEventListener('message', function(event) {
+    var d = event.data;
+    if (!d || typeof d !== 'object') return;
+    if (d.type === 'block_config_update') {
+      applyBlockConfig(String(d.blockId), d.config || {});
+    } else if (d.type === 'site_settings_update') {
+      applySiteSettings(d.delta || {});
+    }
   });
 })();
 </script>`;
@@ -1715,6 +1795,7 @@ function toggleMusic() {
   ${langContentJson ? `<script type="application/json" id="lang-content-data">${langContentJson}</script>` : ""}
   ${navScript}
   ${hasCountdown ? buildCountdownScript() : ""}
+  ${buildMessageListenerScript()}
   ${musicScript}
   ${langScript}
   <script>
