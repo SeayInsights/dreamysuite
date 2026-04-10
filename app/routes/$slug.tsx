@@ -193,87 +193,99 @@ function buildStyles(settings: SiteSettingRow | null): BuiltStyles {
     .intro-overlay { position:fixed; inset:0; z-index:9999; display:flex; align-items:center; justify-content:center; background:transparent; cursor:pointer; overflow:hidden; }
 
     /* ════════════════════════════════
-       ENVELOPE
+       FULL-SCREEN ENVELOPE
     ════════════════════════════════ */
-    @keyframes env-float {
-      0%,100% { transform:translateY(0); }
-      50%      { transform:translateY(-10px); }
+    @keyframes envfs-seal-pulse {
+      0%,100% { box-shadow:0 4px 18px rgba(0,0,0,0.55); }
+      50%     { box-shadow:0 4px 18px rgba(0,0,0,0.55),0 0 32px 12px rgba(255,200,110,0.32); }
     }
-    @keyframes seal-glow {
-      0%,100% { box-shadow:0 3px 10px rgba(0,0,0,0.35); }
-      50%     { box-shadow:0 3px 10px rgba(0,0,0,0.35),0 0 22px 8px rgba(255,220,140,0.25); }
+    .intro-env-fs {
+      perspective:1600px;
+      background:radial-gradient(ellipse at 50% 38%,#1e0e06 0%,#0a0402 100%);
+      cursor:pointer;
     }
-    .intro-env { background:radial-gradient(ellipse at 50% 60%,#241408 0%,#140a02 100%); }
-    .env-scene { display:flex; flex-direction:column; align-items:center; perspective:1000px; animation:env-float 3.6s ease-in-out infinite; }
-    .env-body {
-      position:relative;
-      width:clamp(260px,48vw,480px); height:clamp(168px,31vw,308px);
-      background:var(--env-color,#f5ede0);
-      border-radius:3px 3px 5px 5px;
-      box-shadow:0 24px 60px rgba(0,0,0,0.55),0 6px 16px rgba(0,0,0,0.3);
-      transform-style:preserve-3d;
+    /* Envelope body — fills entire screen */
+    .envfs-body { position:absolute; inset:0; background:var(--env-color,#f2e8d8); overflow:hidden; }
+    /* Inner crease folds */
+    .envfs-left-fold {
+      position:absolute; top:0; left:0; bottom:0; width:62%;
+      background:linear-gradient(to right,color-mix(in srgb,var(--env-color,#f2e8d8) 72%,#6b4c2a) 0%,transparent 100%);
+      clip-path:polygon(0 0,100% 50%,0 100%);
     }
-    .env-body::before {
-      content:''; position:absolute; inset:0;
-      background:color-mix(in srgb,var(--env-color,#f5ede0) 55%,#6b4c2a); border-radius:3px 3px 5px 5px; z-index:0;
+    .envfs-right-fold {
+      position:absolute; top:0; right:0; bottom:0; width:62%;
+      background:linear-gradient(to left,color-mix(in srgb,var(--env-color,#f2e8d8) 72%,#6b4c2a) 0%,transparent 100%);
+      clip-path:polygon(100% 0,0 50%,100% 100%);
     }
-    .env-left-fold {
-      position:absolute; top:0; left:0; bottom:0; width:50%;
-      background:linear-gradient(to right,color-mix(in srgb,var(--env-color,#f5ede0) 82%,#6b4c2a),var(--env-color,#f5ede0));
-      clip-path:polygon(0 0,100% 50%,0 100%); z-index:2;
+    .envfs-bottom-fold {
+      position:absolute; bottom:0; left:0; right:0; height:56%;
+      background:linear-gradient(to top,color-mix(in srgb,var(--env-color,#f2e8d8) 83%,#6b4c2a) 0%,transparent 100%);
+      clip-path:polygon(0 100%,50% 0,100% 100%);
     }
-    .env-right-fold {
-      position:absolute; top:0; right:0; bottom:0; width:50%;
-      background:linear-gradient(to left,color-mix(in srgb,var(--env-color,#f5ede0) 75%,#6b4c2a),var(--env-color,#f5ede0));
-      clip-path:polygon(100% 0,0 50%,100% 100%); z-index:2;
+    /* Warm glow — hidden until flap opens */
+    .envfs-glow {
+      position:absolute; inset:0;
+      background:radial-gradient(ellipse at 50% 42%,rgba(255,215,140,0.78) 0%,rgba(255,175,65,0.38) 38%,transparent 66%);
+      opacity:0; z-index:4; pointer-events:none;
     }
-    .env-bottom-fold {
-      position:absolute; bottom:0; left:0; right:0; height:48%;
-      background:color-mix(in srgb,var(--env-color,#f5ede0) 88%,#6b4c2a);
-      clip-path:polygon(0 100%,50% 0%,100% 100%); z-index:3;
-    }
-    .env-letter {
-      position:absolute; bottom:4px; left:10px; right:10px; height:85%;
-      background:var(--card-color,#fffef9); border-radius:2px;
-      box-shadow:0 2px 10px rgba(0,0,0,0.1);
+    /* Invitation card — centered, off-screen below initially via GSAP */
+    .envfs-card {
+      position:absolute; left:50%; top:50%;
+      width:min(400px,72vw);
+      padding:clamp(1.75rem,4vw,2.75rem) clamp(1.5rem,3vw,2.25rem);
+      background:var(--card-color,#fffaf4);
+      border-radius:3px;
       display:flex; flex-direction:column; align-items:center; justify-content:center;
-      gap:0.4rem; padding:1rem; z-index:1; pointer-events:none;
+      text-align:center; z-index:30;
+      box-shadow:0 18px 80px rgba(0,0,0,0.6),0 4px 16px rgba(0,0,0,0.35);
+      pointer-events:none;
     }
-    .env-letter-name {
-      font-family:var(--heading-font); font-size:clamp(0.9rem,2.5vw,1.4rem);
-      font-weight:normal; color:#292524; text-align:center;
+    .envfs-card::before,.envfs-card::after {
+      content:''; display:block; width:72%; height:1px;
+      background:linear-gradient(to right,transparent,rgba(0,0,0,0.18),transparent);
     }
-    .env-letter-date { font-size:clamp(0.7rem,1.3vw,0.85rem); color:#78716c; font-style:italic; text-align:center; }
-    .env-flap {
-      position:absolute; top:0; left:0; right:0; height:55%;
-      clip-path:polygon(0 0,100% 0,50% 88%);
-      background:linear-gradient(170deg,var(--env-color,#f5ede0),color-mix(in srgb,var(--env-color,#f5ede0) 88%,#6b4c2a));
+    .envfs-card::before { margin-bottom:1rem; }
+    .envfs-card::after  { margin-top:1rem; }
+    .envfs-card-ornament { font-size:1.2rem; opacity:0.3; margin-bottom:0.7rem; letter-spacing:0.35em; }
+    .envfs-card-name {
+      font-family:var(--heading-font,'Georgia',serif);
+      font-size:clamp(1.25rem,4vw,2rem); font-weight:normal;
+      color:#1c1008; margin-bottom:0.5rem; line-height:1.2;
+    }
+    .envfs-card-date { font-size:clamp(0.75rem,1.8vw,0.95rem); color:#78716c; font-style:italic; }
+    /* Flap — large triangular top section that rotates open */
+    .envfs-flap {
+      position:absolute; top:0; left:0; right:0; height:58vh;
+      background:linear-gradient(168deg,var(--env-color,#f2e8d8) 28%,color-mix(in srgb,var(--env-color,#f2e8d8) 80%,#5a3820) 100%);
+      clip-path:polygon(0 0,100% 0,50% 100%);
       transform-origin:top center; transform-style:preserve-3d;
-      z-index:8; will-change:transform;
+      z-index:20; will-change:transform;
     }
-    .env-flap::after {
+    .envfs-flap::after {
       content:''; position:absolute; inset:0;
-      clip-path:polygon(0 0,100% 0,50% 88%);
-      background:linear-gradient(170deg,color-mix(in srgb,var(--env-color,#f5ede0) 65%,#6b4c2a),color-mix(in srgb,var(--env-color,#f5ede0) 55%,#6b4c2a));
+      clip-path:polygon(0 0,100% 0,50% 100%);
+      background:linear-gradient(168deg,color-mix(in srgb,var(--env-color,#f2e8d8) 55%,#3d2210) 0%,color-mix(in srgb,var(--env-color,#f2e8d8) 40%,#3d2210) 100%);
       transform:rotateX(180deg); backface-visibility:visible;
     }
-    .env-seal {
-      position:absolute; top:48%; left:50%;
-      transform:translateX(-50%) translateY(-50%);
-      width:80px; height:80px; border-radius:50%;
-      background:radial-gradient(circle at 35% 35%,var(--seal-color,var(--accent,#0d9488)),color-mix(in srgb,var(--seal-color,var(--accent,#0d9488)) 60%,#000));
+    /* Wax seal on the flap */
+    .envfs-seal {
+      position:absolute; top:78%; left:50%;
+      transform:translate(-50%,-50%);
+      width:clamp(54px,7vw,84px); height:clamp(54px,7vw,84px); border-radius:50%;
+      background:radial-gradient(circle at 38% 32%,var(--seal-color,var(--accent,#0d9488)),color-mix(in srgb,var(--seal-color,var(--accent,#0d9488)) 52%,#000));
       display:flex; align-items:center; justify-content:center;
-      color:white; font-size:1.1rem;
-      box-shadow:0 3px 10px rgba(0,0,0,0.35); z-index:10; pointer-events:none;
-      animation:seal-glow 2.2s ease-in-out infinite;
+      color:rgba(255,245,235,0.95); z-index:25; pointer-events:none;
+      box-shadow:0 4px 20px rgba(0,0,0,0.6),inset 0 1px 3px rgba(255,255,255,0.12);
+      animation:envfs-seal-pulse 2.4s ease-in-out infinite;
     }
-    .env-seal-text { font-family:var(--heading-font,'Georgia',serif); letter-spacing:0.04em; line-height:1.2; text-align:center; }
-    .env-inner-glow {
-      position:absolute; inset:0; z-index:9; pointer-events:none; border-radius:3px;
-      background:radial-gradient(ellipse at 50% 25%,rgba(255,235,180,0.92),rgba(255,210,120,0.5) 40%,transparent 72%);
-      opacity:0;
+    .envfs-seal-text { font-family:var(--heading-font,'Georgia',serif); font-size:clamp(0.58rem,1.3vw,0.85rem); letter-spacing:0.05em; line-height:1.3; text-align:center; }
+    /* Cue text */
+    .envfs-cue {
+      position:absolute; bottom:clamp(1.5rem,4vh,2.5rem); left:50%; transform:translateX(-50%);
+      font-style:italic; color:rgba(255,255,255,0.5);
+      font-size:clamp(0.72rem,1.5vw,0.88rem); letter-spacing:0.12em;
+      white-space:nowrap; z-index:35; pointer-events:none;
     }
-    .env-cue { margin-top:1.8rem; font-style:italic; color:rgba(255,255,255,0.45); font-size:0.82rem; letter-spacing:0.1em; pointer-events:none; }
 
     /* ════════════════════════════════
        DOORS
@@ -818,7 +830,7 @@ function renderBlock(
                  </div>`
               : placeholder("Set a target date to show the countdown.")
           }
-          ${cfg.showRsvpButton ? `<div style="text-align:center;margin-top:2rem"><a href="#rsvp" class="rsvp-submit" style="background:${escHtml(accent)};text-decoration:none;display:inline-block">RSVP Now</a></div>` : ""}
+          ${cfg.showRsvpButton ? `<div style="text-align:center;margin-top:2rem"><a href="#rsvp" class="rsvp-submit" style="background:${escHtml(String(cfg.rsvpButtonColor ?? accent))};text-decoration:none;display:inline-block">${escHtml(String(cfg.rsvpButtonText ?? "RSVP Now"))}</a></div>` : ""}
         </section>`;
     }
 
@@ -1134,32 +1146,26 @@ function renderBlock(
 
 // ── Countdown script ──────────────────────────────────────────────────────────
 
-function buildCountdownScript(
-  countdownBlocks: Array<{ id: string; date: string }>
-): string {
-  if (countdownBlocks.length === 0) return "";
-  // JSON.stringify is safe here — the values came from the DB and are plain strings.
-  const data = JSON.stringify(countdownBlocks);
+function buildCountdownScript(): string {
   return `<script>
 (function(){
-  var blocks=${data};
   function pad(n){return String(n).padStart(2,'0');}
   function tick(){
     var now=Date.now();
-    blocks.forEach(function(b){
-      var diff=Math.max(0,new Date(b.date).getTime()-now);
+    document.querySelectorAll('.countdown-units[data-target]').forEach(function(el){
+      var t=el.dataset.target;
+      if(!t)return;
+      var diff=Math.max(0,new Date(t).getTime()-now);
+      var id=el.id.replace('countdown-','');
       var d=Math.floor(diff/86400000);
       var h=Math.floor((diff%86400000)/3600000);
       var m=Math.floor((diff%3600000)/60000);
       var s=Math.floor((diff%60000)/1000);
-      var el=document.getElementById.bind(document);
-      var days=el('cd-days-'+b.id);
-      var hrs =el('cd-hrs-' +b.id);
-      var min =el('cd-min-' +b.id);
-      var sec =el('cd-sec-' +b.id);
-      if(days)days.textContent=d;
+      var ge=function(i){return document.getElementById(i);};
+      var days=ge('cd-days-'+id),hrs=ge('cd-hrs-'+id),mn=ge('cd-min-'+id),sec=ge('cd-sec-'+id);
+      if(days)days.textContent=String(d);
       if(hrs) hrs.textContent=pad(h);
-      if(min) min.textContent=pad(m);
+      if(mn)  mn.textContent=pad(m);
       if(sec) sec.textContent=pad(s);
     });
   }
@@ -1198,22 +1204,22 @@ function buildIntroHtml(
     const letterStyle = (cardColor || cardImage)
       ? ` style="${cardColor ? `--card-color:${escHtml(cardColor)};` : ""}${cardBg ? `background-image:${cardBg};background-size:cover;background-position:center;` : ""}"`
       : "";
-    return `<div id="intro-overlay" class="intro-overlay intro-env" role="button" tabindex="0" aria-label="Click to open invitation">
-  <div class="env-scene">
-    <div class="env-body"${envStyle}>
-      <div class="env-left-fold"></div>
-      <div class="env-right-fold"></div>
-      <div class="env-bottom-fold"></div>
-      <div class="env-letter"${letterStyle}>
-        <p class="env-letter-name">${title}</p>
-        ${date ? `<p class="env-letter-date">${date}</p>` : ""}
-      </div>
-      <div class="env-inner-glow"></div>
-      <div class="env-flap"></div>
-      <div class="env-seal"><span class="env-seal-text">${sealText}</span></div>
+    return `<div id="intro-overlay" class="intro-overlay intro-env-fs" role="button" tabindex="0" aria-label="Click to open invitation"${envStyle}>
+  <div class="envfs-body">
+    <div class="envfs-left-fold"></div>
+    <div class="envfs-right-fold"></div>
+    <div class="envfs-bottom-fold"></div>
+    <div class="envfs-glow"></div>
+    <div class="envfs-card"${letterStyle}>
+      <div class="envfs-card-ornament">&#10038; &middot; &#10038;</div>
+      <p class="envfs-card-name">${title}</p>
+      ${date ? `<p class="envfs-card-date">${date}</p>` : ""}
     </div>
-    <p class="env-cue">&#8212; click to open &#8212;</p>
   </div>
+  <div class="envfs-flap">
+    <div class="envfs-seal"><span class="envfs-seal-text">${sealText}</span></div>
+  </div>
+  <p class="envfs-cue">&#8212; click to open &#8212;</p>
 </div>`;
   }
 
@@ -1273,13 +1279,7 @@ function buildHtml(
   const accent = settings?.accentColor ?? "#0d9488";
 
   const allBlocks = pages.flatMap((p) => p.blocks);
-  const countdownData = allBlocks
-    .filter((b) => b.type === "countdown")
-    .map((b) => ({
-      id: b.id,
-      date: String(settings?.eventDate ?? ""),
-    }))
-    .filter((b) => b.date !== "");
+  const hasCountdown = allBlocks.some((b) => b.type === "countdown");
 
   // Build nav bar (only if there are multiple pages, all visible)
   const visiblePages = pages.filter((p) => p.isVisible !== 0);
@@ -1386,22 +1386,18 @@ function openIntro() {
   var el = document.getElementById('intro-overlay');
   if (!el) return;
   ${animation === "envelope" ? `
-  var _envScene = document.querySelector('.env-scene');
-  var _envSeal  = document.querySelector('.env-seal');
-  if (_envScene) _envScene.style.animation = 'none';
-  if (_envSeal)  _envSeal.style.animation  = 'none';
-  gsap.set('.env-scene', { clearProps:'transform' });
+  var _seal = document.querySelector('.envfs-seal');
+  if (_seal) _seal.style.animation = 'none';
+  gsap.set('.envfs-card', { xPercent:-50, yPercent:-50, y:'100vh', opacity:0 });
   var tl = gsap.timeline({ onComplete: function(){ el.style.display='none'; } });
-  tl.to('.env-body',       { scale:1.07, duration:0.38, ease:'power1.out' })
-    .to('.env-seal',       { scale:0, opacity:0, duration:0.3, ease:'back.in(3)', rotation:20 }, '+=0.05')
-    .to('.env-cue',        { opacity:0, duration:0.2 }, '<')
-    .to('.env-flap',       { rotateX:-190, duration:0.9, ease:'back.out(1.4)', transformOrigin:'top center' })
-    .to('.env-inner-glow', { opacity:1, duration:0.5 }, '-=0.5')
-    .set('.env-letter',    { zIndex:15, translateZ: 50 })
-    .to('.env-letter',     { y:'-58%', duration:0.7, ease:'power2.out' }, '-=0.35')
-    .to('.env-body',       { scale:1, duration:0.45, ease:'power2.inOut' }, '-=0.35')
-    .to('.env-letter',     { opacity:0, y:'-68%', duration:0.35 }, '+=0.28')
-    .to(el,                { opacity:0, duration:0.45 }, '-=0.2');
+  tl.to('.envfs-cue',  { opacity:0, duration:0.25 }, 0)
+    .to('.envfs-seal', { y:'-300%', opacity:0, scale:0.28, rotation:30, duration:0.65, ease:'back.in(2.5)' }, 0.1)
+    .to('.envfs-flap', { rotateX:-185, duration:1.15, ease:'power2.inOut', transformOrigin:'top center' }, 0.3)
+    .to('.envfs-glow', { opacity:1, duration:0.8 }, 0.78)
+    .to('.envfs-card', { y:0, opacity:1, duration:1.35, ease:'power2.out' }, 0.95)
+    .to('.envfs-card', { scale:1.03, duration:0.38, ease:'power1.inOut' }, 2.25)
+    .to({},            { duration:2.0 })
+    .to(el,            { opacity:0, duration:0.65, ease:'power2.in' });
   ` : animation === "doors" ? `
   var tl = gsap.timeline({ onComplete: function(){ el.style.display='none'; } });
   tl.to('.door-cue',  { opacity:0, duration:0.15 })
@@ -1493,7 +1489,7 @@ function toggleMusic() {
   ${pageSectionsHtml}
   ${musicPlayerHtml}
   ${navScript}
-  ${buildCountdownScript(countdownData)}
+  ${hasCountdown ? buildCountdownScript() : ""}
   ${musicScript}
   <script>
 function submitRsvp(event, slug, formId, msgId) {

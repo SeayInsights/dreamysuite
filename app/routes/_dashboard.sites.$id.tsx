@@ -748,6 +748,7 @@ export default function SiteEditor() {
 
   async function handleAddBlock(type: string) {
     if (!activePage) return;
+    pushHistory(blocks);
     try {
       await apiFetch("/blocks", {
         method: "POST",
@@ -1217,7 +1218,7 @@ export default function SiteEditor() {
               Settings
             </button>
             <div className="section-topbar-divider" />
-            <button className="btn-ghost" aria-label="Guest Preview">
+            <button className="btn-ghost" aria-label="Guest Preview" onClick={() => window.open('/' + site.slug, '_blank')}>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
               </svg>
@@ -1443,6 +1444,16 @@ export default function SiteEditor() {
                                         Show RSVP button below countdown
                                       </label>
                                     </div>
+                                    {!!cfg.showRsvpButton && (<>
+                                      <div className="sf-group">
+                                        <label className="sf-lbl">Button Text</label>
+                                        <input className="sf-input" value={cfg.rsvpButtonText ?? 'RSVP Now'} onChange={e => setField('rsvpButtonText', e.target.value)} />
+                                      </div>
+                                      <div className="sf-group">
+                                        <label className="sf-lbl">Button Color</label>
+                                        <input type="color" value={cfg.rsvpButtonColor ?? ''} onChange={e => setField('rsvpButtonColor', e.target.value)} />
+                                      </div>
+                                    </>)}
                                   </>)}
 
                                   {block.type === 'images' && (<>
