@@ -295,6 +295,8 @@ export default function SiteEditor() {
   // Site Setup / Settings
   const [eventType, setEventType]         = useState(site.eventType ?? "wedding");
   const [savingType, setSavingType]       = useState(false);
+  const [copyLinkFeedback, setCopyLinkFeedback] = useState(false);
+  const [qrDownloading, setQrDownloading]       = useState(false);
   const [customDomainInput, setCustomDomainInput] = useState(site.customDomain ?? "");
   const [domainModalOpen, setDomainModalOpen] = useState(false);
   const [domainTab, setDomainTab] = useState<"free" | "buy">("free");
@@ -2309,24 +2311,102 @@ export default function SiteEditor() {
               </div>
             </div>
 
-            {/* QR Code */}
-            <div className="setup-section">
-              <div className="setup-section-head">
-                <h2 className="setup-section-title">Share QR Code</h2>
-                <p className="setup-section-desc">Generate a QR code to print on invitations or displays.</p>
-              </div>
-              <div className="qr-section">
-                <div className="qr-input-row">
-                  <input
-                    type="url"
-                    className="qr-url-input"
-                    defaultValue={siteUrl}
-                    aria-label="Site URL for QR code"
-                  />
-                  <button className="btn-primary-sm">Generate</button>
+            {/* Share & QR Code */}
+            {(() => {
+              const publicUrl = `https://dreamysuite.com/${site.slug}`;
+              const qrSrc = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(publicUrl)}`;
+
+              async function handleCopyLink() {
+                try {
+                  await navigator.clipboard.writeText(publicUrl);
+                  setCopyLinkFeedback(true);
+                  setTimeout(() => setCopyLinkFeedback(false), 2000);
+                } catch {
+                  // fallback: select a temp input
+                  const el = document.createElement("input");
+                  el.value = publicUrl;
+                  document.body.appendChild(el);
+                  el.select();
+                  document.execCommand("copy");
+                  document.body.removeChild(el);
+                  setCopyLinkFeedback(true);
+                  setTimeout(() => setCopyLinkFeedback(false), 2000);
+                }
+              }
+
+              async function handleDownloadQr() {
+                setQrDownloading(true);
+                try {
+                  const res = await fetch(qrSrc);
+                  const blob = await res.blob();
+                  const objectUrl = URL.createObjectURL(blob);
+                  const a = document.createElement("a");
+                  a.href = objectUrl;
+                  a.download = `qr-${site.slug}.png`;
+                  a.click();
+                  URL.revokeObjectURL(objectUrl);
+                } catch {
+                  toast("Failed to download QR code", true);
+                } finally {
+                  setQrDownloading(false);
+                }
+              }
+
+              return (
+                <div className="setup-section">
+                  <div className="setup-section-head">
+                    <h2 className="setup-section-title">Share &amp; QR Code</h2>
+                    <p className="setup-section-desc">Share your site link or print the QR code on invitations and displays.</p>
+                  </div>
+
+                  {/* URL row */}
+                  <div style={{ display: "flex", gap: "8px", alignItems: "center", marginBottom: "1.25rem", flexWrap: "wrap" }}>
+                    <div style={{
+                      flex: 1, minWidth: 0,
+                      background: "#f5f0eb", borderRadius: "8px",
+                      padding: "0.55rem 0.85rem",
+                      fontSize: "0.83rem", color: "#1c1917", fontWeight: 500,
+                      overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+                      border: "1.5px solid #e0dbd4",
+                    }}>
+                      {publicUrl}
+                    </div>
+                    <button
+                      className="btn-primary-sm"
+                      style={{ flexShrink: 0, minWidth: "88px" }}
+                      onClick={handleCopyLink}
+                      aria-label="Copy site link to clipboard"
+                    >
+                      {copyLinkFeedback ? "Copied!" : "Copy Link"}
+                    </button>
+                  </div>
+
+                  {/* QR image + download */}
+                  <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: "0.75rem" }}>
+                    <img
+                      src={qrSrc}
+                      alt={`QR code for ${publicUrl}`}
+                      width={160}
+                      height={160}
+                      style={{
+                        border: "1.5px solid #e0dbd4",
+                        borderRadius: "10px",
+                        background: "#fff",
+                        display: "block",
+                      }}
+                    />
+                    <button
+                      className="btn-ghost"
+                      onClick={handleDownloadQr}
+                      disabled={qrDownloading}
+                      aria-label="Download QR code as PNG"
+                    >
+                      {qrDownloading ? "Downloading…" : "Download QR Code"}
+                    </button>
+                  </div>
                 </div>
-              </div>
-            </div>
+              );
+            })()}
 
             {/* Custom Domain */}
             <div className="setup-section">
