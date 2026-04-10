@@ -365,6 +365,7 @@ export default function SiteEditor() {
   const [settings, setSettings]                   = useState<SiteSettings | null>(null);
   const [settingsLoading, setSettingsLoading]     = useState(false);
   const [savingSettings, setSavingSettings]       = useState(false);
+  const [previewKey, setPreviewKey] = useState(0);
   const [settingsForm, setSettingsForm] = useState({
     eventName: "",
     eventDate: "",
@@ -1029,6 +1030,7 @@ export default function SiteEditor() {
         body: JSON.stringify(settingsForm),
       });
       await fetchSettings();
+      setPreviewKey((k) => k + 1);
       toast("Settings saved");
     } catch (err) {
       toast(err instanceof Error ? err.message : "Failed to save settings", true);
@@ -1419,9 +1421,6 @@ export default function SiteEditor() {
                                     </div>
                                   </>)}
 
-                                  {block.type === 'countdown' && (
-                                    <div className="sf-group"><label className="sf-lbl">Countdown To</label><input className="sf-input" type="datetime-local" value={String(cfg.countdownDate??'')} onChange={e=>setField('countdownDate',e.target.value)}/></div>
-                                  )}
 
                                   {block.type === 'images' && (<>
                                     <div className="sf-group"><label className="sf-lbl">Image Slot Name</label><input className="sf-input" value={String(cfg.imageSlot??'')} onChange={e=>setField('imageSlot',e.target.value)} placeholder="home"/></div>
@@ -1777,13 +1776,6 @@ export default function SiteEditor() {
                 const onChange = (key: string, val: unknown) => setContentField(activePage.slug, curLangCode, key, val);
                 const slug = activePage.slug;
 
-                // Parse countdown for home page
-                const rawTarget = cf("countdown_target");
-                const ctMatch = rawTarget.match(/^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2})/);
-                const ctDateVal = ctMatch ? ctMatch[1] : "";
-                const ctTzMatch = rawTarget.match(/([+-]\d{2}:\d{2})$/);
-                const ctTzVal = ctTzMatch ? ctTzMatch[1] : "";
-
                 const schedEvents = Array.isArray(pageContent.events) ? (pageContent.events as Record<string, unknown>[]) : [];
                 const faqQuestions = Array.isArray(pageContent.questions) ? (pageContent.questions as Record<string, unknown>[]) : [];
 
@@ -1989,7 +1981,7 @@ export default function SiteEditor() {
               </div>
               <div className="preview-wrap">
                 <iframe
-                  key={activePage?.id ?? "no-page"}
+                  key={`${activePage?.id ?? "no-page"}-${previewKey}`}
                   className="preview-iframe"
                   src={previewUrl}
                   title="Page preview"
@@ -3350,7 +3342,7 @@ export default function SiteEditor() {
                           <option value="doors">Doors</option>
                         </select>
                         <p style={{ fontSize: "0.7rem", color: "#9b8e85", marginTop: "4px", lineHeight: 1.5 }}>
-                          Envelope: content slides up. Storybook: content fades from scale. Doors: curtain panels open.
+                          Envelope: panels split apart vertically on click. Storybook: book pages open sideways on click. Doors: curtain panels slide open on click.
                         </p>
                       </div>
 
