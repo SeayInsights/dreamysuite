@@ -46,6 +46,7 @@ interface SiteSettingRow {
   siteBorderColor: string | null;
   navBg: string | null;
   navPosition: string | null;       // "fixed" | "scroll-away" | null
+  navShape: string | null;          // "bar" | "pill" | "floating" | null
   navBrandColor: string | null;
   navLinkColor: string | null;
   navHighlightColor: string | null;
@@ -57,6 +58,7 @@ interface SiteSettingRow {
   envelopeColor: string | null;
   sealInitials: string | null;
   cardColor: string | null;
+  cardImage: string | null;
 }
 
 interface PageRow {
@@ -168,7 +170,7 @@ function buildStyles(settings: SiteSettingRow | null): BuiltStyles {
       --body-color: ${escHtml(settings?.bodyColor ?? "var(--muted)")};
       --site-text: ${escHtml(settings?.siteTextColor ?? "var(--text)")};
       --site-border: ${escHtml(settings?.siteBorderColor ?? "var(--border)")};
-      --nav-bg: ${escHtml(settings?.navBg ?? "rgba(255,255,255,0.96)")};
+      --nav-bg: ${(() => { const nb = settings?.navBg ?? ""; if (!nb || nb === "white") return "rgba(255,255,255,0.96)"; if (nb === "glass" || nb === "transparent") return "rgba(255,255,255,0.65)"; if (nb === "custom") return "rgba(255,255,255,0.96)"; return escHtml(nb); })()};
       --nav-brand: ${escHtml(settings?.navBrandColor ?? "var(--text)")};
       --nav-link: ${escHtml(settings?.navLinkColor ?? "var(--muted)")};
       --nav-highlight: ${escHtml(settings?.navHighlightColor ?? "var(--accent)")};
@@ -622,6 +624,14 @@ function buildStyles(settings: SiteSettingRow | null): BuiltStyles {
       -webkit-backdrop-filter: blur(8px);
       border-bottom: 1px solid var(--site-border);
       padding: 0;
+    }
+    .site-nav.nav-pill {
+      border-radius: 999px; margin: 8px 1rem; width: calc(100% - 2rem);
+      box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+    }
+    .site-nav.nav-floating {
+      border-radius: 14px; margin: 8px 1rem; width: calc(100% - 2rem);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.12); border-color: transparent;
     }
     .site-nav-inner {
       max-width: var(--max-width);
@@ -1166,7 +1176,8 @@ function buildIntroHtml(
   eventDate: string | null,
   envelopeColor: string | null,
   sealInitials: string | null,
-  cardColor: string | null
+  cardColor: string | null,
+  cardImage: string | null
 ): string {
   if (!animation || animation === "none") return "";
   const title = escHtml(eventTitle);
@@ -1182,7 +1193,10 @@ function buildIntroHtml(
 
   if (animation === "envelope") {
     const envStyle = envelopeColor ? ` style="--env-color:${escHtml(envelopeColor)}"` : "";
-    const letterStyle = cardColor ? ` style="--card-color:${escHtml(cardColor)}"` : "";
+    const cardBg = cardImage ? `url('${escHtml(cardImage)}')` : "";
+    const letterStyle = (cardColor || cardImage)
+      ? ` style="${cardColor ? `--card-color:${escHtml(cardColor)};` : ""}${cardBg ? `background-image:${cardBg};background-size:cover;background-position:center;` : ""}"`
+      : "";
     return `<div id="intro-overlay" class="intro-overlay intro-env" role="button" tabindex="0" aria-label="Click to open invitation">
   <div class="env-scene">
     <div class="env-body"${envStyle}>
@@ -1275,8 +1289,10 @@ function buildHtml(
     return escHtml(p.label || p.slug.charAt(0).toUpperCase() + p.slug.slice(1));
   }
 
+  const navShape = settings?.navShape ?? "";
+  const navShapeClass = navShape === "pill" ? " nav-pill" : navShape === "floating" ? " nav-floating" : "";
   const navHtml = hasMultiplePages
-    ? `<nav class="site-nav" aria-label="Site navigation">
+    ? `<nav class="site-nav${navShapeClass}" aria-label="Site navigation">
         <div class="site-nav-inner">
           <a class="site-nav-brand" href="#" onclick="return false;">${escHtml(eventTitle)}</a>
           <ul class="site-nav-links" role="list">
@@ -1354,7 +1370,8 @@ function showPage(pageId) {
   const envelopeColor = settings?.envelopeColor ?? null;
   const sealInitials = settings?.sealInitials ?? null;
   const cardColor = settings?.cardColor ?? null;
-  const introHtml = buildIntroHtml(animation, eventTitle, eventDate, envelopeColor, sealInitials, cardColor);
+  const cardImage = settings?.cardImage ?? null;
+  const introHtml = buildIntroHtml(animation, eventTitle, eventDate, envelopeColor, sealInitials, cardColor, cardImage);
   const gsapCdn = introHtml
     ? `<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>`
     : "";
@@ -1379,7 +1396,7 @@ function openIntro() {
     .to('.env-cue',        { opacity:0, duration:0.2 }, '<')
     .to('.env-flap',       { rotateX:-190, duration:0.9, ease:'back.out(1.4)', transformOrigin:'top center' })
     .to('.env-inner-glow', { opacity:1, duration:0.5 }, '-=0.5')
-    .set('.env-letter',    { zIndex:15 })
+    .set('.env-letter',    { zIndex:15, translateZ: 50 })
     .to('.env-letter',     { y:'-58%', duration:0.7, ease:'power2.out' }, '-=0.35')
     .to('.env-body',       { scale:1, duration:0.45, ease:'power2.inOut' }, '-=0.35')
     .to('.env-letter',     { opacity:0, y:'-68%', duration:0.35 }, '+=0.28')

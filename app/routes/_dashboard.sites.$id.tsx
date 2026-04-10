@@ -115,6 +115,8 @@ interface SiteSettings {
   envelopeColor: string | null;
   sealInitials: string;
   cardColor: string;
+  cardImage: string;
+  navShape: string;
 }
 
 interface AnalyticsData {
@@ -404,6 +406,8 @@ export default function SiteEditor() {
     envelopeColor: "",
     sealInitials: "",
     cardColor: "",
+    cardImage: "",
+    navShape: "",
   });
 
   // CSV import state
@@ -547,6 +551,8 @@ export default function SiteEditor() {
         envelopeColor:      data.settings.envelopeColor      ?? "",
         sealInitials:       data.settings.sealInitials       ?? "",
         cardColor:          data.settings.cardColor          ?? "",
+        cardImage:          data.settings.cardImage          ?? "",
+        navShape:           data.settings.navShape           ?? "",
       });
       setStyleHeadingFont(data.settings.headingFont ?? "Georgia");
       setStyleBodyFont(data.settings.bodyFont ?? "Inter");
@@ -765,6 +771,7 @@ export default function SiteEditor() {
       }) as { page: Page };
       setPages((prev) => prev.map((p) => (p.id === page.id ? updated.page : p)));
       if (activePage?.id === page.id) setActivePage(updated.page);
+      setPreviewKey((k) => k + 1);
       toast(updated.page.isVisible ? "Page visible" : "Page hidden");
     } catch (err) {
       toast(err instanceof Error ? err.message : "Failed to update page", true);
@@ -3424,6 +3431,41 @@ export default function SiteEditor() {
                               <span style={{ fontSize: "0.8rem", color: "#6b5e56", flex: 1 }}>Card background</span>
                               <code style={{ fontSize: "0.72rem", color: "#a09690", fontFamily: "monospace" }}>{(settingsForm.cardColor || "#fffef9").toUpperCase()}</code>
                             </div>
+                            {/* Card image upload */}
+                            <div className="sf-group" style={{ marginTop: "0.75rem" }}>
+                              <label className="sf-lbl">Card Photo</label>
+                              {settingsForm.cardImage ? (
+                                <div style={{ marginBottom: "0.5rem" }}>
+                                  <img src={settingsForm.cardImage} alt="Card photo preview"
+                                    style={{ width: "100%", height: "72px", objectFit: "cover", borderRadius: "6px", border: "1px solid #e0dbd4", display: "block", marginBottom: "4px" }} />
+                                  <button type="button" className="btn-ghost"
+                                    style={{ fontSize: "0.74rem", color: "#c42a22", borderColor: "#fde8e7", width: "100%" }}
+                                    onClick={() => setSettingsForm((f) => ({ ...f, cardImage: "" }))}>
+                                    Remove photo
+                                  </button>
+                                </div>
+                              ) : null}
+                              <label style={{ display: "flex", alignItems: "center", gap: "8px", padding: "7px 12px", border: "1px dashed #c4bdb6", borderRadius: "7px", cursor: "pointer", fontSize: "0.78rem", color: "#6b5e56", background: "#fafaf9", justifyContent: "center" }}>
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                                {settingsForm.cardImage ? "Replace photo" : "Upload photo"}
+                                <input type="file" accept="image/jpeg,image/png,image/webp,image/gif"
+                                  style={{ display: "none" }}
+                                  onChange={async (e) => {
+                                    const file = e.target.files?.[0];
+                                    if (!file) return;
+                                    if (file.size > 10 * 1024 * 1024) { toast("File exceeds 10 MB limit", true); return; }
+                                    try {
+                                      const fd = new FormData();
+                                      fd.append("file", file);
+                                      const res = await fetch(`/api/sites/${site.id}/photos`, { method: "POST", body: fd });
+                                      if (!res.ok) { const body = await res.json() as { error?: { message?: string } }; throw new Error(body?.error?.message ?? "Upload failed"); }
+                                      const data = await res.json() as { photo: { id: string } };
+                                      setSettingsForm((f) => ({ ...f, cardImage: `/api/sites/${site.id}/photos/${data.photo.id}` }));
+                                    } catch (err) { toast(err instanceof Error ? err.message : "Upload failed", true); }
+                                  }} />
+                              </label>
+                              <div style={{ fontSize: "0.68rem", color: "#b0a99f", marginTop: "3px" }}>Shows as card background; color fill is used if no photo</div>
+                            </div>
                             <div className="sf-group" style={{ marginTop: "0.75rem" }}>
                               <label className="sf-lbl">Wax Seal Initials</label>
                               <input
@@ -3460,59 +3502,103 @@ export default function SiteEditor() {
                             </button>
                           </div>
                         ) : null}
-                        <label className="sf-lbl">Upload image (JPG, PNG, WEBP, GIF — max 10 MB)</label>
-                        <input
-                          type="file"
-                          accept="image/jpeg,image/png,image/webp,image/gif"
-                          style={{ fontSize: "0.78rem", color: "#1c1917" }}
+                        <label
+                          style={{ display: "flex", alignItems: "center", gap: "8px", padding: "8px 14px", border: "1px dashed #c4bdb6", borderRadius: "7px", cursor: "pointer", fontSize: "0.8rem", color: "#6b5e56", background: "#fafaf9", justifyContent: "center" }}
                           aria-label="Upload background image"
-                          onChange={async (e) => {
-                            const file = e.target.files?.[0];
-                            if (!file) return;
-                            if (file.size > 10 * 1024 * 1024) {
-                              toast("File exceeds 10 MB limit", true);
-                              return;
-                            }
-                            try {
-                              const fd = new FormData();
-                              fd.append("file", file);
-                              const res = await fetch(`/api/sites/${site.id}/photos`, { method: "POST", body: fd });
-                              if (!res.ok) {
-                                const body = await res.json() as { error?: { message?: string } };
-                                throw new Error(body?.error?.message ?? "Upload failed");
+                        >
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                          Upload background image (JPG · PNG · WEBP · GIF, max 10 MB)
+                          <input
+                            type="file"
+                            accept="image/jpeg,image/png,image/webp,image/gif"
+                            style={{ display: "none" }}
+                            aria-label="Upload background image"
+                            onChange={async (e) => {
+                              const file = e.target.files?.[0];
+                              if (!file) return;
+                              if (file.size > 10 * 1024 * 1024) {
+                                toast("File exceeds 10 MB limit", true);
+                                return;
                               }
-                              const data = await res.json() as { photo: { id: string } };
-                              const url = `/api/sites/${site.id}/photos/${data.photo.id}`;
-                              setSettingsForm((f) => ({ ...f, bgImage: url }));
-                            } catch (err) {
-                              toast(err instanceof Error ? err.message : "Upload failed", true);
-                            }
-                          }}
-                        />
+                              try {
+                                const fd = new FormData();
+                                fd.append("file", file);
+                                const res = await fetch(`/api/sites/${site.id}/photos`, { method: "POST", body: fd });
+                                if (!res.ok) {
+                                  const body = await res.json() as { error?: { message?: string } };
+                                  throw new Error(body?.error?.message ?? "Upload failed");
+                                }
+                                const data = await res.json() as { photo: { id: string } };
+                                const url = `/api/sites/${site.id}/photos/${data.photo.id}`;
+                                setSettingsForm((f) => ({ ...f, bgImage: url }));
+                              } catch (err) {
+                                toast(err instanceof Error ? err.message : "Upload failed", true);
+                              }
+                            }}
+                          />
+                        </label>
                       </div>
                     </>
                   )}
 
                   {settingsDrawerTab === "nav" && (
                     <>
-                      <div style={{ fontSize: "0.72rem", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: "#9b8e85", marginBottom: "0.6rem" }}>Background</div>
-                      <div style={{ display: "flex", gap: "6px", marginBottom: "1rem" }}>
-                        {(["white", "transparent", "custom"] as const).map((opt) => (
-                          <button key={opt} onClick={() => setSettingsForm((f) => ({ ...f, navBg: opt }))} style={{ flex: 1, padding: "5px 0", fontSize: "0.78rem", borderRadius: "6px", border: "1px solid", borderColor: settingsForm.navBg === opt ? "#0d9488" : "#e0dbd4", background: settingsForm.navBg === opt ? "#f0fdfa" : "#fff", color: settingsForm.navBg === opt ? "#0d9488" : "#6b5e56", cursor: "pointer", fontWeight: settingsForm.navBg === opt ? 600 : 400, textTransform: "capitalize" }}>
-                            {opt}
-                          </button>
-                        ))}
-                      </div>
-
-                      <div style={{ fontSize: "0.72rem", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: "#9b8e85", marginBottom: "0.6rem" }}>Position</div>
+                      {/* Position */}
+                      <div style={{ fontSize: "0.72rem", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: "#9b8e85", marginBottom: "0.5rem" }}>Position</div>
                       <div style={{ display: "flex", gap: "6px", marginBottom: "1rem" }}>
                         {(["fixed", "scroll-away"] as const).map((opt) => (
-                          <button key={opt} onClick={() => setSettingsForm((f) => ({ ...f, navPosition: opt }))} style={{ flex: 1, padding: "5px 0", fontSize: "0.78rem", borderRadius: "6px", border: "1px solid", borderColor: settingsForm.navPosition === opt ? "#0d9488" : "#e0dbd4", background: settingsForm.navPosition === opt ? "#f0fdfa" : "#fff", color: settingsForm.navPosition === opt ? "#0d9488" : "#6b5e56", cursor: "pointer", fontWeight: settingsForm.navPosition === opt ? 600 : 400 }}>
+                          <button key={opt} onClick={() => setSettingsForm((f) => ({ ...f, navPosition: opt }))}
+                            style={{ flex: 1, padding: "5px 0", fontSize: "0.78rem", borderRadius: "6px", border: "1px solid", borderColor: settingsForm.navPosition === opt ? "#0d9488" : "#e0dbd4", background: settingsForm.navPosition === opt ? "#f0fdfa" : "#fff", color: settingsForm.navPosition === opt ? "#0d9488" : "#6b5e56", cursor: "pointer", fontWeight: settingsForm.navPosition === opt ? 600 : 400 }}>
                             {opt === "fixed" ? "Fixed" : "Scroll Away"}
                           </button>
                         ))}
                       </div>
 
+                      {/* Shape — only for scroll-away */}
+                      {settingsForm.navPosition === "scroll-away" && (
+                        <>
+                          <div style={{ fontSize: "0.72rem", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: "#9b8e85", marginBottom: "0.5rem" }}>Shape</div>
+                          <div style={{ display: "flex", gap: "6px", marginBottom: "1rem" }}>
+                            {([
+                              { value: "bar", label: "Bar" },
+                              { value: "pill", label: "Pill" },
+                              { value: "floating", label: "Floating" },
+                            ] as const).map(({ value, label }) => (
+                              <button key={value} onClick={() => setSettingsForm((f) => ({ ...f, navShape: value }))}
+                                style={{ flex: 1, padding: "5px 0", fontSize: "0.78rem", borderRadius: "6px", border: "1px solid", borderColor: settingsForm.navShape === value ? "#0d9488" : "#e0dbd4", background: settingsForm.navShape === value ? "#f0fdfa" : "#fff", color: settingsForm.navShape === value ? "#0d9488" : "#6b5e56", cursor: "pointer", fontWeight: settingsForm.navShape === value ? 600 : 400 }}>
+                                {label}
+                              </button>
+                            ))}
+                          </div>
+                        </>
+                      )}
+
+                      {/* Background */}
+                      <div style={{ fontSize: "0.72rem", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: "#9b8e85", marginBottom: "0.5rem" }}>Background</div>
+                      <div style={{ display: "flex", gap: "6px", marginBottom: settingsForm.navBg !== "white" && settingsForm.navBg !== "glass" ? "0.5rem" : "1rem" }}>
+                        {(["white", "glass", "custom"] as const).map((opt) => {
+                          const isActive = opt === "custom"
+                            ? (settingsForm.navBg !== "white" && settingsForm.navBg !== "glass")
+                            : settingsForm.navBg === opt;
+                          return (
+                            <button key={opt} onClick={() => setSettingsForm((f) => ({ ...f, navBg: opt === "custom" ? "#f7f5f0" : opt }))}
+                              style={{ flex: 1, padding: "5px 0", fontSize: "0.78rem", borderRadius: "6px", border: "1px solid", borderColor: isActive ? "#0d9488" : "#e0dbd4", background: isActive ? "#f0fdfa" : "#fff", color: isActive ? "#0d9488" : "#6b5e56", cursor: "pointer", fontWeight: isActive ? 600 : 400, textTransform: "capitalize" }}>
+                              {opt === "glass" ? "Glass" : opt === "custom" ? "Custom" : "White"}
+                            </button>
+                          );
+                        })}
+                      </div>
+                      {settingsForm.navBg !== "white" && settingsForm.navBg !== "glass" && (
+                        <div style={{ display: "flex", alignItems: "center", gap: "10px", padding: "6px 0", marginBottom: "1rem", borderBottom: "1px solid #f5f2ee" }}>
+                          <input type="color" value={settingsForm.navBg || "#f7f5f0"}
+                            onChange={(e) => setSettingsForm((f) => ({ ...f, navBg: e.target.value }))}
+                            style={{ width: "26px", height: "26px", borderRadius: "5px", border: "1px solid #e0dbd4", cursor: "pointer", padding: "1px", flexShrink: 0 }} />
+                          <span style={{ fontSize: "0.8rem", color: "#6b5e56", flex: 1 }}>Custom color</span>
+                          <code style={{ fontSize: "0.72rem", color: "#a09690", fontFamily: "monospace" }}>{(settingsForm.navBg || "#f7f5f0").toUpperCase()}</code>
+                        </div>
+                      )}
+
+                      {/* Nav Colors */}
                       <div style={{ fontSize: "0.72rem", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: "#9b8e85", marginBottom: "0.4rem" }}>Nav Colors</div>
                       {[
                         { label: "Couple name", key: "navBrandColor" as const, def: "#1c1917" },
@@ -3527,7 +3613,6 @@ export default function SiteEditor() {
                           <code style={{ fontSize: "0.72rem", color: "#a09690", fontFamily: "monospace" }}>{(settingsForm[key] || def).toUpperCase()}</code>
                         </div>
                       ))}
-
                     </>
                   )}
 
@@ -3557,14 +3642,24 @@ export default function SiteEditor() {
                                 <div key={p.id} style={{ display: "grid", gridTemplateColumns: "1fr 80px 90px", alignItems: "center", padding: "5px 0", borderBottom: "1px solid #f9f6f2" }}>
                                   <span style={{ fontSize: "0.8rem", color: "#1c1917" }}>{p.label}</span>
                                   <div style={{ textAlign: "center" }}>
-                                    <input type="checkbox" checked={showChecked}
-                                      onChange={() => { const next = showChecked ? songArr.filter(id => id !== p.id) : [...songArr, p.id]; setSettingsForm(f => ({ ...f, songPages: JSON.stringify(next) })); }}
-                                      style={{ width: "14px", height: "14px", accentColor: "#0d9488", cursor: "pointer" }} />
+                                    <label style={{ display: "inline-flex", cursor: "pointer" }}>
+                                      <input type="checkbox" checked={showChecked}
+                                        onChange={() => { const next = showChecked ? songArr.filter(id => id !== p.id) : [...songArr, p.id]; setSettingsForm(f => ({ ...f, songPages: JSON.stringify(next) })); }}
+                                        style={{ display: "none" }} />
+                                      <span style={{ display: "block", width: "30px", height: "17px", borderRadius: "9px", background: showChecked ? "#0d9488" : "#d1cdc7", position: "relative", transition: "background 0.2s", flexShrink: 0 }}>
+                                        <span style={{ position: "absolute", top: "2px", left: showChecked ? "13px" : "2px", width: "13px", height: "13px", borderRadius: "50%", background: "#fff", transition: "left 0.2s", boxShadow: "0 1px 3px rgba(0,0,0,0.2)" }} />
+                                      </span>
+                                    </label>
                                   </div>
                                   <div style={{ textAlign: "center" }}>
-                                    <input type="checkbox" checked={resetChecked}
-                                      onChange={() => { const next = resetChecked ? resetArr.filter(id => id !== p.id) : [...resetArr, p.id]; setSettingsForm(f => ({ ...f, songResetPages: JSON.stringify(next) })); }}
-                                      style={{ width: "14px", height: "14px", accentColor: "#0d9488", cursor: "pointer" }} />
+                                    <label style={{ display: "inline-flex", cursor: "pointer" }}>
+                                      <input type="checkbox" checked={resetChecked}
+                                        onChange={() => { const next = resetChecked ? resetArr.filter(id => id !== p.id) : [...resetArr, p.id]; setSettingsForm(f => ({ ...f, songResetPages: JSON.stringify(next) })); }}
+                                        style={{ display: "none" }} />
+                                      <span style={{ display: "block", width: "30px", height: "17px", borderRadius: "9px", background: resetChecked ? "#0d9488" : "#d1cdc7", position: "relative", transition: "background 0.2s", flexShrink: 0 }}>
+                                        <span style={{ position: "absolute", top: "2px", left: resetChecked ? "13px" : "2px", width: "13px", height: "13px", borderRadius: "50%", background: "#fff", transition: "left 0.2s", boxShadow: "0 1px 3px rgba(0,0,0,0.2)" }} />
+                                      </span>
+                                    </label>
                                   </div>
                                 </div>
                               );
