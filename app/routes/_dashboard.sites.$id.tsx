@@ -117,6 +117,7 @@ interface SiteSettings {
   cardColor: string;
   cardImage: string;
   navShape: string;
+  navLinkPadding: string;
 }
 
 interface AnalyticsData {
@@ -408,6 +409,7 @@ export default function SiteEditor() {
     cardColor: "",
     cardImage: "",
     navShape: "",
+    navLinkPadding: "0.875rem",
   });
 
   // CSV import state
@@ -553,6 +555,7 @@ export default function SiteEditor() {
         cardColor:          data.settings.cardColor          ?? "",
         cardImage:          data.settings.cardImage          ?? "",
         navShape:           data.settings.navShape           ?? "",
+        navLinkPadding:     data.settings.navLinkPadding     ?? "0.875rem",
       });
       setStyleHeadingFont(data.settings.headingFont ?? "Georgia");
       setStyleBodyFont(data.settings.bodyFont ?? "Inter");
@@ -3711,6 +3714,18 @@ export default function SiteEditor() {
                           <code style={{ fontSize: "0.72rem", color: "#a09690", fontFamily: "monospace" }}>{(settingsForm[key] || def).toUpperCase()}</code>
                         </div>
                       ))}
+                      <div style={{ fontSize: "0.72rem", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: "#9b8e85", marginBottom: "0.5rem", marginTop: "1rem" }}>Link Padding</div>
+                      <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "1rem" }}>
+                        <input
+                          type="range" min="0.25" max="1.5" step="0.0625"
+                          value={parseFloat(settingsForm.navLinkPadding || "0.875")}
+                          onChange={(e) => setSettingsForm((f) => ({ ...f, navLinkPadding: e.target.value + "rem" }))}
+                          style={{ flex: 1 }}
+                        />
+                        <code style={{ fontSize: "0.72rem", color: "#a09690", fontFamily: "monospace", minWidth: "3.5rem", textAlign: "right" }}>
+                          {settingsForm.navLinkPadding || "0.875rem"}
+                        </code>
+                      </div>
                     </>
                   )}
 

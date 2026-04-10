@@ -32,11 +32,12 @@ def build_content(data: dict) -> dict[str, dict]:
     home = {
         "welcome_title": d["home"]["welcome_title"],
         "welcome_body":  d["home"]["welcome_body"],
+        "home-welcome":  d["home"]["welcome_body"],
     }
 
     # Full story body — paragraphs joined with \n\n
     story_body = d["story"]["body"]
-    story = {"body": story_body}
+    story = {"body": story_body, "story": story_body}
 
     # Travel: combine sections into heading + body for the generic content tab
     # Also keep sections array for future structured rendering
@@ -50,11 +51,13 @@ def build_content(data: dict) -> dict[str, dict]:
     travel = {
         "heading": d["travel"]["title"],
         "body": "\n\n".join(travel_body_parts),
+        "travel": "\n\n".join(travel_body_parts),
         "sections": travel_sections,
     }
 
     accommodations = {
         "intro":              d["accommodations"]["intro"],
+        "accommodations":     d["accommodations"]["intro"],
         "hotel_name":         d["accommodations"]["hotel_name"],
         "hotel_description":  d["accommodations"]["hotel_description"],
         "room_block_note":    d["accommodations"]["room_block_note"],
@@ -62,6 +65,7 @@ def build_content(data: dict) -> dict[str, dict]:
 
     registry = {
         "intro":            d["registry"]["intro"],
+        "registry":         d["registry"]["intro"],
         "item_name":        d["registry"]["item_name"],
         "item_description": d["registry"]["item_description"],
         "cta":              d["registry"]["cta"],

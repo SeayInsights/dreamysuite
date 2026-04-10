@@ -59,6 +59,7 @@ interface SiteSettingRow {
   sealInitials: string | null;
   cardColor: string | null;
   cardImage: string | null;
+  navLinkPadding: string | null;
 }
 
 interface PageRow {
@@ -150,6 +151,8 @@ function buildStyles(settings: SiteSettingRow | null): BuiltStyles {
   const bg = settings?.bgColor ?? "#ffffff";
   const navPosition = settings?.navPosition ?? null;
   const isFixed = navPosition === "fixed";
+  const isScrollAway = navPosition === "scroll-away";
+  const navLinkPadding = settings?.navLinkPadding ?? "0.875rem";
   const bgImage = settings?.bgImage ?? null;
   // Escape a URL for safe use inside CSS url('...')
   const escapedBgImageUrl = bgImage ? bgImage.replace(/\\/g, "\\\\").replace(/'/g, "\\'") : null;
@@ -182,6 +185,7 @@ function buildStyles(settings: SiteSettingRow | null): BuiltStyles {
       --nav-brand: ${escHtml(settings?.navBrandColor ?? "var(--text)")};
       --nav-link: ${escHtml(settings?.navLinkColor ?? "var(--muted)")};
       --nav-highlight: ${escHtml(settings?.navHighlightColor ?? "var(--accent)")};
+      --nav-link-padding: ${escHtml(navLinkPadding)};
     }
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -195,6 +199,7 @@ function buildStyles(settings: SiteSettingRow | null): BuiltStyles {
       line-height: 1.7;
       -webkit-font-smoothing: antialiased;
       ${isFixed ? "padding-top: 4rem;" : ""}
+      ${isScrollAway ? "position: relative;" : ""}
     }
 
     /* ── Intro overlay base ── */
@@ -678,41 +683,58 @@ function buildStyles(settings: SiteSettingRow | null): BuiltStyles {
 
     /* ── Nav bar ── */
     .site-nav {
-      ${isFixed ? "position: fixed; top: 0; width: 100%; z-index: 100;" : "position: sticky; top: 0; z-index: 100;"}
+      ${isFixed ? "position: fixed; top: 0; width: 100%; z-index: 100;" : "position: absolute; top: 0; width: 100%; z-index: 100;"}
       background: var(--nav-bg);
       backdrop-filter: blur(8px);
       -webkit-backdrop-filter: blur(8px);
       border-bottom: 1px solid var(--site-border);
       padding: 0;
     }
-    .site-nav.nav-pill {
-      border-radius: 999px;
-      width: fit-content;
-      margin: 8px auto;
-      box-shadow: 0 2px 12px rgba(0,0,0,0.08);
-      padding: 0 0.25rem;
+    /* Pill / floating outer row — brand left, pill center, lang right */
+    .site-nav-row {
+      ${isFixed ? "position: fixed; top: 0; left: 0; right: 0;" : "position: absolute; top: 0; left: 0; right: 0;"}
+      z-index: 100;
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+      padding: 6px 1.5rem;
     }
-    .site-nav.nav-pill .site-nav-brand {
-      display: none;
-    }
-    .site-nav.nav-floating {
-      border-radius: 14px; margin: 8px 1rem; width: calc(100% - 2rem);
-      box-shadow: 0 4px 20px rgba(0,0,0,0.12); border-color: transparent;
-    }
-    .site-nav.nav-floating .site-nav-brand {
-      display: none;
-    }
-    .site-nav-wrap {
-      text-align: center;
-    }
-    .site-nav-brand--outside {
-      display: block;
+    .site-nav-brand-outside {
       font-family: var(--heading-font);
       font-size: 1rem;
       font-weight: normal;
+      font-style: italic;
       color: var(--nav-brand);
       text-decoration: none;
-      margin: 0.5rem auto 0;
+      white-space: nowrap;
+    }
+    .site-nav-lang-outside {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+    }
+    .site-nav-lang-outside .lang-toggle { display: contents; }
+    .site-nav.nav-pill {
+      border-radius: 999px;
+      width: fit-content;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+      background: var(--nav-bg);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border: 1px solid var(--site-border);
+      padding: 0 0.25rem;
+      position: static;
+    }
+    .site-nav.nav-floating {
+      border-radius: 14px;
+      width: fit-content;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+      background: var(--nav-bg);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border: 1px solid transparent;
+      padding: 0 0.5rem;
+      position: static;
     }
     .site-nav-inner {
       max-width: var(--max-width);
@@ -725,6 +747,8 @@ function buildStyles(settings: SiteSettingRow | null): BuiltStyles {
       scrollbar-width: none;
     }
     .site-nav-inner::-webkit-scrollbar { display: none; }
+    .site-nav.nav-pill .site-nav-inner,
+    .site-nav.nav-floating .site-nav-inner { padding: 0; max-width: none; }
     .site-nav-brand {
       font-family: var(--heading-font);
       font-size: 1rem;
@@ -732,7 +756,7 @@ function buildStyles(settings: SiteSettingRow | null): BuiltStyles {
       color: var(--nav-brand);
       text-decoration: none;
       white-space: nowrap;
-      padding: 0.875rem 0;
+      padding: var(--nav-link-padding) 0;
       margin-right: 1.5rem;
       flex-shrink: 0;
     }
@@ -747,7 +771,7 @@ function buildStyles(settings: SiteSettingRow | null): BuiltStyles {
     .site-nav-links li { flex-shrink: 0; }
     .site-nav-link {
       display: block;
-      padding: 0.875rem 0.875rem;
+      padding: var(--nav-link-padding) 0.875rem;
       font-size: 0.85rem;
       letter-spacing: 0.03em;
       color: var(--nav-link);
@@ -1402,15 +1426,17 @@ function buildHtml(
     : "";
   const navHtml = hasMultiplePages
     ? isPillOrFloating
-      ? `<nav class="site-nav${navShapeClass}" aria-label="Site navigation">
-          <div class="site-nav-inner">
-            <a class="site-nav-brand" href="#" onclick="return false;" style="display:block">${escHtml(eventTitle)}</a>
-            <ul class="site-nav-links" role="list">
-              ${navLinksHtml}
-            </ul>
-            ${navLangToggle}
-          </div>
-        </nav>`
+      ? `<div class="site-nav-row" role="navigation" aria-label="Site navigation">
+          <a class="site-nav-brand-outside" href="#" onclick="return false;">${escHtml(eventTitle)}</a>
+          <nav class="site-nav${navShapeClass}">
+            <div class="site-nav-inner">
+              <ul class="site-nav-links" role="list">
+                ${navLinksHtml}
+              </ul>
+            </div>
+          </nav>
+          <div class="site-nav-lang-outside">${navLangToggle}</div>
+        </div>`
       : `<nav class="site-nav${navShapeClass}" aria-label="Site navigation">
           <div class="site-nav-inner">
             <a class="site-nav-brand" href="#" onclick="return false;">${escHtml(eventTitle)}</a>
