@@ -788,12 +788,11 @@ function buildStyles(settings: SiteSettingRow | null): BuiltStyles {
 
     /* ── Language toggle ── */
     .lang-toggle {
-      position: fixed;
-      bottom: 1.5rem;
-      left: 1.5rem;
-      z-index: 200;
       display: flex;
       gap: 0.25rem;
+      align-items: center;
+      flex-shrink: 0;
+      margin-left: 0.75rem;
     }
     .lang-btn {
       padding: 0.35rem 0.65rem;
@@ -852,9 +851,9 @@ function renderBlock(
         <section class="block block-home-hero" aria-label="Hero">
           <div class="hero-inner">
             <p class="hero-eyebrow">We&#39;re getting married</p>
-            <h1 class="hero-title">${escHtml(title)}</h1>
-            ${date ? `<p class="hero-date">${escHtml(date)}</p>` : ""}
-            ${location ? `<p class="hero-location">${escHtml(location)}</p>` : ""}
+            <h1 class="hero-title" data-lang-field="couple">${escHtml(title)}</h1>
+            ${date ? `<p class="hero-date" data-lang-field="date">${escHtml(date)}</p>` : ""}
+            ${location ? `<p class="hero-location" data-lang-field="location">${escHtml(location)}</p>` : ""}
             <div class="hero-divider" aria-hidden="true">&#10038;</div>
           </div>
         </section>`;
@@ -880,19 +879,15 @@ function renderBlock(
         : String(cfg.body ?? cfg.text ?? cfg.content ?? "");
       return `
         <section class="block block-text">
-          ${heading ? `<h2 class="section-heading">${escHtml(heading)}</h2><div class="section-rule" aria-hidden="true"></div>` : ""}
+          ${heading ? `<h2 class="section-heading"${contentKey ? ` data-lang-field="${escHtml(contentKey)}_heading"` : ""}>${escHtml(heading)}</h2><div class="section-rule" aria-hidden="true"></div>` : ""}
           <div class="text-body">
-            ${body ? `<p>${escHtml(body)}</p>` : placeholder("Story text will appear here once added.")}
+            ${body ? `<p${contentKey ? ` data-lang-field="${escHtml(contentKey)}"` : ""}>${escHtml(body)}</p>` : placeholder("Story text will appear here once added.")}
           </div>
         </section>`;
     }
 
     case "countdown": {
-      const targetDate =
-        (pageContent?.countdown_target as string | undefined) ??
-        (cfg.date as string | undefined) ??
-        (cfg.countdownDate as string | undefined) ??
-        settings?.eventDate ?? "";
+      const targetDate = settings?.eventDate ?? "";
       const label = (cfg.label as string | undefined) ?? "Until we say I do";
       return `
         <section class="block block-countdown" aria-label="Countdown">
@@ -1379,6 +1374,8 @@ function buildHtml(
     return escHtml(p.label || p.slug.charAt(0).toUpperCase() + p.slug.slice(1));
   }
 
+  const secondLang = settings?.secondLanguage ?? null;
+
   const navShape = settings?.navShape ?? "";
   const navShapeClass = navShape === "pill" ? " nav-pill" : navShape === "floating" ? " nav-floating" : "";
   const isPillOrFloating = navShape === "pill" || navShape === "floating";
@@ -1388,6 +1385,12 @@ function buildHtml(
         `<li><button class="site-nav-link${i === 0 ? " active" : ""}" data-page="${escHtml(p.id)}" onclick="showPage('${escHtml(p.id)}')">${pageLabel(p)}</button></li>`
     )
     .join("");
+  const navLangToggle = secondLang
+    ? `<div class="lang-toggle" role="group" aria-label="Language">
+        <button class="lang-btn active" id="lang-btn-main" onclick="switchLang('${escHtml(mainLang)}')">${escHtml(mainLang.toUpperCase())}</button>
+        <button class="lang-btn" id="lang-btn-second" onclick="switchLang('${escHtml(secondLang)}')">${escHtml(secondLang.toUpperCase())}</button>
+      </div>`
+    : "";
   const navHtml = hasMultiplePages
     ? isPillOrFloating
       ? `<div class="site-nav-wrap">
@@ -1397,6 +1400,7 @@ function buildHtml(
               <ul class="site-nav-links" role="list">
                 ${navLinksHtml}
               </ul>
+              ${navLangToggle}
             </div>
           </nav>
         </div>`
@@ -1406,6 +1410,7 @@ function buildHtml(
             <ul class="site-nav-links" role="list">
               ${navLinksHtml}
             </ul>
+            ${navLangToggle}
           </div>
         </nav>`
     : "";
@@ -1462,9 +1467,9 @@ function showPage(pageId) {
     : "";
 
   // Language toggle — shown when a second language is configured
-  const secondLang = settings?.secondLanguage ?? null;
-  const langToggleHtml = secondLang
-    ? `<div class="lang-toggle" role="group" aria-label="Language">
+  // Normally injected into the nav bar; this fallback is only for single-page sites with no nav.
+  const langToggleHtml = secondLang && !hasMultiplePages
+    ? `<div class="lang-toggle" style="position:fixed;top:1rem;right:1rem;z-index:200" role="group" aria-label="Language">
         <button class="lang-btn active" id="lang-btn-main" onclick="switchLang('${escHtml(mainLang)}')">${escHtml(mainLang.toUpperCase())}</button>
         <button class="lang-btn" id="lang-btn-second" onclick="switchLang('${escHtml(secondLang)}')">${escHtml(secondLang.toUpperCase())}</button>
       </div>`
