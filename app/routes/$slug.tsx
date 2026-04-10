@@ -54,6 +54,7 @@ interface SiteSettingRow {
   buttonBorderWidth: string | null;
   animation: string | null;
   bgImage: string | null;
+  envelopeColor: string | null;
 }
 
 interface PageRow {
@@ -195,28 +196,28 @@ function buildStyles(settings: SiteSettingRow | null): BuiltStyles {
     .env-body {
       position:relative;
       width:clamp(260px,48vw,480px); height:clamp(168px,31vw,308px);
-      background:#f5ede0;
+      background:var(--env-color,#f5ede0);
       border-radius:3px 3px 5px 5px;
       box-shadow:0 24px 60px rgba(0,0,0,0.55),0 6px 16px rgba(0,0,0,0.3);
       transform-style:preserve-3d;
     }
     .env-body::before {
       content:''; position:absolute; inset:0;
-      background:#c0a882; border-radius:3px 3px 5px 5px; z-index:0;
+      background:color-mix(in srgb,var(--env-color,#f5ede0) 55%,#6b4c2a); border-radius:3px 3px 5px 5px; z-index:0;
     }
     .env-left-fold {
       position:absolute; top:0; left:0; bottom:0; width:50%;
-      background:linear-gradient(to right,#e4d4bc,#ede0cc);
+      background:linear-gradient(to right,color-mix(in srgb,var(--env-color,#f5ede0) 82%,#6b4c2a),var(--env-color,#f5ede0));
       clip-path:polygon(0 0,100% 50%,0 100%); z-index:2;
     }
     .env-right-fold {
       position:absolute; top:0; right:0; bottom:0; width:50%;
-      background:linear-gradient(to left,#d8cab0,#e6d8c0);
+      background:linear-gradient(to left,color-mix(in srgb,var(--env-color,#f5ede0) 75%,#6b4c2a),var(--env-color,#f5ede0));
       clip-path:polygon(100% 0,0 50%,100% 100%); z-index:2;
     }
     .env-bottom-fold {
       position:absolute; bottom:0; left:0; right:0; height:48%;
-      background:#e2d0b8;
+      background:color-mix(in srgb,var(--env-color,#f5ede0) 88%,#6b4c2a);
       clip-path:polygon(0 100%,50% 0%,100% 100%); z-index:3;
     }
     .env-letter {
@@ -234,21 +235,21 @@ function buildStyles(settings: SiteSettingRow | null): BuiltStyles {
     .env-flap {
       position:absolute; top:0; left:0; right:0; height:55%;
       clip-path:polygon(0 0,100% 0,50% 88%);
-      background:linear-gradient(170deg,#f0e4d0,#e4d4be);
+      background:linear-gradient(170deg,var(--env-color,#f5ede0),color-mix(in srgb,var(--env-color,#f5ede0) 88%,#6b4c2a));
       transform-origin:top center; transform-style:preserve-3d;
       z-index:8; will-change:transform;
     }
     .env-flap::after {
       content:''; position:absolute; inset:0;
       clip-path:polygon(0 0,100% 0,50% 88%);
-      background:linear-gradient(170deg,#b8a080,#a89070);
+      background:linear-gradient(170deg,color-mix(in srgb,var(--env-color,#f5ede0) 65%,#6b4c2a),color-mix(in srgb,var(--env-color,#f5ede0) 55%,#6b4c2a));
       transform:rotateX(180deg); backface-visibility:visible;
     }
     .env-seal {
-      position:absolute; bottom:-4%; left:50%;
-      transform:translateX(-50%) translateY(50%);
+      position:absolute; top:48%; left:50%;
+      transform:translateX(-50%) translateY(-50%);
       width:46px; height:46px; border-radius:50%;
-      background:radial-gradient(circle at 35% 35%,var(--accent,#0d9488),color-mix(in srgb,var(--accent,#0d9488) 60%,#000));
+      background:radial-gradient(circle at 35% 35%,var(--seal-color,var(--accent,#0d9488)),color-mix(in srgb,var(--seal-color,var(--accent,#0d9488)) 60%,#000));
       display:flex; align-items:center; justify-content:center;
       color:white; font-size:1.2rem;
       box-shadow:0 3px 10px rgba(0,0,0,0.35); z-index:10; pointer-events:none;
@@ -1112,16 +1113,18 @@ function buildCountdownScript(
 function buildIntroHtml(
   animation: string | null,
   eventTitle: string,
-  eventDate: string | null
+  eventDate: string | null,
+  envelopeColor: string | null
 ): string {
   if (!animation || animation === "none") return "";
   const title = escHtml(eventTitle);
   const date = eventDate ? escHtml(eventDate) : "";
 
   if (animation === "envelope") {
+    const envStyle = envelopeColor ? ` style="--env-color:${escHtml(envelopeColor)}"` : "";
     return `<div id="intro-overlay" class="intro-overlay intro-env" role="button" tabindex="0" aria-label="Click to open invitation">
   <div class="env-scene">
-    <div class="env-body">
+    <div class="env-body"${envStyle}>
       <div class="env-left-fold"></div>
       <div class="env-right-fold"></div>
       <div class="env-bottom-fold"></div>
@@ -1129,9 +1132,8 @@ function buildIntroHtml(
         <p class="env-letter-name">${title}</p>
         ${date ? `<p class="env-letter-date">${date}</p>` : ""}
       </div>
-      <div class="env-flap">
-        <div class="env-seal"><span>&#10086;</span></div>
-      </div>
+      <div class="env-flap"></div>
+      <div class="env-seal"><span>&#10086;</span></div>
     </div>
     <p class="env-cue">&#8212; click to open &#8212;</p>
   </div>
@@ -1285,7 +1287,8 @@ function showPage(pageId) {
 
   // Animation
   const animation = settings?.animation ?? null;
-  const introHtml = buildIntroHtml(animation, eventTitle, eventDate);
+  const envelopeColor = settings?.envelopeColor ?? null;
+  const introHtml = buildIntroHtml(animation, eventTitle, eventDate, envelopeColor);
   const gsapCdn = introHtml
     ? `<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>`
     : "";
@@ -1303,6 +1306,7 @@ function openIntro() {
   tl.to('.env-seal',  { scale:0, opacity:0, duration:0.25, ease:'back.in(2)' })
     .to('.env-cue',   { opacity:0, duration:0.2 }, '<')
     .to('.env-flap',  { rotateX:-185, duration:0.7, ease:'power2.inOut', transformOrigin:'top center' })
+    .set('.env-letter',{ zIndex:15 })
     .to('.env-letter',{ y:'-60%', duration:0.55, ease:'power2.out' }, '-=0.25')
     .to('.env-letter',{ opacity:0, duration:0.25 }, '+=0.3')
     .to(el,           { opacity:0, duration:0.35 }, '-=0.15');

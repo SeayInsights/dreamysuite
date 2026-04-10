@@ -112,6 +112,7 @@ interface SiteSettings {
   navItemsConfig: string | null;
   animation: string | null;
   bgImage: string | null;
+  envelopeColor: string | null;
 }
 
 interface AnalyticsData {
@@ -398,6 +399,7 @@ export default function SiteEditor() {
     navItemsConfig: "[]",
     animation: "",
     bgImage: "",
+    envelopeColor: "",
   });
 
   // CSV import state
@@ -538,6 +540,7 @@ export default function SiteEditor() {
         navItemsConfig:     data.settings.navItemsConfig     ?? "[]",
         animation:          data.settings.animation          ?? "",
         bgImage:            data.settings.bgImage            ?? "",
+        envelopeColor:      data.settings.envelopeColor      ?? "",
       });
       setStyleHeadingFont(data.settings.headingFont ?? "Georgia");
       setStyleBodyFont(data.settings.bodyFont ?? "Inter");
@@ -3390,6 +3393,38 @@ export default function SiteEditor() {
                           );
                         })}
                       </div>
+
+                      {/* Envelope color — shown only when envelope animation is selected */}
+                      {settingsForm.animation === "envelope" && (
+                        <>
+                          <div style={{ fontSize: "0.72rem", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: "#9b8e85", margin: "1.1rem 0 0.6rem" }}>Envelope Colors</div>
+                          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem" }}>
+                            <div>
+                              <div style={{ fontSize: "0.72rem", color: "#9b8e85", marginBottom: "4px" }}>Envelope</div>
+                              <input
+                                type="color"
+                                value={settingsForm.envelopeColor || "#f5ede0"}
+                                onChange={(e) => setSettingsForm((f) => ({ ...f, envelopeColor: e.target.value }))}
+                                style={{ width: "100%", height: "34px", border: "1px solid #e0dbd4", borderRadius: "6px", cursor: "pointer" }}
+                                title="Envelope color"
+                              />
+                            </div>
+                            <div>
+                              <div style={{ fontSize: "0.72rem", color: "#9b8e85", marginBottom: "4px" }}>Wax Seal</div>
+                              <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                                <input
+                                  type="color"
+                                  value={settingsForm.accentColor}
+                                  onChange={(e) => setSettingsForm((f) => ({ ...f, accentColor: e.target.value }))}
+                                  style={{ width: "100%", height: "34px", border: "1px solid #e0dbd4", borderRadius: "6px", cursor: "pointer" }}
+                                  title="Wax seal color (uses accent color)"
+                                />
+                              </div>
+                              <div style={{ fontSize: "0.65rem", color: "#b0a99f", marginTop: "3px" }}>Uses accent color</div>
+                            </div>
+                          </div>
+                        </>
+                      )}
 
                       {/* Background Image */}
                       <div style={{ fontSize: "0.72rem", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: "#9b8e85", margin: "1.1rem 0 0.6rem" }}>Background Image</div>
