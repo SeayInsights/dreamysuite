@@ -877,22 +877,20 @@ export default function SiteEditor() {
   }
 
   function setField(key: string, val: unknown) {
-    setBlockConfigFields((f) => {
-      const updated = { ...f, [key]: val };
-      if (iframeRef.current?.contentWindow && expandedBlockId) {
-        iframeRef.current.contentWindow.postMessage(
-          { type: 'block_config_update', blockId: expandedBlockId, config: updated },
-          '*'
-        );
-      }
-      return updated;
-    });
+    const updated = { ...blockConfigFields, [key]: val };
+    setBlockConfigFields(updated);
+    if (iframeRef.current?.contentWindow && expandedBlockId) {
+      iframeRef.current.contentWindow.postMessage(
+        { type: 'block_config_update', blockId: expandedBlockId, config: updated },
+        window.location.origin
+      );
+    }
   }
 
   function fireSettingsPreview(delta: Record<string, unknown>) {
     iframeRef.current?.contentWindow?.postMessage(
       { type: 'site_settings_update', delta },
-      '*'
+      window.location.origin
     );
   }
 
