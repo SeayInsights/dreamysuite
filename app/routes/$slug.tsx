@@ -866,8 +866,12 @@ function buildHtml(
 
   const allBlocks = pages.flatMap((p) => p.blocks);
   const countdownData = allBlocks
-    .filter((b) => b.type === "countdown" && typeof (b.config.date ?? b.config.countdownDate) === "string")
-    .map((b) => ({ id: b.id, date: (b.config.date ?? b.config.countdownDate) as string }));
+    .filter((b) => b.type === "countdown")
+    .map((b) => ({
+      id: b.id,
+      date: String(b.config.date ?? b.config.countdownDate ?? settings?.eventDate ?? ""),
+    }))
+    .filter((b) => b.date !== "");
 
   // Build nav bar (only if there are multiple pages, all visible)
   const visiblePages = pages.filter((p) => p.isVisible !== 0);
