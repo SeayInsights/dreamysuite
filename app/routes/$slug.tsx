@@ -191,8 +191,16 @@ function buildStyles(settings: SiteSettingRow | null): BuiltStyles {
     /* ════════════════════════════════
        ENVELOPE
     ════════════════════════════════ */
-    .intro-env { background:#1a1208; }
-    .env-scene { display:flex; flex-direction:column; align-items:center; perspective:1000px; }
+    @keyframes env-float {
+      0%,100% { transform:translateY(0); }
+      50%      { transform:translateY(-10px); }
+    }
+    @keyframes seal-glow {
+      0%,100% { box-shadow:0 3px 10px rgba(0,0,0,0.35); }
+      50%     { box-shadow:0 3px 10px rgba(0,0,0,0.35),0 0 22px 8px rgba(255,220,140,0.25); }
+    }
+    .intro-env { background:radial-gradient(ellipse at 50% 60%,#241408 0%,#140a02 100%); }
+    .env-scene { display:flex; flex-direction:column; align-items:center; perspective:1000px; animation:env-float 3.6s ease-in-out infinite; }
     .env-body {
       position:relative;
       width:clamp(260px,48vw,480px); height:clamp(168px,31vw,308px);
@@ -248,111 +256,150 @@ function buildStyles(settings: SiteSettingRow | null): BuiltStyles {
     .env-seal {
       position:absolute; top:48%; left:50%;
       transform:translateX(-50%) translateY(-50%);
-      width:46px; height:46px; border-radius:50%;
+      width:50px; height:50px; border-radius:50%;
       background:radial-gradient(circle at 35% 35%,var(--seal-color,var(--accent,#0d9488)),color-mix(in srgb,var(--seal-color,var(--accent,#0d9488)) 60%,#000));
       display:flex; align-items:center; justify-content:center;
-      color:white; font-size:1.2rem;
+      color:white; font-size:1.3rem;
       box-shadow:0 3px 10px rgba(0,0,0,0.35); z-index:10; pointer-events:none;
+      animation:seal-glow 2.2s ease-in-out infinite;
     }
-    .env-cue { margin-top:1.8rem; font-style:italic; color:rgba(255,255,255,0.5); font-size:0.82rem; letter-spacing:0.1em; pointer-events:none; }
+    .env-inner-glow {
+      position:absolute; inset:0; z-index:9; pointer-events:none; border-radius:3px;
+      background:radial-gradient(ellipse at 50% 25%,rgba(255,235,180,0.92),rgba(255,210,120,0.5) 40%,transparent 72%);
+      opacity:0;
+    }
+    .env-cue { margin-top:1.8rem; font-style:italic; color:rgba(255,255,255,0.45); font-size:0.82rem; letter-spacing:0.1em; pointer-events:none; }
 
     /* ════════════════════════════════
        DOORS
     ════════════════════════════════ */
-    .intro-doors { perspective:1200px; background:#0f0c07; }
+    .intro-doors { perspective:1400px; background:radial-gradient(ellipse at 50% 30%,#1a1208 0%,#080604 100%); }
+    .door-glow {
+      position:absolute; top:0; bottom:0; left:50%; width:3px;
+      transform:translateX(-50%); z-index:4; pointer-events:none;
+      background:linear-gradient(to bottom,transparent 0%,rgba(255,190,70,0.7) 20%,rgba(255,210,100,1) 50%,rgba(255,190,70,0.7) 80%,transparent 100%);
+      box-shadow:0 0 40px 16px rgba(255,175,50,0.18),0 0 100px 40px rgba(255,140,20,0.08);
+      filter:blur(2px);
+    }
     .door {
       position:absolute; top:0; bottom:0; width:50%;
-      background:linear-gradient(175deg,#2c2018 0%,#1a1208 55%,#0f0c07 100%);
+      background:linear-gradient(175deg,#2e2214 0%,#1e1608 50%,#120e06 100%);
       transform-style:preserve-3d; will-change:transform;
     }
     .door-l {
       left:0; transform-origin:left center;
-      box-shadow:inset -30px 0 80px rgba(0,0,0,0.6),2px 0 4px rgba(0,0,0,0.4);
+      box-shadow:inset -40px 0 100px rgba(0,0,0,0.7),3px 0 6px rgba(0,0,0,0.5);
     }
     .door-r {
       right:0; transform-origin:right center;
-      box-shadow:inset 30px 0 80px rgba(0,0,0,0.6),-2px 0 4px rgba(0,0,0,0.4);
+      box-shadow:inset 40px 0 100px rgba(0,0,0,0.7),-3px 0 6px rgba(0,0,0,0.5);
     }
     .door-panel-inset {
-      position:absolute; top:12%; bottom:12%; left:14%; right:14%;
-      border:1px solid rgba(255,220,120,0.1); border-radius:2px;
+      position:absolute; top:10%; bottom:10%; left:12%; right:12%;
+      border:1px solid rgba(255,220,120,0.12); border-radius:3px;
     }
     .door-panel-inset::before {
-      content:''; position:absolute; top:22%; bottom:22%; left:20%; right:20%;
-      border:1px solid rgba(255,220,120,0.07); border-radius:1px;
+      content:''; position:absolute; top:20%; bottom:20%; left:18%; right:18%;
+      border:1px solid rgba(255,220,120,0.07); border-radius:2px;
+    }
+    .door-panel-inset::after {
+      content:''; position:absolute; top:8%; left:8%; right:8%;
+      height:1px; background:rgba(255,220,120,0.06);
     }
     .door-knob {
       position:absolute; top:50%;
-      width:12px; height:12px; border-radius:50%;
-      background:radial-gradient(circle at 35% 30%,#f8e08a,#b8921e);
-      box-shadow:0 2px 8px rgba(0,0,0,0.5),inset 0 1px 2px rgba(255,255,255,0.2);
+      width:14px; height:14px; border-radius:50%;
+      background:radial-gradient(circle at 35% 30%,#fce898,#c4981e);
+      box-shadow:0 2px 10px rgba(0,0,0,0.6),inset 0 1px 3px rgba(255,255,255,0.25),0 0 8px rgba(255,200,50,0.2);
       transform:translateY(-50%);
     }
-    .door-knob-l { right:18px; }
-    .door-knob-r { left:18px; }
+    .door-knob-l { right:22px; }
+    .door-knob-r { left:22px; }
     .door-centre-text {
       position:relative; z-index:5;
       text-align:center; pointer-events:none;
       display:flex; flex-direction:column; align-items:center; gap:0.6rem;
     }
     .door-title {
-      font-family:var(--heading-font); font-size:clamp(1.4rem,3.5vw,2.2rem);
-      font-weight:normal; color:rgba(255,245,215,0.88);
-      letter-spacing:0.05em; text-shadow:0 2px 16px rgba(0,0,0,0.5);
+      font-family:var(--heading-font); font-size:clamp(1.4rem,3.5vw,2.4rem);
+      font-weight:normal; color:rgba(255,245,215,0.9);
+      letter-spacing:0.06em; text-shadow:0 2px 20px rgba(255,180,50,0.2),0 0 60px rgba(255,150,30,0.1);
     }
-    .door-cue { font-style:italic; color:rgba(255,215,100,0.5); font-size:0.82rem; letter-spacing:0.12em; }
+    .door-cue { font-style:italic; color:rgba(255,210,90,0.45); font-size:0.82rem; letter-spacing:0.14em; }
 
     /* ════════════════════════════════
-       STORYBOOK
+       STORYBOOK — Full-screen Disney book
     ════════════════════════════════ */
-    .intro-book { background:#1a140f; perspective:1600px; flex-direction:column; gap:1.5rem; }
-    .book-container {
-      position:relative; display:flex;
-      width:clamp(280px,56vw,520px); height:clamp(188px,37vw,348px);
-      transform-style:preserve-3d;
-      filter:drop-shadow(0 30px 60px rgba(0,0,0,0.6));
+    .intro-book { background:#1e120a; perspective:2600px; perspective-origin:60% 50%; }
+    .book-page-bg {
+      position:absolute; inset:0;
+      background:radial-gradient(ellipse at 30% 50%,#fff8ee 0%,#f0e0c0 45%,#ddc898 100%);
     }
-    .book-cover-l {
-      flex:1; transform-origin:right center;
-      transform-style:preserve-3d; will-change:transform;
-      border-radius:3px 0 0 3px; position:relative;
+    .book-cover {
+      position:absolute; inset:0;
+      transform-origin:right center; transform-style:preserve-3d; will-change:transform;
     }
-    .book-cover-r {
-      flex:1; transform-origin:left center;
-      transform-style:preserve-3d; will-change:transform;
-      border-radius:0 3px 3px 0; position:relative;
+    .book-cover-face {
+      position:absolute; inset:0; backface-visibility:hidden;
+      background:linear-gradient(160deg,#1c0e08 0%,#2e1a0e 18%,#3d2412 50%,#2a1808 82%,#180c06 100%);
+      display:flex; align-items:center; justify-content:center; overflow:hidden;
     }
-    .book-cover-face, .book-cover-back { position:absolute; inset:0; backface-visibility:hidden; border-radius:inherit; }
-    .book-cover-l .book-cover-face {
-      background:linear-gradient(145deg,color-mix(in srgb,var(--accent,#0d9488) 90%,#fff) 0%,var(--accent,#0d9488) 40%,color-mix(in srgb,var(--accent,#0d9488) 55%,#000) 100%);
-      display:flex; flex-direction:column; align-items:center; justify-content:center; gap:0.5rem; padding:1.2rem;
+    .book-cover-face::before {
+      content:''; position:absolute; inset:0;
+      background-image:repeating-linear-gradient(91deg,transparent,transparent 2px,rgba(0,0,0,0.025) 2px,rgba(0,0,0,0.025) 3px),
+        repeating-linear-gradient(1deg,transparent,transparent 9px,rgba(255,255,255,0.008) 9px,rgba(255,255,255,0.008) 10px);
     }
-    .book-cover-r .book-cover-face {
-      background:linear-gradient(215deg,color-mix(in srgb,var(--accent,#0d9488) 90%,#fff) 0%,var(--accent,#0d9488) 40%,color-mix(in srgb,var(--accent,#0d9488) 55%,#000) 100%);
+    .book-ornate-border {
+      position:absolute; inset:clamp(12px,2.5vw,40px);
+      border:1px solid rgba(212,175,55,0.65);
     }
-    .book-cover-back {
-      background:linear-gradient(to right,#e4dcd0,#f0e8da);
-      transform:rotateY(180deg);
+    .book-ornate-border::before {
+      content:''; position:absolute; inset:9px;
+      border:1px solid rgba(212,175,55,0.28);
     }
-    .book-cover-r .book-cover-back { background:linear-gradient(to left,#e4dcd0,#f0e8da); }
-    .book-ornament { color:rgba(255,255,255,0.5); font-size:1rem; }
+    .book-ornate-border::after {
+      content:''; position:absolute; inset:17px;
+      border:1px solid rgba(212,175,55,0.12);
+    }
+    .book-inner-frame {
+      position:absolute; inset:0;
+      display:flex; flex-direction:column; align-items:center; justify-content:center;
+      gap:clamp(0.45rem,1.8vh,1.3rem); padding:clamp(1.2rem,5vw,5rem); text-align:center;
+    }
+    .book-ornament-top {
+      color:rgba(212,175,55,0.52); font-size:clamp(0.62rem,1.4vw,0.95rem);
+      letter-spacing:0.52em;
+    }
+    .book-rule {
+      width:clamp(60px,20vw,260px); height:1px;
+      background:linear-gradient(to right,transparent,rgba(212,175,55,0.55),rgba(212,175,55,0.75),rgba(212,175,55,0.55),transparent);
+    }
     .book-cover-title {
-      font-family:var(--heading-font); font-size:clamp(0.85rem,2.2vw,1.2rem);
-      font-weight:normal; color:rgba(255,255,255,0.92);
-      text-align:center; letter-spacing:0.06em;
+      font-family:var(--heading-font); font-size:clamp(1.7rem,5.5vw,4.8rem);
+      font-weight:normal; color:rgba(255,245,210,0.93); letter-spacing:0.07em; line-height:1.2;
+      text-shadow:0 0 70px rgba(212,175,55,0.22),0 2px 10px rgba(0,0,0,0.75);
     }
-    .book-cover-date { font-size:clamp(0.65rem,1.2vw,0.78rem); color:rgba(255,255,255,0.6); font-style:italic; text-align:center; }
+    .book-cover-date {
+      font-size:clamp(0.78rem,1.8vw,1.2rem); color:rgba(212,175,55,0.62);
+      font-style:italic; letter-spacing:0.14em;
+    }
+    .book-ornament-btm { color:rgba(212,175,55,0.48); font-size:clamp(1rem,2.5vw,2rem); }
+    .book-cover-back {
+      position:absolute; inset:0; backface-visibility:hidden;
+      transform:rotateY(180deg);
+      background:linear-gradient(to left,#f0e4cc 0%,#ecdcbe 40%,#e2d0aa 100%);
+    }
     .book-spine {
-      width:14px; flex-shrink:0; z-index:2;
-      background:linear-gradient(to right,color-mix(in srgb,var(--accent,#0d9488) 35%,#000),color-mix(in srgb,var(--accent,#0d9488) 50%,#000),color-mix(in srgb,var(--accent,#0d9488) 35%,#000));
-      box-shadow:inset 0 0 10px rgba(0,0,0,0.4);
+      position:absolute; right:0; top:0; bottom:0; width:clamp(18px,2vw,38px);
+      background:linear-gradient(to right,#0e0706,#1c1008,#0e0706);
+      box-shadow:-8px 0 28px rgba(0,0,0,0.65),inset -3px 0 10px rgba(255,255,255,0.03);
+      z-index:12; pointer-events:none;
     }
-    .book-pages {
-      position:absolute; inset:2px;
-      background:repeating-linear-gradient(to bottom,#fffef9 0px,#fffef9 3px,#ede5d4 3px,#ede5d4 4px);
-      border-radius:2px; z-index:-1;
+    .book-cue {
+      position:absolute; bottom:clamp(1.2rem,3vh,2.5rem); left:0; right:0;
+      text-align:center; font-style:italic; color:rgba(212,175,55,0.42);
+      font-size:0.82rem; letter-spacing:0.16em; pointer-events:none; z-index:20;
     }
-    .book-cue { font-style:italic; color:rgba(255,255,255,0.4); font-size:0.82rem; letter-spacing:0.15em; pointer-events:none; }
 
     /* ── Layout ── */
     .site-wrapper { max-width: var(--max-width); margin: 0 auto; padding: 0 1.25rem; }
@@ -1132,6 +1179,7 @@ function buildIntroHtml(
         <p class="env-letter-name">${title}</p>
         ${date ? `<p class="env-letter-date">${date}</p>` : ""}
       </div>
+      <div class="env-inner-glow"></div>
       <div class="env-flap"></div>
       <div class="env-seal"><span>&#10086;</span></div>
     </div>
@@ -1142,28 +1190,30 @@ function buildIntroHtml(
 
   if (animation === "storybook") {
     return `<div id="intro-overlay" class="intro-overlay intro-book" role="button" tabindex="0" aria-label="Click to open">
-  <div class="book-container">
-    <div class="book-cover-l">
-      <div class="book-cover-face">
-        <span class="book-ornament">&#10022;</span>
-        <p class="book-cover-title">${title}</p>
-        ${date ? `<p class="book-cover-date">${date}</p>` : ""}
+  <div class="book-page-bg"></div>
+  <div class="book-cover">
+    <div class="book-cover-face">
+      <div class="book-ornate-border">
+        <div class="book-inner-frame">
+          <div class="book-ornament-top">&#10022; &middot; &#10022; &middot; &#10022;</div>
+          <div class="book-rule"></div>
+          <p class="book-cover-title">${title}</p>
+          ${date ? `<p class="book-cover-date">${date}</p>` : ""}
+          <div class="book-rule"></div>
+          <div class="book-ornament-btm">&#10086;</div>
+        </div>
       </div>
-      <div class="book-cover-back"></div>
     </div>
-    <div class="book-spine"></div>
-    <div class="book-cover-r">
-      <div class="book-cover-face"></div>
-      <div class="book-cover-back"></div>
-    </div>
-    <div class="book-pages"></div>
+    <div class="book-cover-back"></div>
   </div>
-  <p class="book-cue">open</p>
+  <div class="book-spine"></div>
+  <p class="book-cue">&#8212; tap to open &#8212;</p>
 </div>`;
   }
 
   if (animation === "doors") {
     return `<div id="intro-overlay" class="intro-overlay intro-doors" role="button" tabindex="0" aria-label="Click to enter">
+  <div class="door-glow"></div>
   <div class="door door-l"><div class="door-panel-inset"></div><div class="door-knob door-knob-l"></div></div>
   <div class="door door-r"><div class="door-panel-inset"></div><div class="door-knob door-knob-r"></div></div>
   <div class="door-centre-text">
@@ -1302,26 +1352,38 @@ function openIntro() {
   var el = document.getElementById('intro-overlay');
   if (!el) return;
   ${animation === "envelope" ? `
+  var _envScene = document.querySelector('.env-scene');
+  var _envSeal  = document.querySelector('.env-seal');
+  if (_envScene) _envScene.style.animation = 'none';
+  if (_envSeal)  _envSeal.style.animation  = 'none';
+  gsap.set('.env-scene', { clearProps:'transform' });
   var tl = gsap.timeline({ onComplete: function(){ el.style.display='none'; } });
-  tl.to('.env-seal',  { scale:0, opacity:0, duration:0.25, ease:'back.in(2)' })
-    .to('.env-cue',   { opacity:0, duration:0.2 }, '<')
-    .to('.env-flap',  { rotateX:-185, duration:0.7, ease:'power2.inOut', transformOrigin:'top center' })
-    .set('.env-letter',{ zIndex:15 })
-    .to('.env-letter',{ y:'-60%', duration:0.55, ease:'power2.out' }, '-=0.25')
-    .to('.env-letter',{ opacity:0, duration:0.25 }, '+=0.3')
-    .to(el,           { opacity:0, duration:0.35 }, '-=0.15');
+  tl.to('.env-body',       { scale:1.07, duration:0.38, ease:'power1.out' })
+    .to('.env-seal',       { scale:0, opacity:0, duration:0.3, ease:'back.in(3)', rotation:20 }, '+=0.05')
+    .to('.env-cue',        { opacity:0, duration:0.2 }, '<')
+    .to('.env-flap',       { rotateX:-190, duration:0.9, ease:'back.out(1.4)', transformOrigin:'top center' })
+    .to('.env-inner-glow', { opacity:1, duration:0.5 }, '-=0.5')
+    .set('.env-letter',    { zIndex:15 })
+    .to('.env-letter',     { y:'-58%', duration:0.7, ease:'power2.out' }, '-=0.35')
+    .to('.env-body',       { scale:1, duration:0.45, ease:'power2.inOut' }, '-=0.35')
+    .to('.env-letter',     { opacity:0, y:'-68%', duration:0.35 }, '+=0.28')
+    .to(el,                { opacity:0, duration:0.45 }, '-=0.2');
   ` : animation === "doors" ? `
   var tl = gsap.timeline({ onComplete: function(){ el.style.display='none'; } });
-  tl.to('.door-cue', { opacity:0, duration:0.15 })
-    .to('.door-l',   { rotateY:-108, duration:0.85, ease:'power3.inOut' }, 0.1)
-    .to('.door-r',   { rotateY:108,  duration:0.85, ease:'power3.inOut' }, 0.1)
-    .to(el,          { opacity:0, duration:0.3 }, '-=0.05');
+  tl.to('.door-cue',  { opacity:0, duration:0.15 })
+    .to('.door-glow', { width:'60px', filter:'blur(10px)', opacity:1.0, duration:0.35, ease:'power2.in' }, 0)
+    .to('.door-l',    { rotateY:-115, duration:1.1, ease:'power3.inOut' }, 0.18)
+    .to('.door-r',    { rotateY:115,  duration:1.1, ease:'power3.inOut' }, 0.18)
+    .to('.door-glow', { opacity:0, duration:0.4 }, '-=0.45')
+    .to(el,           { opacity:0, duration:0.4 }, '-=0.2');
   ` : animation === "storybook" ? `
   var tl = gsap.timeline({ onComplete: function(){ el.style.display='none'; } });
-  tl.to('.book-cue',     { opacity:0, duration:0.15 })
-    .to('.book-cover-l', { rotateY:-158, duration:0.85, ease:'power2.inOut' }, 0.1)
-    .to('.book-cover-r', { rotateY:158,  duration:0.85, ease:'power2.inOut' }, 0.1)
-    .to(el,              { opacity:0, scale:1.04, duration:0.4 }, '+=0.18');
+  tl.to('.book-cue',  { opacity:0, duration:0.2 })
+    .to('.book-cover', {
+      rotateY:-155, duration:1.7, ease:'power3.inOut',
+      transformOrigin:'right center'
+    }, 0.1)
+    .to(el, { opacity:0, duration:0.55 }, '-=0.35');
   ` : `
   gsap.to(el, { opacity:0, duration:0.4, onComplete:function(){ el.style.display='none'; } });
   `}

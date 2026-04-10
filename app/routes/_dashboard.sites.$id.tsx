@@ -415,7 +415,7 @@ export default function SiteEditor() {
   const blocksRef = useRef<Block[]>(blocks);
   blocksRef.current = blocks;
 
-  const previewUrl = activePage ? `/${site.slug}?_page=${activePage.id}` : `/${site.slug}`;
+  const previewUrl = activePage ? `/${site.slug}?_page=${activePage.id}&_t=${previewKey}` : `/${site.slug}?_t=${previewKey}`;
   const siteUrl = site.customDomain
     ? `https://${site.customDomain}`
     : `https://${site.slug}.dreamysuite.com`;
@@ -3161,7 +3161,7 @@ export default function SiteEditor() {
               top: 0,
               right: 0,
               bottom: 0,
-              width: "min(420px, 95vw)",
+              width: "min(600px, 95vw)",
               background: "#fff",
               borderLeft: "1px solid #eae5df",
               zIndex: 400,
@@ -3515,34 +3515,6 @@ export default function SiteEditor() {
                         </div>
                       </div>
 
-                      {pages.length > 0 && (() => {
-                        const entranceMap: Record<string, string> = {};
-                        try { (JSON.parse(settingsForm.navItemsConfig || "[]") as {key:string;entrance?:string}[]).forEach(item => { entranceMap[item.key] = item.entrance ?? "none"; }); } catch { /* keep empty */ }
-                        function setEntrance(key: string, val: string) {
-                          const next = pages.map(p => ({ key: p.slug, entrance: p.slug === key ? val : (entranceMap[p.slug] ?? "none") }));
-                          setSettingsForm(f => ({ ...f, navItemsConfig: JSON.stringify(next) }));
-                        }
-                        return (
-                          <div style={{ marginTop: "1.25rem" }}>
-                            <div style={{ fontSize: "0.72rem", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: "#9b8e85", marginBottom: "0.6rem" }}>Page Entrance Animations</div>
-                            {pages.map(p => (
-                              <div key={p.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "5px 0", borderBottom: "1px solid #f9f6f2" }}>
-                                <span style={{ fontSize: "0.8rem", color: "#1c1917" }}>{p.label}</span>
-                                <select
-                                  value={entranceMap[p.slug] ?? "none"}
-                                  onChange={e => setEntrance(p.slug, e.target.value)}
-                                  style={{ fontSize: "0.75rem", border: "1px solid #e0dbd4", borderRadius: "6px", padding: "4px 6px", background: "#fff", color: "#1c1917", cursor: "pointer" }}
-                                >
-                                  <option value="none">None</option>
-                                  <option value="envelope">Envelope</option>
-                                  <option value="storybook">Storybook</option>
-                                  <option value="doors">Doors</option>
-                                </select>
-                              </div>
-                            ))}
-                          </div>
-                        );
-                      })()}
                     </>
                   )}
 
