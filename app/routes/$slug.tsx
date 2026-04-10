@@ -96,6 +96,14 @@ interface PageWithBlocks extends PageRow {
 // contentMap[pageSlug][lang] = parsed content object
 type ContentMap = Map<string, Map<string, Record<string, unknown>>>;
 
+// Native language names shown in the toggle
+const LANG_NATIVE: Record<string, string> = {
+  en: "English", vi: "Tiếng Việt", es: "Español", fr: "Français",
+  "zh-CN": "中文 (简体)", "zh-TW": "中文 (繁體)", ko: "한국어", ja: "日本語",
+  de: "Deutsch", pt: "Português", it: "Italiano", th: "ภาษาไทย",
+  tl: "Filipino", hi: "हिन्दी", ar: "العربية",
+};
+
 // ── HTML helpers ──────────────────────────────────────────────────────────────
 
 function escHtml(str: string): string {
@@ -789,30 +797,25 @@ function buildStyles(settings: SiteSettingRow | null): BuiltStyles {
     /* ── Language toggle ── */
     .lang-toggle {
       display: flex;
-      gap: 0.25rem;
       align-items: center;
       flex-shrink: 0;
-      margin-left: 0.75rem;
+      margin-left: auto;
+      padding-left: 0.75rem;
     }
     .lang-btn {
-      padding: 0.35rem 0.65rem;
-      border-radius: 999px;
-      border: 1px solid var(--site-border);
-      background: var(--nav-bg);
+      display: block;
+      padding: 0.875rem 0.875rem;
+      font-size: 0.85rem;
+      letter-spacing: 0.03em;
       color: var(--nav-link);
+      background: none;
+      border: none;
       font-family: var(--body-font);
-      font-size: 0.72rem;
-      letter-spacing: 0.04em;
       cursor: pointer;
-      backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px);
-      transition: background 0.15s, color 0.15s;
+      white-space: nowrap;
+      transition: color 0.15s;
     }
-    .lang-btn.active {
-      background: var(--accent);
-      color: #fff;
-      border-color: var(--accent);
-    }
+    .lang-btn:hover { color: var(--nav-brand); }
 
     /* ── Responsive ── */
     @media (max-width: 600px) {
@@ -1385,25 +1388,29 @@ function buildHtml(
         `<li><button class="site-nav-link${i === 0 ? " active" : ""}" data-page="${escHtml(p.id)}" onclick="showPage('${escHtml(p.id)}')">${pageLabel(p)}</button></li>`
     )
     .join("");
+  const secondNative = secondLang ? (LANG_NATIVE[secondLang] ?? secondLang.toUpperCase()) : "";
+  const mainNative = LANG_NATIVE[mainLang] ?? mainLang.toUpperCase();
   const navLangToggle = secondLang
-    ? `<div class="lang-toggle" role="group" aria-label="Language">
-        <button class="lang-btn active" id="lang-btn-main" onclick="switchLang('${escHtml(mainLang)}')">${escHtml(mainLang.toUpperCase())}</button>
-        <button class="lang-btn" id="lang-btn-second" onclick="switchLang('${escHtml(secondLang)}')">${escHtml(secondLang.toUpperCase())}</button>
+    ? `<div class="lang-toggle">
+        <button class="lang-btn" id="lang-toggle-btn"
+          data-main="${escHtml(mainLang)}" data-second="${escHtml(secondLang)}"
+          data-main-label="${escHtml(mainNative)}" data-second-label="${escHtml(secondNative)}"
+          onclick="switchLang()"
+          aria-label="Switch language"
+        >${escHtml(secondNative)}</button>
       </div>`
     : "";
   const navHtml = hasMultiplePages
     ? isPillOrFloating
-      ? `<div class="site-nav-wrap">
-          <a class="site-nav-brand site-nav-brand--outside" href="#" onclick="return false;">${escHtml(eventTitle)}</a>
-          <nav class="site-nav${navShapeClass}" aria-label="Site navigation">
-            <div class="site-nav-inner">
-              <ul class="site-nav-links" role="list">
-                ${navLinksHtml}
-              </ul>
-              ${navLangToggle}
-            </div>
-          </nav>
-        </div>`
+      ? `<nav class="site-nav${navShapeClass}" aria-label="Site navigation">
+          <div class="site-nav-inner">
+            <a class="site-nav-brand" href="#" onclick="return false;" style="display:block">${escHtml(eventTitle)}</a>
+            <ul class="site-nav-links" role="list">
+              ${navLinksHtml}
+            </ul>
+            ${navLangToggle}
+          </div>
+        </nav>`
       : `<nav class="site-nav${navShapeClass}" aria-label="Site navigation">
           <div class="site-nav-inner">
             <a class="site-nav-brand" href="#" onclick="return false;">${escHtml(eventTitle)}</a>
@@ -1469,9 +1476,13 @@ function showPage(pageId) {
   // Language toggle — shown when a second language is configured
   // Normally injected into the nav bar; this fallback is only for single-page sites with no nav.
   const langToggleHtml = secondLang && !hasMultiplePages
-    ? `<div class="lang-toggle" style="position:fixed;top:1rem;right:1rem;z-index:200" role="group" aria-label="Language">
-        <button class="lang-btn active" id="lang-btn-main" onclick="switchLang('${escHtml(mainLang)}')">${escHtml(mainLang.toUpperCase())}</button>
-        <button class="lang-btn" id="lang-btn-second" onclick="switchLang('${escHtml(secondLang)}')">${escHtml(secondLang.toUpperCase())}</button>
+    ? `<div style="position:fixed;top:1rem;right:1rem;z-index:200">
+        <button class="lang-btn" id="lang-toggle-btn"
+          data-main="${escHtml(mainLang)}" data-second="${escHtml(secondLang)}"
+          data-main-label="${escHtml(mainNative)}" data-second-label="${escHtml(secondNative)}"
+          onclick="switchLang()"
+          style="background:var(--nav-bg);border:1px solid var(--site-border);border-radius:999px;padding:0.35rem 0.85rem;backdrop-filter:blur(8px)"
+        >${escHtml(secondNative)}</button>
       </div>`
     : "";
   const langScript = secondLang
@@ -1479,12 +1490,16 @@ function showPage(pageId) {
 var _currentLang = '${escHtml(mainLang)}';
 var _langContent = {};
 try { _langContent = JSON.parse(document.getElementById('lang-content-data')?.textContent || '{}'); } catch(e){}
-function switchLang(lang) {
-  _currentLang = lang;
-  document.querySelectorAll('.lang-btn').forEach(function(b){ b.classList.remove('active'); });
-  var activeBtn = lang === '${escHtml(mainLang)}' ? document.getElementById('lang-btn-main') : document.getElementById('lang-btn-second');
-  if (activeBtn) activeBtn.classList.add('active');
-  var content = _langContent[lang] || _langContent['${escHtml(mainLang)}'] || {};
+function switchLang() {
+  var btn = document.getElementById('lang-toggle-btn');
+  if (!btn) return;
+  var main = btn.getAttribute('data-main');
+  var second = btn.getAttribute('data-second');
+  var mainLabel = btn.getAttribute('data-main-label');
+  var secondLabel = btn.getAttribute('data-second-label');
+  _currentLang = (_currentLang === main) ? second : main;
+  btn.textContent = (_currentLang === main) ? secondLabel : mainLabel;
+  var content = _langContent[_currentLang] || _langContent[main] || {};
   document.querySelectorAll('[data-lang-field]').forEach(function(el) {
     var field = el.getAttribute('data-lang-field');
     if (field && content[field] !== undefined) el.textContent = content[field];
