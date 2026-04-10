@@ -3308,22 +3308,84 @@ export default function SiteEditor() {
 
                       {/* Entrance Animation */}
                       <div style={{ fontSize: "0.72rem", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: "#9b8e85", margin: "1.1rem 0 0.6rem" }}>Entrance Animation</div>
-                      <div className="sf-group">
-                        <label className="sf-lbl" htmlFor="s-animation">Animation</label>
-                        <select
-                          id="s-animation"
-                          className="sf-input"
-                          value={settingsForm.animation ?? ""}
-                          onChange={(e) => setSettingsForm((f) => ({ ...f, animation: e.target.value }))}
-                        >
-                          <option value="">None</option>
-                          <option value="envelope">Envelope</option>
-                          <option value="storybook">Storybook</option>
-                          <option value="doors">Doors</option>
-                        </select>
-                        <p style={{ fontSize: "0.7rem", color: "#9b8e85", marginTop: "4px", lineHeight: 1.5 }}>
-                          Envelope: panels split apart vertically on click. Storybook: book pages open sideways on click. Doors: curtain panels slide open on click.
-                        </p>
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
+                        {([
+                          {
+                            value: "",
+                            label: "None",
+                            diagram: (
+                              <svg viewBox="0 0 48 32" width="48" height="32" style={{ display: "block" }}>
+                                <rect x="0" y="0" width="48" height="32" rx="3" fill="#f0ece8" />
+                                <line x1="8" y1="10" x2="40" y2="10" stroke="#c8c0b8" strokeWidth="2" strokeLinecap="round" />
+                                <line x1="12" y1="16" x2="36" y2="16" stroke="#c8c0b8" strokeWidth="2" strokeLinecap="round" />
+                                <line x1="16" y1="22" x2="32" y2="22" stroke="#c8c0b8" strokeWidth="2" strokeLinecap="round" />
+                              </svg>
+                            ),
+                          },
+                          {
+                            value: "envelope",
+                            label: "Envelope",
+                            diagram: (
+                              <svg viewBox="0 0 48 32" width="48" height="32" style={{ display: "block" }}>
+                                <rect x="0" y="0" width="48" height="32" rx="3" fill="#faf6f0" />
+                                <rect x="0" y="0" width="48" height="14" rx="3" fill="#e8e0d4" />
+                                <rect x="0" y="18" width="48" height="14" rx="3" fill="#e8e0d4" style={{ transform: "translateY(0)" }} />
+                                <circle cx="24" cy="16" r="4" fill="#0d9488" />
+                              </svg>
+                            ),
+                          },
+                          {
+                            value: "storybook",
+                            label: "Storybook",
+                            diagram: (
+                              <svg viewBox="0 0 48 32" width="48" height="32" style={{ display: "block" }}>
+                                <rect x="0" y="0" width="48" height="32" rx="3" fill="#fdf8f4" />
+                                <rect x="0" y="0" width="22" height="32" rx="3" fill="#ede6d9" />
+                                <rect x="26" y="0" width="22" height="32" rx="3" fill="#ede6d9" />
+                                <line x1="24" y1="0" x2="24" y2="32" stroke="#c8bfb2" strokeWidth="1" />
+                                <text x="24" y="20" textAnchor="middle" fontSize="10" fill="#9b8e85">✦</text>
+                              </svg>
+                            ),
+                          },
+                          {
+                            value: "doors",
+                            label: "Doors",
+                            diagram: (
+                              <svg viewBox="0 0 48 32" width="48" height="32" style={{ display: "block" }}>
+                                <rect x="0" y="0" width="22" height="32" rx="3" fill="#0d9488" opacity="0.85" />
+                                <rect x="26" y="0" width="22" height="32" rx="3" fill="#0d9488" opacity="0.85" />
+                                <line x1="24" y1="0" x2="24" y2="32" stroke="rgba(255,255,255,0.4)" strokeWidth="1" />
+                                <text x="24" y="20" textAnchor="middle" fontSize="8" fill="white" opacity="0.9">✦</text>
+                              </svg>
+                            ),
+                          },
+                        ] as { value: string; label: string; diagram: React.ReactNode }[]).map(({ value, label, diagram }) => {
+                          const isSelected = (settingsForm.animation ?? "") === value;
+                          return (
+                            <button
+                              key={value}
+                              type="button"
+                              onClick={() => setSettingsForm((f) => ({ ...f, animation: value }))}
+                              style={{
+                                display: "flex",
+                                flexDirection: "column",
+                                alignItems: "center",
+                                gap: "6px",
+                                padding: "10px 6px 8px",
+                                border: `2px solid ${isSelected ? "#0d9488" : "#e0dbd4"}`,
+                                borderRadius: "8px",
+                                background: isSelected ? "#f0fdfa" : "#fff",
+                                cursor: "pointer",
+                                transition: "border-color 0.15s, background 0.15s",
+                              }}
+                              aria-pressed={isSelected}
+                              aria-label={label}
+                            >
+                              {diagram}
+                              <span style={{ fontSize: "0.7rem", fontWeight: isSelected ? 600 : 400, color: isSelected ? "#0d9488" : "#6b5e56" }}>{label}</span>
+                            </button>
+                          );
+                        })}
                       </div>
 
                       {/* Background Image */}
