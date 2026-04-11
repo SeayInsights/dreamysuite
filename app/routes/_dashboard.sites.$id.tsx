@@ -1612,21 +1612,39 @@ export default function SiteEditor() {
                                         Show countdown clock
                                       </label>
                                     </div>
+                                    {!!cfg.showCountdown && (
+                                      <div className="sf-group">
+                                        <label className="sf-lbl">Countdown Position</label>
+                                        <div style={{ display: 'flex', gap: '0.75rem', marginTop: '4px' }}>
+                                          <div style={{ flex: 1 }}>
+                                            <label className="sf-lbl" style={{ fontSize: '0.68rem', color: '#9b8e85' }}>X Offset (px from center)</label>
+                                            <input
+                                              className="sf-input"
+                                              type="number"
+                                              value={Number(cfg.countdownX ?? 0)}
+                                              onChange={e => setField('countdownX', Number(e.target.value))}
+                                              style={{ marginTop: '2px' }}
+                                            />
+                                          </div>
+                                          <div style={{ flex: 1 }}>
+                                            <label className="sf-lbl" style={{ fontSize: '0.68rem', color: '#9b8e85' }}>Y Offset (px from bottom)</label>
+                                            <input
+                                              className="sf-input"
+                                              type="number"
+                                              value={Number(cfg.countdownY ?? 120)}
+                                              onChange={e => setField('countdownY', Number(e.target.value))}
+                                              style={{ marginTop: '2px' }}
+                                            />
+                                          </div>
+                                        </div>
+                                      </div>
+                                    )}
                                   </>)}
 
                                   {block.type === 'countdown' && (<>
-                                    <div className="sf-group">
-                                      <label className="sf-lbl">Countdown Date</label>
-                                      <input
-                                        className="sf-input"
-                                        type="date"
-                                        value={String(cfg.date ?? '')}
-                                        onChange={e => setField('date', e.target.value)}
-                                      />
-                                      <p style={{ fontSize: '0.7rem', color: '#9b8e85', margin: '0.25rem 0 0', lineHeight: 1.4 }}>
-                                        Falls back to Site Settings → Event Date if blank.
-                                      </p>
-                                    </div>
+                                    <p style={{ fontSize: '0.72rem', color: '#9b8e85', margin: '0 0 0.75rem', lineHeight: 1.5 }}>
+                                      Countdown always uses the event date from Site Settings.
+                                    </p>
                                     <div className="sf-group">
                                       <label className="style-toggle">
                                         <input type="checkbox" checked={!!cfg.showRsvpButton} onChange={e => setField('showRsvpButton', e.target.checked)} />
@@ -1639,15 +1657,36 @@ export default function SiteEditor() {
                                         <input className="sf-input" value={cfg.rsvpButtonText ?? 'RSVP Now'} onChange={e => setField('rsvpButtonText', e.target.value)} />
                                       </div>
                                       <div className="sf-group">
-                                        <label className="sf-lbl">Button Background</label>
+                                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                          <label className="sf-lbl" style={{ margin: 0 }}>Button Background <span style={{ fontWeight: 400, fontSize: '0.68rem', color: '#b0a99f' }}>overrides global accent</span></label>
+                                          {!!cfg.rsvpButtonColor && (
+                                            <button type="button" onClick={() => setField('rsvpButtonColor', null)} style={{ fontSize: '0.68rem', color: '#0d9488', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
+                                              Reset to global
+                                            </button>
+                                          )}
+                                        </div>
                                         <ColorSwatch value={String(cfg.rsvpButtonColor ?? styleAccent)} onChange={v => setField('rsvpButtonColor', v)} />
                                       </div>
                                       <div className="sf-group">
-                                        <label className="sf-lbl">Button Text Color</label>
+                                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                          <label className="sf-lbl" style={{ margin: 0 }}>Button Text <span style={{ fontWeight: 400, fontSize: '0.68rem', color: '#b0a99f' }}>overrides global accent</span></label>
+                                          {!!cfg.rsvpButtonTextColor && (
+                                            <button type="button" onClick={() => setField('rsvpButtonTextColor', null)} style={{ fontSize: '0.68rem', color: '#0d9488', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
+                                              Reset to global
+                                            </button>
+                                          )}
+                                        </div>
                                         <ColorSwatch value={String(cfg.rsvpButtonTextColor ?? '#ffffff')} onChange={v => setField('rsvpButtonTextColor', v)} />
                                       </div>
                                       <div className="sf-group">
-                                        <label className="sf-lbl">Button Border Color</label>
+                                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                          <label className="sf-lbl" style={{ margin: 0 }}>Button Border <span style={{ fontWeight: 400, fontSize: '0.68rem', color: '#b0a99f' }}>overrides global accent</span></label>
+                                          {!!cfg.rsvpButtonBorderColor && (
+                                            <button type="button" onClick={() => setField('rsvpButtonBorderColor', null)} style={{ fontSize: '0.68rem', color: '#0d9488', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
+                                              Reset to global
+                                            </button>
+                                          )}
+                                        </div>
                                         <ColorSwatch value={String(cfg.rsvpButtonBorderColor ?? '#e0dbd4')} onChange={v => setField('rsvpButtonBorderColor', v)} />
                                       </div>
                                     </>)}
