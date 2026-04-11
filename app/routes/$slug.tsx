@@ -1339,10 +1339,10 @@ function renderBlock(
       const colsCss = cols === "2" ? "repeat(2,1fr)" : cols === "3" ? "repeat(3,1fr)" : "repeat(auto-fill,minmax(200px,1fr))";
       const cardStyle = String(cfg.cardStyle ?? "card");
       const cardCss = cardStyle === "flat"
-        ? "padding:1.25rem;text-align:center;"
+        ? "padding:1.25rem;text-align:center;color:var(--block-text,var(--site-text));"
         : cardStyle === "bordered"
-        ? "border:1px solid var(--border);border-radius:12px;padding:1.25rem;text-align:center;"
-        : "background:#fff;border:1px solid var(--border);border-radius:12px;padding:1.25rem;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,0.05);";
+        ? "border:1px solid var(--site-border,var(--border));border-radius:12px;padding:1.25rem;text-align:center;color:var(--block-text,var(--site-text));"
+        : "background:#fff;border:1px solid var(--site-border,var(--border));border-radius:12px;padding:1.25rem;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,0.05);color:var(--block-text,var(--text));";
       return `
     <section class="block block-tidbits" aria-label="Fun facts" data-block-id="${escHtml(block.id)}" data-block-type="${escHtml(block.type)}">
       ${cfg.showTitle !== false ? `<h2 class="section-heading">Fun Facts</h2><div class="section-rule" aria-hidden="true"></div>` : ""}
@@ -1351,7 +1351,7 @@ function renderBlock(
              ${items.map(it => `<div style="${cardCss}">
                ${it.icon ? `<div style="font-size:2rem;margin-bottom:0.5rem;">${escHtml(it.icon)}</div>` : ""}
                ${it.title ? `<strong style="display:block;margin-bottom:0.375rem;">${escHtml(it.title)}</strong>` : ""}
-               ${it.body ? `<p style="color:var(--muted);font-size:0.9375rem;margin:0;">${escHtml(it.body)}</p>` : ""}
+               ${it.body ? `<p style="color:var(--block-text,var(--muted));font-size:0.9375rem;margin:0;">${escHtml(it.body)}</p>` : ""}
              </div>`).join("")}
            </div>`
         : placeholder("Fun facts will appear here once added in the Content tab.")
