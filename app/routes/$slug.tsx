@@ -486,6 +486,75 @@ function buildStyles(settings: SiteSettingRow | null): BuiltStyles {
       font-size:0.82rem; letter-spacing:0.16em; pointer-events:none; z-index:20;
     }
 
+    /* ════════════════════════════════
+       CINEMATIC OVERLAY ELEMENTS
+    ════════════════════════════════ */
+
+    /* Film grain */
+    @keyframes grain-shift {
+      0%,100% { background-position:0% 0%; }
+      25%  { background-position:18% 9%; }
+      50%  { background-position:-14% 22%; }
+      75%  { background-position:9% -12%; }
+    }
+    .intro-grain {
+      position:absolute; inset:0; z-index:90; pointer-events:none;
+      background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      background-size:200px 200px;
+      animation:grain-shift 0.14s steps(1) infinite;
+      mix-blend-mode:overlay; opacity:0.05;
+    }
+
+    /* Cinematic letterbox bars */
+    .intro-lbox {
+      position:absolute; left:0; right:0; z-index:88; pointer-events:none;
+      background:#000;
+    }
+    .intro-lbox-t { top:0;    height:48px; }
+    .intro-lbox-b { bottom:0; height:48px; }
+
+    /* Vignette */
+    .intro-vignette {
+      position:absolute; inset:0; z-index:89; pointer-events:none;
+      background:radial-gradient(ellipse at 50% 50%, transparent 42%, rgba(0,0,0,0.78) 100%);
+    }
+
+    /* Floating dust motes */
+    @keyframes dust-rise {
+      0%   { transform:translateY(0) translateX(0); opacity:0; }
+      12%  { opacity:1; }
+      88%  { opacity:0.55; }
+      100% { transform:translateY(-65vh) translateX(var(--dx,18px)); opacity:0; }
+    }
+    .intro-dust { position:absolute; inset:0; z-index:3; pointer-events:none; overflow:hidden; }
+    .dust-mote {
+      position:absolute; border-radius:50%;
+      width:var(--sz,2px); height:var(--sz,2px);
+      background:rgba(255,218,130,var(--op,0.55));
+      bottom:var(--by,20%); left:var(--bx,50%);
+      animation:dust-rise var(--dur,10s) var(--delay,0s) ease-in-out infinite;
+    }
+
+    /* Replay button */
+    .intro-replay-btn {
+      position:fixed; bottom:4.5rem; right:1.75rem; z-index:201;
+      background:rgba(18,10,3,0.76); color:rgba(255,215,120,0.78);
+      border:1px solid rgba(255,195,70,0.2); border-radius:999px;
+      padding:0.38rem 1.05rem; font-size:0.75rem; letter-spacing:0.15em;
+      cursor:pointer; backdrop-filter:blur(8px);
+      font-family:var(--heading-font,'Georgia',serif); font-style:italic;
+      transition:background 0.25s, color 0.25s, opacity 0.25s;
+      opacity:0; pointer-events:none;
+    }
+    .intro-replay-btn.visible { opacity:1; pointer-events:auto; }
+    .intro-replay-btn:hover { background:rgba(36,20,6,0.92); color:rgba(255,235,155,1); }
+
+    /* Mobile: simplify grain + reduce letterbox */
+    @media (max-width:600px) {
+      .intro-grain { display:none; }
+      .intro-lbox-t,.intro-lbox-b { height:28px; }
+    }
+
     /* ── Layout ── */
     .site-wrapper { max-width: var(--max-width); margin: 0 auto; padding: 0 1.25rem; }
     .block { padding: 3.5rem 1.25rem; }
@@ -1536,6 +1605,13 @@ function buildIntroHtml(
     <div class="envfs-right-fold"></div>
     <div class="envfs-bottom-fold"></div>
     <div class="envfs-glow"></div>
+    <div class="intro-dust">
+      <div class="dust-mote" style="--sz:2px;--by:14%;--bx:27%;--dur:11s;--delay:0.4s;--dx:-28px;--op:0.5"></div>
+      <div class="dust-mote" style="--sz:3px;--by:21%;--bx:64%;--dur:9s;--delay:2.0s;--dx:22px;--op:0.6"></div>
+      <div class="dust-mote" style="--sz:2px;--by:9%;--bx:44%;--dur:13s;--delay:0.9s;--dx:34px;--op:0.4"></div>
+      <div class="dust-mote" style="--sz:3px;--by:33%;--bx:79%;--dur:8s;--delay:3.4s;--dx:-24px;--op:0.55"></div>
+      <div class="dust-mote" style="--sz:2px;--by:26%;--bx:11%;--dur:10s;--delay:1.5s;--dx:16px;--op:0.45"></div>
+    </div>
     <div class="envfs-card"${letterStyle}>
       <div class="envfs-card-ornament">&#10038; &middot; &#10038;</div>
       <p class="envfs-card-name">${cardHeading}</p>
@@ -1546,6 +1622,10 @@ function buildIntroHtml(
     <div class="envfs-seal"><span class="envfs-seal-text">${sealText}</span></div>
   </div>
   <p class="envfs-cue">&#8212; click to open &#8212;</p>
+  <div class="intro-lbox intro-lbox-t" id="intro-lbox-t"></div>
+  <div class="intro-lbox intro-lbox-b" id="intro-lbox-b"></div>
+  <div class="intro-vignette"></div>
+  <div class="intro-grain"></div>
 </div>`;
   }
 
@@ -1570,6 +1650,8 @@ function buildIntroHtml(
   <div class="book-spine"></div>
   <p class="book-cue">&#8212; tap to open &#8212;</p>
   ${bundleCardHtml}
+  <div class="intro-vignette"></div>
+  <div class="intro-grain"></div>
 </div>`;
   }
 
@@ -1583,6 +1665,8 @@ function buildIntroHtml(
     <p class="door-cue">click to enter</p>
   </div>
   ${bundleCardHtml}
+  <div class="intro-vignette"></div>
+  <div class="intro-grain"></div>
 </div>`;
   }
 
@@ -1807,9 +1891,56 @@ function switchLang() {
     ? `<script>
 var _animKey = 'dsuite_intro_${escHtml(siteSlug)}_${escHtml(animation ?? "")}';
 var _introOpened = !!sessionStorage.getItem(_animKey);
+
+function _addReplayBtn() {
+  var btn = document.getElementById('_intro_replay_btn');
+  if (!btn) {
+    btn = document.createElement('button');
+    btn.id = '_intro_replay_btn';
+    btn.className = 'intro-replay-btn';
+    btn.setAttribute('aria-label','Replay entrance animation');
+    btn.textContent = '\u21ba replay';
+    document.body.appendChild(btn);
+    btn.onclick = function() {
+      btn.classList.remove('visible');
+      var el = document.getElementById('intro-overlay');
+      if (!el) return;
+      gsap.killTweensOf('*');
+      el.style.display = '';
+      gsap.set(el, { opacity:1, clearProps:'background' });
+      ${animation === "envelope" ? `
+      gsap.set('.envfs-card', { xPercent:-50, yPercent:-50, y:'100vh', opacity:0, scale:1 });
+      gsap.set('.envfs-flap', { rotateX:0 });
+      gsap.set('.envfs-glow', { opacity:0 });
+      gsap.set('.envfs-seal', { y:0, opacity:1, scale:1, rotation:0 });
+      gsap.set('.envfs-cue',  { opacity:1 });
+      gsap.set('#intro-lbox-t', { height:48 });
+      gsap.set('#intro-lbox-b', { height:48 });
+      var _sealEl = document.querySelector('.envfs-seal');
+      if (_sealEl) _sealEl.style.animation = 'envfs-seal-pulse 2.4s ease-in-out infinite';
+      ` : animation === "doors" ? `
+      gsap.set('.door-l', { rotateY:0, opacity:1 });
+      gsap.set('.door-r', { rotateY:0, opacity:1 });
+      gsap.set('.door-glow', { width:'3px', filter:'blur(2px)', opacity:1 });
+      gsap.set('.door-cue', { opacity:1 });
+      gsap.set('.door-centre-text', { opacity:1 });
+      ` : animation === "storybook" ? `
+      gsap.set('.book-cover', { rotateY:0 });
+      gsap.set('.book-page-bg', { filter:'none' });
+      gsap.set('.book-cue', { opacity:1 });
+      ` : ``}
+      _introOpened = false;
+      el.addEventListener('click', openIntro);
+      openIntro();
+    };
+  }
+  requestAnimationFrame(function(){ btn.classList.add('visible'); });
+}
+
 function _afterAnimDone(el) {
-  el.style.display='none';
-  try { sessionStorage.setItem(_animKey, '1'); } catch(e) {}
+  el.style.display = 'none';
+  try { sessionStorage.setItem(_animKey,'1'); } catch(e){}
+  _addReplayBtn();
   ${triggerPopupAfterAnim ? `var g=document.getElementById('greeting-overlay');if(g)g.classList.remove('hidden');` : ""}
 }
 window._closeIntro = function() {
@@ -1825,15 +1956,19 @@ function openIntro() {
   var _seal = document.querySelector('.envfs-seal');
   if (_seal) _seal.style.animation = 'none';
   gsap.set('.envfs-card', { xPercent:-50, yPercent:-50, y:'100vh', opacity:0 });
+  gsap.set('#intro-lbox-t', { height:48 });
+  gsap.set('#intro-lbox-b', { height:48 });
   var tl = gsap.timeline({ onComplete: function(){ _afterAnimDone(el); } });
-  tl.to('.envfs-cue',  { opacity:0, duration:0.25 }, 0)
-    .to('.envfs-seal', { y:'-300%', opacity:0, scale:0.28, rotation:30, duration:0.65, ease:'back.in(2.5)' }, 0.1)
-    .to('.envfs-flap', { rotateX:-185, duration:1.15, ease:'power2.inOut', transformOrigin:'top center' }, 0.3)
-    .to('.envfs-glow', { opacity:1, duration:0.8 }, 0.78)
-    .to('.envfs-card', { y:0, opacity:1, duration:1.35, ease:'power2.out' }, 0.95)
-    .to('.envfs-card', { scale:1.03, duration:0.38, ease:'power1.inOut' }, 2.25)
-    .to({},            { duration:2.0 })
-    .to(el,            { opacity:0, duration:0.65, ease:'power2.in' });
+  tl.to('.envfs-cue',  { opacity:0, duration:0.3 }, 0)
+    .to(['#intro-lbox-t','#intro-lbox-b'], { height:0, duration:1.25, ease:'power2.inOut' }, 0.15)
+    .to('.envfs-seal', { y:'-320%', opacity:0, scale:0.22, rotation:42, duration:0.78, ease:'back.in(2.8)' }, 0.42)
+    .to('.envfs-flap', { rotateX:-192, duration:1.45, ease:'power3.inOut', transformOrigin:'top center' }, 0.68)
+    .to('.envfs-glow', { opacity:1, duration:1.05, ease:'power1.in' }, 1.18)
+    .to('.envfs-card', { y:0, opacity:1, duration:1.65, ease:'power2.out' }, 1.42)
+    .to('.envfs-card', { scale:1.04, duration:0.45, ease:'sine.inOut' }, 3.0)
+    .to('.envfs-card', { scale:1.0,  duration:0.45, ease:'sine.inOut' }, 3.45)
+    .to({},            { duration:2.2 })
+    .to(el,            { opacity:0, duration:0.9, ease:'power2.in' });
   ` : animation === "doors" ? `
   var _bundleCard = document.getElementById('intro-bundle-card');
   var tl = gsap.timeline({ onComplete: function(){
@@ -1843,12 +1978,13 @@ function openIntro() {
       gsap.to(_bundleCard, { opacity:1, scale:1, duration:0.4, ease:'back.out(1.2)', pointerEvents:'auto' });
     } else { _afterAnimDone(el); }
   } });
-  tl.to('.door-cue',  { opacity:0, duration:0.15 })
-    .to('.door-glow', { width:'60px', filter:'blur(10px)', opacity:1.0, duration:0.35, ease:'power2.in' }, 0)
-    .to('.door-l',    { rotateY:-115, duration:1.1, ease:'power3.inOut' }, 0.18)
-    .to('.door-r',    { rotateY:115,  duration:1.1, ease:'power3.inOut' }, 0.18)
-    .to('.door-glow', { opacity:0, duration:0.4 }, '-=0.45')
-    ${popupBundleActive ? `.to(['.door-l','.door-r','.door-centre-text'], { opacity:0, duration:0.35 }, '-=0.2')` : `.to(el, { opacity:0, duration:0.4 }, '-=0.2')`};
+  tl.to('.door-cue',  { opacity:0, duration:0.2 })
+    .to('.door-glow', { width:'90px', filter:'blur(18px)', opacity:1.0, duration:0.55, ease:'power3.in' }, 0)
+    .to('.door-l',    { rotateY:-122, duration:1.45, ease:'power4.inOut' }, 0.28)
+    .to('.door-r',    { rotateY:122,  duration:1.45, ease:'power4.inOut' }, 0.28)
+    .to('.door-glow', { width:'320px', filter:'blur(40px)', opacity:0.55, duration:0.5, ease:'power1.out' }, 0.7)
+    .to('.door-glow', { opacity:0, duration:0.55, ease:'power2.in' }, '-=0.15')
+    ${popupBundleActive ? `.to(['.door-l','.door-r','.door-centre-text'], { opacity:0, duration:0.4 }, '-=0.35')` : `.to(el, { opacity:0, duration:0.52, ease:'power2.in' }, '-=0.38')`};
   ` : animation === "storybook" ? `
   var _bundleCard = document.getElementById('intro-bundle-card');
   var tl = gsap.timeline({ onComplete: function(){
@@ -1858,17 +1994,18 @@ function openIntro() {
       gsap.to(_bundleCard, { opacity:1, scale:1, duration:0.4, ease:'back.out(1.2)', pointerEvents:'auto' });
     } else { _afterAnimDone(el); }
   } });
-  tl.to('.book-cue',  { opacity:0, duration:0.2 })
+  tl.to('.book-cue', { opacity:0, duration:0.25 })
     .to('.book-cover', {
-      rotateY:-155, duration:1.7, ease:'power3.inOut',
+      rotateY:-162, duration:2.1, ease:'power4.inOut',
       transformOrigin:'right center'
-    }, 0.1)
-    ${popupBundleActive ? `.to(['.book-cover','.book-spine','.book-page-bg'], { opacity:0, duration:0.4 }, '-=0.2')` : `.to(el, { opacity:0, duration:0.55 }, '-=0.35')`};
+    }, 0.15)
+    .to('.book-page-bg', { filter:'brightness(1.14)', duration:0.7, ease:'power1.inOut' }, 1.5)
+    ${popupBundleActive ? `.to(['.book-cover','.book-spine','.book-page-bg'], { opacity:0, duration:0.45 }, '-=0.28')` : `.to(el, { opacity:0, duration:0.72, ease:'power2.in' }, '-=0.48')`};
   ` : `
   gsap.to(el, { opacity:0, duration:0.4, onComplete:function(){ _afterAnimDone(el); } });
   `}
 }
-${animation === "envelope" ? `if (!_introOpened) gsap.set('.envfs-card',{xPercent:-50,yPercent:-50,y:'100vh',opacity:0});` : ""}
+${animation === "envelope" ? `if (!_introOpened) { gsap.set('.envfs-card',{xPercent:-50,yPercent:-50,y:'100vh',opacity:0}); gsap.set('#intro-lbox-t',{height:48}); gsap.set('#intro-lbox-b',{height:48}); }` : ""}
 if (_introOpened) {
   var _skipEl = document.getElementById('intro-overlay');
   if (_skipEl) _afterAnimDone(_skipEl);
