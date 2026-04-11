@@ -1547,9 +1547,6 @@ export default function SiteEditor() {
                           const borderMode = cfg.hideBorder ? 'none' : 'show';
                           const animVal    = (cfg.animation as string | undefined) ?? '';
 
-                          const scheduleEvts = isExpanded && Array.isArray(cfg.events) ? (cfg.events as {name:string;date:string;time:string;location:string;description:string}[]) : [];
-                          const faqItms = isExpanded && Array.isArray(cfg.items) ? (cfg.items as {q:string;a:string}[]) : [];
-
                           return (
                             <div key={block.id} className="bl-card-wrap">
                               {/* Tile header */}
@@ -1897,7 +1894,7 @@ export default function SiteEditor() {
                                         Show section title
                                       </label>
                                     </div>
-                                    <div style={{ background: '#faf9f8', borderRadius: 8, padding: '0.75rem', textAlign: 'center', marginTop: '0.5rem' }}>
+                                    <div className="sf-group" style={{ background: '#faf9f8', borderRadius: 8, padding: '0.75rem', textAlign: 'center', marginTop: '0.5rem' }}>
                                       <p style={{ fontSize: '0.75rem', color: '#9b8e85', margin: 0, lineHeight: 1.5 }}>
                                         Fun facts are edited in the <strong>Content</strong> tab above.
                                       </p>
@@ -1906,7 +1903,7 @@ export default function SiteEditor() {
 
                                   {block.type === 'travel-section' && (<>
                                     <div className="sf-group"><label className="sf-lbl">Section Title</label><input className="sf-input" value={String(cfg.title??'')} onChange={e=>setField('title',e.target.value)} placeholder="Getting There"/></div>
-                                    <div style={{ background: '#faf9f8', borderRadius: 8, padding: '0.75rem', textAlign: 'center', marginTop: '0.5rem' }}>
+                                    <div className="sf-group" style={{ background: '#faf9f8', borderRadius: 8, padding: '0.75rem', textAlign: 'center', marginTop: '0.5rem' }}>
                                       <p style={{ fontSize: '0.75rem', color: '#9b8e85', margin: 0, lineHeight: 1.5 }}>
                                         Travel items are edited in the <strong>Content</strong> tab above.
                                       </p>
