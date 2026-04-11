@@ -315,10 +315,19 @@ function ColorSwatch({
       />
       {open && (
         <div style={{
-          position: "absolute", top: "calc(100% + 4px)", left: 0, zIndex: 9999,
+          position: "absolute", top: "calc(100% + 4px)", right: 0, zIndex: 9999,
           background: "#fff", border: "1px solid #e0dbd4", borderRadius: 8,
-          boxShadow: "0 4px 16px rgba(0,0,0,0.13)", padding: "0.6rem", minWidth: 160,
+          boxShadow: "0 4px 16px rgba(0,0,0,0.13)", padding: "0.6rem", minWidth: 192,
         }}>
+          {/* Native OS color wheel */}
+          <input
+            type="color"
+            value={hex.length === 7 && hex.startsWith("#") ? hex : "#000000"}
+            onChange={e => { setHex(e.target.value); onChange(e.target.value); }}
+            style={{ width: "100%", height: 36, border: "none", padding: 0, cursor: "pointer",
+              borderRadius: 5, marginBottom: "0.4rem", display: "block" }}
+          />
+          {/* Hex input */}
           <input
             type="text"
             value={hex}
@@ -331,6 +340,7 @@ function ColorSwatch({
               borderRadius: 5, padding: "4px 8px", fontSize: "0.8rem", marginBottom: "0.5rem",
             }}
           />
+          {/* Preset swatches */}
           <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 4 }}>
             {COLOR_PRESETS.map(p => (
               <button
