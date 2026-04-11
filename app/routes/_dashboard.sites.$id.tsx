@@ -1,4 +1,5 @@
 import { redirect, useLoaderData, useSearchParams } from "react-router";
+import * as React from "react";
 import { useState, useEffect, useCallback, useRef } from "react";
 import { createAuth } from "~/lib/auth.server";
 import type { Route } from "./+types/_dashboard.sites.$id";
@@ -233,6 +234,92 @@ function useToast() {
   );
 
   return { show, Toast };
+}
+
+// ── ColorSwatch ───────────────────────────────────────────────────────────────
+
+function ColorSwatch({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+}) {
+  const [open, setOpen] = React.useState(false);
+  const [hex, setHex] = React.useState(value);
+  const ref = React.useRef<HTMLDivElement>(null);
+  const PRESETS = ["#ffffff","#000000","#9b8e85","#0d9488","#e75850","#f59e0b","#6366f1","#ec4899"];
+
+  React.useEffect(() => { setHex(value); }, [value]);
+
+  React.useEffect(() => {
+    if (!open) return;
+    function handleClick(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    }
+    function handleKey(e: KeyboardEvent) {
+      if (e.key === "Escape") setOpen(false);
+    }
+    document.addEventListener("mousedown", handleClick);
+    document.addEventListener("keydown", handleKey);
+    return () => {
+      document.removeEventListener("mousedown", handleClick);
+      document.removeEventListener("keydown", handleKey);
+    };
+  }, [open]);
+
+  function commitHex(v: string) {
+    const clean = v.startsWith("#") ? v : "#" + v;
+    if (/^#[0-9a-fA-F]{6}$/.test(clean)) { onChange(clean); setHex(clean); }
+  }
+
+  return (
+    <div ref={ref} style={{ position: "relative", display: "inline-block" }}>
+      <button
+        type="button"
+        onClick={() => setOpen(o => !o)}
+        style={{
+          width: 28, height: 26, borderRadius: 4, border: "1px solid #e0dbd4",
+          background: value || "#fff", cursor: "pointer", padding: 0, flexShrink: 0,
+        }}
+        aria-label={`Color picker, current: ${value}`}
+      />
+      {open && (
+        <div style={{
+          position: "absolute", top: "calc(100% + 4px)", left: 0, zIndex: 9999,
+          background: "#fff", border: "1px solid #e0dbd4", borderRadius: 8,
+          boxShadow: "0 4px 16px rgba(0,0,0,0.13)", padding: "0.6rem", minWidth: 160,
+        }}>
+          <input
+            type="text"
+            value={hex}
+            maxLength={7}
+            onChange={e => setHex(e.target.value)}
+            onBlur={e => commitHex(e.target.value)}
+            onKeyDown={e => { if (e.key === "Enter") commitHex(hex); }}
+            style={{
+              width: "100%", boxSizing: "border-box", border: "1px solid #e0dbd4",
+              borderRadius: 5, padding: "4px 8px", fontSize: "0.8rem", marginBottom: "0.5rem",
+            }}
+          />
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 4 }}>
+            {PRESETS.map(p => (
+              <button
+                key={p}
+                type="button"
+                onClick={() => { onChange(p); setHex(p); setOpen(false); }}
+                style={{
+                  width: "100%", aspectRatio: "1", borderRadius: 4, border: "1px solid #e0dbd4",
+                  background: p, cursor: "pointer", padding: 0,
+                }}
+                aria-label={p}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
 }
 
 // ── Main component ────────────────────────────────────────────────────────────
@@ -1548,15 +1635,15 @@ export default function SiteEditor() {
                                       </div>
                                       <div className="sf-group">
                                         <label className="sf-lbl">Button Background</label>
-                                        <input type="color" value={cfg.rsvpButtonColor ?? ''} onChange={e => setField('rsvpButtonColor', e.target.value)} />
+                                        <ColorSwatch value={String(cfg.rsvpButtonColor ?? styleAccent)} onChange={v => setField('rsvpButtonColor', v)} />
                                       </div>
                                       <div className="sf-group">
                                         <label className="sf-lbl">Button Text Color</label>
-                                        <input type="color" value={cfg.rsvpButtonTextColor ?? '#ffffff'} onChange={e => setField('rsvpButtonTextColor', e.target.value)} />
+                                        <ColorSwatch value={String(cfg.rsvpButtonTextColor ?? '#ffffff')} onChange={v => setField('rsvpButtonTextColor', v)} />
                                       </div>
                                       <div className="sf-group">
                                         <label className="sf-lbl">Button Border Color</label>
-                                        <input type="color" value={cfg.rsvpButtonBorderColor ?? ''} onChange={e => setField('rsvpButtonBorderColor', e.target.value)} />
+                                        <ColorSwatch value={String(cfg.rsvpButtonBorderColor ?? '#e0dbd4')} onChange={v => setField('rsvpButtonBorderColor', v)} />
                                       </div>
                                     </>)}
                                   </>)}
@@ -1608,7 +1695,7 @@ export default function SiteEditor() {
                                         <div className="appear-field full-w">
                                           <div className="appear-fld-lbl">Border Color</div>
                                           <div className="appear-ctrl">
-                                            <input type="color" className="clr-swatch" value={String(cfg.photoBorderColor??'#e0dbd4')} onChange={e=>setField('photoBorderColor',e.target.value)} />
+                                            <ColorSwatch value={String(cfg.photoBorderColor??'#e0dbd4')} onChange={v=>setField('photoBorderColor',v)} />
                                             <span style={{fontSize:'0.72rem',color:'#9b8e85'}}>{String(cfg.photoBorderColor??'#e0dbd4')}</span>
                                           </div>
                                         </div>
@@ -1825,7 +1912,7 @@ export default function SiteEditor() {
                                             {opt==='none'?'None':'Color'}
                                           </button>
                                         ))}
-                                        {bgMode==='color' && <input type="color" value={bgColor} onChange={e=>setField('background',{type:'color',value:e.target.value})} style={{width:'28px',height:'26px',border:'1px solid #e0dbd4',borderRadius:'4px',padding:'1px',cursor:'pointer'}}/>}
+                                        {bgMode==='color' && <ColorSwatch value={bgColor} onChange={v=>setField('background',{type:'color',value:v})} />}
                                       </div>
                                       <div style={{display:'flex',gap:'4px',alignItems:'center'}}>
                                         {(['default','custom'] as const).map(opt=>(
@@ -1834,7 +1921,7 @@ export default function SiteEditor() {
                                             {opt==='default'?'Default':'Custom'}
                                           </button>
                                         ))}
-                                        {tcMode==='custom' && <input type="color" value={tcVal} onChange={e=>setField('textColor',e.target.value)} style={{width:'28px',height:'26px',border:'1px solid #e0dbd4',borderRadius:'4px',padding:'1px',cursor:'pointer'}}/>}
+                                        {tcMode==='custom' && <ColorSwatch value={tcVal} onChange={v=>setField('textColor',v)} />}
                                       </div>
                                     </div>
                                   </div>
@@ -3366,7 +3453,7 @@ export default function SiteEditor() {
                           <select className="sf-input" style={{ flex: 1 }} value={settingsForm.headingFont} onChange={(e) => setSettingsForm((f) => ({ ...f, headingFont: e.target.value }))}>
                             {HEADING_FONTS.map((fn) => <option key={fn}>{fn}</option>)}
                           </select>
-                          <input type="color" value={settingsForm.headingColor} onChange={(e) => { setSettingsForm((f) => ({ ...f, headingColor: e.target.value })); fireSettingsPreview({ headingColor: e.target.value }); }} style={{ width: "36px", height: "36px", border: "1px solid #e0dbd4", borderRadius: "6px", cursor: "pointer", flexShrink: 0 }} title="Heading color" />
+                          <ColorSwatch value={settingsForm.headingColor} onChange={v => { setSettingsForm((f) => ({ ...f, headingColor: v })); fireSettingsPreview({ headingColor: v }); }} />
                         </div>
                       </div>
                       <div className="sf-group">
@@ -3375,7 +3462,7 @@ export default function SiteEditor() {
                           <select className="sf-input" style={{ flex: 1 }} value={settingsForm.bodyFont} onChange={(e) => setSettingsForm((f) => ({ ...f, bodyFont: e.target.value }))}>
                             {BODY_FONTS.map((fn) => <option key={fn}>{fn}</option>)}
                           </select>
-                          <input type="color" value={settingsForm.bodyColor} onChange={(e) => { setSettingsForm((f) => ({ ...f, bodyColor: e.target.value })); fireSettingsPreview({ bodyColor: e.target.value }); }} style={{ width: "36px", height: "36px", border: "1px solid #e0dbd4", borderRadius: "6px", cursor: "pointer", flexShrink: 0 }} title="Body text color" />
+                          <ColorSwatch value={settingsForm.bodyColor} onChange={v => { setSettingsForm((f) => ({ ...f, bodyColor: v })); fireSettingsPreview({ bodyColor: v }); }} />
                         </div>
                       </div>
                       <div style={{ marginTop: "0.5rem", paddingTop: "0.5rem", borderTop: "1px solid #f0ede8" }}>
@@ -3401,7 +3488,7 @@ export default function SiteEditor() {
                       <div className="sf-group">
                         <label className="sf-lbl">Accent Color</label>
                         <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                          <input type="color" value={settingsForm.accentColor} onChange={(e) => { setSettingsForm((f) => ({ ...f, accentColor: e.target.value })); fireSettingsPreview({ accentColor: e.target.value }); }} style={{ width: "36px", height: "36px", border: "1px solid #e0dbd4", borderRadius: "6px", cursor: "pointer" }} />
+                          <ColorSwatch value={settingsForm.accentColor} onChange={v => { setSettingsForm((f) => ({ ...f, accentColor: v })); fireSettingsPreview({ accentColor: v }); }} />
                           <div style={{ flex: 1, padding: "6px 14px", borderRadius: "4px", fontSize: "0.78rem", textAlign: "center", background: settingsForm.buttonStyle === "filled" ? settingsForm.accentColor : "transparent", color: settingsForm.buttonStyle === "filled" ? "#fff" : settingsForm.accentColor, border: `${settingsForm.buttonBorderWidth || "1.5px"} solid ${settingsForm.accentColor}` }}>Preview</div>
                         </div>
                       </div>
@@ -3433,9 +3520,7 @@ export default function SiteEditor() {
                         { label: "Borders / Dividers", key: "siteBorderColor" as const, def: "#e8e2da" },
                       ].map(({ label, key, def }) => (
                         <div key={key} style={{ display: "flex", alignItems: "center", gap: "10px", padding: "6px 0", borderBottom: "1px solid #f5f2ee" }}>
-                          <input type="color" value={settingsForm[key] || def}
-                            onChange={(e) => { setSettingsForm((f) => ({ ...f, [key]: e.target.value })); fireSettingsPreview({ [key]: e.target.value }); }}
-                            style={{ width: "26px", height: "26px", borderRadius: "5px", border: "1px solid #e0dbd4", cursor: "pointer", padding: "1px", flexShrink: 0 }} />
+                          <ColorSwatch value={settingsForm[key] || def} onChange={v => { setSettingsForm((f) => ({ ...f, [key]: v })); fireSettingsPreview({ [key]: v }); }} />
                           <span style={{ fontSize: "0.8rem", color: "#6b5e56", flex: 1 }}>{label}</span>
                           <code style={{ fontSize: "0.72rem", color: "#a09690", fontFamily: "monospace" }}>{(settingsForm[key] || def).toUpperCase()}</code>
                         </div>
@@ -3532,9 +3617,7 @@ export default function SiteEditor() {
                             { label: "Wax seal", key: "accentColor" as const, def: "#0d9488" },
                           ].map(({ label, key, def }) => (
                             <div key={key} style={{ display: "flex", alignItems: "center", gap: "10px", padding: "6px 0", borderBottom: "1px solid #f5f2ee" }}>
-                              <input type="color" value={settingsForm[key] || def}
-                                onChange={(e) => setSettingsForm((f) => ({ ...f, [key]: e.target.value }))}
-                                style={{ width: "26px", height: "26px", borderRadius: "5px", border: "1px solid #e0dbd4", cursor: "pointer", padding: "1px", flexShrink: 0 }} />
+                              <ColorSwatch value={settingsForm[key] || def} onChange={v => setSettingsForm((f) => ({ ...f, [key]: v }))} />
                               <span style={{ fontSize: "0.8rem", color: "#6b5e56", flex: 1 }}>{label}</span>
                               <code style={{ fontSize: "0.72rem", color: "#a09690", fontFamily: "monospace" }}>{(settingsForm[key] || def).toUpperCase()}</code>
                             </div>
@@ -3542,9 +3625,7 @@ export default function SiteEditor() {
                           <div style={{ marginTop: "0.9rem" }}>
                             <div style={{ fontSize: "0.72rem", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: "#9b8e85", marginBottom: "0.5rem" }}>Invitation Card</div>
                             <div style={{ display: "flex", alignItems: "center", gap: "10px", padding: "6px 0", borderBottom: "1px solid #f5f2ee" }}>
-                              <input type="color" value={settingsForm.cardColor || "#fffef9"}
-                                onChange={(e) => setSettingsForm((f) => ({ ...f, cardColor: e.target.value }))}
-                                style={{ width: "26px", height: "26px", borderRadius: "5px", border: "1px solid #e0dbd4", cursor: "pointer", padding: "1px", flexShrink: 0 }} />
+                              <ColorSwatch value={settingsForm.cardColor || "#fffef9"} onChange={v => setSettingsForm((f) => ({ ...f, cardColor: v }))} />
                               <span style={{ fontSize: "0.8rem", color: "#6b5e56", flex: 1 }}>Card background</span>
                               <code style={{ fontSize: "0.72rem", color: "#a09690", fontFamily: "monospace" }}>{(settingsForm.cardColor || "#fffef9").toUpperCase()}</code>
                             </div>
@@ -3707,9 +3788,7 @@ export default function SiteEditor() {
                       </div>
                       {settingsForm.navBg !== "white" && settingsForm.navBg !== "glass" && (
                         <div style={{ display: "flex", alignItems: "center", gap: "10px", padding: "6px 0", marginBottom: "1rem", borderBottom: "1px solid #f5f2ee" }}>
-                          <input type="color" value={settingsForm.navBg || "#f7f5f0"}
-                            onChange={(e) => { setSettingsForm((f) => ({ ...f, navBg: e.target.value })); fireSettingsPreview({ navBg: e.target.value }); }}
-                            style={{ width: "26px", height: "26px", borderRadius: "5px", border: "1px solid #e0dbd4", cursor: "pointer", padding: "1px", flexShrink: 0 }} />
+                          <ColorSwatch value={settingsForm.navBg || "#f7f5f0"} onChange={v => { setSettingsForm((f) => ({ ...f, navBg: v })); fireSettingsPreview({ navBg: v }); }} />
                           <span style={{ fontSize: "0.8rem", color: "#6b5e56", flex: 1 }}>Custom color</span>
                           <code style={{ fontSize: "0.72rem", color: "#a09690", fontFamily: "monospace" }}>{(settingsForm.navBg || "#f7f5f0").toUpperCase()}</code>
                         </div>
@@ -3723,9 +3802,7 @@ export default function SiteEditor() {
                         { label: "Highlight / Active", key: "navHighlightColor" as const, def: "#0d9488" },
                       ].map(({ label, key, def }) => (
                         <div key={key} style={{ display: "flex", alignItems: "center", gap: "10px", padding: "6px 0", borderBottom: "1px solid #f5f2ee" }}>
-                          <input type="color" value={settingsForm[key] || def}
-                            onChange={(e) => { setSettingsForm((f) => ({ ...f, [key]: e.target.value })); fireSettingsPreview({ [key]: e.target.value }); }}
-                            style={{ width: "26px", height: "26px", borderRadius: "5px", border: "1px solid #e0dbd4", cursor: "pointer", padding: "1px", flexShrink: 0 }} />
+                          <ColorSwatch value={settingsForm[key] || def} onChange={v => { setSettingsForm((f) => ({ ...f, [key]: v })); fireSettingsPreview({ [key]: v }); }} />
                           <span style={{ fontSize: "0.8rem", color: "#6b5e56", flex: 1 }}>{label}</span>
                           <code style={{ fontSize: "0.72rem", color: "#a09690", fontFamily: "monospace" }}>{(settingsForm[key] || def).toUpperCase()}</code>
                         </div>
