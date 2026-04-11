@@ -475,6 +475,8 @@ function buildStyles(settings: SiteSettingRow | null): BuiltStyles {
       position:absolute; bottom:0; border-radius:50%;
       background:radial-gradient(ellipse at 50% 80%,rgba(40,20,8,0.55) 0%,rgba(30,15,5,0.3) 40%,transparent 75%);
       pointer-events:none;
+      filter:blur(22px) saturate(0.7);
+      transform-origin:center bottom;
     }
     /* Warm light flood on door open */
     .door-light-flood {
@@ -576,10 +578,29 @@ function buildStyles(settings: SiteSettingRow | null): BuiltStyles {
       will-change:transform; backface-visibility:hidden;
     }
     .book-page-1 { background:linear-gradient(160deg,#fdf8f0 0%,#f5e8d0 55%,#ecdcc0 100%); z-index:8; }
-    .book-page-1::before { content:''; position:absolute; inset:0; background:repeating-linear-gradient(0deg,transparent,transparent 18px,rgba(0,0,0,0.028) 18px,rgba(0,0,0,0.028) 19px); }
+    .book-page-1::before { content:''; position:absolute; inset:0; background:repeating-linear-gradient(0deg,transparent,transparent 18px,rgba(0,0,0,0.028) 18px,rgba(0,0,0,0.028) 19px); pointer-events:none; }
+    /* Back face — visible when page flips past 90deg, simulates paper reverse */
+    .book-page-1::after {
+      content:''; position:absolute; inset:0;
+      transform:rotateY(180deg); backface-visibility:hidden;
+      background:linear-gradient(160deg,#f0e4cc 0%,#e6d4b0 55%,#d8c090 100%);
+      box-shadow:inset 4px 0 18px rgba(0,0,0,0.14);
+    }
     .book-page-2 { background:linear-gradient(160deg,#fef9f2 0%,#f7ece0 55%,#eedec8 100%); z-index:7; }
-    .book-page-2::before { content:''; position:absolute; inset:0; background:repeating-linear-gradient(0deg,transparent,transparent 18px,rgba(0,0,0,0.022) 18px,rgba(0,0,0,0.022) 19px); }
+    .book-page-2::before { content:''; position:absolute; inset:0; background:repeating-linear-gradient(0deg,transparent,transparent 18px,rgba(0,0,0,0.022) 18px,rgba(0,0,0,0.022) 19px); pointer-events:none; }
+    .book-page-2::after {
+      content:''; position:absolute; inset:0;
+      transform:rotateY(180deg); backface-visibility:hidden;
+      background:linear-gradient(160deg,#f2e6d0 0%,#e8d8b8 55%,#dacc98 100%);
+      box-shadow:inset 4px 0 18px rgba(0,0,0,0.12);
+    }
     .book-page-3 { background:linear-gradient(160deg,#fdf7ed 0%,#f3e5cc 55%,#e8d5b0 100%); z-index:6; }
+    .book-page-3::after {
+      content:''; position:absolute; inset:0;
+      transform:rotateY(180deg); backface-visibility:hidden;
+      background:linear-gradient(160deg,#f0e2c8 0%,#e4d0a8 55%,#d4bc88 100%);
+      box-shadow:inset 4px 0 18px rgba(0,0,0,0.11);
+    }
     /* Final reveal page */
     .book-final-page {
       position:absolute; inset:0; z-index:4; overflow:hidden; opacity:0;
