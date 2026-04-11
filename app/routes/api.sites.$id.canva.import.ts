@@ -1,5 +1,6 @@
+import type { ActionFunctionArgs } from "react-router";
 import { createAuth } from "~/lib/auth.server";
-import type { Route } from "./+types/api.sites.$id.canva.import";
+import type { Env } from "~/lib/context";
 import "~/lib/context";
 
 interface CanvaConnection {
@@ -16,10 +17,7 @@ function jsonResponse(data: unknown, status = 200) {
   });
 }
 
-async function refreshToken(
-  conn: CanvaConnection,
-  env: Route.ActionArgs["context"]["cloudflare"]["env"]
-): Promise<string> {
+async function refreshToken(conn: CanvaConnection, env: Env): Promise<string> {
   const res = await fetch("https://api.canva.com/rest/v1/oauth/token", {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -44,8 +42,8 @@ async function refreshToken(
   return data.access_token;
 }
 
-export async function action({ request, context, params }: Route.ActionArgs) {
-  const env = context.cloudflare.env;
+export async function action({ request, context, params }: ActionFunctionArgs) {
+  const env = context.cloudflare.env as Env;
   const auth = createAuth(env);
   const session = await auth.api.getSession({ headers: request.headers });
   if (!session) return jsonResponse({ error: { code: "UNAUTHORIZED", message: "Not authenticated" } }, 401);
@@ -54,7 +52,7 @@ export async function action({ request, context, params }: Route.ActionArgs) {
     return jsonResponse({ error: { code: "METHOD_NOT_ALLOWED", message: "Method not allowed" } }, 405);
   }
 
-  const siteId = params.id;
+  const siteId = (params as { id: string }).id;
   const site = await env.DB
     .prepare("SELECT id FROM site WHERE id = ? AND userId = ?")
     .bind(siteId, session.user.id)

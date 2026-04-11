@@ -45,6 +45,12 @@ export default [
   // Site analytics API
   route("api/sites/:id/analytics", "routes/api.sites.$id.analytics.ts"),
 
+  // Canva OAuth + design import
+  route("api/canva/connect", "routes/api.canva.connect.ts"),
+  route("api/canva/callback", "routes/api.canva.callback.ts"),
+  route("api/sites/:id/canva/designs", "routes/api.sites.$id.canva.designs.ts"),
+  route("api/sites/:id/canva/import", "routes/api.sites.$id.canva.import.ts"),
+
   // Auth pages (unauthenticated)
   layout("routes/_auth.tsx", [
     route("login", "routes/_auth.login.tsx"),

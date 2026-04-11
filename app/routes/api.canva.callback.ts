@@ -1,8 +1,8 @@
 import { redirect } from "react-router";
-import type { Route } from "./+types/api.canva.callback";
+import type { LoaderFunctionArgs } from "react-router";
 import "~/lib/context";
 
-export async function loader({ request, context }: Route.LoaderArgs) {
+export async function loader({ request, context }: LoaderFunctionArgs) {
   const env = context.cloudflare.env;
   const url = new URL(request.url);
   const code = url.searchParams.get("code");

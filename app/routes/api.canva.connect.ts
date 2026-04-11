@@ -1,6 +1,6 @@
 import { redirect } from "react-router";
+import type { LoaderFunctionArgs } from "react-router";
 import { createAuth } from "~/lib/auth.server";
-import type { Route } from "./+types/api.canva.connect";
 import "~/lib/context";
 
 async function generatePKCE(): Promise<{ verifier: string; challenge: string }> {
@@ -15,7 +15,7 @@ async function generatePKCE(): Promise<{ verifier: string; challenge: string }> 
   return { verifier, challenge };
 }
 
-export async function loader({ request, context }: Route.LoaderArgs) {
+export async function loader({ request, context }: LoaderFunctionArgs) {
   const env = context.cloudflare.env;
   const auth = createAuth(env);
   const session = await auth.api.getSession({ headers: request.headers });
