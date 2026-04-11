@@ -2046,8 +2046,14 @@ export default function SiteEditor() {
                 const onChange = (key: string, val: unknown) => setContentField(activePage.slug, curLangCode, key, val);
                 const slug = activePage.slug;
 
+                const pageBlockTypes = new Set(
+                  (blocks).map(b => b.type)
+                );
+
                 const schedEvents = Array.isArray(pageContent.events) ? (pageContent.events as Record<string, unknown>[]) : [];
                 const faqQuestions = Array.isArray(pageContent.questions) ? (pageContent.questions as Record<string, unknown>[]) : [];
+                const tidbits = Array.isArray(pageContent.tidbits) ? (pageContent.tidbits as Record<string,unknown>[]) : [];
+                const travelItems = Array.isArray(pageContent.travelItems) ? (pageContent.travelItems as Record<string,unknown>[]) : [];
 
                 const fieldStyle: React.CSSProperties = { display: "flex", flexDirection: "column", gap: "4px", marginBottom: "0.75rem" };
                 const lblStyle: React.CSSProperties = { fontSize: "0.72rem", color: "#6b5e56", fontWeight: 500 };
@@ -2123,7 +2129,7 @@ export default function SiteEditor() {
                           )}
 
                           {/* SCHEDULE */}
-                          {slug === "schedule" && (
+                          {(slug === "schedule" || pageBlockTypes.has("schedule")) && (
                             <div style={{ border: "1px solid #e8e4e0", borderRadius: "10px", padding: "1rem", marginBottom: "0.75rem" }}>
                               <p style={sectionHeadStyle}>Schedule Events</p>
                               {schedEvents.map((ev, i) => (
@@ -2147,7 +2153,7 @@ export default function SiteEditor() {
                           )}
 
                           {/* FAQ */}
-                          {slug === "faq" && (
+                          {(slug === "faq" || pageBlockTypes.has("faq")) && (
                             <div style={{ border: "1px solid #e8e4e0", borderRadius: "10px", padding: "1rem", marginBottom: "0.75rem" }}>
                               <p style={sectionHeadStyle}>FAQ</p>
                               <div style={fieldStyle}><label style={lblStyle}>Intro Text</label><input style={inputStyle} value={cf("intro")} onChange={e => onChange("intro", e.target.value)} /></div>
@@ -2162,6 +2168,70 @@ export default function SiteEditor() {
                                 </div>
                               ))}
                               <button onClick={() => onChange("questions", [...faqQuestions, { q: "", a: "" }])} className="btn-ghost" style={{ fontSize: "0.76rem", width: "100%" }}>+ Add Question</button>
+                            </div>
+                          )}
+
+                          {/* TIDBITS (Fun Facts) */}
+                          {pageBlockTypes.has("tidbits") && (
+                            <div style={{ border: "1px solid #e8e4e0", borderRadius: "10px", padding: "1rem", marginBottom: "0.75rem" }}>
+                              <p style={sectionHeadStyle}>Fun Facts</p>
+                              {tidbits.map((item, i) => (
+                                <div key={i} style={{ border: "1px solid #f0ede8", borderRadius: "8px", padding: "0.75rem", marginBottom: "0.6rem" }}>
+                                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem" }}>
+                                    <span style={{ fontSize: "0.72rem", fontWeight: 600, color: "#9b8e85" }}>Fact {i + 1}</span>
+                                    <button onClick={() => onChange("tidbits", tidbits.filter((_, j) => j !== i))}
+                                      style={{ background: "none", border: "none", cursor: "pointer", color: "#ccc", fontSize: "0.8rem" }}>×</button>
+                                  </div>
+                                  <div style={fieldStyle}><label style={lblStyle}>Icon / Emoji</label>
+                                    <input style={inputStyle} value={String(item.icon ?? "")} onChange={e => {
+                                      const next = [...tidbits]; next[i] = { ...next[i], icon: e.target.value }; onChange("tidbits", next);
+                                    }} placeholder="✨" /></div>
+                                  <div style={fieldStyle}><label style={lblStyle}>Title</label>
+                                    <input style={inputStyle} value={String(item.title ?? "")} onChange={e => {
+                                      const next = [...tidbits]; next[i] = { ...next[i], title: e.target.value }; onChange("tidbits", next);
+                                    }} /></div>
+                                  <div style={fieldStyle}><label style={lblStyle}>Body</label>
+                                    <textarea style={{ ...taStyle, minHeight: "60px" }} value={String(item.body ?? "")} onChange={e => {
+                                      const next = [...tidbits]; next[i] = { ...next[i], body: e.target.value }; onChange("tidbits", next);
+                                    }} /></div>
+                                </div>
+                              ))}
+                              <button onClick={() => onChange("tidbits", [...tidbits, { icon: "✨", title: "", body: "" }])}
+                                className="btn-ghost" style={{ fontSize: "0.76rem", width: "100%" }}>+ Add Fact</button>
+                            </div>
+                          )}
+
+                          {/* TRAVEL */}
+                          {pageBlockTypes.has("travel-section") && (
+                            <div style={{ border: "1px solid #e8e4e0", borderRadius: "10px", padding: "1rem", marginBottom: "0.75rem" }}>
+                              <p style={sectionHeadStyle}>Travel Details</p>
+                              {travelItems.map((item, i) => (
+                                <div key={i} style={{ border: "1px solid #f0ede8", borderRadius: "8px", padding: "0.75rem", marginBottom: "0.6rem" }}>
+                                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem" }}>
+                                    <span style={{ fontSize: "0.72rem", fontWeight: 600, color: "#9b8e85" }}>Item {i + 1}</span>
+                                    <button onClick={() => onChange("travelItems", travelItems.filter((_, j) => j !== i))}
+                                      style={{ background: "none", border: "none", cursor: "pointer", color: "#ccc", fontSize: "0.8rem" }}>×</button>
+                                  </div>
+                                  <div style={fieldStyle}><label style={lblStyle}>Heading</label>
+                                    <input style={inputStyle} value={String(item.heading ?? "")} onChange={e => {
+                                      const next = [...travelItems]; next[i] = { ...next[i], heading: e.target.value }; onChange("travelItems", next);
+                                    }} placeholder="Getting to the venue" /></div>
+                                  <div style={fieldStyle}><label style={lblStyle}>Body</label>
+                                    <textarea style={{ ...taStyle, minHeight: "80px" }} value={String(item.body ?? "")} onChange={e => {
+                                      const next = [...travelItems]; next[i] = { ...next[i], body: e.target.value }; onChange("travelItems", next);
+                                    }} /></div>
+                                  <div style={fieldStyle}><label style={lblStyle}>Link Label (optional)</label>
+                                    <input style={inputStyle} value={String(item.linkLabel ?? "")} onChange={e => {
+                                      const next = [...travelItems]; next[i] = { ...next[i], linkLabel: e.target.value }; onChange("travelItems", next);
+                                    }} placeholder="Get directions" /></div>
+                                  <div style={fieldStyle}><label style={lblStyle}>Link URL (optional)</label>
+                                    <input style={inputStyle} type="url" value={String(item.linkUrl ?? "")} onChange={e => {
+                                      const next = [...travelItems]; next[i] = { ...next[i], linkUrl: e.target.value }; onChange("travelItems", next);
+                                    }} placeholder="https://maps.google.com/…" /></div>
+                                </div>
+                              ))}
+                              <button onClick={() => onChange("travelItems", [...travelItems, { heading: "", body: "", linkLabel: "", linkUrl: "" }])}
+                                className="btn-ghost" style={{ fontSize: "0.76rem", width: "100%" }}>+ Add Travel Item</button>
                             </div>
                           )}
 
