@@ -128,6 +128,11 @@ interface SiteSettings {
   cardImage: string;
   navShape: string;
   navLinkPadding: string;
+  navUnderline: string | null;
+  popupEnabled: number;
+  popupTitle: string | null;
+  popupTicker: number;
+  popupAfterAnimation: number;
 }
 
 interface AnalyticsData {
@@ -528,7 +533,12 @@ export default function SiteEditor() {
     cardColor: "",
     cardImage: "",
     navShape: "",
-    navLinkPadding: "0.875rem",
+    navLinkPadding: "14px",
+    navUnderline: "on",
+    popupEnabled: 1 as 0 | 1,
+    popupTitle: "",
+    popupTicker: 0 as 0 | 1,
+    popupAfterAnimation: 0 as 0 | 1,
   });
 
   // CSV import state
@@ -699,7 +709,12 @@ export default function SiteEditor() {
         cardColor:          data.settings.cardColor          ?? "",
         cardImage:          data.settings.cardImage          ?? "",
         navShape:           data.settings.navShape           ?? "",
-        navLinkPadding:     data.settings.navLinkPadding     ?? "0.875rem",
+        navLinkPadding:     data.settings.navLinkPadding     ?? "14px",
+        navUnderline:       data.settings.navUnderline       ?? "on",
+        popupEnabled:       (data.settings.popupEnabled      ?? 1) as 0 | 1,
+        popupTitle:         data.settings.popupTitle         ?? "",
+        popupTicker:        (data.settings.popupTicker       ?? 0) as 0 | 1,
+        popupAfterAnimation:(data.settings.popupAfterAnimation ?? 0) as 0 | 1,
       });
       setStyleHeadingFont(data.settings.headingFont ?? "Georgia");
       setStyleBodyFont(data.settings.bodyFont ?? "Inter");
@@ -3472,7 +3487,7 @@ export default function SiteEditor() {
 
       {/* ── Photo picker modal ──────────────────────────────── */}
       {photoPickerOpen && (
-        <div className="overlay-bg" onClick={() => setPhotoPickerOpen(false)} role="dialog" aria-modal="true" aria-label="Pick a photo">
+        <div className="overlay-bg" style={{ zIndex: 500 }} onClick={() => setPhotoPickerOpen(false)} role="dialog" aria-modal="true" aria-label="Pick a photo">
           <div className="overlay-box" onClick={(e) => e.stopPropagation()} style={{ maxWidth: "560px", maxHeight: "80vh", display: "flex", flexDirection: "column" }}>
             <div className="overlay-box-header">
               <h2>Photo Library</h2>
@@ -3887,8 +3902,8 @@ export default function SiteEditor() {
                         <input id="s-event-name" type="text" className="sf-input" placeholder="Jane & John's Wedding" value={settingsForm.eventName} onChange={(e) => setSettingsForm((f) => ({ ...f, eventName: e.target.value }))} />
                       </div>
                       <div className="sf-group">
-                        <label className="sf-lbl" htmlFor="s-event-date">Event Date</label>
-                        <input id="s-event-date" type="date" className="sf-input" value={settingsForm.eventDate} onChange={(e) => setSettingsForm((f) => ({ ...f, eventDate: e.target.value }))} />
+                        <label className="sf-lbl" htmlFor="s-event-date">Event Date &amp; Time</label>
+                        <input id="s-event-date" type="datetime-local" className="sf-input" value={settingsForm.eventDate} onChange={(e) => setSettingsForm((f) => ({ ...f, eventDate: e.target.value }))} />
                       </div>
                       <div className="sf-group">
                         <label className="sf-lbl" htmlFor="s-event-location">Event Location</label>
@@ -4086,30 +4101,31 @@ export default function SiteEditor() {
                             {/* Card image upload */}
                             <div className="sf-group" style={{ marginTop: "0.75rem" }}>
                               <label className="sf-lbl">Card Photo</label>
-                              {settingsForm.cardImage ? (
-                                <div style={{ marginBottom: "0.5rem" }}>
-                                  <img src={settingsForm.cardImage} alt="Card photo preview"
-                                    style={{ width: "100%", height: "72px", objectFit: "cover", borderRadius: "6px", border: "1px solid #e0dbd4", display: "block", marginBottom: "4px" }} />
-                                  <button type="button" className="btn-ghost"
-                                    style={{ fontSize: "0.74rem", color: "#c42a22", borderColor: "#fde8e7", width: "100%" }}
-                                    onClick={() => setSettingsForm((f) => ({ ...f, cardImage: "" }))}>
-                                    Remove photo
+                              <div style={{ display: "flex", gap: "8px", alignItems: "flex-start" }}>
+                                <button
+                                  type="button"
+                                  onClick={() => { if (photos.length === 0) fetchPhotos(); setPhotoPickerTarget(() => (url: string) => setSettingsForm((f) => ({ ...f, cardImage: url }))); setPhotoPickerOpen(true); }}
+                                  style={{ flexShrink: 0, width: "72px", height: "72px", border: settingsForm.cardImage ? "2px solid #0d9488" : "1.5px dashed #c4bdb6", borderRadius: "8px", overflow: "hidden", cursor: "pointer", background: "#f7f5f0", display: "flex", alignItems: "center", justifyContent: "center", padding: 0, position: "relative" }}
+                                  aria-label="Pick card photo"
+                                >
+                                  {settingsForm.cardImage
+                                    ? <img src={settingsForm.cardImage} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+                                    : <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#b0a99f" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                                  }
+                                </button>
+                                <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "5px", justifyContent: "center" }}>
+                                  <span style={{ fontSize: "0.76rem", color: "#6b5e56" }}>{settingsForm.cardImage ? "Photo selected" : "No photo"}</span>
+                                  <button type="button" className="btn-ghost" style={{ fontSize: "0.72rem", padding: "3px 8px" }}
+                                    onClick={() => { if (photos.length === 0) fetchPhotos(); setPhotoPickerTarget(() => (url: string) => setSettingsForm((f) => ({ ...f, cardImage: url }))); setPhotoPickerOpen(true); }}>
+                                    {settingsForm.cardImage ? "Replace" : "Choose photo"}
                                   </button>
+                                  {settingsForm.cardImage && (
+                                    <button type="button" className="btn-ghost" style={{ fontSize: "0.72rem", padding: "3px 8px", color: "#c42a22", borderColor: "#fde8e7" }}
+                                      onClick={() => setSettingsForm((f) => ({ ...f, cardImage: "" }))}>Remove</button>
+                                  )}
                                 </div>
-                              ) : null}
-                              <button
-                                type="button"
-                                style={{ display: "flex", alignItems: "center", gap: "8px", padding: "7px 12px", border: "1px dashed #c4bdb6", borderRadius: "7px", cursor: "pointer", fontSize: "0.78rem", color: "#6b5e56", background: "#fafaf9", justifyContent: "center", width: "100%" }}
-                                onClick={() => {
-                                  if (photos.length === 0) fetchPhotos();
-                                  setPhotoPickerTarget(() => (url: string) => setSettingsForm((f) => ({ ...f, cardImage: url })));
-                                  setPhotoPickerOpen(true);
-                                }}
-                              >
-                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-                                {settingsForm.cardImage ? "Replace from Media Library" : "Pick from Media Library"}
-                              </button>
-                              <div style={{ fontSize: "0.68rem", color: "#b0a99f", marginTop: "3px" }}>Upload photos in Media first, then pick here. Color fill is used if no photo.</div>
+                              </div>
+                              <div style={{ fontSize: "0.68rem", color: "#b0a99f", marginTop: "4px" }}>Upload photos in Media first. Color fill used if no photo.</div>
                             </div>
                             <div className="sf-group" style={{ marginTop: "0.75rem" }}>
                               <label className="sf-lbl">Wax Seal Initials</label>
@@ -4130,35 +4146,30 @@ export default function SiteEditor() {
                       {/* Background Image */}
                       <div style={{ fontSize: "0.72rem", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: "#9b8e85", margin: "1.1rem 0 0.6rem" }}>Background Image</div>
                       <div className="sf-group">
-                        {settingsForm.bgImage ? (
-                          <div style={{ marginBottom: "0.75rem" }}>
-                            <img
-                              src={settingsForm.bgImage}
-                              alt="Background image preview"
-                              style={{ width: "100%", height: "80px", objectFit: "cover", borderRadius: "6px", border: "1px solid #e0dbd4", display: "block", marginBottom: "6px" }}
-                            />
-                            <button
-                              type="button"
-                              className="btn-ghost"
-                              style={{ fontSize: "0.74rem", color: "#c42a22", borderColor: "#fde8e7", width: "100%" }}
-                              onClick={() => setSettingsForm((f) => ({ ...f, bgImage: "" }))}
-                            >
-                              Remove background image
+                        <div style={{ display: "flex", gap: "8px", alignItems: "flex-start" }}>
+                          <button
+                            type="button"
+                            onClick={() => { if (photos.length === 0) fetchPhotos(); setPhotoPickerTarget(() => (url: string) => setSettingsForm((f) => ({ ...f, bgImage: url }))); setPhotoPickerOpen(true); }}
+                            style={{ flexShrink: 0, width: "80px", height: "56px", border: settingsForm.bgImage ? "2px solid #0d9488" : "1.5px dashed #c4bdb6", borderRadius: "8px", overflow: "hidden", cursor: "pointer", background: "#f7f5f0", display: "flex", alignItems: "center", justifyContent: "center", padding: 0 }}
+                            aria-label="Pick background image"
+                          >
+                            {settingsForm.bgImage
+                              ? <img src={settingsForm.bgImage} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+                              : <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#b0a99f" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                            }
+                          </button>
+                          <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "5px", justifyContent: "center" }}>
+                            <span style={{ fontSize: "0.76rem", color: "#6b5e56" }}>{settingsForm.bgImage ? "Image selected" : "No image"}</span>
+                            <button type="button" className="btn-ghost" style={{ fontSize: "0.72rem", padding: "3px 8px" }}
+                              onClick={() => { if (photos.length === 0) fetchPhotos(); setPhotoPickerTarget(() => (url: string) => setSettingsForm((f) => ({ ...f, bgImage: url }))); setPhotoPickerOpen(true); }}>
+                              {settingsForm.bgImage ? "Replace" : "Choose image"}
                             </button>
+                            {settingsForm.bgImage && (
+                              <button type="button" className="btn-ghost" style={{ fontSize: "0.72rem", padding: "3px 8px", color: "#c42a22", borderColor: "#fde8e7" }}
+                                onClick={() => setSettingsForm((f) => ({ ...f, bgImage: "" }))}>Remove</button>
+                            )}
                           </div>
-                        ) : null}
-                        <button
-                          type="button"
-                          style={{ display: "flex", alignItems: "center", gap: "8px", padding: "8px 14px", border: "1px dashed #c4bdb6", borderRadius: "7px", cursor: "pointer", fontSize: "0.8rem", color: "#6b5e56", background: "#fafaf9", justifyContent: "center", width: "100%" }}
-                          onClick={() => {
-                            if (photos.length === 0) fetchPhotos();
-                            setPhotoPickerTarget(() => (url: string) => setSettingsForm((f) => ({ ...f, bgImage: url })));
-                            setPhotoPickerOpen(true);
-                          }}
-                        >
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-                          {settingsForm.bgImage ? "Replace from Media Library" : "Pick from Media Library"}
-                        </button>
+                        </div>
                         <div style={{ fontSize: "0.68rem", color: "#b0a99f", marginTop: "4px" }}>Upload images in Media first, then pick here.</div>
                       </div>
                     </>
@@ -4181,7 +4192,7 @@ export default function SiteEditor() {
                       {settingsForm.navPosition === "scroll-away" && (
                         <>
                           <div style={{ fontSize: "0.72rem", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: "#9b8e85", marginBottom: "0.5rem" }}>Shape</div>
-                          <div style={{ display: "flex", gap: "6px", marginBottom: "1rem" }}>
+                          <div style={{ display: "flex", gap: "6px", marginBottom: "0.75rem" }}>
                             {([
                               { value: "bar", label: "Bar" },
                               { value: "pill", label: "Pill" },
@@ -4195,6 +4206,19 @@ export default function SiteEditor() {
                           </div>
                         </>
                       )}
+
+                      {/* Size (nav height via link padding) */}
+                      <div style={{ fontSize: "0.72rem", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: "#9b8e85", marginBottom: "0.4rem", marginTop: "0.75rem" }}>Size</div>
+                      <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "1rem" }}>
+                        <input
+                          type="number" min="4" max="48" step="1"
+                          className="sf-input"
+                          style={{ width: "72px", textAlign: "center" }}
+                          value={parseInt(settingsForm.navLinkPadding) || 14}
+                          onChange={(e) => setSettingsForm((f) => ({ ...f, navLinkPadding: e.target.value + "px" }))}
+                        />
+                        <span style={{ fontSize: "0.78rem", color: "#9b8e85" }}>px — controls how tall or short the nav bar is</span>
+                      </div>
 
                       {/* Background */}
                       <div style={{ fontSize: "0.72rem", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: "#9b8e85", marginBottom: "0.5rem" }}>Background</div>
@@ -4232,17 +4256,22 @@ export default function SiteEditor() {
                           <code style={{ fontSize: "0.72rem", color: "#a09690", fontFamily: "monospace" }}>{(settingsForm[key] || def).toUpperCase()}</code>
                         </div>
                       ))}
-                      <div style={{ fontSize: "0.72rem", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: "#9b8e85", marginBottom: "0.5rem", marginTop: "1rem" }}>Link Padding</div>
-                      <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "1rem" }}>
-                        <input
-                          type="range" min="0.25" max="1.5" step="0.0625"
-                          value={parseFloat(settingsForm.navLinkPadding || "0.875")}
-                          onChange={(e) => setSettingsForm((f) => ({ ...f, navLinkPadding: e.target.value + "rem" }))}
-                          style={{ flex: 1 }}
-                        />
-                        <code style={{ fontSize: "0.72rem", color: "#a09690", fontFamily: "monospace", minWidth: "3.5rem", textAlign: "right" }}>
-                          {settingsForm.navLinkPadding || "0.875rem"}
-                        </code>
+
+                      {/* Underline toggle */}
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0.75rem 0", borderTop: "1px solid #f5f2ee", marginTop: "0.5rem" }}>
+                        <div>
+                          <div style={{ fontSize: "0.8rem", fontWeight: 600, color: "#1c1917" }}>Active page underline</div>
+                          <div style={{ fontSize: "0.7rem", color: "#9b8e85", marginTop: "2px" }}>Shows underline directly below the link text</div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setSettingsForm((f) => ({ ...f, navUnderline: f.navUnderline === "off" ? "on" : "off" }))}
+                          style={{ position: "relative", width: "44px", height: "24px", borderRadius: "12px", background: settingsForm.navUnderline !== "off" ? "#0d9488" : "#e0dbd4", border: "none", cursor: "pointer", flexShrink: 0, transition: "background 0.2s" }}
+                          aria-pressed={settingsForm.navUnderline !== "off"}
+                          aria-label="Toggle active page underline"
+                        >
+                          <span style={{ position: "absolute", top: "3px", left: settingsForm.navUnderline !== "off" ? "23px" : "3px", width: "18px", height: "18px", borderRadius: "50%", background: "#fff", transition: "left 0.2s", boxShadow: "0 1px 4px rgba(0,0,0,0.2)" }} />
+                        </button>
                       </div>
                     </>
                   )}
@@ -4278,7 +4307,7 @@ export default function SiteEditor() {
                               ))}
                             </select>
                             {settingsForm.musicUrl && (
-                              <div style={{ fontSize: "0.68rem", color: "#9b8e85", marginTop: "3px", wordBreak: "break-all" }}>{settingsForm.musicUrl}</div>
+                              <div style={{ display: "none" }}>{settingsForm.musicUrl}</div>
                             )}
                           </>
                         )}
@@ -4354,18 +4383,71 @@ export default function SiteEditor() {
 
                   {settingsDrawerTab === "popup" && (
                     <>
-                      <p style={{ fontSize: "0.75rem", color: "#9b8e85", marginBottom: "1rem", lineHeight: 1.6 }}>
-                        A welcome overlay pops up the first time a guest visits. Set the message below — leave it blank to disable the popup.
-                      </p>
-                      <div className="sf-group">
-                        <label className="sf-lbl" htmlFor="s-greeting">Welcome Message</label>
-                        <input id="s-greeting" type="text" className="sf-input" placeholder="We're getting married! Join us on our special day." value={settingsForm.greeting} onChange={(e) => setSettingsForm((f) => ({ ...f, greeting: e.target.value }))} />
-                      </div>
-                      {settingsForm.greeting && (
-                        <div style={{ marginTop: "1rem", padding: "1rem", background: "#f0fdfa", border: "1px solid #99f6e4", borderRadius: "10px" }}>
-                          <div style={{ fontSize: "0.7rem", color: "#0d9488", fontWeight: 600, marginBottom: "0.375rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>Preview</div>
-                          <div style={{ fontSize: "0.85rem", color: "#1c1917", fontStyle: "italic" }}>"{settingsForm.greeting}"</div>
+                      {/* Enabled toggle */}
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0.5rem 0 1rem" }}>
+                        <div>
+                          <div style={{ fontSize: "0.8rem", fontWeight: 600, color: "#1c1917" }}>Welcome Popup</div>
+                          <div style={{ fontSize: "0.7rem", color: "#9b8e85", marginTop: "2px" }}>Show a popup when guests first arrive</div>
                         </div>
+                        <button
+                          type="button"
+                          onClick={() => setSettingsForm((f) => ({ ...f, popupEnabled: f.popupEnabled ? 0 : 1 }))}
+                          style={{ position: "relative", width: "44px", height: "24px", borderRadius: "12px", background: settingsForm.popupEnabled ? "#0d9488" : "#e0dbd4", border: "none", cursor: "pointer", flexShrink: 0, transition: "background 0.2s" }}
+                          aria-pressed={!!settingsForm.popupEnabled}
+                          aria-label="Toggle welcome popup"
+                        >
+                          <span style={{ position: "absolute", top: "3px", left: settingsForm.popupEnabled ? "23px" : "3px", width: "18px", height: "18px", borderRadius: "50%", background: "#fff", transition: "left 0.2s", boxShadow: "0 1px 4px rgba(0,0,0,0.2)" }} />
+                        </button>
+                      </div>
+
+                      {!!settingsForm.popupEnabled && (
+                        <>
+                          {/* Title */}
+                          <div className="sf-group">
+                            <label className="sf-lbl" htmlFor="s-popup-title">Popup Title <span style={{ fontWeight: 400, color: "#b0a99f" }}>(optional)</span></label>
+                            <input id="s-popup-title" type="text" className="sf-input" placeholder="You're Invited!" value={settingsForm.popupTitle} onChange={(e) => setSettingsForm((f) => ({ ...f, popupTitle: e.target.value }))} />
+                          </div>
+
+                          {/* Message */}
+                          <div className="sf-group">
+                            <label className="sf-lbl" htmlFor="s-greeting">Welcome Message</label>
+                            <input id="s-greeting" type="text" className="sf-input" placeholder="We're getting married! Join us on our special day." value={settingsForm.greeting} onChange={(e) => setSettingsForm((f) => ({ ...f, greeting: e.target.value }))} />
+                          </div>
+
+                          {/* Ticker toggle */}
+                          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0.6rem 0", borderTop: "1px solid #f5f2ee" }}>
+                            <div>
+                              <div style={{ fontSize: "0.8rem", fontWeight: 500, color: "#1c1917" }}>Scrolling ticker</div>
+                              <div style={{ fontSize: "0.7rem", color: "#9b8e85", marginTop: "2px" }}>Adds a scrolling event name bar</div>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => setSettingsForm((f) => ({ ...f, popupTicker: f.popupTicker ? 0 : 1 }))}
+                              style={{ position: "relative", width: "44px", height: "24px", borderRadius: "12px", background: settingsForm.popupTicker ? "#0d9488" : "#e0dbd4", border: "none", cursor: "pointer", flexShrink: 0, transition: "background 0.2s" }}
+                              aria-pressed={!!settingsForm.popupTicker}
+                              aria-label="Toggle scrolling ticker"
+                            >
+                              <span style={{ position: "absolute", top: "3px", left: settingsForm.popupTicker ? "23px" : "3px", width: "18px", height: "18px", borderRadius: "50%", background: "#fff", transition: "left 0.2s", boxShadow: "0 1px 4px rgba(0,0,0,0.2)" }} />
+                            </button>
+                          </div>
+
+                          {/* Show after animation toggle */}
+                          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0.6rem 0", borderTop: "1px solid #f5f2ee" }}>
+                            <div>
+                              <div style={{ fontSize: "0.8rem", fontWeight: 500, color: "#1c1917" }}>Show after entrance animation</div>
+                              <div style={{ fontSize: "0.7rem", color: "#9b8e85", marginTop: "2px" }}>Popup appears after the animation completes</div>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => setSettingsForm((f) => ({ ...f, popupAfterAnimation: f.popupAfterAnimation ? 0 : 1 }))}
+                              style={{ position: "relative", width: "44px", height: "24px", borderRadius: "12px", background: settingsForm.popupAfterAnimation ? "#0d9488" : "#e0dbd4", border: "none", cursor: "pointer", flexShrink: 0, transition: "background 0.2s" }}
+                              aria-pressed={!!settingsForm.popupAfterAnimation}
+                              aria-label="Toggle show after animation"
+                            >
+                              <span style={{ position: "absolute", top: "3px", left: settingsForm.popupAfterAnimation ? "23px" : "3px", width: "18px", height: "18px", borderRadius: "50%", background: "#fff", transition: "left 0.2s", boxShadow: "0 1px 4px rgba(0,0,0,0.2)" }} />
+                            </button>
+                          </div>
+                        </>
                       )}
                     </>
                   )}

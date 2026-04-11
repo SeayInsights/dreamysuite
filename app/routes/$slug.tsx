@@ -60,6 +60,11 @@ interface SiteSettingRow {
   cardColor: string | null;
   cardImage: string | null;
   navLinkPadding: string | null;
+  navUnderline: string | null;
+  popupEnabled: number | null;
+  popupTitle: string | null;
+  popupTicker: number | null;
+  popupAfterAnimation: number | null;
 }
 
 interface PageRow {
@@ -668,6 +673,14 @@ function buildStyles(settings: SiteSettingRow | null): BuiltStyles {
       width: 100%;
       text-align: center;
       box-shadow: 0 20px 60px rgba(0,0,0,0.18);
+      overflow: hidden;
+    }
+    .greeting-title {
+      font-family: var(--heading-font);
+      font-size: 1.35rem;
+      font-weight: normal;
+      color: var(--text);
+      margin: 0 0 0.75rem;
     }
     .greeting-modal p {
       font-family: var(--heading-font);
@@ -676,6 +689,25 @@ function buildStyles(settings: SiteSettingRow | null): BuiltStyles {
       color: var(--text);
       margin-bottom: 1.75rem;
       font-weight: normal;
+    }
+    .greeting-ticker-wrap {
+      overflow: hidden;
+      width: 100%;
+      margin: -0.75rem 0 1.25rem;
+    }
+    .greeting-ticker {
+      display: inline-block;
+      white-space: nowrap;
+      font-family: var(--body-font);
+      font-size: 0.78rem;
+      letter-spacing: 0.08em;
+      color: var(--accent);
+      text-transform: uppercase;
+      animation: ticker-scroll 14s linear infinite;
+    }
+    @keyframes ticker-scroll {
+      0%   { transform: translateX(0); }
+      100% { transform: translateX(-50%); }
     }
     .greeting-close {
       display: inline-block;
@@ -787,17 +819,20 @@ function buildStyles(settings: SiteSettingRow | null): BuiltStyles {
       color: var(--nav-link);
       text-decoration: none;
       cursor: pointer;
-      border-bottom: 2px solid transparent;
       white-space: nowrap;
       background: none;
-      border-top: none;
-      border-left: none;
-      border-right: none;
+      border: none;
       font-family: var(--body-font);
-      transition: color 0.15s, border-color 0.15s;
+      transition: color 0.15s;
     }
     .site-nav-link:hover { color: var(--nav-brand); }
-    .site-nav-link.active { color: var(--nav-highlight); border-bottom-color: var(--nav-highlight); }
+    .site-nav-link.active { color: var(--nav-highlight); }
+    .site-nav.nav-underline .site-nav-link.active {
+      text-decoration: underline;
+      text-decoration-color: var(--nav-highlight);
+      text-underline-offset: 3px;
+      text-decoration-thickness: 2px;
+    }
 
     /* ── Page sections ── */
     .page-section { display: none; }
@@ -1531,7 +1566,8 @@ function buildHtml(
   const secondLang = settings?.secondLanguage ?? null;
 
   const navShape = settings?.navShape ?? "";
-  const navShapeClass = navShape === "pill" ? " nav-pill" : navShape === "floating" ? " nav-floating" : "";
+  const navUnderlineClass = (settings?.navUnderline ?? "on") !== "off" ? " nav-underline" : "";
+  const navShapeClass = (navShape === "pill" ? " nav-pill" : navShape === "floating" ? " nav-floating" : "") + navUnderlineClass;
   const isPillOrFloating = navShape === "pill" || navShape === "floating";
   const navLinksHtml = visiblePages
     .map(
@@ -1616,10 +1652,18 @@ function showPage(pageId) {
 </script>`
     : "";
 
-  const greetingHtml = greeting
-    ? `<div class="greeting-overlay" id="greeting-overlay" role="dialog" aria-modal="true" aria-label="Welcome message">
+  const popupEnabled = settings?.popupEnabled ?? 1;
+  const popupTitle = settings?.popupTitle ?? null;
+  const popupTicker = settings?.popupTicker ?? 0;
+  const popupAfterAnimation = settings?.popupAfterAnimation ?? 0;
+  const showPopup = greeting && popupEnabled !== 0;
+  const tickerText = popupTicker ? escHtml(eventTitle + (eventDate ? "  ·  " + eventDate : "")) : null;
+  const greetingHtml = showPopup
+    ? `<div class="greeting-overlay${popupAfterAnimation && settings?.animation ? " hidden" : ""}" id="greeting-overlay" role="dialog" aria-modal="true" aria-label="Welcome message">
         <div class="greeting-modal">
-          <p>${escHtml(greeting)}</p>
+          ${popupTitle ? `<h2 class="greeting-title">${escHtml(popupTitle)}</h2>` : ""}
+          <p>${escHtml(greeting!)}</p>
+          ${tickerText ? `<div class="greeting-ticker-wrap" aria-hidden="true"><div class="greeting-ticker">${tickerText}&nbsp;&nbsp;✦&nbsp;&nbsp;${tickerText}&nbsp;&nbsp;✦&nbsp;&nbsp;</div></div>` : ""}
           <button
             class="greeting-close"
             onclick="document.getElementById('greeting-overlay').classList.add('hidden');"
@@ -1696,9 +1740,14 @@ function switchLang() {
     ? `<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>`
     : "";
 
+  const triggerPopupAfterAnim = showPopup && popupAfterAnimation;
   const introScript = introHtml
     ? `<script>
 var _introOpened = false;
+function _afterAnimDone(el) {
+  el.style.display='none';
+  ${triggerPopupAfterAnim ? `var g=document.getElementById('greeting-overlay');if(g)g.classList.remove('hidden');` : ""}
+}
 function openIntro() {
   if (_introOpened) return;
   _introOpened = true;
@@ -1708,7 +1757,7 @@ function openIntro() {
   var _seal = document.querySelector('.envfs-seal');
   if (_seal) _seal.style.animation = 'none';
   gsap.set('.envfs-card', { xPercent:-50, yPercent:-50, y:'100vh', opacity:0 });
-  var tl = gsap.timeline({ onComplete: function(){ el.style.display='none'; } });
+  var tl = gsap.timeline({ onComplete: function(){ _afterAnimDone(el); } });
   tl.to('.envfs-cue',  { opacity:0, duration:0.25 }, 0)
     .to('.envfs-seal', { y:'-300%', opacity:0, scale:0.28, rotation:30, duration:0.65, ease:'back.in(2.5)' }, 0.1)
     .to('.envfs-flap', { rotateX:-185, duration:1.15, ease:'power2.inOut', transformOrigin:'top center' }, 0.3)
@@ -1718,7 +1767,7 @@ function openIntro() {
     .to({},            { duration:2.0 })
     .to(el,            { opacity:0, duration:0.65, ease:'power2.in' });
   ` : animation === "doors" ? `
-  var tl = gsap.timeline({ onComplete: function(){ el.style.display='none'; } });
+  var tl = gsap.timeline({ onComplete: function(){ _afterAnimDone(el); } });
   tl.to('.door-cue',  { opacity:0, duration:0.15 })
     .to('.door-glow', { width:'60px', filter:'blur(10px)', opacity:1.0, duration:0.35, ease:'power2.in' }, 0)
     .to('.door-l',    { rotateY:-115, duration:1.1, ease:'power3.inOut' }, 0.18)
@@ -1726,7 +1775,7 @@ function openIntro() {
     .to('.door-glow', { opacity:0, duration:0.4 }, '-=0.45')
     .to(el,           { opacity:0, duration:0.4 }, '-=0.2');
   ` : animation === "storybook" ? `
-  var tl = gsap.timeline({ onComplete: function(){ el.style.display='none'; } });
+  var tl = gsap.timeline({ onComplete: function(){ _afterAnimDone(el); } });
   tl.to('.book-cue',  { opacity:0, duration:0.2 })
     .to('.book-cover', {
       rotateY:-155, duration:1.7, ease:'power3.inOut',
@@ -1734,7 +1783,7 @@ function openIntro() {
     }, 0.1)
     .to(el, { opacity:0, duration:0.55 }, '-=0.35');
   ` : `
-  gsap.to(el, { opacity:0, duration:0.4, onComplete:function(){ el.style.display='none'; } });
+  gsap.to(el, { opacity:0, duration:0.4, onComplete:function(){ _afterAnimDone(el); } });
   `}
 }
 ${animation === "envelope" ? `gsap.set('.envfs-card',{xPercent:-50,yPercent:-50,y:'100vh',opacity:0});` : ""}
