@@ -970,31 +970,33 @@ export default function SiteEditor() {
           { blockType: "tidbits",  cfgKey: "items",   contentKey: "tidbits"   },
         ];
 
-        const openBlock = blocks.find(b => b.id === expandedBlockId);
-        const mig = migrations.find(m => m.blockType === openBlock?.type);
+        const mig = migrations.find(m => m.blockType === editingBlock.type);
 
-        if (mig && Array.isArray((configToSave as Record<string,unknown>)[mig.cfgKey]) &&
-            ((configToSave as Record<string,unknown>)[mig.cfgKey] as unknown[]).length > 0) {
-          // Fetch current site_content to check if already migrated
-          const existing = contentByPage[pageSlug]?.[lang] ?? {};
-          const alreadyHasData = Array.isArray((existing as Record<string,unknown>)[mig.contentKey]) &&
-            ((existing as Record<string,unknown>)[mig.contentKey] as unknown[]).length > 0;
+        if (mig) {
+          const cfgVal = (configToSave as Record<string, unknown>)[mig.cfgKey];
 
-          if (!alreadyHasData) {
-            // Write legacy data to site_content
-            const migratedContent = { ...existing, [mig.contentKey]: (configToSave as Record<string,unknown>)[mig.cfgKey] };
-            await apiFetch("/content", {
-              method: "POST",
-              headers: { "content-type": "application/json" },
-              body: JSON.stringify({ pageSlug, lang, content: migratedContent }),
-            });
-            // Refresh contentByPage
-            await fetchContent();
+          // Only write to site_content if legacy data is a non-empty array
+          if (Array.isArray(cfgVal) && (cfgVal as unknown[]).length > 0) {
+            const existing = contentByPage[pageSlug]?.[lang] ?? {};
+            const alreadyHasData = Array.isArray((existing as Record<string, unknown>)[mig.contentKey]) &&
+              ((existing as Record<string, unknown>)[mig.contentKey] as unknown[]).length > 0;
+
+            if (!alreadyHasData) {
+              const migratedContent = { ...(existing as Record<string, unknown>), [mig.contentKey]: cfgVal };
+              await apiFetch(`/content`, {
+                method: "POST",
+                headers: { "content-type": "application/json" },
+                body: JSON.stringify({ pageSlug, lang, content: migratedContent }),
+              });
+              await fetchContent();
+            }
           }
 
-          // Remove legacy key from config (whether we migrated or not)
-          const { [mig.cfgKey]: _removed, ...cleanedConfig } = configToSave as Record<string, unknown>;
-          configToSave = cleanedConfig;
+          // Always strip the legacy key if it exists, even if it was empty
+          if (cfgVal !== undefined) {
+            const { [mig.cfgKey]: _removed, ...cleanedConfig } = configToSave as Record<string, unknown>;
+            configToSave = cleanedConfig;
+          }
         }
       }
 
