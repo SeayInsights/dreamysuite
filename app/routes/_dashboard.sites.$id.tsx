@@ -138,6 +138,12 @@ interface SiteSettings {
   musicBtnColor: string | null;
 }
 
+interface CanvaDesign {
+  id: string;
+  title: string;
+  thumbnail_url: string;
+}
+
 interface AnalyticsData {
   rsvp: {
     total: number;
@@ -498,6 +504,10 @@ export default function SiteEditor() {
   const [settings, setSettings]                   = useState<SiteSettings | null>(null);
   const [settingsLoading, setSettingsLoading]     = useState(false);
   const [savingSettings, setSavingSettings]       = useState(false);
+  const [canvaConnected, setCanvaConnected]       = useState(false);
+  const [canvaDesigns, setCanvaDesigns]           = useState<CanvaDesign[]>([]);
+  const [canvaModalOpen, setCanvaModalOpen]       = useState(false);
+  const [importingDesignId, setImportingDesignId] = useState<string | null>(null);
   const [previewKey, setPreviewKey] = useState(0);
   const [settingsForm, setSettingsForm] = useState({
     eventName: "",
@@ -735,6 +745,16 @@ export default function SiteEditor() {
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
+  const fetchCanvaStatus = useCallback(async () => {
+    try {
+      const data = await apiFetch("/canva/designs") as { connected: boolean; designs: CanvaDesign[] };
+      setCanvaConnected(data.connected);
+      if (data.connected) setCanvaDesigns(data.designs);
+    } catch {
+      setCanvaConnected(false);
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   const fetchContent = useCallback(async () => {
     setContentLoading(true);
     try {
@@ -824,7 +844,19 @@ export default function SiteEditor() {
 
   useEffect(() => {
     if (section === "site-setup" && !settings) fetchSettings();
+    if (section === "site-setup") fetchCanvaStatus();
   }, [section]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    if (searchParams.get("canva") === "connected") {
+      toast("Canva connected!");
+      setSearchParams((p) => { p.delete("canva"); return p; });
+      fetchCanvaStatus();
+    } else if (searchParams.get("canva") === "error") {
+      toast("Canva connection failed. Please try again.", true);
+      setSearchParams((p) => { p.delete("canva"); return p; });
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (section === "website" && activeTab === "content") {
@@ -1424,6 +1456,28 @@ export default function SiteEditor() {
       // Roll back optimistic update on error
       setSettingsForm((f) => ({ ...f, isLive: newVal ? 0 : 1 }));
       toast(err instanceof Error ? err.message : "Failed to update site status", true);
+    }
+  }
+
+  async function handleCanvaImport(designId: string) {
+    setImportingDesignId(designId);
+    try {
+      const res = await fetch(`/api/sites/${site.id}/canva/import`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ designId }),
+      });
+      if (!res.ok) {
+        const body = await res.json() as { error?: { message?: string } };
+        throw new Error(body?.error?.message ?? "Import failed");
+      }
+      await fetchPhotos();
+      toast("Design imported");
+      setCanvaModalOpen(false);
+    } catch (err) {
+      toast(err instanceof Error ? err.message : "Import failed", true);
+    } finally {
+      setImportingDesignId(null);
     }
   }
 
@@ -3269,9 +3323,27 @@ export default function SiteEditor() {
                 </div>
                 <div>
                   <div style={{ fontSize: "0.85rem", fontWeight: 600, color: "#1c1917" }}>Canva</div>
-                  <div style={{ fontSize: "0.73rem", color: "#9b8e85" }}>Not connected</div>
+                  <div style={{ fontSize: "0.73rem", color: canvaConnected ? "#0d9488" : "#9b8e85" }}>
+                    {canvaConnected ? "Connected" : "Not connected"}
+                  </div>
                 </div>
-                <button className="btn-primary-sm" disabled style={{ marginLeft: "auto", opacity: 0.45, cursor: "not-allowed" }} title="Canva integration coming soon">Coming Soon</button>
+                {canvaConnected ? (
+                  <button
+                    className="btn-primary-sm"
+                    style={{ marginLeft: "auto" }}
+                    onClick={() => setCanvaModalOpen(true)}
+                  >
+                    Browse Designs
+                  </button>
+                ) : (
+                  <a
+                    href={`/api/canva/connect?siteId=${site.id}`}
+                    className="btn-primary-sm"
+                    style={{ marginLeft: "auto" }}
+                  >
+                    Connect Canva
+                  </a>
+                )}
               </div>
             </div>
 
@@ -3490,6 +3562,53 @@ export default function SiteEditor() {
                 {guestSubmitting ? "Adding…" : "Add Guest"}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Canva designs modal ─────────────────────────────── */}
+      {canvaModalOpen && (
+        <div
+          className="overlay-bg"
+          style={{ zIndex: 500 }}
+          onClick={() => setCanvaModalOpen(false)}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Browse Canva designs"
+        >
+          <div className="overlay-box" onClick={(e) => e.stopPropagation()} style={{ maxWidth: "560px", maxHeight: "80vh", display: "flex", flexDirection: "column" }}>
+            <div className="overlay-box-header">
+              <h2>Canva Designs</h2>
+              <button className="overlay-close" onClick={() => setCanvaModalOpen(false)} aria-label="Close">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </button>
+            </div>
+            {canvaDesigns.length === 0 ? (
+              <p style={{ fontSize: "0.82rem", color: "#9b8e85", textAlign: "center", padding: "2rem" }}>
+                No designs found. Create a design in Canva and it will appear here.
+              </p>
+            ) : (
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(130px, 1fr))", gap: "0.75rem", padding: "1rem", overflowY: "auto", flex: 1 }}>
+                {canvaDesigns.map((d) => (
+                  <div key={d.id} style={{ border: "1.5px solid #e8e2da", borderRadius: "8px", overflow: "hidden" }}>
+                    {d.thumbnail_url && (
+                      <img src={d.thumbnail_url} alt={d.title} style={{ width: "100%", aspectRatio: "1", objectFit: "cover", display: "block" }} />
+                    )}
+                    <div style={{ padding: "0.5rem" }}>
+                      <div style={{ fontSize: "0.72rem", fontWeight: 600, color: "#1c1917", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{d.title}</div>
+                      <button
+                        className="btn-primary-sm"
+                        style={{ width: "100%", marginTop: "0.4rem", fontSize: "0.72rem" }}
+                        disabled={importingDesignId === d.id}
+                        onClick={() => handleCanvaImport(d.id)}
+                      >
+                        {importingDesignId === d.id ? "Importing…" : "Import"}
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       )}
