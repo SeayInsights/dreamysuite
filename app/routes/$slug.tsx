@@ -116,6 +116,12 @@ function escHtml(str: string): string {
     .replace(/'/g, "&#39;");
 }
 
+function safeUrl(raw: string): string {
+  const trimmed = raw.trim().toLowerCase();
+  if (trimmed.startsWith("javascript:") || trimmed.startsWith("data:")) return "#";
+  return raw;
+}
+
 function placeholder(text: string): string {
   return `<p class="placeholder-text">${escHtml(text)}</p>`;
 }
@@ -1228,7 +1234,7 @@ function renderBlock(
               ${item.heading ? `<h3 style="font-size:1.05rem;margin:0 0 0.4rem;">${escHtml(item.heading)}</h3>` : ""}
               ${item.body ? `<p style="margin:0 0 0.4rem;line-height:1.7;">${escHtml(item.body)}</p>` : ""}
               ${item.linkUrl && item.linkLabel
-                ? `<a href="${escHtml(item.linkUrl)}" target="_blank" rel="noopener noreferrer" style="color:var(--accent)">${escHtml(item.linkLabel)}</a>`
+                ? `<a href="${escHtml(safeUrl(item.linkUrl))}" target="_blank" rel="noopener noreferrer" style="color:var(--accent)">${escHtml(item.linkLabel)}</a>`
                 : ""}
             </div>`).join("")
         : placeholder("Travel details will appear here once added in the Content tab.")
