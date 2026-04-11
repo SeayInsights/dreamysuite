@@ -661,6 +661,43 @@ export default function SiteEditor() {
   const [canvaModalOpen, setCanvaModalOpen]       = useState(false);
   const [importingDesignId, setImportingDesignId] = useState<string | null>(null);
   const [previewKey, setPreviewKey] = useState(0);
+
+  // Collaborator invites
+  const [invites, setInvites]           = useState<{ id: string; email: string; invitedBy: string; createdAt: number }[]>([]);
+  const [inviteEmail, setInviteEmail]   = useState("");
+  const [inviteSending, setInviteSending] = useState(false);
+
+  async function fetchInvites() {
+    const res = await fetch(`/api/sites/${site.id}/invites`);
+    if (res.ok) {
+      const data = await res.json<{ invites: typeof invites }>();
+      setInvites(data.invites);
+    }
+  }
+
+  async function sendInvite() {
+    if (!inviteEmail.trim()) return;
+    setInviteSending(true);
+    try {
+      const res = await fetch(`/api/sites/${site.id}/invites`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ email: inviteEmail.trim() }),
+      });
+      const data = await res.json<{ invite?: { id: string; email: string; invitedBy: string; createdAt: number }; error?: { message: string } }>();
+      if (!res.ok) {
+        toast(data.error?.message ?? "Failed to send invite", true);
+      } else {
+        setInvites((prev) => [data.invite!, ...prev]);
+        setInviteEmail("");
+        toast("Invite sent!");
+      }
+    } catch {
+      toast("Failed to send invite", true);
+    } finally {
+      setInviteSending(false);
+    }
+  }
   const [settingsForm, setSettingsForm] = useState({
     eventName: "",
     eventDate: "",
@@ -997,6 +1034,7 @@ export default function SiteEditor() {
   useEffect(() => {
     if (section === "site-setup" && !settings) fetchSettings();
     if (section === "site-setup") fetchCanvaStatus();
+    if (section === "site-setup") fetchInvites();
   }, [section]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
@@ -3364,45 +3402,50 @@ export default function SiteEditor() {
                   </div>
 
                   {/* ── Invite Collaborator ── */}
-                  {(()=>{
-                    return (
-                      <div style={{ marginBottom: '1.25rem' }}>
-                        <div style={{ fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: '#9b8e85', marginBottom: '0.5rem' }}>Collaborators</div>
-                        <p style={{ fontSize: '0.78rem', color: '#6b5e56', lineHeight: 1.5, marginBottom: '0.75rem' }}>
-                          Share this editor link with anyone you want to edit this site with.
-                        </p>
-                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                          <div style={{
-                            flex: 1, minWidth: 0,
+                  <div style={{ marginBottom: '1.25rem' }}>
+                    <div style={{ fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: '#9b8e85', marginBottom: '0.5rem' }}>Collaborators</div>
+                    <p style={{ fontSize: '0.78rem', color: '#6b5e56', lineHeight: 1.5, marginBottom: '0.75rem' }}>
+                      Invite someone by email — they'll get a link to this editor.
+                    </p>
+                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '0.5rem' }}>
+                      <input
+                        type="email"
+                        className="sf-input"
+                        placeholder="colleague@example.com"
+                        value={inviteEmail}
+                        onChange={(e) => setInviteEmail(e.target.value)}
+                        onKeyDown={(e) => { if (e.key === 'Enter') sendInvite(); }}
+                        style={{ flex: 1, minWidth: 0 }}
+                      />
+                      <button
+                        className="btn-primary-sm"
+                        style={{ flexShrink: 0 }}
+                        disabled={inviteSending || !inviteEmail.trim()}
+                        onClick={sendInvite}
+                      >
+                        {inviteSending ? 'Sending…' : 'Send Invite'}
+                      </button>
+                    </div>
+                    {invites.length > 0 && (
+                      <ul style={{ listStyle: 'none', margin: '0.75rem 0 0', padding: 0, display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                        {invites.map((inv) => (
+                          <li key={inv.id} style={{
+                            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                             background: '#f5f0eb', borderRadius: '8px',
-                            padding: '0.55rem 0.85rem',
-                            fontSize: '0.78rem', color: '#6b5e56',
-                            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                            border: '1.5px solid #e0dbd4',
+                            padding: '0.45rem 0.75rem',
+                            border: '1px solid #e0dbd4',
                           }}>
-                            {`https://dreamysuite.com/sites/${site.id}`}
-                          </div>
-                          <button
-                            className="btn-primary-sm"
-                            style={{ flexShrink: 0 }}
-                            onClick={async () => {
-                              try {
-                                await navigator.clipboard.writeText(`https://dreamysuite.com/sites/${site.id}`);
-                                toast('Editor link copied!');
-                              } catch {
-                                toast('Could not copy link', true);
-                              }
-                            }}
-                          >
-                            Copy Link
-                          </button>
-                        </div>
-                        <p style={{ fontSize: '0.7rem', color: '#b0a99f', marginTop: '0.4rem', lineHeight: 1.4 }}>
-                          Anyone with this link and a DreamySuite account can edit your site.
-                        </p>
-                      </div>
-                    );
-                  })()}
+                            <span style={{ fontSize: '0.78rem', color: '#44403c', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                              {inv.email}
+                            </span>
+                            <span style={{ fontSize: '0.68rem', color: '#b0a99f', flexShrink: 0, marginLeft: '0.5rem' }}>
+                              {new Date(inv.createdAt).toLocaleDateString()}
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
 
                   {/* QR image + download */}
                   <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: "0.75rem" }}>

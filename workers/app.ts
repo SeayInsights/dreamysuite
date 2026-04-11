@@ -15,6 +15,7 @@ export interface Env {
   CF_API_TOKEN: string;
   CANVA_CLIENT_ID: string;
   CANVA_CLIENT_SECRET: string;
+  RESEND_API_KEY: string;
 }
 
 /**
