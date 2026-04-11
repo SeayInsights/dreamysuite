@@ -1438,7 +1438,8 @@ function renderBlock(
       const wPx = photo.widthPx ? `${Number(photo.widthPx)}px` : "auto";
       const hPx = photo.heightPx ? `${Number(photo.heightPx)}px` : "auto";
       const offsetXRaw = Number(photo.offsetX ?? 0);
-      const photoContainerStyle = `flex-shrink:0;${offsetXRaw !== 0 ? `transform:translateX(${offsetXRaw}px);` : ""}`;
+      const marginDir = photoSide === "right" ? "right" : "left";
+      const photoContainerStyle = `flex-shrink:0;${offsetXRaw !== 0 ? `margin-${marginDir}:${offsetXRaw}px;` : ""}`;
       const components = (cfg.components as Array<Record<string, unknown>>) ?? [];
 
       const imgEl = photoUrl
