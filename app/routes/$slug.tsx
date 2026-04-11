@@ -65,6 +65,7 @@ interface SiteSettingRow {
   popupTitle: string | null;
   popupTicker: number | null;
   popupAfterAnimation: number | null;
+  popupBundle: number | null;
   musicBtnBg: string | null;
   musicBtnColor: string | null;
 }
@@ -554,6 +555,37 @@ function buildStyles(settings: SiteSettingRow | null): BuiltStyles {
     .video-cd-overlay .countdown-units { justify-content:center; }
     .video-cd-overlay .countdown-num { color:#fff; }
     .video-cd-overlay .countdown-unit-label { color:rgba(255,255,255,0.75); }
+
+    /* ── Bundle popup card (inside entrance animations) ── */
+    .intro-bundle-card {
+      position:absolute; left:50%; top:50%; z-index:50;
+      transform:translate(-50%,-50%) scale(0.95);
+      width:min(360px,82vw); padding:clamp(1.5rem,4vw,2.5rem) clamp(1.25rem,3vw,2rem);
+      background:var(--card-color,#fffaf4); border-radius:4px; text-align:center;
+      box-shadow:0 20px 80px rgba(0,0,0,0.55),0 4px 16px rgba(0,0,0,0.3);
+      opacity:0; pointer-events:none;
+    }
+    .intro-bundle-card::before,.intro-bundle-card::after {
+      content:''; display:block; width:72%; height:1px; margin:0 auto;
+      background:linear-gradient(to right,transparent,rgba(0,0,0,0.15),transparent);
+    }
+    .intro-bundle-card::before { margin-bottom:1rem; }
+    .intro-bundle-card::after  { margin-top:1rem; }
+    .intro-bundle-card-title {
+      font-family:var(--heading-font,'Georgia',serif);
+      font-size:clamp(1.1rem,3.5vw,1.75rem); font-weight:normal;
+      color:var(--text,#1c1008); margin-bottom:0.6rem; line-height:1.2;
+    }
+    .intro-bundle-card-body {
+      font-size:clamp(0.8rem,2vw,0.95rem); color:var(--muted,#78716c);
+      line-height:1.6; margin-bottom:1.25rem;
+    }
+    .intro-bundle-card-close {
+      display:inline-block; padding:0.5rem 1.75rem;
+      background:var(--accent); color:#fff; border:none;
+      border-radius:99px; font-size:0.85rem; cursor:pointer;
+      letter-spacing:0.04em; font-family:var(--body-font);
+    }
 
     /* ── Timeline ── */
     .timeline { list-style: none; max-width: 540px; margin: 0 auto; }
@@ -1104,7 +1136,7 @@ function renderBlock(
       const targetDate = settings?.eventDate ?? "";
 
       const overlayHtml = showCountdown && targetDate
-        ? `<div class="video-cd-overlay" style="bottom:${cdY}px;transform:translateX(${cdX}px);" data-cd-clock data-date="${escHtml(targetDate)}" data-block-id="${escHtml(block.id)}-overlay">
+        ? `<div class="video-cd-overlay" style="bottom:${cdY}px;transform:translateX(calc(-50% + ${cdX}px));" data-cd-clock data-date="${escHtml(targetDate)}" data-block-id="${escHtml(block.id)}-overlay">
              <div class="countdown-units">
                <div class="countdown-unit"><span class="countdown-num" id="cd-days-${escHtml(block.id)}-overlay">--</span><span class="countdown-unit-label">Days</span></div>
                <div class="countdown-unit"><span class="countdown-num" id="cd-hours-${escHtml(block.id)}-overlay">--</span><span class="countdown-unit-label">Hours</span></div>
@@ -1336,7 +1368,7 @@ function buildCountdownScript(): string {
   document.querySelectorAll('[data-cd-clock]').forEach(function(container){
     var raw = container.getAttribute('data-date');
     if (!raw) return;
-    var target = new Date(raw + 'T00:00:00');
+    var target = raw.includes('T') ? new Date(raw) : new Date(raw + 'T00:00:00');
     if (isNaN(target.getTime())) return;
     var bid = container.getAttribute('data-block-id') || '';
     var els = {
@@ -1410,7 +1442,7 @@ function buildMessageListenerScript(): string {
       var overlay = node.querySelector('.video-cd-overlay');
       if (overlay) overlay.style.display = cfg.showCountdown ? '' : 'none';
       // update overlay position
-      if (overlay && cfg.countdownX != null) overlay.style.transform = 'translateX(' + cfg.countdownX + 'px)';
+      if (overlay && cfg.countdownX != null) overlay.style.transform = 'translateX(calc(-50% + ' + cfg.countdownX + 'px))';
       if (overlay && cfg.countdownY != null) overlay.style.bottom = cfg.countdownY + 'px';
       // update block height
       if (cfg.height && /^[\d.]+(px|dvh|vh|svh|%)$/.test(String(cfg.height))) {
@@ -1461,14 +1493,26 @@ function buildIntroHtml(
   envelopeColor: string | null,
   sealInitials: string | null,
   cardColor: string | null,
-  cardImage: string | null
+  cardImage: string | null,
+  popupBundle: boolean,
+  popupTitle: string | null,
+  popupGreeting: string | null
 ): string {
   if (!animation || animation === "none") return "";
   const title = escHtml(eventTitle);
   const date = eventDate ? escHtml(eventDate) : "";
 
-  function extractInitials(title: string): string {
-    const parts = title.split(/\s*[&+]\s*|\s+and\s+/i).map((s) => s.trim()).filter(Boolean);
+  // Bundle card shared HTML (used by doors + storybook when popupBundle=true)
+  const bundleCardHtml = popupBundle && (popupTitle || popupGreeting)
+    ? `<div class="intro-bundle-card" id="intro-bundle-card">
+        ${popupTitle ? `<p class="intro-bundle-card-title">${escHtml(popupTitle)}</p>` : ""}
+        ${popupGreeting ? `<p class="intro-bundle-card-body">${escHtml(popupGreeting)}</p>` : ""}
+        <button class="intro-bundle-card-close" onclick="window._closeIntro()">View Site</button>
+      </div>`
+    : "";
+
+  function extractInitials(t: string): string {
+    const parts = t.split(/\s*[&+]\s*|\s+and\s+/i).map((s) => s.trim()).filter(Boolean);
     if (parts.length >= 2) return parts.map((p) => p.charAt(0).toUpperCase()).join(" · ");
     if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
     return "&#10086;";
@@ -1481,6 +1525,11 @@ function buildIntroHtml(
     const letterStyle = (cardColor || cardImage)
       ? ` style="${cardColor ? `--card-color:${escHtml(cardColor)};` : ""}${cardBg ? `background-image:${cardBg};background-size:cover;background-position:center;` : ""}"`
       : "";
+    // Envelope card: use popup content when available, fall back to event name + date
+    const cardHeading = popupTitle ? escHtml(popupTitle) : title;
+    const cardBody = popupGreeting
+      ? `<p class="envfs-card-date">${escHtml(popupGreeting)}</p>`
+      : (date ? `<p class="envfs-card-date">${date}</p>` : "");
     return `<div id="intro-overlay" class="intro-overlay intro-env-fs" role="button" tabindex="0" aria-label="Click to open invitation"${envStyle}>
   <div class="envfs-body">
     <div class="envfs-left-fold"></div>
@@ -1489,8 +1538,8 @@ function buildIntroHtml(
     <div class="envfs-glow"></div>
     <div class="envfs-card"${letterStyle}>
       <div class="envfs-card-ornament">&#10038; &middot; &#10038;</div>
-      <p class="envfs-card-name">${title}</p>
-      ${date ? `<p class="envfs-card-date">${date}</p>` : ""}
+      <p class="envfs-card-name">${cardHeading}</p>
+      ${cardBody}
     </div>
   </div>
   <div class="envfs-flap">
@@ -1520,6 +1569,7 @@ function buildIntroHtml(
   </div>
   <div class="book-spine"></div>
   <p class="book-cue">&#8212; tap to open &#8212;</p>
+  ${bundleCardHtml}
 </div>`;
   }
 
@@ -1532,6 +1582,7 @@ function buildIntroHtml(
     <p class="door-title">${title}</p>
     <p class="door-cue">click to enter</p>
   </div>
+  ${bundleCardHtml}
 </div>`;
   }
 
@@ -1556,7 +1607,8 @@ function buildHtml(
   const accent = settings?.accentColor ?? "#0d9488";
 
   const allBlocks = pages.flatMap((p) => p.blocks);
-  const hasCountdown = allBlocks.some((b) => b.type === "countdown");
+  const hasCountdown = allBlocks.some((b) => b.type === "countdown")
+    || (!!settings?.eventDate && allBlocks.some((b) => b.type === "video" && !!(b.config as Record<string, unknown>).showCountdown));
 
   // Build nav bar (only if there are multiple pages, all visible)
   const visiblePages = pages.filter((p) => p.isVisible !== 0);
@@ -1739,7 +1791,13 @@ function switchLang() {
   const sealInitials = settings?.sealInitials ?? null;
   const cardColor = settings?.cardColor ?? null;
   const cardImage = settings?.cardImage ?? null;
-  const introHtml = buildIntroHtml(animation, eventTitle, eventDate, envelopeColor, sealInitials, cardColor, cardImage);
+  const popupBundleActive = !!(settings?.popupBundle) && !!animation && animation !== "none" && animation !== "envelope";
+  const introHtml = buildIntroHtml(
+    animation, eventTitle, eventDate, envelopeColor, sealInitials, cardColor, cardImage,
+    popupBundleActive,
+    settings?.popupTitle ?? null,
+    greeting
+  );
   const gsapCdn = introHtml
     ? `<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>`
     : "";
@@ -1754,6 +1812,10 @@ function _afterAnimDone(el) {
   try { sessionStorage.setItem(_animKey, '1'); } catch(e) {}
   ${triggerPopupAfterAnim ? `var g=document.getElementById('greeting-overlay');if(g)g.classList.remove('hidden');` : ""}
 }
+window._closeIntro = function() {
+  var el = document.getElementById('intro-overlay');
+  if (el) _afterAnimDone(el);
+};
 function openIntro() {
   if (_introOpened) return;
   _introOpened = true;
@@ -1773,21 +1835,35 @@ function openIntro() {
     .to({},            { duration:2.0 })
     .to(el,            { opacity:0, duration:0.65, ease:'power2.in' });
   ` : animation === "doors" ? `
-  var tl = gsap.timeline({ onComplete: function(){ _afterAnimDone(el); } });
+  var _bundleCard = document.getElementById('intro-bundle-card');
+  var tl = gsap.timeline({ onComplete: function(){
+    if (_bundleCard) {
+      el.removeEventListener('click', openIntro);
+      gsap.set(el, { background:'rgba(0,0,0,0.88)' });
+      gsap.to(_bundleCard, { opacity:1, scale:1, duration:0.4, ease:'back.out(1.2)', pointerEvents:'auto' });
+    } else { _afterAnimDone(el); }
+  } });
   tl.to('.door-cue',  { opacity:0, duration:0.15 })
     .to('.door-glow', { width:'60px', filter:'blur(10px)', opacity:1.0, duration:0.35, ease:'power2.in' }, 0)
     .to('.door-l',    { rotateY:-115, duration:1.1, ease:'power3.inOut' }, 0.18)
     .to('.door-r',    { rotateY:115,  duration:1.1, ease:'power3.inOut' }, 0.18)
     .to('.door-glow', { opacity:0, duration:0.4 }, '-=0.45')
-    .to(el,           { opacity:0, duration:0.4 }, '-=0.2');
+    ${popupBundleActive ? `.to(['.door-l','.door-r','.door-centre-text'], { opacity:0, duration:0.35 }, '-=0.2')` : `.to(el, { opacity:0, duration:0.4 }, '-=0.2')`};
   ` : animation === "storybook" ? `
-  var tl = gsap.timeline({ onComplete: function(){ _afterAnimDone(el); } });
+  var _bundleCard = document.getElementById('intro-bundle-card');
+  var tl = gsap.timeline({ onComplete: function(){
+    if (_bundleCard) {
+      el.removeEventListener('click', openIntro);
+      gsap.set(el, { background:'rgba(10,6,2,0.92)' });
+      gsap.to(_bundleCard, { opacity:1, scale:1, duration:0.4, ease:'back.out(1.2)', pointerEvents:'auto' });
+    } else { _afterAnimDone(el); }
+  } });
   tl.to('.book-cue',  { opacity:0, duration:0.2 })
     .to('.book-cover', {
       rotateY:-155, duration:1.7, ease:'power3.inOut',
       transformOrigin:'right center'
     }, 0.1)
-    .to(el, { opacity:0, duration:0.55 }, '-=0.35');
+    ${popupBundleActive ? `.to(['.book-cover','.book-spine','.book-page-bg'], { opacity:0, duration:0.4 }, '-=0.2')` : `.to(el, { opacity:0, duration:0.55 }, '-=0.35')`};
   ` : `
   gsap.to(el, { opacity:0, duration:0.4, onComplete:function(){ _afterAnimDone(el); } });
   `}

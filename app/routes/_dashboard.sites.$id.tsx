@@ -133,6 +133,7 @@ interface SiteSettings {
   popupTitle: string | null;
   popupTicker: number;
   popupAfterAnimation: number;
+  popupBundle: number | null;
   musicBtnBg: string | null;
   musicBtnColor: string | null;
 }
@@ -541,6 +542,7 @@ export default function SiteEditor() {
     popupTitle: "",
     popupTicker: 0 as 0 | 1,
     popupAfterAnimation: 0 as 0 | 1,
+    popupBundle: 0 as 0 | 1,
     musicBtnBg: "",
     musicBtnColor: "",
   });
@@ -719,6 +721,7 @@ export default function SiteEditor() {
         popupTitle:         data.settings.popupTitle         ?? "",
         popupTicker:        (data.settings.popupTicker       ?? 0) as 0 | 1,
         popupAfterAnimation:(data.settings.popupAfterAnimation ?? 0) as 0 | 1,
+        popupBundle:        (data.settings.popupBundle        ?? 0) as 0 | 1,
         musicBtnBg:         data.settings.musicBtnBg         ?? "",
         musicBtnColor:      data.settings.musicBtnColor      ?? "",
       });
@@ -915,23 +918,19 @@ export default function SiteEditor() {
   }
 
   function handleUndo() {
-    setBlockHistory((h) => {
-      if (h.length === 0) return h;
-      const restored = h[h.length - 1];
-      setBlockFuture((f) => [blocks, ...f.slice(0, 19)]);
-      setBlocks(restored);
-      return h.slice(0, -1);
-    });
+    if (blockHistory.length === 0) return;
+    const restored = blockHistory[blockHistory.length - 1];
+    setBlockFuture((f) => [blocks, ...f.slice(0, 19)]);
+    setBlocks(restored);
+    setBlockHistory((h) => h.slice(0, -1));
   }
 
   function handleRedo() {
-    setBlockFuture((f) => {
-      if (f.length === 0) return f;
-      const restored = f[0];
-      setBlockHistory((h) => [...h.slice(-19), blocks]);
-      setBlocks(restored);
-      return f.slice(1);
-    });
+    if (blockFuture.length === 0) return;
+    const restored = blockFuture[0];
+    setBlockHistory((h) => [...h.slice(-19), blocks]);
+    setBlocks(restored);
+    setBlockFuture((f) => f.slice(1));
   }
 
   // ── Mutations ───────────────────────────────────────────────────────────────
@@ -992,6 +991,7 @@ export default function SiteEditor() {
         body: JSON.stringify({ isVisible: block.isVisible === 0 }),
       });
       if (activePage) await fetchBlocks(activePage.id);
+      setPreviewKey((k) => k + 1);
       toast("Tile updated");
     } catch (err) {
       toast(err instanceof Error ? err.message : "Failed to update tile", true);
@@ -1088,6 +1088,7 @@ export default function SiteEditor() {
         body: JSON.stringify({ config: JSON.stringify(configToSave) }),
       });
       if (activePage) await fetchBlocks(activePage.id);
+      setPreviewKey((k) => k + 1);
       setBlockEditOpen(false);
       toast("Tile config saved");
     } catch (err) {
@@ -3270,7 +3271,7 @@ export default function SiteEditor() {
                   <div style={{ fontSize: "0.85rem", fontWeight: 600, color: "#1c1917" }}>Canva</div>
                   <div style={{ fontSize: "0.73rem", color: "#9b8e85" }}>Not connected</div>
                 </div>
-                <button className="btn-primary-sm" style={{ marginLeft: "auto" }}>Connect Canva</button>
+                <button className="btn-primary-sm" disabled style={{ marginLeft: "auto", opacity: 0.45, cursor: "not-allowed" }} title="Canva integration coming soon">Coming Soon</button>
               </div>
             </div>
 
@@ -4088,6 +4089,9 @@ export default function SiteEditor() {
                       {/* Envelope color — shown only when envelope animation is selected */}
                       {settingsForm.animation === "envelope" && (
                         <>
+                          <div style={{ margin: "0.75rem 0 0.5rem", padding: "0.6rem 0.75rem", background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: "6px", fontSize: "0.73rem", color: "#166534", lineHeight: 1.5 }}>
+                            <strong>Invitation card uses your Popup settings.</strong> Go to the <strong>Popup</strong> tab to set the card title and welcome message. If left blank, your event name and date appear instead.
+                          </div>
                           <div style={{ fontSize: "0.72rem", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: "#9b8e85", margin: "1.1rem 0 0.5rem" }}>Envelope Colors</div>
                           {[
                             { label: "Envelope paper", key: "envelopeColor" as const, def: "#f5ede0" },
@@ -4462,22 +4466,51 @@ export default function SiteEditor() {
                             </button>
                           </div>
 
-                          {/* Show after animation toggle */}
-                          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0.6rem 0", borderTop: "1px solid #f5f2ee" }}>
-                            <div>
-                              <div style={{ fontSize: "0.8rem", fontWeight: 500, color: "#1c1917" }}>Show after entrance animation</div>
-                              <div style={{ fontSize: "0.7rem", color: "#9b8e85", marginTop: "2px" }}>Popup appears after the animation completes</div>
+                          {/* Envelope note — shown when envelope animation is active */}
+                          {settingsForm.animation === "envelope" && (
+                            <div style={{ margin: "0.5rem 0 0.25rem", padding: "0.6rem 0.75rem", background: "#fdf8f0", border: "1px solid #e8d9c0", borderRadius: "6px", fontSize: "0.73rem", color: "#7a5c2e", lineHeight: 1.5 }}>
+                              <strong style={{ display: "block", marginBottom: "2px" }}>Envelope card uses this popup</strong>
+                              The invitation card inside your envelope pulls its content from the Title and Welcome Message fields above. Set them here to customize what guests read when the envelope opens. If left blank, your event name and date are shown instead.
                             </div>
-                            <button
-                              type="button"
-                              onClick={() => setSettingsForm((f) => ({ ...f, popupAfterAnimation: f.popupAfterAnimation ? 0 : 1 }))}
-                              style={{ position: "relative", width: "44px", height: "24px", borderRadius: "12px", background: settingsForm.popupAfterAnimation ? "#0d9488" : "#e0dbd4", border: "none", cursor: "pointer", flexShrink: 0, transition: "background 0.2s" }}
-                              aria-pressed={!!settingsForm.popupAfterAnimation}
-                              aria-label="Toggle show after animation"
-                            >
-                              <span style={{ position: "absolute", top: "3px", left: settingsForm.popupAfterAnimation ? "23px" : "3px", width: "18px", height: "18px", borderRadius: "50%", background: "#fff", transition: "left 0.2s", boxShadow: "0 1px 4px rgba(0,0,0,0.2)" }} />
-                            </button>
-                          </div>
+                          )}
+
+                          {/* Bundle with entrance animation toggle — only for non-envelope animations */}
+                          {settingsForm.animation && settingsForm.animation !== "envelope" && settingsForm.animation !== "none" && (
+                            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0.6rem 0", borderTop: "1px solid #f5f2ee" }}>
+                              <div>
+                                <div style={{ fontSize: "0.8rem", fontWeight: 500, color: "#1c1917" }}>Bundle popup inside entrance animation</div>
+                                <div style={{ fontSize: "0.7rem", color: "#9b8e85", marginTop: "2px" }}>Shows a popup card as part of the animation, before guests see the site</div>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => setSettingsForm((f) => ({ ...f, popupBundle: f.popupBundle ? 0 : 1 }))}
+                                style={{ position: "relative", width: "44px", height: "24px", borderRadius: "12px", background: settingsForm.popupBundle ? "#0d9488" : "#e0dbd4", border: "none", cursor: "pointer", flexShrink: 0, transition: "background 0.2s" }}
+                                aria-pressed={!!settingsForm.popupBundle}
+                                aria-label="Toggle bundle popup with entrance animation"
+                              >
+                                <span style={{ position: "absolute", top: "3px", left: settingsForm.popupBundle ? "23px" : "3px", width: "18px", height: "18px", borderRadius: "50%", background: "#fff", transition: "left 0.2s", boxShadow: "0 1px 4px rgba(0,0,0,0.2)" }} />
+                              </button>
+                            </div>
+                          )}
+
+                          {/* Show after animation toggle */}
+                          {(!settingsForm.animation || settingsForm.animation === "none" || settingsForm.animation === "envelope" || !settingsForm.popupBundle) && (
+                            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0.6rem 0", borderTop: "1px solid #f5f2ee" }}>
+                              <div>
+                                <div style={{ fontSize: "0.8rem", fontWeight: 500, color: "#1c1917" }}>Show after entrance animation</div>
+                                <div style={{ fontSize: "0.7rem", color: "#9b8e85", marginTop: "2px" }}>Popup appears after the animation completes</div>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => setSettingsForm((f) => ({ ...f, popupAfterAnimation: f.popupAfterAnimation ? 0 : 1 }))}
+                                style={{ position: "relative", width: "44px", height: "24px", borderRadius: "12px", background: settingsForm.popupAfterAnimation ? "#0d9488" : "#e0dbd4", border: "none", cursor: "pointer", flexShrink: 0, transition: "background 0.2s" }}
+                                aria-pressed={!!settingsForm.popupAfterAnimation}
+                                aria-label="Toggle show after animation"
+                              >
+                                <span style={{ position: "absolute", top: "3px", left: settingsForm.popupAfterAnimation ? "23px" : "3px", width: "18px", height: "18px", borderRadius: "50%", background: "#fff", transition: "left 0.2s", boxShadow: "0 1px 4px rgba(0,0,0,0.2)" }} />
+                              </button>
+                            </div>
+                          )}
                         </>
                       )}
                     </>
