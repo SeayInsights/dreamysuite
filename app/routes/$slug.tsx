@@ -1864,8 +1864,9 @@ function showPage(pageId) {
   const showPopup = greeting && popupEnabled !== 0;
   const tickerText = popupTicker ? escHtml(eventTitle + (eventDate ? "  ·  " + eventDate : "")) : null;
   const greetingHtml = showPopup
-    ? `<div class="greeting-overlay${popupAfterAnimation && settings?.animation ? " hidden" : ""}" id="greeting-overlay" role="dialog" aria-modal="true" aria-label="Welcome message">
-        <div class="greeting-modal">
+    ? `<div class="greeting-overlay${popupAfterAnimation && settings?.animation ? " hidden" : ""}" id="greeting-overlay" role="dialog" aria-modal="true" aria-label="Welcome message"
+        onclick="document.getElementById('greeting-overlay').classList.add('hidden');">
+        <div class="greeting-modal" onclick="event.stopPropagation();">
           ${popupTitle ? `<h2 class="greeting-title">${escHtml(popupTitle)}</h2>` : ""}
           <p>${escHtml(greeting!)}</p>
           ${tickerText ? `<div class="greeting-ticker-wrap" aria-hidden="true"><div class="greeting-ticker">${tickerText}&nbsp;&nbsp;✦&nbsp;&nbsp;${tickerText}&nbsp;&nbsp;✦&nbsp;&nbsp;</div></div>` : ""}
