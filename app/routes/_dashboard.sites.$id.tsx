@@ -1769,7 +1769,17 @@ export default function SiteEditor() {
                                   </>)}
 
                                   {block.type === 'video' && (<>
-                                    <div className="sf-group"><label className="sf-lbl">Vimeo URL or ID</label><input className="sf-input" value={String(cfg.vimeoId??'')} onChange={e=>setField('vimeoId',e.target.value)} placeholder="https://vimeo.com/123456789 (blank = default)"/></div>
+                                    <div className="sf-group">
+                                      <label className="sf-lbl">Video</label>
+                                      {videos.length === 0 ? (
+                                        <p style={{fontSize:'0.75rem',color:'#9b8e85',margin:0}}>No videos in Media yet. <button type="button" style={{background:'none',border:'none',color:'#0d9488',cursor:'pointer',fontSize:'inherit',padding:0,textDecoration:'underline'}} onClick={()=>setSection("media")}>Go to Media</button></p>
+                                      ) : (
+                                        <select className="sf-input" value={String(cfg.url??'')} onChange={e=>setField('url',e.target.value)}>
+                                          <option value="">— Select a video —</option>
+                                          {videos.map(v=><option key={v.id} value={v.url}>{v.title??v.url}</option>)}
+                                        </select>
+                                      )}
+                                    </div>
                                     <div className="sf-group">
                                       <label className="sf-lbl">Block Height</label>
                                       <div className="bsel-row" style={{marginTop:'4px'}}>
