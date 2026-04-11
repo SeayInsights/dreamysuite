@@ -1775,23 +1775,13 @@ export default function SiteEditor() {
                                     <div className="sf-group"><label className="sf-lbl">Map Height (px)</label><input className="sf-input" type="number" value={String(cfg.height??'360')} onChange={e=>setField('height',Number(e.target.value))}/></div>
                                   </>)}
 
-                                  {block.type === 'schedule' && (<>
-                                    {scheduleEvts.map((evt,i)=>(
-                                      <div key={i} style={{border:'1px solid #e0dbd4',borderRadius:'8px',padding:'0.75rem',marginBottom:'0.75rem'}}>
-                                        <div style={{display:'flex',justifyContent:'space-between',marginBottom:'0.5rem'}}>
-                                          <span style={{fontSize:'0.72rem',fontWeight:600,color:'#9b8e85'}}>Event {i+1}</span>
-                                          <button onClick={()=>setField('events',scheduleEvts.filter((_,j)=>j!==i))} style={{background:'none',border:'none',cursor:'pointer',color:'#ccc',fontSize:'0.8rem'}}>✕</button>
-                                        </div>
-                                        {(['name','date','time','location','description'] as const).map(f=>(
-                                          <div key={f} className="sf-group" style={{marginBottom:'0.35rem'}}>
-                                            <label className="sf-lbl" style={{textTransform:'capitalize',fontSize:'0.68rem'}}>{f}</label>
-                                            <input className="sf-input" style={{padding:'5px 8px',fontSize:'0.78rem'}} value={String((evt as Record<string,unknown>)[f]??'')} onChange={e=>{const next=[...scheduleEvts];(next[i] as Record<string,unknown>)[f]=e.target.value;setField('events',next);}}/>
-                                          </div>
-                                        ))}
-                                      </div>
-                                    ))}
-                                    <button onClick={()=>setField('events',[...scheduleEvts,{name:'',date:'',time:'',location:'',description:''}])} className="btn-ghost" style={{fontSize:'0.76rem',width:'100%'}}>+ Add Event</button>
-                                  </>)}
+                                  {block.type === 'schedule' && (
+                                    <div className="sf-group" style={{ background: '#faf9f8', borderRadius: 8, padding: '0.75rem', textAlign: 'center' }}>
+                                      <p style={{ fontSize: '0.75rem', color: '#9b8e85', margin: 0, lineHeight: 1.5 }}>
+                                        Schedule events are edited in the <strong>Content</strong> tab above.
+                                      </p>
+                                    </div>
+                                  )}
 
                                   {block.type === 'photo-split' && (() => {
                                     const photo = (cfg.photo as Record<string,unknown>|undefined) ?? {};
@@ -1876,26 +1866,13 @@ export default function SiteEditor() {
                                     </>);
                                   })()}
 
-                                  {block.type === 'faq' && (<>
-                                    <div className="sf-group"><label className="sf-lbl">Intro Text</label><input className="sf-input" value={String(cfg.intro??'')} onChange={e=>setField('intro',e.target.value)}/></div>
-                                    {faqItms.map((item,i)=>(
-                                      <div key={i} style={{border:'1px solid #e0dbd4',borderRadius:'8px',padding:'0.75rem',marginBottom:'0.75rem'}}>
-                                        <div style={{display:'flex',justifyContent:'space-between',marginBottom:'0.5rem'}}>
-                                          <span style={{fontSize:'0.72rem',fontWeight:600,color:'#9b8e85'}}>Q&A {i+1}</span>
-                                          <button onClick={()=>setField('items',faqItms.filter((_,j)=>j!==i))} style={{background:'none',border:'none',cursor:'pointer',color:'#ccc',fontSize:'0.8rem'}}>✕</button>
-                                        </div>
-                                        <div className="sf-group" style={{marginBottom:'0.35rem'}}>
-                                          <label className="sf-lbl" style={{fontSize:'0.68rem'}}>Question</label>
-                                          <input className="sf-input" style={{padding:'5px 8px',fontSize:'0.78rem'}} value={item.q??''} onChange={e=>{const next=[...faqItms];next[i]={...next[i],q:e.target.value};setField('items',next);}}/>
-                                        </div>
-                                        <div className="sf-group">
-                                          <label className="sf-lbl" style={{fontSize:'0.68rem'}}>Answer</label>
-                                          <textarea className="sf-input" rows={2} style={{padding:'5px 8px',fontSize:'0.78rem',resize:'vertical'}} value={item.a??''} onChange={e=>{const next=[...faqItms];next[i]={...next[i],a:e.target.value};setField('items',next);}}/>
-                                        </div>
-                                      </div>
-                                    ))}
-                                    <button onClick={()=>setField('items',[...faqItms,{q:'',a:''}])} className="btn-ghost" style={{fontSize:'0.76rem',width:'100%'}}>+ Add Q&A</button>
-                                  </>)}
+                                  {block.type === 'faq' && (
+                                    <div className="sf-group" style={{ background: '#faf9f8', borderRadius: 8, padding: '0.75rem', textAlign: 'center' }}>
+                                      <p style={{ fontSize: '0.75rem', color: '#9b8e85', margin: 0, lineHeight: 1.5 }}>
+                                        Q&amp;A items are edited in the <strong>Content</strong> tab above.
+                                      </p>
+                                    </div>
+                                  )}
 
                                   {block.type === 'tidbits' && (<>
                                     <div className="sf-group">
@@ -1920,24 +1897,20 @@ export default function SiteEditor() {
                                         Show section title
                                       </label>
                                     </div>
-                                    {(Array.isArray(cfg.items) ? cfg.items as Record<string,unknown>[] : []).map((item,i,arr)=>(
-                                      <div key={i} style={{border:'1px solid #e0dbd4',borderRadius:'8px',padding:'0.75rem',marginBottom:'0.5rem'}}>
-                                        <div style={{display:'flex',justifyContent:'space-between',marginBottom:'0.5rem'}}>
-                                          <span style={{fontSize:'0.72rem',fontWeight:600,color:'#9b8e85'}}>Fact {i+1}</span>
-                                          <button onClick={()=>setField('items',arr.filter((_,j)=>j!==i))} style={{background:'none',border:'none',cursor:'pointer',color:'#ccc',fontSize:'0.8rem'}}>✕</button>
-                                        </div>
-                                        <div className="sf-group" style={{marginBottom:'0.35rem'}}><label className="sf-lbl" style={{fontSize:'0.68rem'}}>Icon / Emoji</label><input className="sf-input" style={{padding:'5px 8px',fontSize:'0.78rem'}} value={String(item.icon??'')} onChange={e=>{const next=[...arr];next[i]={...next[i],icon:e.target.value};setField('items',next);}}/></div>
-                                        <div className="sf-group" style={{marginBottom:'0.35rem'}}><label className="sf-lbl" style={{fontSize:'0.68rem'}}>Title</label><input className="sf-input" style={{padding:'5px 8px',fontSize:'0.78rem'}} value={String(item.title??'')} onChange={e=>{const next=[...arr];next[i]={...next[i],title:e.target.value};setField('items',next);}}/></div>
-                                        <div className="sf-group"><label className="sf-lbl" style={{fontSize:'0.68rem'}}>Body</label><textarea className="sf-input" rows={2} style={{padding:'5px 8px',fontSize:'0.78rem',resize:'vertical'}} value={String(item.body??'')} onChange={e=>{const next=[...arr];next[i]={...next[i],body:e.target.value};setField('items',next);}}/></div>
-                                      </div>
-                                    ))}
-                                    <button onClick={()=>setField('items',[...(Array.isArray(cfg.items)?cfg.items:[]),{icon:'✨',title:'',body:''}])} className="btn-ghost" style={{fontSize:'0.76rem',width:'100%'}}>+ Add Fact</button>
+                                    <div style={{ background: '#faf9f8', borderRadius: 8, padding: '0.75rem', textAlign: 'center', marginTop: '0.5rem' }}>
+                                      <p style={{ fontSize: '0.75rem', color: '#9b8e85', margin: 0, lineHeight: 1.5 }}>
+                                        Fun facts are edited in the <strong>Content</strong> tab above.
+                                      </p>
+                                    </div>
                                   </>)}
 
                                   {block.type === 'travel-section' && (<>
                                     <div className="sf-group"><label className="sf-lbl">Section Title</label><input className="sf-input" value={String(cfg.title??'')} onChange={e=>setField('title',e.target.value)} placeholder="Getting There"/></div>
-                                    <div className="sf-group"><label className="sf-lbl">Intro Text</label><textarea className="sf-input" rows={3} value={String(cfg.intro??'')} onChange={e=>setField('intro',e.target.value)} style={{resize:'vertical'}}/></div>
-                                    <p style={{fontSize:'0.7rem',color:'#9b8e85',margin:'0 0 0.5rem',lineHeight:1.4}}>Travel details (flights, hotels, visa info) are edited in the Content tab.</p>
+                                    <div style={{ background: '#faf9f8', borderRadius: 8, padding: '0.75rem', textAlign: 'center', marginTop: '0.5rem' }}>
+                                      <p style={{ fontSize: '0.75rem', color: '#9b8e85', margin: 0, lineHeight: 1.5 }}>
+                                        Travel items are edited in the <strong>Content</strong> tab above.
+                                      </p>
+                                    </div>
                                   </>)}
 
                                   {/* APPEARANCE section */}
