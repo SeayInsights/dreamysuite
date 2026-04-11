@@ -1038,9 +1038,21 @@ function renderBlock(
 
     case "header": {
       const text = cnt("title", "title", cnt("heading", "heading", cnt("text", "text", "Section")));
+      const tSize = cfg.titleSize as string | undefined;
+      const tAlign = cfg.titleAlign as string | undefined;
+      const tBold = !!cfg.titleBold;
+      const tItalic = !!cfg.titleItalic;
+      const tUnder = !!cfg.titleUnderline;
+      const titleStyle = [
+        tSize ? `font-size:${escHtml(tSize)}` : "",
+        tAlign ? `text-align:${escHtml(tAlign)}` : "",
+        tBold ? "font-weight:700" : "",
+        tItalic ? "font-style:italic" : "",
+        tUnder ? "text-decoration:underline" : "",
+      ].filter(Boolean).join(";");
       return `
         <section class="block block-header" data-block-id="${escHtml(block.id)}" data-block-type="${escHtml(block.type)}">
-          <h2 class="section-heading">${escHtml(text)}</h2>
+          <h2 class="section-heading"${titleStyle ? ` style="${titleStyle}"` : ""}>${escHtml(text)}</h2>
           <div class="section-rule" aria-hidden="true"></div>
         </section>`;
     }
@@ -1054,10 +1066,30 @@ function renderBlock(
       const body = contentKey
         ? String(pageContent?.[contentKey] ?? cfg.body ?? "")
         : String(cfg.body ?? cfg.text ?? cfg.content ?? "");
+      // Heading style
+      const hSize = cfg.headingSize as string | undefined;
+      const hAlign = cfg.headingAlign as string | undefined;
+      const hStyle = [
+        hSize ? `font-size:${escHtml(hSize)}` : "",
+        hAlign ? `text-align:${escHtml(hAlign)}` : "",
+        cfg.headingBold ? "font-weight:700" : "",
+        cfg.headingItalic ? "font-style:italic" : "",
+        cfg.headingUnderline ? "text-decoration:underline" : "",
+      ].filter(Boolean).join(";");
+      // Body style
+      const bSize = cfg.bodySize as string | undefined;
+      const bAlign = cfg.bodyAlign as string | undefined;
+      const bStyle = [
+        bSize ? `font-size:${escHtml(bSize)}` : "",
+        bAlign ? `text-align:${escHtml(bAlign)}` : "",
+        cfg.bodyBold ? "font-weight:700" : "",
+        cfg.bodyItalic ? "font-style:italic" : "",
+        cfg.bodyUnderline ? "text-decoration:underline" : "",
+      ].filter(Boolean).join(";");
       return `
         <section class="block block-text" data-block-id="${escHtml(block.id)}" data-block-type="${escHtml(block.type)}">
-          ${heading ? `<h2 class="section-heading"${contentKey ? ` data-lang-field="${escHtml(contentKey)}_heading"` : ""}>${escHtml(heading)}</h2><div class="section-rule" aria-hidden="true"></div>` : ""}
-          <div class="text-body">
+          ${heading ? `<h2 class="section-heading"${hStyle ? ` style="${hStyle}"` : ""}${contentKey ? ` data-lang-field="${escHtml(contentKey)}_heading"` : ""}>${escHtml(heading)}</h2><div class="section-rule" aria-hidden="true"></div>` : ""}
+          <div class="text-body"${bStyle ? ` style="${bStyle}"` : ""}>
             ${body ? `<p${contentKey ? ` data-lang-field="${escHtml(contentKey)}"` : ""}>${escHtml(body)}</p>` : placeholder("Story text will appear here once added.")}
           </div>
         </section>`;
@@ -1181,12 +1213,23 @@ function renderBlock(
     case "images": {
       const urls = cfg.urls as string[] | undefined;
       const imageSlot = cfg.imageSlot as string | undefined;
+      const focusX = escHtml(String(cfg.imageFocusX ?? "center"));
+      const focusY = escHtml(String(cfg.imageFocusY ?? "center"));
+      const objPos = `${focusX} ${focusY}`;
+      const phRaw = Number(cfg.photoHeight);
+      const photoH = phRaw > 0 ? `${phRaw}px` : null;
+      const imgStyle = [
+        `object-position:${objPos}`,
+        photoH ? `height:${photoH}` : "",
+      ].filter(Boolean).join(";");
+      const offsetXRaw = Number(cfg.galleryOffsetX ?? 0);
+      const gridStyle = offsetXRaw !== 0 ? `transform:translateX(${offsetXRaw}px)` : "";
       return `
         <section class="block block-images" aria-label="Photo gallery" data-block-id="${escHtml(block.id)}" data-block-type="${escHtml(block.type)}">
           ${
             urls && urls.length > 0
-              ? `<div class="image-grid">
-                   ${urls.map((u, i) => `<img src="${escHtml(u)}" alt="Wedding photo ${i + 1}" loading="lazy" class="gallery-img" />`).join("")}
+              ? `<div class="image-grid"${gridStyle ? ` style="${gridStyle}"` : ""}>
+                   ${urls.map((u, i) => `<img src="${escHtml(u)}" alt="Wedding photo ${i + 1}" loading="lazy" class="gallery-img" style="${imgStyle}" />`).join("")}
                  </div>`
               : placeholder(imageSlot ? `Photos for "${escHtml(imageSlot)}" will appear here.` : "Photos will appear here once uploaded.")
           }
@@ -1394,10 +1437,12 @@ function renderBlock(
       const cropVal = escHtml(String(photo.crop ?? "center"));
       const wPx = photo.widthPx ? `${Number(photo.widthPx)}px` : "auto";
       const hPx = photo.heightPx ? `${Number(photo.heightPx)}px` : "auto";
+      const offsetXRaw = Number(photo.offsetX ?? 0);
+      const photoContainerStyle = `flex-shrink:0;${offsetXRaw !== 0 ? `transform:translateX(${offsetXRaw}px);` : ""}`;
       const components = (cfg.components as Array<Record<string, unknown>>) ?? [];
 
       const imgEl = photoUrl
-        ? `<div class="ps-photo" style="flex-shrink:0;">
+        ? `<div class="ps-photo" style="${photoContainerStyle}">
              <img src="${escHtml(photoUrl)}" alt="Photo" loading="lazy"
                style="width:${wPx};height:${hPx};max-width:100%;object-fit:cover;object-position:${cropVal};border-radius:8px;" />
            </div>`
@@ -1405,9 +1450,29 @@ function renderBlock(
 
       const compsHtml = components.map((c) => {
         if (c.type === "text") {
-          const h = c.heading ? `<h3 style="margin:0 0 0.6rem;">${escHtml(String(c.heading))}</h3>` : "";
+          const hSize = c.headingSize as string | undefined;
+          const hAlign = c.headingAlign as string | undefined;
+          const hStyleParts = [
+            "margin:0 0 0.6rem",
+            hSize ? `font-size:${escHtml(hSize)}` : "",
+            hAlign ? `text-align:${escHtml(hAlign)}` : "",
+            c.headingBold ? "font-weight:700" : "",
+            c.headingItalic ? "font-style:italic" : "",
+            c.headingUnderline ? "text-decoration:underline" : "",
+          ].filter(Boolean).join(";");
+          const bSize = c.bodySize as string | undefined;
+          const bAlign = c.bodyAlign as string | undefined;
+          const bStyleParts = [
+            "margin:0;line-height:1.75",
+            bSize ? `font-size:${escHtml(bSize)}` : "",
+            bAlign ? `text-align:${escHtml(bAlign)}` : "",
+            c.bodyBold ? "font-weight:700" : "",
+            c.bodyItalic ? "font-style:italic" : "",
+            c.bodyUnderline ? "text-decoration:underline" : "",
+          ].filter(Boolean).join(";");
+          const h = c.heading ? `<h3 style="${hStyleParts}">${escHtml(String(c.heading))}</h3>` : "";
           const b = c.body
-            ? `<p style="margin:0;line-height:1.75;">${escHtml(String(c.body)).replace(/\n\n/g, "</p><p style='margin:0.8rem 0 0;line-height:1.75;'>").replace(/\n/g, "<br>")}</p>`
+            ? `<p style="${bStyleParts}">${escHtml(String(c.body)).replace(/\n\n/g, `</p><p style="${bStyleParts}">`).replace(/\n/g, "<br>")}</p>`
             : "";
           return `<div class="ps-comp-text">${h}${b}</div>`;
         }

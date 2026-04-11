@@ -1626,6 +1626,53 @@ export default function SiteEditor() {
     return BLOCK_TYPES.find((b) => b.type === type)?.label ?? type;
   }
 
+  // ── TextStyleRow ─────────────────────────────────────────────────────────────
+  function TextStyleRow({ prefix, cfg: c, setF }: {
+    prefix: 'heading' | 'body' | 'title';
+    cfg: Record<string,unknown>;
+    setF: (k: string, v: unknown) => void;
+  }) {
+    const label = prefix === 'heading' ? 'Heading' : prefix === 'body' ? 'Body' : 'Title';
+    const sizes = prefix === 'body'
+      ? ['0.8rem','0.875rem','1rem','1.125rem','1.25rem']
+      : ['0.875rem','1rem','1.125rem','1.25rem','1.5rem','1.75rem','2rem'];
+    const sk = `${prefix}Size`, ak = `${prefix}Align`, bk = `${prefix}Bold`, ik = `${prefix}Italic`, uk = `${prefix}Underline`;
+    return (
+      <div style={{margin:'2px 0 8px',padding:'6px 8px',background:'#faf9f8',borderRadius:'6px',border:'1px solid #f0ede8'}}>
+        <div style={{fontSize:'0.64rem',fontWeight:700,textTransform:'uppercase',letterSpacing:'0.07em',color:'#b0a99f',marginBottom:'5px'}}>{label} Style</div>
+        <div style={{display:'flex',gap:'4px',flexWrap:'wrap',alignItems:'center'}}>
+          <select className="sf-input" style={{width:'90px',fontSize:'0.73rem',padding:'3px 5px',height:'26px'}}
+            value={String(c[sk]??'')} onChange={e=>setF(sk,e.target.value||null)}>
+            <option value="">Default</option>
+            {sizes.map(s=><option key={s} value={s}>{s}</option>)}
+          </select>
+          {(['left','center','right'] as const).map(a=>(
+            <button key={a} onClick={()=>setF(ak,c[ak]===a?null:a)}
+              style={{padding:'2px 5px',borderRadius:'4px',border:'1.5px solid',height:'26px',minWidth:'28px',
+                borderColor:c[ak]===a?'#0d9488':'#e0dbd4',
+                background:c[ak]===a?'#0d9488':'#fff',
+                color:c[ak]===a?'#fff':'#6b5e56',fontSize:'0.72rem',cursor:'pointer'}}>
+              {a==='left'?'L':a==='center'?'C':'R'}
+            </button>
+          ))}
+          {([['B',bk],['I',ik],['U',uk]] as [string,string][]).map(([lbl,key])=>(
+            <button key={key} onClick={()=>setF(key,!c[key])}
+              style={{padding:'2px 7px',borderRadius:'4px',border:'1.5px solid',height:'26px',
+                borderColor:c[key]?'#0d9488':'#e0dbd4',
+                background:c[key]?'#0d9488':'#fff',
+                color:c[key]?'#fff':'#6b5e56',
+                fontSize:'0.82rem',fontWeight:lbl==='B'?700:400,
+                fontStyle:lbl==='I'?'italic':'normal',
+                textDecoration:lbl==='U'?'underline':'none',
+                cursor:'pointer'}}>
+              {lbl}
+            </button>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   // ── Render ───────────────────────────────────────────────────────────────────
 
   return (
@@ -1846,13 +1893,16 @@ export default function SiteEditor() {
                                     <p style={{ fontSize: "0.72rem", color: "#9b8e85", margin: "0.25rem 0 0.5rem", lineHeight: 1.5 }}>Couple names, date &amp; location come from Site Settings.</p>
                                   )}
 
-                                  {block.type === 'header' && (
+                                  {block.type === 'header' && (<>
                                     <div className="sf-group"><label className="sf-lbl">Page Title</label><input className="sf-input" value={String(cfg.title??'')} onChange={e=>setField('title',e.target.value)} placeholder="Our Story"/></div>
-                                  )}
+                                    <TextStyleRow prefix="title" cfg={cfg} setF={setField} />
+                                  </>)}
 
                                   {block.type === 'text' && (<>
                                     <div className="sf-group"><label className="sf-lbl">Heading</label><input className="sf-input" value={String(cfg.heading??'')} onChange={e=>setField('heading',e.target.value)} placeholder="Section heading…"/></div>
+                                    <TextStyleRow prefix="heading" cfg={cfg} setF={setField} />
                                     <div className="sf-group"><label className="sf-lbl">Body</label><textarea className="sf-input" rows={4} value={String(cfg.body??'')} onChange={e=>setField('body',e.target.value)} style={{resize:'vertical'}}/></div>
+                                    <TextStyleRow prefix="body" cfg={cfg} setF={setField} />
                                     <div className="sf-group"><label className="sf-lbl">Content Key <span style={{fontWeight:400,color:'#b0a99f'}}>(advanced)</span></label><input className="sf-input" value={String(cfg.contentKey??'')} onChange={e=>setField('contentKey',e.target.value)} placeholder="story / home-welcome / registry…"/></div>
                                   </>)}
 
@@ -2031,6 +2081,42 @@ export default function SiteEditor() {
                                         </div>
                                       </div>
                                     </div>
+                                    <div className="sf-group">
+                                      <label className="sf-lbl">Image Focus Area</label>
+                                      <div style={{fontSize:'0.68rem',color:'#9b8e85',marginBottom:'5px'}}>Where photos crop when space is limited</div>
+                                      <div style={{display:'flex',gap:'3px',marginBottom:'4px'}}>
+                                        {(['top','center','bottom'] as const).map(v=>(
+                                          <button key={v} onClick={()=>setField('imageFocusY',cfg.imageFocusY===v?null:v)}
+                                            style={{flex:1,padding:'3px',borderRadius:'4px',border:'1.5px solid',fontSize:'0.72rem',cursor:'pointer',textTransform:'capitalize',
+                                              borderColor:(cfg.imageFocusY??'center')===v?'#0d9488':'#e0dbd4',
+                                              background:(cfg.imageFocusY??'center')===v?'#0d9488':'#fff',
+                                              color:(cfg.imageFocusY??'center')===v?'#fff':'#6b5e56'}}>{v}</button>
+                                        ))}
+                                      </div>
+                                      <div style={{display:'flex',gap:'3px'}}>
+                                        {(['left','center','right'] as const).map(h=>(
+                                          <button key={h} onClick={()=>setField('imageFocusX',cfg.imageFocusX===h?null:h)}
+                                            style={{flex:1,padding:'3px',borderRadius:'4px',border:'1.5px solid',fontSize:'0.72rem',cursor:'pointer',textTransform:'capitalize',
+                                              borderColor:(cfg.imageFocusX??'center')===h?'#0d9488':'#e0dbd4',
+                                              background:(cfg.imageFocusX??'center')===h?'#0d9488':'#fff',
+                                              color:(cfg.imageFocusX??'center')===h?'#fff':'#6b5e56'}}>{h}</button>
+                                        ))}
+                                      </div>
+                                    </div>
+                                    <div className="sf-group">
+                                      <label className="sf-lbl">Photo Height (px)</label>
+                                      <div style={{display:'flex',alignItems:'center',gap:'8px'}}>
+                                        <input type="number" className="sf-input" style={{width:'80px'}} value={String(cfg.photoHeight??'')} onChange={e=>setField('photoHeight',e.target.value?Number(e.target.value):null)} placeholder="Auto" />
+                                        <span style={{fontSize:'0.72rem',color:'#9b8e85'}}>Leave blank for auto</span>
+                                      </div>
+                                    </div>
+                                    <div className="sf-group">
+                                      <label className="sf-lbl">Horizontal Offset (px)</label>
+                                      <div style={{display:'flex',alignItems:'center',gap:'8px'}}>
+                                        <input type="number" className="sf-input" style={{width:'80px'}} value={String(cfg.galleryOffsetX??0)} onChange={e=>setField('galleryOffsetX',Number(e.target.value))} />
+                                        <span style={{fontSize:'0.72rem',color:'#9b8e85'}}>+ right, − left</span>
+                                      </div>
+                                    </div>
                                   </>)}
 
                                   {block.type === 'youtube' && (<>
@@ -2134,6 +2220,13 @@ export default function SiteEditor() {
                                         </div>
                                       </div>
                                       <div className="sf-group">
+                                        <label className="sf-lbl">Photo X Offset (px)</label>
+                                        <div style={{display:'flex',alignItems:'center',gap:'8px'}}>
+                                          <input type="number" className="sf-input" style={{width:'80px'}} value={String(photo.offsetX??0)} onChange={e=>setPhoto('offsetX',Number(e.target.value))} />
+                                          <span style={{fontSize:'0.72rem',color:'#9b8e85'}}>+ right, − left</span>
+                                        </div>
+                                      </div>
+                                      <div className="sf-group">
                                         <span className="sf-lbl">Photo Side</span>
                                         <div style={{display:'flex',gap:'4px'}}>
                                           {(['left','right'] as const).map(s=>(
@@ -2148,10 +2241,12 @@ export default function SiteEditor() {
                                             <span style={{fontSize:'0.7rem',fontWeight:600,color:'#9b8e85',textTransform:'capitalize'}}>{String(c.type??'Component')}</span>
                                             <button onClick={()=>setField('components',comps.filter((_,j)=>j!==ci))} style={{background:'none',border:'none',cursor:'pointer',color:'#ccc',fontSize:'0.8rem'}}>×</button>
                                           </div>
-                                          {c.type==='text'&&(<>
-                                            <div className="sf-group" style={{marginBottom:'0.35rem'}}><label className="sf-lbl" style={{fontSize:'0.68rem'}}>Heading (optional)</label><input className="sf-input" style={{padding:'5px 8px',fontSize:'0.78rem'}} value={String(c.heading??'')} onChange={e=>{const n=[...comps];n[ci]={...n[ci],heading:e.target.value};setField('components',n);}}/></div>
-                                            <div className="sf-group"><label className="sf-lbl" style={{fontSize:'0.68rem'}}>Body</label><textarea className="sf-input" rows={3} style={{padding:'5px 8px',fontSize:'0.78rem',resize:'vertical'}} value={String(c.body??'')} onChange={e=>{const n=[...comps];n[ci]={...n[ci],body:e.target.value};setField('components',n);}}/></div>
-                                          </>)}
+                                          {c.type==='text'&&(()=>{const setC=(k:string,v:unknown)=>{const n=[...comps];n[ci]={...n[ci],[k]:v};setField('components',n);};return(<>
+                                            <div className="sf-group" style={{marginBottom:'0.35rem'}}><label className="sf-lbl" style={{fontSize:'0.68rem'}}>Heading (optional)</label><input className="sf-input" style={{padding:'5px 8px',fontSize:'0.78rem'}} value={String(c.heading??'')} onChange={e=>setC('heading',e.target.value)}/></div>
+                                            <TextStyleRow prefix="heading" cfg={c} setF={setC} />
+                                            <div className="sf-group"><label className="sf-lbl" style={{fontSize:'0.68rem'}}>Body</label><textarea className="sf-input" rows={3} style={{padding:'5px 8px',fontSize:'0.78rem',resize:'vertical'}} value={String(c.body??'')} onChange={e=>setC('body',e.target.value)}/></div>
+                                            <TextStyleRow prefix="body" cfg={c} setF={setC} />
+                                          </>);})()}
                                         </div>
                                       ))}
                                       <div style={{display:'flex',gap:'6px',alignItems:'center'}}>
@@ -3062,8 +3157,15 @@ export default function SiteEditor() {
                     <p className="setup-section-desc">Share your site link or print the QR code on invitations and displays.</p>
                   </div>
 
+                  {/* Live status notice */}
+                  {!settingsForm.isLive && (
+                    <div style={{ background: "#fffbeb", border: "1px solid #fde68a", borderRadius: "8px", padding: "0.6rem 0.85rem", marginBottom: "1rem", fontSize: "0.78rem", color: "#92400e", lineHeight: 1.5 }}>
+                      <strong>Draft mode</strong> — only you can see this site right now. Go to Settings → Access to publish it.
+                    </div>
+                  )}
+
                   {/* URL row */}
-                  <div style={{ display: "flex", gap: "8px", alignItems: "center", marginBottom: "1.25rem", flexWrap: "wrap" }}>
+                  <div style={{ display: "flex", gap: "8px", alignItems: "center", marginBottom: "0.75rem", flexWrap: "wrap" }}>
                     <div style={{
                       flex: 1, minWidth: 0,
                       background: "#f5f0eb", borderRadius: "8px",
@@ -3082,6 +3184,33 @@ export default function SiteEditor() {
                     >
                       {copyLinkFeedback ? "Copied!" : "Copy Link"}
                     </button>
+                  </div>
+
+                  {/* Action buttons row */}
+                  <div style={{ display: "flex", gap: "8px", marginBottom: "1.25rem", flexWrap: "wrap" }}>
+                    <a
+                      href={publicUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="btn-ghost"
+                      style={{ fontSize: "0.82rem", textDecoration: "none" }}
+                    >
+                      Open Site ↗
+                    </a>
+                    {"share" in navigator && (
+                      <button
+                        className="btn-ghost"
+                        style={{ fontSize: "0.82rem" }}
+                        onClick={() => {
+                          (navigator as Navigator & { share: (d: object) => Promise<void> }).share({
+                            title: site.name ?? "Our Wedding Site",
+                            url: publicUrl,
+                          }).catch(() => {/* dismissed */});
+                        }}
+                      >
+                        Share…
+                      </button>
+                    )}
                   </div>
 
                   {/* QR image + download */}
@@ -3720,14 +3849,17 @@ export default function SiteEditor() {
               )}
 
               {/* header */}
-              {t === "header" && (
+              {t === "header" && (<>
                 <div className="sf-group"><label className="sf-lbl">Page Title</label><input className="sf-input" value={String(cfg.title ?? "")} onChange={e => setField("title", e.target.value)} placeholder="Our Story" /></div>
-              )}
+                <TextStyleRow prefix="title" cfg={cfg} setF={setField} />
+              </>)}
 
               {/* text */}
               {t === "text" && (<>
                 <div className="sf-group"><label className="sf-lbl">Heading</label><input className="sf-input" value={String(cfg.heading ?? "")} onChange={e => setField("heading", e.target.value)} placeholder="Section heading…" /></div>
+                <TextStyleRow prefix="heading" cfg={cfg} setF={setField} />
                 <div className="sf-group"><label className="sf-lbl">Body</label><textarea className="sf-input" rows={5} value={String(cfg.body ?? "")} onChange={e => setField("body", e.target.value)} placeholder="Your text here…" style={{ resize: "vertical" }} /></div>
+                <TextStyleRow prefix="body" cfg={cfg} setF={setField} />
                 <div className="sf-group"><label className="sf-lbl">Content Key <span style={{ fontWeight: 400, color: "#b0a99f" }}>(advanced)</span></label><input className="sf-input" value={String(cfg.contentKey ?? "")} onChange={e => setField("contentKey", e.target.value)} placeholder="story / home-welcome / accommodations / registry" /></div>
               </>)}
 
@@ -3759,7 +3891,7 @@ export default function SiteEditor() {
               </>)}
 
               {/* images */}
-              {t === "images" && (
+              {t === "images" && (<>
                 <div className="sf-group">
                   <label className="sf-lbl">Photos</label>
                   <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(64px,1fr))',gap:'5px',marginBottom:'6px'}}>
@@ -3777,7 +3909,43 @@ export default function SiteEditor() {
                       setPhotoPickerOpen(true);
                     }}>+ Add Photo from Media</button>
                 </div>
-              )}
+                <div className="sf-group">
+                  <label className="sf-lbl">Image Focus Area</label>
+                  <div style={{fontSize:'0.68rem',color:'#9b8e85',marginBottom:'5px'}}>Where photos crop when space is limited</div>
+                  <div style={{display:'flex',gap:'3px',marginBottom:'4px'}}>
+                    {(['top','center','bottom'] as const).map(v=>(
+                      <button key={v} onClick={()=>setField('imageFocusY',cfg.imageFocusY===v?null:v)}
+                        style={{flex:1,padding:'3px 0',borderRadius:'4px',border:'1.5px solid',fontSize:'0.72rem',cursor:'pointer',textTransform:'capitalize',
+                          borderColor:(cfg.imageFocusY??'center')===v?'#0d9488':'#e0dbd4',
+                          background:(cfg.imageFocusY??'center')===v?'#0d9488':'#fff',
+                          color:(cfg.imageFocusY??'center')===v?'#fff':'#6b5e56'}}>{v}</button>
+                    ))}
+                  </div>
+                  <div style={{display:'flex',gap:'3px'}}>
+                    {(['left','center','right'] as const).map(h=>(
+                      <button key={h} onClick={()=>setField('imageFocusX',cfg.imageFocusX===h?null:h)}
+                        style={{flex:1,padding:'3px 0',borderRadius:'4px',border:'1.5px solid',fontSize:'0.72rem',cursor:'pointer',textTransform:'capitalize',
+                          borderColor:(cfg.imageFocusX??'center')===h?'#0d9488':'#e0dbd4',
+                          background:(cfg.imageFocusX??'center')===h?'#0d9488':'#fff',
+                          color:(cfg.imageFocusX??'center')===h?'#fff':'#6b5e56'}}>{h}</button>
+                    ))}
+                  </div>
+                </div>
+                <div className="sf-group">
+                  <label className="sf-lbl">Photo Height (px)</label>
+                  <div style={{display:'flex',alignItems:'center',gap:'8px'}}>
+                    <input type="number" className="sf-input" style={{width:'80px'}} value={String(cfg.photoHeight??'')} onChange={e=>setField('photoHeight',e.target.value?Number(e.target.value):null)} placeholder="Auto" />
+                    <span style={{fontSize:'0.72rem',color:'#9b8e85'}}>Leave blank for auto</span>
+                  </div>
+                </div>
+                <div className="sf-group">
+                  <label className="sf-lbl">Horizontal Offset (px)</label>
+                  <div style={{display:'flex',alignItems:'center',gap:'8px'}}>
+                    <input type="number" className="sf-input" style={{width:'80px'}} value={String(cfg.galleryOffsetX??0)} onChange={e=>setField('galleryOffsetX',Number(e.target.value))} />
+                    <span style={{fontSize:'0.72rem',color:'#9b8e85'}}>+ right, − left</span>
+                  </div>
+                </div>
+              </>)}
 
               {/* youtube */}
               {t === "youtube" && (<>
@@ -3915,6 +4083,13 @@ export default function SiteEditor() {
                     </div>
                   </div>
                   <div className="sf-group">
+                    <label className="sf-lbl">Photo X Offset (px)</label>
+                    <div style={{display:"flex",alignItems:"center",gap:"8px"}}>
+                      <input type="number" className="sf-input" style={{width:"80px"}} value={String(photo.offsetX??0)} onChange={e=>setPhoto("offsetX",Number(e.target.value))} />
+                      <span style={{fontSize:"0.72rem",color:"#9b8e85"}}>+ right, − left</span>
+                    </div>
+                  </div>
+                  <div className="sf-group">
                     <span className="sf-lbl">Photo Side</span>
                     <div style={{display:"flex",gap:"4px"}}>
                       {(["left","right"] as const).map(s=>(
@@ -3929,10 +4104,12 @@ export default function SiteEditor() {
                         <span style={{fontSize:"0.72rem",fontWeight:600,color:"#9b8e85",textTransform:"capitalize"}}>{String(c.type??"Component")}</span>
                         <button onClick={()=>setField("components",comps.filter((_,j)=>j!==ci))} style={{background:"none",border:"none",cursor:"pointer",color:"#ccc",fontSize:"0.8rem"}}>×</button>
                       </div>
-                      {c.type==="text"&&(<>
-                        <div className="sf-group" style={{marginBottom:"0.35rem"}}><label className="sf-lbl" style={{fontSize:"0.68rem"}}>Heading (optional)</label><input className="sf-input" value={String(c.heading??"")} onChange={e=>{const n=[...comps];n[ci]={...n[ci],heading:e.target.value};setField("components",n);}}/></div>
-                        <div className="sf-group"><label className="sf-lbl" style={{fontSize:"0.68rem"}}>Body</label><textarea className="sf-input" rows={4} style={{resize:"vertical"}} value={String(c.body??"")} onChange={e=>{const n=[...comps];n[ci]={...n[ci],body:e.target.value};setField("components",n);}}/></div>
-                      </>)}
+                      {c.type==="text"&&(()=>{const setC=(k:string,v:unknown)=>{const n=[...comps];n[ci]={...n[ci],[k]:v};setField("components",n);};return(<>
+                        <div className="sf-group" style={{marginBottom:"0.35rem"}}><label className="sf-lbl" style={{fontSize:"0.68rem"}}>Heading (optional)</label><input className="sf-input" value={String(c.heading??"")} onChange={e=>setC("heading",e.target.value)}/></div>
+                        <TextStyleRow prefix="heading" cfg={c} setF={setC} />
+                        <div className="sf-group"><label className="sf-lbl" style={{fontSize:"0.68rem"}}>Body</label><textarea className="sf-input" rows={4} style={{resize:"vertical"}} value={String(c.body??"")} onChange={e=>setC("body",e.target.value)}/></div>
+                        <TextStyleRow prefix="body" cfg={c} setF={setC} />
+                      </>);})()}
                     </div>
                   ))}
                   <div style={{display:"flex",gap:"6px",alignItems:"center",marginBottom:"0.5rem"}}>
