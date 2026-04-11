@@ -945,55 +945,48 @@ function renderBlock(
     }
 
     case "schedule": {
-      const items = cfg.items as
-        | Array<{ time?: string; title?: string; description?: string }>
-        | undefined;
+      const events = Array.isArray(pageContent?.events)
+        ? (pageContent.events as Array<{ name?: string; date?: string; time?: string; location?: string; description?: string }>)
+        : [];
       return `
-        <section class="block block-schedule" aria-label="Schedule" data-block-id="${escHtml(block.id)}" data-block-type="${escHtml(block.type)}">
-          <h2 class="section-heading">The Day</h2>
-          <div class="section-rule" aria-hidden="true"></div>
-          ${
-            items && items.length > 0
-              ? `<ol class="timeline">
-                   ${items
-                     .map(
-                       (item) => `
-                     <li class="timeline-item">
-                       ${item.time ? `<span class="timeline-time">${escHtml(item.time)}</span>` : ""}
-                       <div class="timeline-content">
-                         ${item.title ? `<strong>${escHtml(item.title)}</strong>` : ""}
-                         ${item.description ? `<p>${escHtml(item.description)}</p>` : ""}
-                       </div>
-                     </li>`
-                     )
-                     .join("")}
-                 </ol>`
-              : placeholder("The wedding day schedule will appear here.")
-          }
-        </section>`;
+    <section class="block block-schedule" aria-label="Schedule" data-block-id="${escHtml(block.id)}" data-block-type="${escHtml(block.type)}">
+      <h2 class="section-heading">The Day</h2>
+      <div class="section-rule" aria-hidden="true"></div>
+      ${events.length > 0
+        ? `<ol class="timeline">
+             ${events.map(ev => `
+               <li class="timeline-item">
+                 ${ev.time ? `<span class="timeline-time">${escHtml(ev.time)}</span>` : ""}
+                 <div class="timeline-content">
+                   ${ev.name ? `<strong>${escHtml(ev.name)}</strong>` : ""}
+                   ${ev.date ? `<p style="font-size:0.85em;color:var(--muted);margin:0.2rem 0 0;">${escHtml(ev.date)}</p>` : ""}
+                   ${ev.location ? `<p style="font-size:0.85em;color:var(--muted);margin:0.2rem 0 0;">📍 ${escHtml(ev.location)}</p>` : ""}
+                   ${ev.description ? `<p>${escHtml(ev.description)}</p>` : ""}
+                 </div>
+               </li>`).join("")}
+           </ol>`
+        : placeholder("The wedding day schedule will appear here once added in the Content tab.")
+      }
+    </section>`;
     }
 
     case "faq": {
-      const items = cfg.items as
-        | Array<{ question?: string; answer?: string }>
-        | undefined;
+      const questions = Array.isArray(pageContent?.questions)
+        ? (pageContent.questions as Array<{ q?: string; a?: string }>)
+        : [];
       return `
-        <section class="block block-faq" aria-label="Frequently asked questions" data-block-id="${escHtml(block.id)}" data-block-type="${escHtml(block.type)}">
-          <h2 class="section-heading">Questions &amp; Answers</h2>
-          <div class="section-rule" aria-hidden="true"></div>
-          ${
-            items && items.length > 0
-              ? `<dl class="faq-list">
-                   ${items
-                     .map(
-                       (item) =>
-                         `${item.question ? `<dt class="faq-question">${escHtml(item.question)}</dt>` : ""}${item.answer ? `<dd class="faq-answer">${escHtml(item.answer)}</dd>` : ""}`
-                     )
-                     .join("")}
-                 </dl>`
-              : placeholder("Frequently asked questions will appear here.")
-          }
-        </section>`;
+    <section class="block block-faq" aria-label="Frequently asked questions" data-block-id="${escHtml(block.id)}" data-block-type="${escHtml(block.type)}">
+      <h2 class="section-heading">Questions &amp; Answers</h2>
+      <div class="section-rule" aria-hidden="true"></div>
+      ${questions.length > 0
+        ? `<dl class="faq-list">
+             ${questions.map(item =>
+               `${item.q ? `<dt class="faq-question">${escHtml(item.q)}</dt>` : ""}${item.a ? `<dd class="faq-answer">${escHtml(item.a)}</dd>` : ""}`
+             ).join("")}
+           </dl>`
+        : placeholder("Frequently asked questions will appear here once added in the Content tab.")
+      }
+    </section>`;
     }
 
     case "rsvp": {
@@ -1193,39 +1186,54 @@ function renderBlock(
     }
 
     case "tidbits": {
-      const items = cfg.items as Array<{ icon?: string; title?: string; body?: string }> | undefined;
+      const items = Array.isArray(pageContent?.tidbits)
+        ? (pageContent.tidbits as Array<{ icon?: string; title?: string; body?: string }>)
+        : [];
       const cols = String(cfg.columns ?? "auto");
       const colsCss = cols === "2" ? "repeat(2,1fr)" : cols === "3" ? "repeat(3,1fr)" : "repeat(auto-fill,minmax(200px,1fr))";
       const cardStyle = String(cfg.cardStyle ?? "card");
       const cardCss = cardStyle === "flat"
         ? "padding:1.25rem;text-align:center;"
         : cardStyle === "bordered"
-        ? `border:1px solid var(--border);border-radius:12px;padding:1.25rem;text-align:center;`
-        : `background:#fff;border:1px solid var(--border);border-radius:12px;padding:1.25rem;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,0.05);`;
+        ? "border:1px solid var(--border);border-radius:12px;padding:1.25rem;text-align:center;"
+        : "background:#fff;border:1px solid var(--border);border-radius:12px;padding:1.25rem;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,0.05);";
       return `
-        <section class="block block-tidbits" aria-label="Fun facts" data-block-id="${escHtml(block.id)}" data-block-type="${escHtml(block.type)}">
-          ${cfg.showTitle !== false ? `<h2 class="section-heading">Fun Facts</h2><div class="section-rule" aria-hidden="true"></div>` : ""}
-          ${items && items.length > 0
-            ? `<div style="display:grid;grid-template-columns:${colsCss};gap:1rem;">
-                 ${items.map(it => `<div style="${cardCss}">
-                   ${it.icon ? `<div style="font-size:2rem;margin-bottom:0.5rem;">${escHtml(it.icon)}</div>` : ""}
-                   ${it.title ? `<strong style="display:block;margin-bottom:0.375rem;">${escHtml(it.title)}</strong>` : ""}
-                   ${it.body ? `<p style="color:var(--muted);font-size:0.9375rem;margin:0;">${escHtml(it.body)}</p>` : ""}
-                 </div>`).join("")}
-               </div>`
-            : placeholder("Fun facts will appear here once added.")}
-        </section>`;
+    <section class="block block-tidbits" aria-label="Fun facts" data-block-id="${escHtml(block.id)}" data-block-type="${escHtml(block.type)}">
+      ${cfg.showTitle !== false ? `<h2 class="section-heading">Fun Facts</h2><div class="section-rule" aria-hidden="true"></div>` : ""}
+      ${items.length > 0
+        ? `<div style="display:grid;grid-template-columns:${colsCss};gap:1rem;">
+             ${items.map(it => `<div style="${cardCss}">
+               ${it.icon ? `<div style="font-size:2rem;margin-bottom:0.5rem;">${escHtml(it.icon)}</div>` : ""}
+               ${it.title ? `<strong style="display:block;margin-bottom:0.375rem;">${escHtml(it.title)}</strong>` : ""}
+               ${it.body ? `<p style="color:var(--muted);font-size:0.9375rem;margin:0;">${escHtml(it.body)}</p>` : ""}
+             </div>`).join("")}
+           </div>`
+        : placeholder("Fun facts will appear here once added in the Content tab.")
+      }
+    </section>`;
     }
 
     case "travel-section": {
       const title = (cfg.title as string | undefined) ?? "Getting There";
-      const intro = (cfg.intro as string | undefined) ?? "";
+      const travelItems = Array.isArray(pageContent?.travelItems)
+        ? (pageContent.travelItems as Array<{ heading?: string; body?: string; linkLabel?: string; linkUrl?: string }>)
+        : [];
       return `
-        <section class="block block-travel" aria-label="Travel information" data-block-id="${escHtml(block.id)}" data-block-type="${escHtml(block.type)}">
-          <h2 class="section-heading">${escHtml(title)}</h2>
-          <div class="section-rule" aria-hidden="true"></div>
-          ${intro ? `<div class="text-body"><p>${escHtml(intro)}</p></div>` : ""}
-        </section>`;
+    <section class="block block-travel" aria-label="Travel information" data-block-id="${escHtml(block.id)}" data-block-type="${escHtml(block.type)}">
+      <h2 class="section-heading">${escHtml(title)}</h2>
+      <div class="section-rule" aria-hidden="true"></div>
+      ${travelItems.length > 0
+        ? travelItems.map(item => `
+            <div style="margin-bottom:1.5rem;">
+              ${item.heading ? `<h3 style="font-size:1.05rem;margin:0 0 0.4rem;">${escHtml(item.heading)}</h3>` : ""}
+              ${item.body ? `<p style="margin:0 0 0.4rem;line-height:1.7;">${escHtml(item.body)}</p>` : ""}
+              ${item.linkUrl && item.linkLabel
+                ? `<a href="${escHtml(item.linkUrl)}" target="_blank" rel="noopener noreferrer" style="color:var(--accent)">${escHtml(item.linkLabel)}</a>`
+                : ""}
+            </div>`).join("")
+        : placeholder("Travel details will appear here once added in the Content tab.")
+      }
+    </section>`;
     }
 
     case "spacer": {
