@@ -1,5 +1,4 @@
 import { redirect, useLoaderData, useSearchParams } from "react-router";
-import * as React from "react";
 import { useState, useEffect, useCallback, useRef } from "react";
 import { createAuth } from "~/lib/auth.server";
 import type { Route } from "./+types/_dashboard.sites.$id";
@@ -238,6 +237,8 @@ function useToast() {
 
 // ── ColorSwatch ───────────────────────────────────────────────────────────────
 
+const COLOR_PRESETS = ["#ffffff","#000000","#9b8e85","#0d9488","#e75850","#f59e0b","#6366f1","#ec4899"];
+
 function ColorSwatch({
   value,
   onChange,
@@ -245,14 +246,13 @@ function ColorSwatch({
   value: string;
   onChange: (v: string) => void;
 }) {
-  const [open, setOpen] = React.useState(false);
-  const [hex, setHex] = React.useState(value);
-  const ref = React.useRef<HTMLDivElement>(null);
-  const PRESETS = ["#ffffff","#000000","#9b8e85","#0d9488","#e75850","#f59e0b","#6366f1","#ec4899"];
+  const [open, setOpen] = useState(false);
+  const [hex, setHex] = useState(value);
+  const ref = useRef<HTMLDivElement>(null);
 
-  React.useEffect(() => { setHex(value); }, [value]);
+  useEffect(() => { setHex(value); }, [value]);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (!open) return;
     function handleClick(e: MouseEvent) {
       if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
@@ -270,7 +270,12 @@ function ColorSwatch({
 
   function commitHex(v: string) {
     const clean = v.startsWith("#") ? v : "#" + v;
-    if (/^#[0-9a-fA-F]{6}$/.test(clean)) { onChange(clean); setHex(clean); }
+    if (/^#[0-9a-fA-F]{6}$/.test(clean)) {
+      onChange(clean);
+      setHex(clean);
+    } else {
+      setHex(value); // reset to last valid value
+    }
   }
 
   return (
@@ -303,7 +308,7 @@ function ColorSwatch({
             }}
           />
           <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 4 }}>
-            {PRESETS.map(p => (
+            {COLOR_PRESETS.map(p => (
               <button
                 key={p}
                 type="button"
