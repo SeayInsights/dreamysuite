@@ -1960,11 +1960,8 @@ export default function SiteEditor() {
                                   <div className="bl-section-label">APPEARANCE</div>
 
                                   <div className="sf-group">
-                                    <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'6px'}}>
-                                      <label className="sf-lbl" style={{margin:0}}>BACKGROUND</label>
-                                      <label className="sf-lbl" style={{margin:0}}>TEXT COLOR</label>
-                                    </div>
-                                    <div style={{display:'flex',gap:'16px'}}>
+                                    <div style={{display:'flex',alignItems:'center',gap:'8px',marginBottom:'6px'}}>
+                                      <label className="sf-lbl" style={{margin:0,flexShrink:0}}>BACKGROUND</label>
                                       <div style={{display:'flex',gap:'4px',alignItems:'center'}}>
                                         {(['none','color'] as const).map(opt=>(
                                           <button key={opt} onClick={()=>setField('background', opt==='none' ? null : {type:'color',value:bgColor})}
@@ -1974,6 +1971,9 @@ export default function SiteEditor() {
                                         ))}
                                         {bgMode==='color' && <ColorSwatch value={bgColor} onChange={v=>setField('background',{type:'color',value:v})} />}
                                       </div>
+                                    </div>
+                                    <div style={{display:'flex',alignItems:'center',gap:'8px'}}>
+                                      <label className="sf-lbl" style={{margin:0,flexShrink:0}}>TEXT COLOR</label>
                                       <div style={{display:'flex',gap:'4px',alignItems:'center'}}>
                                         {(['default','custom'] as const).map(opt=>(
                                           <button key={opt} onClick={()=>setField('textColor', opt==='default' ? null : tcVal)}
