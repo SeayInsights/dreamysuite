@@ -769,6 +769,7 @@ export default function SiteEditor() {
   // Sync active page when user clicks a nav link in the preview iframe
   useEffect(() => {
     function handleMessage(event: MessageEvent) {
+      if (event.origin !== window.location.origin) return;
       if (event.data?.type === "dreamysuite_pageChange") {
         const page = pages.find((p) => p.id === event.data.pageId);
         if (page) { setActivePage(page); setPageDropOpen(false); }

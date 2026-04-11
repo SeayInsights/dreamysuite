@@ -118,7 +118,7 @@ function escHtml(str: string): string {
 
 function safeUrl(raw: string): string {
   const trimmed = raw.trim().toLowerCase();
-  if (trimmed.startsWith("javascript:") || trimmed.startsWith("data:")) return "#";
+  if (trimmed.startsWith("javascript:") || trimmed.startsWith("data:") || trimmed.startsWith("vbscript:")) return "#";
   return raw;
 }
 
@@ -1130,7 +1130,7 @@ function renderBlock(
               ? `<div class="info-card">
                    ${name ? `<p class="card-title">${escHtml(name)}</p>` : ""}
                    ${note ? `<p class="card-note">${escHtml(note)}</p>` : ""}
-                   ${url ? `<a href="${escHtml(url)}" target="_blank" rel="noopener noreferrer" class="card-link" style="color:${escHtml(accent)}">View Registry</a>` : ""}
+                   ${url ? `<a href="${escHtml(safeUrl(url))}" target="_blank" rel="noopener noreferrer" class="card-link" style="color:${escHtml(accent)}">View Registry</a>` : ""}
                  </div>`
               : placeholder("Registry details will appear here once added.")
           }
@@ -1152,7 +1152,7 @@ function renderBlock(
                    ${name ? `<p class="card-title">${escHtml(name)}</p>` : ""}
                    ${address ? `<p class="card-note">${escHtml(address)}</p>` : ""}
                    ${note ? `<p class="card-note">${escHtml(note)}</p>` : ""}
-                   ${url ? `<a href="${escHtml(url)}" target="_blank" rel="noopener noreferrer" class="card-link" style="color:${escHtml(accent)}">Book Now</a>` : ""}
+                   ${url ? `<a href="${escHtml(safeUrl(url))}" target="_blank" rel="noopener noreferrer" class="card-link" style="color:${escHtml(accent)}">Book Now</a>` : ""}
                  </div>`
               : placeholder("Hotel and accommodation details will appear here.")
           }
@@ -1342,8 +1342,8 @@ function buildMessageListenerScript(): string {
       bgColor: '--bg',
       headingColor: '--heading-color',
       bodyColor: '--body-color',
-      siteTextColor: '--text',
-      siteBorderColor: '--border',
+      siteTextColor: '--site-text',
+      siteBorderColor: '--site-border',
       navBg: '--nav-bg',
       navBrandColor: '--nav-brand',
       navLinkColor: '--nav-link',
