@@ -494,18 +494,29 @@ function buildStyles(settings: SiteSettingRow | null): BuiltStyles {
       background:radial-gradient(ellipse at 30% 50%,#fff8ee 0%,#f0e0c0 45%,#ddc898 100%);
     }
     .book-cover {
-      position:absolute; inset:0;
+      position:absolute; inset:0; z-index:9;
       transform-origin:right center; transform-style:preserve-3d; will-change:transform;
     }
     .book-cover-face {
       position:absolute; inset:0; backface-visibility:hidden;
-      background:linear-gradient(160deg,#1c0e08 0%,#2e1a0e 18%,#3d2412 50%,#2a1808 82%,#180c06 100%);
+      background:
+        repeating-linear-gradient(45deg,transparent,transparent 1px,rgba(0,0,0,0.03) 1px,rgba(0,0,0,0.03) 2px),
+        repeating-linear-gradient(-45deg,transparent,transparent 1px,rgba(255,255,255,0.012) 1px,rgba(255,255,255,0.012) 2px),
+        linear-gradient(160deg,#1c0e08 0%,#2e1a0e 18%,#3d2412 50%,#2a1808 82%,#180c06 100%);
       display:flex; align-items:center; justify-content:center; overflow:hidden;
     }
     .book-cover-face::before {
       content:''; position:absolute; inset:0;
       background-image:repeating-linear-gradient(91deg,transparent,transparent 2px,rgba(0,0,0,0.025) 2px,rgba(0,0,0,0.025) 3px),
         repeating-linear-gradient(1deg,transparent,transparent 9px,rgba(255,255,255,0.008) 9px,rgba(255,255,255,0.008) 10px);
+    }
+    /* Aged leather crease marks */
+    .book-cover-face::after {
+      content:''; position:absolute; inset:0; pointer-events:none;
+      background-image:
+        linear-gradient(7deg,transparent 22%,rgba(0,0,0,0.045) 22.4%,transparent 22.8%),
+        linear-gradient(-4deg,transparent 57%,rgba(0,0,0,0.03) 57.3%,transparent 57.7%),
+        linear-gradient(11deg,transparent 70%,rgba(0,0,0,0.025) 70.3%,transparent 70.7%);
     }
     .book-ornate-border {
       position:absolute; inset:clamp(12px,2.5vw,40px);
@@ -558,6 +569,63 @@ function buildStyles(settings: SiteSettingRow | null): BuiltStyles {
       text-align:center; font-style:italic; color:rgba(212,175,55,0.42);
       font-size:0.82rem; letter-spacing:0.16em; pointer-events:none; z-index:20;
     }
+    /* Intermediate flip pages */
+    .book-page-1,.book-page-2,.book-page-3 {
+      position:absolute; inset:0;
+      transform-origin:right center; transform-style:preserve-3d;
+      will-change:transform; backface-visibility:hidden;
+    }
+    .book-page-1 { background:linear-gradient(160deg,#fdf8f0 0%,#f5e8d0 55%,#ecdcc0 100%); z-index:8; }
+    .book-page-1::before { content:''; position:absolute; inset:0; background:repeating-linear-gradient(0deg,transparent,transparent 18px,rgba(0,0,0,0.028) 18px,rgba(0,0,0,0.028) 19px); }
+    .book-page-2 { background:linear-gradient(160deg,#fef9f2 0%,#f7ece0 55%,#eedec8 100%); z-index:7; }
+    .book-page-2::before { content:''; position:absolute; inset:0; background:repeating-linear-gradient(0deg,transparent,transparent 18px,rgba(0,0,0,0.022) 18px,rgba(0,0,0,0.022) 19px); }
+    .book-page-3 { background:linear-gradient(160deg,#fdf7ed 0%,#f3e5cc 55%,#e8d5b0 100%); z-index:6; }
+    /* Final reveal page */
+    .book-final-page {
+      position:absolute; inset:0; z-index:4; overflow:hidden; opacity:0;
+    }
+    .book-final-page-image { background-size:cover; background-position:center; }
+    .book-final-page-image::after {
+      content:''; position:absolute; inset:0;
+      background:radial-gradient(ellipse at 50% 50%,transparent 48%,rgba(0,0,0,0.48) 100%);
+    }
+    .book-final-page-parchment {
+      background:radial-gradient(ellipse at 40% 40%,#fdf6e3 0%,#f0e0b0 60%,#dcc890 100%);
+    }
+    .book-final-page-parchment::before {
+      content:''; position:absolute; inset:0;
+      background:radial-gradient(ellipse at 50% 50%,transparent 52%,rgba(10,5,0,0.55) 100%);
+    }
+    /* Rose petals (parchment default) */
+    @keyframes rose-petal-fall {
+      0%   { transform:translateY(-6vh) translateX(0) rotate(0deg); opacity:0; }
+      8%   { opacity:0.42; }
+      92%  { opacity:0.3; }
+      100% { transform:translateY(108vh) translateX(var(--drift,28px)) rotate(var(--rot,255deg)); opacity:0; }
+    }
+    .book-petal {
+      position:absolute; top:-4%; left:var(--left,40%);
+      width:9px; height:7px; border-radius:60% 40% 60% 40%;
+      background:radial-gradient(ellipse,rgba(220,148,118,0.62) 0%,rgba(195,95,85,0.32) 100%);
+      pointer-events:none; z-index:2; opacity:0;
+      animation:rose-petal-fall var(--dur,10s) var(--delay,0s) ease-in infinite;
+    }
+    /* Sparkle glints (parchment default) */
+    @keyframes sparkle-glint {
+      0%,100% { transform:scale(0) rotate(0deg); opacity:0; }
+      40%,60% { transform:scale(1) rotate(15deg); opacity:0.72; }
+    }
+    .book-sparkle {
+      position:absolute; width:6px; height:6px; border-radius:50%;
+      background:radial-gradient(circle,rgba(255,240,178,0.9) 0%,transparent 100%);
+      pointer-events:none; z-index:3; opacity:0;
+      animation:sparkle-glint var(--dur,5s) var(--delay,0s) ease-in-out infinite;
+    }
+    .book-sparkle::before,.book-sparkle::after {
+      content:''; position:absolute; background:rgba(255,238,172,0.72); border-radius:2px;
+    }
+    .book-sparkle::before { width:1px; height:14px; top:-4px; left:2.5px; }
+    .book-sparkle::after  { width:14px; height:1px; top:2.5px; left:-4px; }
 
     /* ════════════════════════════════
        CINEMATIC OVERLAY ELEMENTS
@@ -1702,6 +1770,7 @@ function buildIntroHtml(
   sealInitials: string | null,
   cardColor: string | null,
   cardImage: string | null,
+  bgImage: string | null,
   popupBundle: boolean,
   popupTitle: string | null,
   popupGreeting: string | null
@@ -1783,8 +1852,22 @@ function buildIntroHtml(
   }
 
   if (animation === "storybook") {
+    const bgImgStyle = bgImage ? ` style="background-image:url('${escHtml(bgImage)}')"` : "";
+    const finalPageClass = bgImage ? "book-final-page book-final-page-image" : "book-final-page book-final-page-parchment";
+    const parchmentExtras = !bgImage ? `
+    <div class="book-petal" style="--left:18%;--dur:9s;--delay:0.8s;--drift:25px;--rot:240deg;"></div>
+    <div class="book-petal" style="--left:42%;--dur:11s;--delay:2.4s;--drift:-30px;--rot:310deg;"></div>
+    <div class="book-petal" style="--left:67%;--dur:8.5s;--delay:1.1s;--drift:20px;--rot:180deg;"></div>
+    <div class="book-petal" style="--left:31%;--dur:12s;--delay:4.2s;--drift:-22px;--rot:290deg;"></div>
+    <div class="book-sparkle" style="top:15%;left:12%;--dur:5s;--delay:0s;"></div>
+    <div class="book-sparkle" style="top:20%;right:14%;left:auto;--dur:4.5s;--delay:2.1s;"></div>` : "";
     return `<div id="intro-overlay" class="intro-overlay intro-book" role="button" tabindex="0" aria-label="Click to open">
   <div class="book-page-bg"></div>
+  <div class="${finalPageClass}"${bgImgStyle}>${parchmentExtras}
+  </div>
+  <div class="book-page-3"></div>
+  <div class="book-page-2"></div>
+  <div class="book-page-1"></div>
   <div class="book-cover">
     <div class="book-cover-face">
       <div class="book-ornate-border">
@@ -2041,6 +2124,7 @@ function switchLang() {
   const popupBundleActive = !!(settings?.popupBundle) && !!animation && animation !== "none" && animation !== "envelope";
   const introHtml = buildIntroHtml(
     animation, eventTitle, eventDate, envelopeColor, sealInitials, cardColor, cardImage,
+    settings?.bgImage ?? null,
     popupBundleActive,
     settings?.popupTitle ?? null,
     greeting
@@ -2092,7 +2176,9 @@ function _addReplayBtn() {
       gsap.set('.door-smoke-cloud', { scaleY:1, scaleX:1, y:'0%', opacity:1, clearProps:'background' });
       gsap.set('.door-light-flood', { scaleX:0.1, scaleY:0.1, opacity:0 });
       ` : animation === "storybook" ? `
-      gsap.set('.book-cover', { rotateY:0 });
+      gsap.set('.book-cover', { rotateY:0, transformOrigin:'right center' });
+      gsap.set(['.book-page-1','.book-page-2','.book-page-3'], { rotateY:0, opacity:1 });
+      gsap.set('.book-final-page', { opacity:0 });
       gsap.set('.book-page-bg', { filter:'none' });
       gsap.set('.book-cue', { opacity:1 });
       ` : ``}
@@ -2166,20 +2252,26 @@ function openIntro() {
     ${popupBundleActive ? `.to(['.door-l','.door-r','.door-centre-text'], { opacity:0, duration:0.4 }, '-=0.35')` : `.to(el, { opacity:0, duration:0.52, ease:'power2.in' }, '-=0.38')`};
   ` : animation === "storybook" ? `
   var _bundleCard = document.getElementById('intro-bundle-card');
+  gsap.set(['.book-page-1','.book-page-2','.book-page-3'], { rotateY:0, transformOrigin:'right center' });
+  gsap.set('.book-final-page', { opacity:0 });
   var tl = gsap.timeline({ onComplete: function(){
     if (_bundleCard) {
       el.removeEventListener('click', openIntro);
-      gsap.set(el, { background:'rgba(10,6,2,0.92)' });
-      gsap.to(_bundleCard, { opacity:1, scale:1, duration:0.4, ease:'back.out(1.2)', pointerEvents:'auto' });
+      gsap.to(_bundleCard, { opacity:1, scale:1, y:0, duration:0.55, ease:'back.out(1.1)', pointerEvents:'auto' });
     } else { _afterAnimDone(el); }
   } });
-  tl.to('.book-cue', { opacity:0, duration:0.25 })
-    .to('.book-cover', {
-      rotateY:-162, duration:2.1, ease:'power4.inOut',
-      transformOrigin:'right center'
-    }, 0.15)
-    .to('.book-page-bg', { filter:'brightness(1.14)', duration:0.7, ease:'power1.inOut' }, 1.5)
-    ${popupBundleActive ? `.to(['.book-cover','.book-spine','.book-page-bg'], { opacity:0, duration:0.45 }, '-=0.28')` : `.to(el, { opacity:0, duration:0.72, ease:'power2.in' }, '-=0.48')`};
+  tl
+    .to('.book-cue',    { opacity:0, duration:0.25 }, 0)
+    .to('.book-cover',  { rotateY:-60,  duration:0.8,  ease:'power2.inOut', transformOrigin:'right center' }, 0.1)
+    .to('.book-page-1', { rotateY:-160, duration:0.6,  ease:'power3.inOut', transformOrigin:'right center' }, 0.85)
+    .to('.book-page-2', { rotateY:-160, duration:0.58, ease:'power3.inOut', transformOrigin:'right center' }, 1.4)
+    .to('.book-page-3', { rotateY:-160, duration:0.55, ease:'power3.inOut', transformOrigin:'right center' }, 1.88)
+    .to('.book-cover',  { rotateY:-162, duration:1.1,  ease:'power4.inOut', transformOrigin:'right center' }, 1.62)
+    .to('.book-final-page', { opacity:1, duration:0.85, ease:'power1.inOut' }, 2.42)
+    .to('.book-page-bg', { filter:'brightness(1.12)', duration:0.65, ease:'power1.inOut' }, 2.52)
+    ${popupBundleActive
+      ? `.to(['.book-cover','.book-spine','.book-page-bg','.book-page-1','.book-page-2','.book-page-3'], { opacity:0, duration:0.45 }, '-=0.28')`
+      : `.to(el, { opacity:0, duration:0.72, ease:'power2.in' }, '-=0.45')`};
   ` : `
   gsap.to(el, { opacity:0, duration:0.4, onComplete:function(){ _afterAnimDone(el); } });
   `}
