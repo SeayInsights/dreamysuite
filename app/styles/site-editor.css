@@ -245,7 +245,7 @@ body { background:#fff !important; }
 .tmpl-badge-draft { background:#f0ede8; color:#9b8e85; }
 
 /* ── Site Setup ───────────────────────────────────────── */
-.site-setup-body { max-width:1000px; margin:0 auto; padding:1.5rem; overflow-y:auto; flex:1; display:grid; grid-template-columns:1fr 1fr; gap:1.1rem; align-content:start; }
+.site-setup-body { padding:1.5rem; overflow-y:auto; flex:1; display:grid; grid-template-columns:1fr 1fr; gap:1.1rem; align-content:start; }
 .setup-section { background:#fff; border:1.5px solid #eae5df; border-radius:14px; padding:1.25rem 1.4rem; }
 .setup-section-head { margin-bottom:1rem; }
 .setup-section-title { font-size:0.9rem; font-weight:700; color:#1c1917; margin:0 0 0.25rem; }
@@ -263,7 +263,7 @@ body { background:#fff !important; }
 .qr-url-input:focus { border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-ring); }
 
 /* ── Analytics ────────────────────────────────────────── */
-.analytics-body { max-width:720px; margin:0 auto; padding:1.5rem; overflow-y:auto; flex:1; }
+.analytics-body { padding:1.5rem; overflow-y:auto; flex:1; }
 .analytics-section-title { font-size:0.7rem; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:#9b8e85; margin-bottom:0.75rem; }
 .analytics-stat-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:0.75rem; }
 .analytics-stat-card { display:flex; flex-direction:column; gap:0.3rem; padding:1rem 1.1rem; background:#fff; border:1px solid var(--border); border-radius:10px; }

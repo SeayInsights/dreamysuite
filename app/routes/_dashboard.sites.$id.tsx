@@ -2045,8 +2045,8 @@ export default function SiteEditor() {
                                 onClick={() => toggleBlockExpand(block)}
                                 style={{ cursor: 'pointer', borderRadius: isExpanded ? '8px 8px 0 0' : undefined, borderBottom: isExpanded ? 'none' : undefined }}
                               >
-                                <div className="drag-handle" aria-hidden="true" onClick={e => e.stopPropagation()}>⠿</div>
                                 <div className="bl-stripe" style={{ background: blockColor(block.type) }} />
+                                <div className="drag-handle" aria-hidden="true" onClick={e => e.stopPropagation()}>⠿</div>
                                 <div className="bl-body">
                                   <div className={`bl-name${block.isVisible === 0 ? ' off' : ''}`}>{blockLabel(block.type)}</div>
                                   <div className="bl-sub">{block.isVisible === 0 ? 'hidden' : 'default'}</div>
@@ -2862,9 +2862,6 @@ export default function SiteEditor() {
             <span className="topbar-sep">/</span>
             <span className="section-topbar-title">Media</span>
             <div className="section-topbar-spacer" />
-            <button className="btn-publish" onClick={handlePublish} disabled={publishing}>
-              {publishing ? "Publishing…" : "Publish"}
-            </button>
           </div>
 
           {/* Sub-tabs */}
@@ -3068,9 +3065,6 @@ export default function SiteEditor() {
             <span className="topbar-sep">/</span>
             <span className="section-topbar-title">Guest List</span>
             <div className="section-topbar-spacer" />
-            <button className="btn-publish" onClick={handlePublish} disabled={publishing}>
-              {publishing ? "Publishing…" : "Publish"}
-            </button>
           </div>
           <div className="gl-shell">
             <div className="gl-toolbar">
@@ -3198,9 +3192,6 @@ export default function SiteEditor() {
             <span className="topbar-sep">/</span>
             <span className="section-topbar-title">Templates</span>
             <div className="section-topbar-spacer" />
-            <button className="btn-publish" onClick={handlePublish} disabled={publishing}>
-              {publishing ? "Publishing…" : "Publish"}
-            </button>
           </div>
           <div className="tmpl-shell">
             <div className="tmpl-header">
@@ -3276,9 +3267,6 @@ export default function SiteEditor() {
             <span className="topbar-sep">/</span>
             <span className="section-topbar-title">Site Setup</span>
             <div className="section-topbar-spacer" />
-            <button className="btn-publish" onClick={handlePublish} disabled={publishing}>
-              {publishing ? "Publishing…" : "Publish"}
-            </button>
           </div>
           <div className="site-setup-body">
             {/* Website Type */}
@@ -3784,9 +3772,6 @@ export default function SiteEditor() {
             <span className="topbar-sep">/</span>
             <span className="section-topbar-title">Analytics</span>
             <div className="section-topbar-spacer" />
-            <button className="btn-publish" onClick={handlePublish} disabled={publishing}>
-              {publishing ? "Publishing…" : "Publish"}
-            </button>
           </div>
           <div className="analytics-body">
             <div style={{ marginBottom: "1.5rem" }}>
