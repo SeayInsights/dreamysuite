@@ -814,6 +814,14 @@ export default function SiteEditor() {
   }, [activePage?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
+    if (blockEditOpen && videos.length === 0) fetchVideos();
+  }, [blockEditOpen]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    if (expandedBlockId && videos.length === 0) fetchVideos();
+  }, [expandedBlockId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
     if (settingsOpen && !settings) fetchSettings();
     if (settingsOpen && musicTracks.length === 0) fetchMusicTracks();
   }, [settingsOpen]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -1499,6 +1507,15 @@ export default function SiteEditor() {
 
   // ── Helpers ─────────────────────────────────────────────────────────────────
 
+  function extractYoutubeId(url: string): string | null {
+    try {
+      const u = new URL(url);
+      if (u.hostname === "youtu.be") return u.pathname.slice(1).split("?")[0] || null;
+      if (u.hostname.includes("youtube.com")) return u.searchParams.get("v");
+    } catch { /* ignore */ }
+    return null;
+  }
+
   function formatDate(ts: number) {
     return new Date(ts).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
   }
@@ -1848,7 +1865,23 @@ export default function SiteEditor() {
                                   </>)}
 
                                   {block.type === 'images' && (<>
-                                    <div className="sf-group"><label className="sf-lbl">Image Slot Name</label><input className="sf-input" value={String(cfg.imageSlot??'')} onChange={e=>setField('imageSlot',e.target.value)} placeholder="home"/></div>
+                                    <div className="sf-group">
+                                      <label className="sf-lbl">Photos</label>
+                                      <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(56px,1fr))',gap:'4px',marginBottom:'4px'}}>
+                                        {(Array.isArray(cfg.urls)?(cfg.urls as string[]):[]).map((u,i)=>(
+                                          <div key={i} style={{position:'relative',aspectRatio:'1'}}>
+                                            <img src={u} alt="" style={{width:'100%',height:'100%',objectFit:'cover',borderRadius:'4px',display:'block'}}/>
+                                            <button onClick={()=>setField('urls',(Array.isArray(cfg.urls)?(cfg.urls as string[]):[]).filter((_,j)=>j!==i))} style={{position:'absolute',top:'2px',right:'2px',background:'rgba(0,0,0,0.6)',color:'#fff',border:'none',borderRadius:'3px',width:'16px',height:'16px',cursor:'pointer',fontSize:'0.6rem',display:'flex',alignItems:'center',justifyContent:'center',padding:0}}>✕</button>
+                                          </div>
+                                        ))}
+                                      </div>
+                                      <button className="btn-ghost" style={{width:'100%',fontSize:'0.74rem'}}
+                                        onClick={()=>{
+                                          if(photos.length===0) fetchPhotos();
+                                          setPhotoPickerTarget(()=>(url:string)=>setField('urls',[...(Array.isArray(cfg.urls)?(cfg.urls as string[]):[]),url]));
+                                          setPhotoPickerOpen(true);
+                                        }}>+ Add Photo from Media</button>
+                                    </div>
                                     <div className="sf-group">
                                       <label className="sf-lbl">Layout</label>
                                       <div className="layout-tiles">
@@ -1903,7 +1936,18 @@ export default function SiteEditor() {
                                   </>)}
 
                                   {block.type === 'youtube' && (<>
-                                    <div className="sf-group"><label className="sf-lbl">YouTube URL or Video ID</label><input className="sf-input" value={String(cfg.url??'')} onChange={e=>setField('url',e.target.value)} placeholder="https://youtube.com/watch?v=…"/></div>
+                                    <div className="sf-group">
+                                      <label className="sf-lbl">Video</label>
+                                      {videos.length === 0 ? (
+                                        <p style={{fontSize:'0.75rem',color:'#9b8e85',margin:0}}>No videos in Media yet. <button type="button" style={{background:'none',border:'none',color:'#0d9488',cursor:'pointer',fontSize:'inherit',padding:0,textDecoration:'underline'}} onClick={()=>setSection("media")}>Go to Media</button></p>
+                                      ) : (
+                                        <select className="sf-input" value={String(cfg.url??'')}
+                                          onChange={e=>{const url=e.target.value;const vid=extractYoutubeId(url);setField('url',url);if(vid)setField('videoId',vid);}}>
+                                          <option value="">— Select a video —</option>
+                                          {videos.map(v=><option key={v.id} value={v.url}>{v.title??v.url}</option>)}
+                                        </select>
+                                      )}
+                                    </div>
                                     <div className="sf-group"><label className="sf-lbl">Title</label><input className="sf-input" value={String(cfg.title??'')} onChange={e=>setField('title',e.target.value)}/></div>
                                   </>)}
 
@@ -1955,14 +1999,14 @@ export default function SiteEditor() {
                                     })();
                                     return (<>
                                       <div className="sf-group">
-                                        <label className="sf-lbl">Photo URL</label>
-                                        <input className="sf-input" value={String(photo.url??'')} onChange={e=>setPhoto('url',e.target.value)} placeholder="https://… or pick from library" />
-                                        <button className="btn-ghost" style={{width:'100%',fontSize:'0.74rem',marginTop:'4px'}}
+                                        <label className="sf-lbl">Photo</label>
+                                        {photo.url && <img src={String(photo.url)} alt="" style={{width:'100%',height:'60px',objectFit:'cover',borderRadius:'5px',border:'1px solid #e0dbd4',display:'block',marginBottom:'4px'}}/>}
+                                        <button className="btn-ghost" style={{width:'100%',fontSize:'0.74rem'}}
                                           onClick={()=>{
                                             if(photos.length===0) fetchPhotos();
                                             setPhotoPickerTarget(()=>(url:string)=>setPhoto('url',url));
                                             setPhotoPickerOpen(true);
-                                          }}>Pick from Library</button>
+                                          }}>{photo.url ? 'Change Photo (Media Library)' : 'Pick from Media Library'}</button>
                                       </div>
                                       <div className="sf-group">
                                         <label className="sf-lbl" style={{marginBottom:'4px'}}>Photo Position <span style={{fontWeight:400,color:'#b0a99f',fontSize:'0.68rem'}}>drag to reposition</span></label>
@@ -3526,7 +3570,17 @@ export default function SiteEditor() {
 
               {/* video */}
               {t === "video" && (<>
-                <div className="sf-group"><label className="sf-lbl">Video URL (YouTube / Vimeo)</label><input className="sf-input" type="url" value={String(cfg.url ?? "")} onChange={e => setField("url", e.target.value)} placeholder="https://youtube.com/watch?v=…" /></div>
+                <div className="sf-group">
+                  <label className="sf-lbl">Video</label>
+                  {videos.length === 0 ? (
+                    <p style={{fontSize:'0.75rem',color:'#9b8e85',margin:0}}>No videos in Media yet. <button type="button" style={{background:'none',border:'none',color:'#0d9488',cursor:'pointer',fontSize:'inherit',padding:0,textDecoration:'underline'}} onClick={()=>{setBlockEditOpen(false);setSection("media");}}>Go to Media</button></p>
+                  ) : (
+                    <select className="sf-input" value={String(cfg.url??"")} onChange={e=>setField("url",e.target.value)}>
+                      <option value="">— Select a video —</option>
+                      {videos.map(v=><option key={v.id} value={v.url}>{v.title??v.url}</option>)}
+                    </select>
+                  )}
+                </div>
                 <div className="sf-group"><label className="sf-lbl">Height (CSS)</label><input className="sf-input" value={String(cfg.height ?? "100dvh")} onChange={e => setField("height", e.target.value)} placeholder="100dvh" /></div>
               </>)}
 
@@ -3543,12 +3597,39 @@ export default function SiteEditor() {
 
               {/* images */}
               {t === "images" && (
-                <div className="sf-group"><label className="sf-lbl">Image Slot Name</label><input className="sf-input" value={String(cfg.imageSlot ?? "")} onChange={e => setField("imageSlot", e.target.value)} placeholder="home" /></div>
+                <div className="sf-group">
+                  <label className="sf-lbl">Photos</label>
+                  <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(64px,1fr))',gap:'5px',marginBottom:'6px'}}>
+                    {(Array.isArray(cfg.urls)?(cfg.urls as string[]):[]).map((u,i)=>(
+                      <div key={i} style={{position:'relative',aspectRatio:'1'}}>
+                        <img src={u} alt="" style={{width:'100%',height:'100%',objectFit:'cover',borderRadius:'5px',display:'block'}}/>
+                        <button onClick={()=>setField('urls',(Array.isArray(cfg.urls)?(cfg.urls as string[]):[]).filter((_,j)=>j!==i))} style={{position:'absolute',top:'2px',right:'2px',background:'rgba(0,0,0,0.6)',color:'#fff',border:'none',borderRadius:'3px',width:'16px',height:'16px',cursor:'pointer',fontSize:'0.6rem',display:'flex',alignItems:'center',justifyContent:'center',padding:0}}>✕</button>
+                      </div>
+                    ))}
+                  </div>
+                  <button className="btn-ghost" style={{width:'100%',fontSize:'0.74rem'}}
+                    onClick={()=>{
+                      if(photos.length===0) fetchPhotos();
+                      setPhotoPickerTarget(()=>(url:string)=>setField('urls',[...(Array.isArray(cfg.urls)?(cfg.urls as string[]):[]),url]));
+                      setPhotoPickerOpen(true);
+                    }}>+ Add Photo from Media</button>
+                </div>
               )}
 
               {/* youtube */}
               {t === "youtube" && (<>
-                <div className="sf-group"><label className="sf-lbl">YouTube URL or Video ID</label><input className="sf-input" value={String(cfg.url ?? "")} onChange={e => setField("url", e.target.value)} placeholder="https://youtube.com/watch?v=…" /></div>
+                <div className="sf-group">
+                  <label className="sf-lbl">Video</label>
+                  {videos.length === 0 ? (
+                    <p style={{fontSize:'0.75rem',color:'#9b8e85',margin:0}}>No videos in Media yet. <button type="button" style={{background:'none',border:'none',color:'#0d9488',cursor:'pointer',fontSize:'inherit',padding:0,textDecoration:'underline'}} onClick={()=>{setBlockEditOpen(false);setSection("media");}}>Go to Media</button></p>
+                  ) : (
+                    <select className="sf-input" value={String(cfg.url??"")}
+                      onChange={e=>{const url=e.target.value;const vid=extractYoutubeId(url);setField("url",url);if(vid)setField("videoId",vid);}}>
+                      <option value="">— Select a video —</option>
+                      {videos.map(v=><option key={v.id} value={v.url}>{v.title??v.url}</option>)}
+                    </select>
+                  )}
+                </div>
                 <div className="sf-group"><label className="sf-lbl">Title</label><input className="sf-input" value={String(cfg.title ?? "")} onChange={e => setField("title", e.target.value)} placeholder="Our highlight reel" /></div>
               </>)}
 
@@ -3636,14 +3717,14 @@ export default function SiteEditor() {
                 const arFree = !photo.widthPx && !photo.heightPx;
                 return (<>
                   <div className="sf-group">
-                    <label className="sf-lbl">Photo URL</label>
-                    <input className="sf-input" value={String(photo.url??"")} onChange={e=>setPhoto("url",e.target.value)} placeholder="https://…" />
-                    <button className="btn-ghost" style={{width:"100%",fontSize:"0.74rem",marginTop:"4px"}}
+                    <label className="sf-lbl">Photo</label>
+                    {photo.url && <img src={String(photo.url)} alt="" style={{width:"100%",height:"64px",objectFit:"cover",borderRadius:"5px",border:"1px solid #e0dbd4",display:"block",marginBottom:"4px"}}/>}
+                    <button className="btn-ghost" style={{width:"100%",fontSize:"0.74rem"}}
                       onClick={()=>{
                         if(photos.length===0) fetchPhotos();
                         setPhotoPickerTarget(()=>(url:string)=>setPhoto("url",url));
                         setPhotoPickerOpen(true);
-                      }}>Pick from Library</button>
+                      }}>{photo.url ? "Change Photo (Media Library)" : "Pick from Media Library"}</button>
                   </div>
                   <div className="sf-group">
                     <label className="sf-lbl" style={{marginBottom:"4px"}}>Photo Position <span style={{fontWeight:400,color:"#b0a99f",fontSize:"0.68rem"}}>drag to reposition</span></label>
