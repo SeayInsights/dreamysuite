@@ -955,10 +955,53 @@ export default function SiteEditor() {
     if (!editingBlock) return;
     try {
       pushHistory(blocks);
+
+      let configToSave: Record<string, unknown> = { ...blockConfigFields };
+
+      // Legacy migration: move inline content from config to site_content
+      if (activePage) {
+        const lang = settingsForm.mainLanguage || "en";
+        const pageSlug = activePage.slug;
+
+        type MigSpec = { blockType: string; cfgKey: string; contentKey: string };
+        const migrations: MigSpec[] = [
+          { blockType: "schedule", cfgKey: "events",  contentKey: "events"    },
+          { blockType: "faq",      cfgKey: "items",   contentKey: "questions" },
+          { blockType: "tidbits",  cfgKey: "items",   contentKey: "tidbits"   },
+        ];
+
+        const openBlock = blocks.find(b => b.id === expandedBlockId);
+        const mig = migrations.find(m => m.blockType === openBlock?.type);
+
+        if (mig && Array.isArray((configToSave as Record<string,unknown>)[mig.cfgKey]) &&
+            ((configToSave as Record<string,unknown>)[mig.cfgKey] as unknown[]).length > 0) {
+          // Fetch current site_content to check if already migrated
+          const existing = contentByPage[pageSlug]?.[lang] ?? {};
+          const alreadyHasData = Array.isArray((existing as Record<string,unknown>)[mig.contentKey]) &&
+            ((existing as Record<string,unknown>)[mig.contentKey] as unknown[]).length > 0;
+
+          if (!alreadyHasData) {
+            // Write legacy data to site_content
+            const migratedContent = { ...existing, [mig.contentKey]: (configToSave as Record<string,unknown>)[mig.cfgKey] };
+            await apiFetch("/content", {
+              method: "POST",
+              headers: { "content-type": "application/json" },
+              body: JSON.stringify({ pageSlug, lang, content: migratedContent }),
+            });
+            // Refresh contentByPage
+            await fetchContent();
+          }
+
+          // Remove legacy key from config (whether we migrated or not)
+          const { [mig.cfgKey]: _removed, ...cleanedConfig } = configToSave as Record<string, unknown>;
+          configToSave = cleanedConfig;
+        }
+      }
+
       await apiFetch(`/blocks/${editingBlock.id}`, {
         method: "PUT",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ config: JSON.stringify(blockConfigFields) }),
+        body: JSON.stringify({ config: JSON.stringify(configToSave) }),
       });
       if (activePage) await fetchBlocks(activePage.id);
       setBlockEditOpen(false);
