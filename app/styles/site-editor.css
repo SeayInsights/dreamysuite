@@ -330,3 +330,13 @@ body { background:#fff !important; }
 .bsel-btn { border:1px solid #e0dbd4; border-radius:3px; padding:1px 5px; font-size:0.66rem; cursor:pointer; background:#fff; color:#6b6560; line-height:1.5; white-space:nowrap; }
 .bsel-btn:hover { border-color:#ccc; }
 .bsel-btn.active { border-color:#0d9488; background:#f0fdfa; color:#0d9488; font-weight:600; }
+
+/* Luxury topbar brand elements */
+.topbar-brand { font-size: 0.75rem; color: #9b8e85; font-weight: 400; white-space: nowrap; }
+.topbar-sep { font-size: 0.75rem; color: #d4cec8; }
+
+/* Publish button - premium teal CTA */
+.btn-publish { background: #0d9488; color: #fff; border: none; padding: 7px 20px; font-size: 0.8rem; font-weight: 600; letter-spacing: 0.02em; cursor: pointer; border-radius: 8px; white-space: nowrap; transition: background 0.15s, box-shadow 0.15s, transform 0.1s; }
+.btn-publish:hover:not(:disabled) { background: #0f766e; box-shadow: 0 3px 12px rgba(13,148,136,0.3); transform: translateY(-1px); }
+.btn-publish:active:not(:disabled) { transform: translateY(0); }
+.btn-publish:disabled { opacity: 0.6; cursor: default; }

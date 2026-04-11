@@ -1,5 +1,5 @@
 import { Link, Outlet, redirect, useLoaderData, useLocation, useMatches, useSearchParams } from "react-router";
-import { useState, useCallback } from "react";
+
 import { createAuth } from "~/lib/auth.server";
 import type { Route } from "./+types/_dashboard";
 import "~/lib/context";
@@ -22,36 +22,13 @@ export default function DashboardLayout() {
   const location = useLocation();
   const matches = useMatches();
   const [searchParams, setSearchParams] = useSearchParams();
-  const [publishing, setPublishing] = useState(false);
-
   // Detect editor mode from URL path (reliable) + get site data from matches
   const pathMatch = location.pathname.match(/^\/sites\/([^/]+)$/);
-  const siteId = pathMatch?.[1];
-  const isEditor = Boolean(siteId);
+  const isEditor = Boolean(pathMatch?.[1]);
   const siteMatch = matches.find((m) => (m.params as Record<string, string>).id);
   const site = (siteMatch?.data as { site?: SiteData } | undefined)?.site;
 
   const currentSection = searchParams.get("s") ?? "website";
-
-  const siteUrl = site
-    ? (site.customDomain
-        ? `https://${site.customDomain}`
-        : `https://${site.slug}.dreamysuite.com`)
-    : "#";
-
-  const handlePublish = useCallback(async () => {
-    if (!siteId) return;
-    setPublishing(true);
-    try {
-      await fetch(`/api/sites/${siteId}/settings`, {
-        method: "PUT",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ isLive: 1 }),
-      });
-    } finally {
-      setPublishing(false);
-    }
-  }, [siteId]);
 
   function setSection(s: string) {
     setSearchParams((prev) => { prev.set("s", s); return prev; });
@@ -283,83 +260,6 @@ export default function DashboardLayout() {
 
       {/* ── Main column ────────────────────────────────────── */}
       <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0, overflow: "hidden" }}>
-
-        {/* Editor top bar */}
-        {isEditor && (
-          <div
-            style={{
-              height: "48px",
-              background: "white",
-              borderBottom: "1px solid #e8e4e0",
-              display: "flex",
-              alignItems: "center",
-              padding: "0 1.25rem",
-              gap: "0.625rem",
-              flexShrink: 0,
-            }}
-          >
-            <span style={{ fontSize: "0.75rem", color: "#9b8e85" }}>DreamySuite</span>
-            <span style={{ fontSize: "0.75rem", color: "#d4cec8" }}>/</span>
-            <span style={{ fontSize: "0.85rem", fontWeight: 600, color: "#1c1917", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: "240px" }}>
-              {site?.name}
-            </span>
-            <div style={{ flex: 1 }} />
-            <a
-              href={siteUrl}
-              target="_blank"
-              rel="noreferrer"
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "4px",
-                padding: "0.35rem 0.85rem",
-                borderRadius: "6px",
-                fontSize: "0.78rem",
-                color: "#44403c",
-                border: "1px solid #e0dbd4",
-                background: "white",
-                textDecoration: "none",
-                whiteSpace: "nowrap",
-                transition: "border-color 0.15s, background 0.15s, color 0.15s",
-              }}
-              onMouseOver={(e) => {
-                const el = e.currentTarget as HTMLAnchorElement;
-                el.style.borderColor = "#bbb";
-                el.style.background = "#fafaf8";
-              }}
-              onMouseOut={(e) => {
-                const el = e.currentTarget as HTMLAnchorElement;
-                el.style.borderColor = "#e0dbd4";
-                el.style.background = "white";
-              }}
-            >
-              Open Site
-              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
-                <polyline points="15 3 21 3 21 9" />
-                <line x1="10" y1="14" x2="21" y2="3" />
-              </svg>
-            </a>
-            <button
-              onClick={handlePublish}
-              disabled={publishing}
-              style={{
-                padding: "0.35rem 0.9rem",
-                borderRadius: "6px",
-                fontSize: "0.78rem",
-                fontWeight: 600,
-                color: "white",
-                background: "#0d9488",
-                border: "none",
-                cursor: publishing ? "not-allowed" : "pointer",
-                opacity: publishing ? 0.7 : 1,
-                whiteSpace: "nowrap",
-              }}
-            >
-              {publishing ? "Publishing…" : "Publish"}
-            </button>
-          </div>
-        )}
 
         {/* Content */}
         <main style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", overflow: "hidden" }}>

@@ -1,5 +1,6 @@
 import { redirect, useLoaderData, useSearchParams } from "react-router";
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
+import { createPortal } from "react-dom";
 import { createAuth } from "~/lib/auth.server";
 import type { Route } from "./+types/_dashboard.sites.$id";
 import "~/lib/context";
@@ -263,6 +264,26 @@ function useToast() {
 
 const COLOR_PRESETS = ["#ffffff","#000000","#9b8e85","#0d9488","#e75850","#f59e0b","#6366f1","#ec4899"];
 
+function hexToRgb(hex: string): [number, number, number] {
+  const h = hex.replace('#', '').padEnd(6, '0');
+  return [parseInt(h.slice(0,2),16)||0, parseInt(h.slice(2,4),16)||0, parseInt(h.slice(4,6),16)||0];
+}
+function rgbToHex(r: number, g: number, b: number): string {
+  return '#' + [r,g,b].map(v => Math.min(255,Math.max(0,Math.round(v))).toString(16).padStart(2,'0')).join('');
+}
+function parseColorValue(v: string): { hex: string; opacity: number } {
+  if (typeof v === 'string' && v.startsWith('rgba(')) {
+    const m = v.match(/rgba\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*([\d.]+)\s*\)/);
+    if (m) return { hex: rgbToHex(+m[1], +m[2], +m[3]), opacity: Math.round(+m[4] * 100) };
+  }
+  return { hex: (v && v.startsWith('#') && v.length >= 7) ? v.slice(0,7) : (v || '#000000'), opacity: 100 };
+}
+function buildColorValue(hex: string, opacity: number): string {
+  if (opacity >= 100) return hex;
+  const [r,g,b] = hexToRgb(hex);
+  return `rgba(${r},${g},${b},${(opacity/100).toFixed(2)})`;
+}
+
 function ColorSwatch({
   value,
   onChange,
@@ -270,92 +291,194 @@ function ColorSwatch({
   value: string;
   onChange: (v: string) => void;
 }) {
+  const parsed = useMemo(() => parseColorValue(value), [value]);
   const [open, setOpen] = useState(false);
-  const [hex, setHex] = useState(value);
-  const ref = useRef<HTMLDivElement>(null);
+  const [hex, setHex] = useState(parsed.hex);
+  const [opacity, setOpacity] = useState(parsed.opacity);
+  const [mode, setMode] = useState<'hex' | 'rgb'>('hex');
+  const [dropPos, setDropPos] = useState<{ top: number; right: number } | null>(null);
+  const btnRef = useRef<HTMLButtonElement>(null);
+  const dropRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => { setHex(value); }, [value]);
+  useEffect(() => {
+    const p = parseColorValue(value);
+    setHex(p.hex);
+    setOpacity(p.opacity);
+  }, [value]);
 
   useEffect(() => {
     if (!open) return;
     function handleClick(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+      const target = e.target as Node;
+      if (btnRef.current?.contains(target)) return;
+      if (dropRef.current && !dropRef.current.contains(target)) setOpen(false);
     }
     function handleKey(e: KeyboardEvent) {
-      if (e.key === "Escape") setOpen(false);
+      if (e.key === 'Escape') setOpen(false);
     }
-    document.addEventListener("mousedown", handleClick);
-    document.addEventListener("keydown", handleKey);
+    document.addEventListener('mousedown', handleClick);
+    document.addEventListener('keydown', handleKey);
     return () => {
-      document.removeEventListener("mousedown", handleClick);
-      document.removeEventListener("keydown", handleKey);
+      document.removeEventListener('mousedown', handleClick);
+      document.removeEventListener('keydown', handleKey);
     };
   }, [open]);
 
+  function openPicker() {
+    if (btnRef.current) {
+      const rect = btnRef.current.getBoundingClientRect();
+      setDropPos({
+        top: rect.bottom + 6,
+        right: window.innerWidth - rect.right,
+      });
+    }
+    setOpen(o => !o);
+  }
+
+  function commit(newHex: string, newOpacity: number) {
+    const v = buildColorValue(newHex, newOpacity);
+    onChange(v);
+  }
+
   function commitHex(v: string) {
-    const clean = v.startsWith("#") ? v : "#" + v;
+    const clean = v.startsWith('#') ? v : '#' + v;
     if (/^#[0-9a-fA-F]{6}$/.test(clean)) {
-      onChange(clean);
       setHex(clean);
+      commit(clean, opacity);
     } else {
-      setHex(value); // reset to last valid value
+      setHex(hex);
     }
   }
 
+  const [r, g, b] = hexToRgb(hex);
+
+  const displayValue = buildColorValue(hex, opacity);
+
   return (
-    <div ref={ref} style={{ position: "relative", display: "inline-block" }}>
+    <div style={{ position: 'relative', display: 'inline-block' }}>
       <button
+        ref={btnRef}
         type="button"
-        onClick={() => setOpen(o => !o)}
+        onClick={openPicker}
         style={{
-          width: 28, height: 26, borderRadius: 4, border: "1px solid #e0dbd4",
-          background: value || "#fff", cursor: "pointer", padding: 0, flexShrink: 0,
+          width: 28, height: 26, borderRadius: 4, border: '1px solid #e0dbd4',
+          background: displayValue || '#fff', cursor: 'pointer', padding: 0, flexShrink: 0,
+          position: 'relative', overflow: 'hidden',
         }}
-        aria-label={`Color picker, current: ${value}`}
-      />
-      {open && (
-        <div style={{
-          position: "absolute", top: "calc(100% + 4px)", right: 0, zIndex: 9999,
-          background: "#fff", border: "1px solid #e0dbd4", borderRadius: 8,
-          boxShadow: "0 4px 16px rgba(0,0,0,0.13)", padding: "0.6rem", minWidth: 192,
-        }}>
-          {/* Native OS color wheel */}
+        aria-label={`Color picker, current: ${displayValue}`}
+      >
+        {opacity < 100 && (
+          <div style={{
+            position: 'absolute', inset: 0,
+            backgroundImage: 'linear-gradient(45deg, #ccc 25%, transparent 25%, transparent 75%, #ccc 75%), linear-gradient(45deg, #ccc 25%, transparent 25%, transparent 75%, #ccc 75%)',
+            backgroundSize: '6px 6px',
+            backgroundPosition: '0 0, 3px 3px',
+            zIndex: 0,
+          }} />
+        )}
+        <div style={{ position: 'absolute', inset: 0, background: displayValue, zIndex: 1 }} />
+      </button>
+      {open && dropPos && createPortal(
+        <div
+          ref={dropRef}
+          style={{
+            position: 'fixed',
+            top: dropPos.top,
+            right: dropPos.right,
+            zIndex: 99999,
+            background: '#fff',
+            border: '1px solid #e0dbd4',
+            borderRadius: 10,
+            boxShadow: '0 8px 32px rgba(0,0,0,0.16)',
+            padding: '0.7rem',
+            minWidth: 220,
+          }}
+        >
+          {/* Color wheel */}
           <input
             type="color"
-            value={hex.length === 7 && hex.startsWith("#") ? hex : "#000000"}
-            onChange={e => { setHex(e.target.value); onChange(e.target.value); }}
-            style={{ width: "100%", height: 36, border: "none", padding: 0, cursor: "pointer",
-              borderRadius: 5, marginBottom: "0.4rem", display: "block" }}
+            value={hex.length === 7 && hex.startsWith('#') ? hex : '#000000'}
+            onChange={e => { setHex(e.target.value); commit(e.target.value, opacity); }}
+            style={{ width: '100%', height: 38, border: 'none', padding: 0, cursor: 'pointer', borderRadius: 6, marginBottom: '0.5rem', display: 'block' }}
           />
-          {/* Hex input */}
-          <input
-            type="text"
-            value={hex}
-            maxLength={7}
-            onChange={e => setHex(e.target.value)}
-            onBlur={e => commitHex(e.target.value)}
-            onKeyDown={e => { if (e.key === "Enter") commitHex(hex); }}
-            style={{
-              width: "100%", boxSizing: "border-box", border: "1px solid #e0dbd4",
-              borderRadius: 5, padding: "4px 8px", fontSize: "0.8rem", marginBottom: "0.5rem",
-            }}
-          />
-          {/* Preset swatches */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 4 }}>
+
+          {/* HEX / RGB tabs */}
+          <div style={{ display: 'flex', gap: '2px', marginBottom: '0.4rem', background: '#f5f2ee', borderRadius: 6, padding: '2px' }}>
+            {(['hex','rgb'] as const).map(m => (
+              <button key={m} type="button" onClick={() => setMode(m)}
+                style={{ flex: 1, padding: '3px 0', fontSize: '0.7rem', fontWeight: mode === m ? 700 : 400, borderRadius: 4, border: 'none', background: mode === m ? '#fff' : 'transparent', color: mode === m ? '#1c1917' : '#9b8e85', cursor: 'pointer', letterSpacing: '0.05em', textTransform: 'uppercase', boxShadow: mode === m ? '0 1px 3px rgba(0,0,0,0.1)' : 'none', transition: 'all 0.15s' }}>
+                {m}
+              </button>
+            ))}
+          </div>
+
+          {/* HEX input */}
+          {mode === 'hex' && (
+            <input
+              type="text"
+              value={hex}
+              maxLength={7}
+              onChange={e => setHex(e.target.value)}
+              onBlur={e => commitHex(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter') commitHex(hex); }}
+              style={{ width: '100%', boxSizing: 'border-box', border: '1px solid #e0dbd4', borderRadius: 5, padding: '5px 8px', fontSize: '0.8rem', marginBottom: '0.5rem', fontFamily: 'monospace' }}
+            />
+          )}
+
+          {/* RGB inputs */}
+          {mode === 'rgb' && (
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '4px', marginBottom: '0.5rem' }}>
+              {([['R', r], ['G', g], ['B', b]] as [string, number][]).map(([label, val], idx) => (
+                <div key={label}>
+                  <div style={{ fontSize: '0.6rem', fontWeight: 700, textTransform: 'uppercase', color: '#9b8e85', textAlign: 'center', marginBottom: '2px' }}>{label}</div>
+                  <input
+                    type="number"
+                    min={0} max={255}
+                    value={val}
+                    onChange={e => {
+                      const newVal = Math.min(255, Math.max(0, parseInt(e.target.value) || 0));
+                      const newRgb: [number,number,number] = [r, g, b];
+                      newRgb[idx] = newVal;
+                      const newHex = rgbToHex(...newRgb);
+                      setHex(newHex);
+                      commit(newHex, opacity);
+                    }}
+                    style={{ width: '100%', boxSizing: 'border-box', border: '1px solid #e0dbd4', borderRadius: 5, padding: '4px 4px', fontSize: '0.78rem', textAlign: 'center' }}
+                  />
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Opacity */}
+          <div style={{ marginBottom: '0.5rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '3px' }}>
+              <span style={{ fontSize: '0.65rem', fontWeight: 700, textTransform: 'uppercase', color: '#9b8e85', letterSpacing: '0.06em' }}>Opacity</span>
+              <span style={{ fontSize: '0.72rem', color: '#6b5e56', fontFamily: 'monospace' }}>{opacity}%</span>
+            </div>
+            <input
+              type="range"
+              min={0} max={100}
+              value={opacity}
+              onChange={e => { const o = parseInt(e.target.value); setOpacity(o); commit(hex, o); }}
+              style={{ width: '100%', accentColor: '#0d9488', cursor: 'pointer' }}
+            />
+          </div>
+
+          {/* Presets */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 4 }}>
             {COLOR_PRESETS.map(p => (
               <button
                 key={p}
                 type="button"
-                onClick={() => { onChange(p); setHex(p); setOpen(false); }}
-                style={{
-                  width: "100%", aspectRatio: "1", borderRadius: 4, border: "1px solid #e0dbd4",
-                  background: p, cursor: "pointer", padding: 0,
-                }}
+                onClick={() => { setHex(p); setOpacity(100); commit(p, 100); setOpen(false); }}
+                style={{ width: '100%', aspectRatio: '1', borderRadius: 4, border: '1px solid #e0dbd4', background: p, cursor: 'pointer', padding: 0 }}
                 aria-label={p}
               />
             ))}
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
@@ -375,6 +498,25 @@ export default function SiteEditor() {
   }
 
   const [previewDevice, setPreviewDevice] = useState<"mobile" | "desktop">("desktop");
+
+  // Publish state
+  const [publishing, setPublishing] = useState(false);
+
+  async function handlePublish() {
+    setPublishing(true);
+    try {
+      await fetch(`/api/sites/${site.id}/settings`, {
+        method: "PUT",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ isLive: 1 }),
+      });
+      toast("Site published!");
+    } catch {
+      toast("Publish failed", true);
+    } finally {
+      setPublishing(false);
+    }
+  }
 
   // Website section state
   const [activeTab, setActiveTab]         = useState<"tiles" | "content">("tiles");
@@ -1682,6 +1824,8 @@ export default function SiteEditor() {
       {section === "website" && (
         <div style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}>
           <div className="section-topbar">
+            <span className="topbar-brand">DreamySuite</span>
+            <span className="topbar-sep">/</span>
             <span className="section-topbar-title">Website</span>
             <div className="section-topbar-spacer" />
             <button className="settings-gear-btn" onClick={() => setSettingsOpen(true)}>
@@ -1695,25 +1839,23 @@ export default function SiteEditor() {
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
               </svg>
-              Guest Preview
+              Preview
             </button>
             <div className="section-topbar-divider" />
             <button className="btn-ghost" onClick={handleUndo} disabled={blockHistory.length === 0} title="Undo" aria-label="Undo" style={{ padding: "6px 10px", gap: "5px" }}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/>
-              </svg>
-              Undo
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg>
             </button>
             <button className="btn-ghost" onClick={handleRedo} disabled={blockFuture.length === 0} title="Redo" aria-label="Redo" style={{ padding: "6px 10px", gap: "5px" }}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <path d="m15 14 5-5-5-5"/><path d="M20 9H9.5A5.5 5.5 0 0 0 4 14.5v0A5.5 5.5 0 0 0 9.5 20H13"/>
-              </svg>
-              Redo
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M15 14l5-5-5-5"/><path d="M20 9H9.5a5.5 5.5 0 0 0 0 11H13"/></svg>
             </button>
             <div className="section-topbar-divider" />
-            <button className="btn-ghost" onClick={() => setSection("templates")}>Save Template</button>
+            <button className="btn-ghost" onClick={() => setSection("templates")}>Template</button>
             <div className="section-topbar-divider" />
             <button className="btn-primary-sm" onClick={handleSaveLayout}>Save Layout</button>
+            <div className="section-topbar-divider" />
+            <button className="btn-publish" onClick={handlePublish} disabled={publishing}>
+              {publishing ? "Publishing…" : "Publish"}
+            </button>
           </div>
 
           <div className="builder-shell">
@@ -2082,32 +2224,34 @@ export default function SiteEditor() {
                                       </div>
                                     </div>
                                     <div className="sf-group">
-                                      <label className="sf-lbl">Image Focus Area</label>
-                                      <div style={{fontSize:'0.68rem',color:'#9b8e85',marginBottom:'5px'}}>Where photos crop when space is limited</div>
-                                      <div style={{display:'flex',gap:'3px',marginBottom:'4px'}}>
-                                        {(['top','center','bottom'] as const).map(v=>(
-                                          <button key={v} onClick={()=>setField('imageFocusY',cfg.imageFocusY===v?null:v)}
-                                            style={{flex:1,padding:'3px',borderRadius:'4px',border:'1.5px solid',fontSize:'0.72rem',cursor:'pointer',textTransform:'capitalize',
-                                              borderColor:(cfg.imageFocusY??'center')===v?'#0d9488':'#e0dbd4',
-                                              background:(cfg.imageFocusY??'center')===v?'#0d9488':'#fff',
-                                              color:(cfg.imageFocusY??'center')===v?'#fff':'#6b5e56'}}>{v}</button>
-                                        ))}
-                                      </div>
-                                      <div style={{display:'flex',gap:'3px'}}>
-                                        {(['left','center','right'] as const).map(h=>(
-                                          <button key={h} onClick={()=>setField('imageFocusX',cfg.imageFocusX===h?null:h)}
-                                            style={{flex:1,padding:'3px',borderRadius:'4px',border:'1.5px solid',fontSize:'0.72rem',cursor:'pointer',textTransform:'capitalize',
-                                              borderColor:(cfg.imageFocusX??'center')===h?'#0d9488':'#e0dbd4',
-                                              background:(cfg.imageFocusX??'center')===h?'#0d9488':'#fff',
-                                              color:(cfg.imageFocusX??'center')===h?'#fff':'#6b5e56'}}>{h}</button>
-                                        ))}
+                                      <label className="sf-lbl">Image Focus <span style={{fontWeight:400,color:'#b0a99f',fontSize:'0.68rem'}}>drag to set crop center</span></label>
+                                      <div
+                                        style={{position:'relative',width:'100%',paddingTop:'55%',background:'#f0ede8',borderRadius:'6px',overflow:'hidden',cursor:'crosshair',border:'1px solid #e0dbd4',userSelect:'none',touchAction:'none'}}
+                                        onPointerDown={e=>{e.currentTarget.setPointerCapture(e.pointerId);const rect=e.currentTarget.getBoundingClientRect();const x=Math.round((e.clientX-rect.left)/rect.width*100);const y=Math.round((e.clientY-rect.top)/rect.height*100);setField('imageCrop',`${x}% ${y}%`);}}
+                                        onPointerMove={e=>{if(!e.currentTarget.hasPointerCapture(e.pointerId))return;const rect=e.currentTarget.getBoundingClientRect();const x=Math.round((e.clientX-rect.left)/rect.width*100);const y=Math.round((e.clientY-rect.top)/rect.height*100);setField('imageCrop',`${x}% ${y}%`);}}
+                                      >
+                                        {(Array.isArray(cfg.urls) && (cfg.urls as string[]).length > 0)
+                                          ? <img src={String((cfg.urls as string[])[0])} style={{position:'absolute',inset:0,width:'100%',height:'100%',objectFit:'cover',pointerEvents:'none'}} alt="" />
+                                          : <div style={{position:'absolute',inset:0,display:'flex',alignItems:'center',justifyContent:'center',color:'#b0a99f',fontSize:'0.78rem'}}>Add photos to preview</div>}
+                                        {(()=>{
+                                          const raw = String(cfg.imageCrop ?? '50% 50%');
+                                          const pts = raw.replace(/%/g,'').trim().split(/\s+/);
+                                          const fx = parseFloat(pts[0])||50;
+                                          const fy = parseFloat(pts[1]??pts[0])||50;
+                                          return (Array.isArray(cfg.urls) && (cfg.urls as string[]).length > 0)
+                                            ? <div style={{position:'absolute',width:'16px',height:'16px',borderRadius:'50%',background:'white',border:'2.5px solid #E75850',boxShadow:'0 1px 5px rgba(0,0,0,0.35)',transform:'translate(-50%,-50%)',pointerEvents:'none',left:`${fx}%`,top:`${fy}%`}} />
+                                            : null;
+                                        })()}
                                       </div>
                                     </div>
                                     <div className="sf-group">
-                                      <label className="sf-lbl">Photo Height (px)</label>
-                                      <div style={{display:'flex',alignItems:'center',gap:'8px'}}>
-                                        <input type="number" className="sf-input" style={{width:'80px'}} value={String(cfg.photoHeight??'')} onChange={e=>setField('photoHeight',e.target.value?Number(e.target.value):null)} placeholder="Auto" />
-                                        <span style={{fontSize:'0.72rem',color:'#9b8e85'}}>Leave blank for auto</span>
+                                      <label className="sf-lbl">Photo Size (px)</label>
+                                      <div style={{display:'flex',gap:'8px',alignItems:'center',flexWrap:'wrap'}}>
+                                        <span style={{fontSize:'0.72rem',color:'#9b8e85'}}>W</span>
+                                        <input type="number" className="sf-input" style={{width:'72px',textAlign:'center'}} value={String(cfg.photoWidth??'')} onChange={e=>setField('photoWidth',e.target.value?Number(e.target.value):null)} placeholder="Auto" />
+                                        <span style={{fontSize:'0.72rem',color:'#9b8e85'}}>H</span>
+                                        <input type="number" className="sf-input" style={{width:'72px',textAlign:'center'}} value={String(cfg.photoHeight??'')} onChange={e=>setField('photoHeight',e.target.value?Number(e.target.value):null)} placeholder="Auto" />
+                                        <span style={{fontSize:'0.65rem',color:'#b0a99f'}}>Leave blank for auto</span>
                                       </div>
                                     </div>
                                     <div className="sf-group">
@@ -2676,8 +2820,13 @@ export default function SiteEditor() {
       {section === "media" && (
         <div style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}>
           <div className="section-topbar">
+            <span className="topbar-brand">DreamySuite</span>
+            <span className="topbar-sep">/</span>
             <span className="section-topbar-title">Media</span>
             <div className="section-topbar-spacer" />
+            <button className="btn-publish" onClick={handlePublish} disabled={publishing}>
+              {publishing ? "Publishing…" : "Publish"}
+            </button>
           </div>
 
           {/* Sub-tabs */}
@@ -2877,8 +3026,13 @@ export default function SiteEditor() {
       {section === "guestlist" && (
         <div style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}>
           <div className="section-topbar">
+            <span className="topbar-brand">DreamySuite</span>
+            <span className="topbar-sep">/</span>
             <span className="section-topbar-title">Guest List</span>
             <div className="section-topbar-spacer" />
+            <button className="btn-publish" onClick={handlePublish} disabled={publishing}>
+              {publishing ? "Publishing…" : "Publish"}
+            </button>
           </div>
           <div className="gl-shell">
             <div className="gl-toolbar">
@@ -3002,8 +3156,13 @@ export default function SiteEditor() {
       {section === "templates" && (
         <div style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}>
           <div className="section-topbar">
+            <span className="topbar-brand">DreamySuite</span>
+            <span className="topbar-sep">/</span>
             <span className="section-topbar-title">Templates</span>
             <div className="section-topbar-spacer" />
+            <button className="btn-publish" onClick={handlePublish} disabled={publishing}>
+              {publishing ? "Publishing…" : "Publish"}
+            </button>
           </div>
           <div className="tmpl-shell">
             <div className="tmpl-header">
@@ -3075,8 +3234,13 @@ export default function SiteEditor() {
       {section === "site-setup" && (
         <div style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}>
           <div className="section-topbar">
+            <span className="topbar-brand">DreamySuite</span>
+            <span className="topbar-sep">/</span>
             <span className="section-topbar-title">Site Setup</span>
             <div className="section-topbar-spacer" />
+            <button className="btn-publish" onClick={handlePublish} disabled={publishing}>
+              {publishing ? "Publishing…" : "Publish"}
+            </button>
           </div>
           <div className="site-setup-body">
             {/* Website Type */}
@@ -3197,21 +3361,48 @@ export default function SiteEditor() {
                     >
                       Open Site ↗
                     </a>
-                    {"share" in navigator && (
-                      <button
-                        className="btn-ghost"
-                        style={{ fontSize: "0.82rem" }}
-                        onClick={() => {
-                          (navigator as Navigator & { share: (d: object) => Promise<void> }).share({
-                            title: site.name ?? "Our Wedding Site",
-                            url: publicUrl,
-                          }).catch(() => {/* dismissed */});
-                        }}
-                      >
-                        Share…
-                      </button>
-                    )}
                   </div>
+
+                  {/* ── Invite Collaborator ── */}
+                  {(()=>{
+                    return (
+                      <div style={{ marginBottom: '1.25rem' }}>
+                        <div style={{ fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: '#9b8e85', marginBottom: '0.5rem' }}>Collaborators</div>
+                        <p style={{ fontSize: '0.78rem', color: '#6b5e56', lineHeight: 1.5, marginBottom: '0.75rem' }}>
+                          Share this editor link with anyone you want to edit this site with.
+                        </p>
+                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                          <div style={{
+                            flex: 1, minWidth: 0,
+                            background: '#f5f0eb', borderRadius: '8px',
+                            padding: '0.55rem 0.85rem',
+                            fontSize: '0.78rem', color: '#6b5e56',
+                            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                            border: '1.5px solid #e0dbd4',
+                          }}>
+                            {`https://dreamysuite.com/sites/${site.id}`}
+                          </div>
+                          <button
+                            className="btn-primary-sm"
+                            style={{ flexShrink: 0 }}
+                            onClick={async () => {
+                              try {
+                                await navigator.clipboard.writeText(`https://dreamysuite.com/sites/${site.id}`);
+                                toast('Editor link copied!');
+                              } catch {
+                                toast('Could not copy link', true);
+                              }
+                            }}
+                          >
+                            Copy Link
+                          </button>
+                        </div>
+                        <p style={{ fontSize: '0.7rem', color: '#b0a99f', marginTop: '0.4rem', lineHeight: 1.4 }}>
+                          Anyone with this link and a DreamySuite account can edit your site.
+                        </p>
+                      </div>
+                    );
+                  })()}
 
                   {/* QR image + download */}
                   <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: "0.75rem" }}>
@@ -3546,10 +3737,12 @@ export default function SiteEditor() {
       {section === "analytics" && (
         <div style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}>
           <div className="section-topbar">
+            <span className="topbar-brand">DreamySuite</span>
+            <span className="topbar-sep">/</span>
             <span className="section-topbar-title">Analytics</span>
             <div className="section-topbar-spacer" />
-            <button className="btn-ghost" onClick={fetchAnalytics} aria-label="Refresh analytics">
-              ↻ Refresh
+            <button className="btn-publish" onClick={handlePublish} disabled={publishing}>
+              {publishing ? "Publishing…" : "Publish"}
             </button>
           </div>
           <div className="analytics-body">
