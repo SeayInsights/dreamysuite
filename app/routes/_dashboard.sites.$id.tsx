@@ -709,7 +709,7 @@ export default function SiteEditor() {
         cardColor:          data.settings.cardColor          ?? "",
         cardImage:          data.settings.cardImage          ?? "",
         navShape:           data.settings.navShape           ?? "",
-        navLinkPadding:     data.settings.navLinkPadding     ?? "14px",
+        navLinkPadding:     (() => { const v = data.settings.navLinkPadding ?? "14px"; if (v.endsWith("rem")) return Math.round(parseFloat(v) * 16) + "px"; return v; })(),
         navUnderline:       data.settings.navUnderline       ?? "on",
         popupEnabled:       (data.settings.popupEnabled      ?? 1) as 0 | 1,
         popupTitle:         data.settings.popupTitle         ?? "",
@@ -4365,6 +4365,14 @@ export default function SiteEditor() {
                       <p style={{ fontSize: "0.75rem", color: "#9b8e85", marginBottom: "1rem", lineHeight: 1.6 }}>
                         Set a main language and an optional second language. Guests can switch between them on your site.
                       </p>
+                      {settingsForm.secondLanguage && (
+                        <div style={{ background: "#fff7ed", border: "1px solid #fed7aa", borderRadius: "8px", padding: "0.75rem 0.875rem", marginBottom: "1rem" }}>
+                          <div style={{ fontSize: "0.78rem", fontWeight: 600, color: "#92400e", marginBottom: "3px" }}>Action required</div>
+                          <div style={{ fontSize: "0.73rem", color: "#78350f", lineHeight: 1.55 }}>
+                            To translate your site, go to the <strong>Website</strong> section, open each content block, and enter the translated text in the second language fields. The language toggle will appear on your site once translated content is saved.
+                          </div>
+                        </div>
+                      )}
                       <div className="sf-group">
                         <label className="sf-lbl" htmlFor="s-main-lang">Main Language</label>
                         <select id="s-main-lang" className="sf-input" value={settingsForm.mainLanguage} onChange={(e) => setSettingsForm((f) => ({ ...f, mainLanguage: e.target.value }))}>
