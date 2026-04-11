@@ -40,67 +40,20 @@ export default function DashboardIndex() {
   const { sites } = useLoaderData<typeof loader>();
 
   return (
-    <div style={{ padding: "2rem 2.5rem", maxWidth: "960px" }}>
+    <div className="sites-page ds-animate">
       {/* Header */}
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          marginBottom: "2rem",
-        }}
-      >
+      <div className="sites-header">
         <div>
-          <h1
-            style={{
-              fontSize: "1.5rem",
-              fontWeight: 700,
-              color: "#1c1917",
-              letterSpacing: "-0.02em",
-              marginBottom: "0.25rem",
-            }}
-          >
-            My Sites
-          </h1>
-          <p style={{ fontSize: "0.875rem", color: "#9b8e85" }}>
+          <h1 className="sites-heading">My Sites</h1>
+          <p className="sites-subheading">
             {sites.length === 0
               ? "No sites yet — create your first one"
               : `${sites.length} site${sites.length === 1 ? "" : "s"}`}
           </p>
         </div>
 
-        <Link
-          to="/sites/new"
-          style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: "0.4rem",
-            padding: "0.6rem 1.125rem",
-            background: "#0d9488",
-            color: "white",
-            borderRadius: "8px",
-            fontSize: "0.875rem",
-            fontWeight: 600,
-            textDecoration: "none",
-            transition: "background 0.15s",
-          }}
-          onMouseOver={(e) =>
-            ((e.currentTarget as HTMLAnchorElement).style.background = "#0f766e")
-          }
-          onMouseOut={(e) =>
-            ((e.currentTarget as HTMLAnchorElement).style.background = "#0d9488")
-          }
-        >
-          <svg
-            width="14"
-            height="14"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
+        <Link to="/sites/new" className="ds-btn-primary">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <path d="M12 5v14M5 12h14" />
           </svg>
           New Site
@@ -110,13 +63,7 @@ export default function DashboardIndex() {
       {sites.length === 0 ? (
         <EmptyState />
       ) : (
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))",
-            gap: "1rem",
-          }}
-        >
+        <div className="sites-grid ds-stagger">
           {sites.map((site) => (
             <SiteCard key={site.id} site={site} />
           ))}
@@ -128,85 +75,19 @@ export default function DashboardIndex() {
 
 function EmptyState() {
   return (
-    <div
-      style={{
-        textAlign: "center",
-        padding: "5rem 2rem",
-        background: "white",
-        borderRadius: "12px",
-        border: "1px solid #e8e4e0",
-      }}
-    >
-      <div
-        style={{
-          width: "72px",
-          height: "72px",
-          background: "#f0fdfa",
-          borderRadius: "16px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          margin: "0 auto 1.25rem",
-        }}
-      >
-        <svg
-          width="32"
-          height="32"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="#0d9488"
-          strokeWidth="1.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
+    <div className="sites-empty">
+      <div className="sites-empty-icon">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
           <rect x="3" y="3" width="18" height="18" rx="2" />
           <path d="M3 9h18M9 21V9" />
           <path d="M12 13h4M12 16h2" />
         </svg>
       </div>
-      <h2
-        style={{
-          fontSize: "1.125rem",
-          fontWeight: 700,
-          color: "#1c1917",
-          marginBottom: "0.5rem",
-          letterSpacing: "-0.01em",
-        }}
-      >
-        Build your first site
-      </h2>
-      <p
-        style={{
-          fontSize: "0.875rem",
-          color: "#9b8e85",
-          maxWidth: "320px",
-          margin: "0 auto 1.75rem",
-          lineHeight: 1.6,
-        }}
-      >
+      <h2 className="sites-empty-heading">Build your first site</h2>
+      <p className="sites-empty-body">
         Choose a template, add your content, and publish — no code required.
       </p>
-      <Link
-        to="/sites/new"
-        style={{
-          display: "inline-flex",
-          alignItems: "center",
-          gap: "0.4rem",
-          padding: "0.7rem 1.5rem",
-          background: "#0d9488",
-          color: "white",
-          borderRadius: "8px",
-          fontSize: "0.9rem",
-          fontWeight: 600,
-          textDecoration: "none",
-        }}
-        onMouseOver={(e) =>
-          ((e.currentTarget as HTMLAnchorElement).style.background = "#0f766e")
-        }
-        onMouseOut={(e) =>
-          ((e.currentTarget as HTMLAnchorElement).style.background = "#0d9488")
-        }
-      >
+      <Link to="/sites/new" className="ds-btn-primary">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
           <path d="M12 5v14M5 12h14" />
         </svg>
@@ -221,75 +102,24 @@ function SiteCard({ site }: { site: Site }) {
   const relativeTime = formatRelative(site.updatedAt);
 
   return (
-    <Link to={`/sites/${site.id}`} style={{ textDecoration: "none" }}>
-      <div
-        style={{
-          background: "white",
-          borderRadius: "10px",
-          border: "1px solid #e8e4e0",
-          overflow: "hidden",
-          transition: "box-shadow 0.15s, border-color 0.15s",
-          cursor: "pointer",
-        }}
-        onMouseOver={(e) => {
-          const el = e.currentTarget as HTMLDivElement;
-          el.style.boxShadow = "0 4px 16px rgba(0,0,0,0.08)";
-          el.style.borderColor = "#0d9488";
-        }}
-        onMouseOut={(e) => {
-          const el = e.currentTarget as HTMLDivElement;
-          el.style.boxShadow = "none";
-          el.style.borderColor = "#e8e4e0";
-        }}
-      >
+    <Link to={`/sites/${site.id}`} className="site-card-outer">
+      <div className="site-card-inner">
         <div
-          style={{
-            height: "120px",
-            background: site.previewColor ?? "#0d9488",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
+          className="site-card-preview"
+          style={{ background: site.previewColor ?? "var(--ds-bg-subtle)" }}
         >
-          <svg
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="rgba(255,255,255,0.6)"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
             <rect x="3" y="3" width="18" height="18" rx="2" />
             <path d="M3 9h18M9 21V9" />
           </svg>
         </div>
-        <div style={{ padding: "0.875rem 1rem" }}>
-          <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "0.5rem" }}>
+        <div className="site-card-body">
+          <div className="site-card-row">
             <div style={{ minWidth: 0 }}>
-              <p style={{ fontSize: "0.875rem", fontWeight: 600, color: "#1c1917", marginBottom: "0.2rem" }}>
-                {site.name}
-              </p>
-              <p style={{ fontSize: "0.75rem", color: "#9b8e85", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                {label} · {relativeTime}
-              </p>
+              <p className="site-card-name">{site.name}</p>
+              <p className="site-card-meta">{label} · {relativeTime}</p>
             </div>
-            <span
-              style={{
-                fontSize: "0.65rem",
-                fontWeight: 600,
-                padding: "0.2rem 0.5rem",
-                borderRadius: "4px",
-                background: site.status === "published" ? "#f0fdfa" : "#f0ede8",
-                color: site.status === "published" ? "#0f766e" : "#9b8e85",
-                textTransform: "uppercase",
-                letterSpacing: "0.04em",
-                flexShrink: 0,
-              }}
-            >
-              {site.status}
-            </span>
+            <span className={`site-card-badge ${site.status}`}>{site.status}</span>
           </div>
         </div>
       </div>
