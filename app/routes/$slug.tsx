@@ -399,16 +399,27 @@ function buildStyles(settings: SiteSettingRow | null): BuiltStyles {
     }
     .door {
       position:absolute; top:0; bottom:0; width:50%;
-      background:linear-gradient(175deg,#2e2214 0%,#1e1608 50%,#120e06 100%);
+      background:
+        repeating-linear-gradient(3deg,transparent,transparent 4px,rgba(0,0,0,0.06) 4px,rgba(0,0,0,0.06) 5px),
+        linear-gradient(175deg,#2e2214 0%,#1e1608 50%,#120e06 100%);
       transform-style:preserve-3d; will-change:transform;
+    }
+    /* Horizontal panel lines at 30% and 65% */
+    .door::before {
+      content:''; position:absolute; left:0; right:0; top:30%; height:1px;
+      background:rgba(255,220,120,0.07); pointer-events:none;
+    }
+    .door::after {
+      content:''; position:absolute; left:0; right:0; top:65%; height:1px;
+      background:rgba(255,220,120,0.06); pointer-events:none;
     }
     .door-l {
       left:0; transform-origin:left center;
-      box-shadow:inset -40px 0 100px rgba(0,0,0,0.7),3px 0 6px rgba(0,0,0,0.5);
+      box-shadow:inset -60px 0 120px rgba(0,0,0,0.8),3px 0 6px rgba(0,0,0,0.5);
     }
     .door-r {
       right:0; transform-origin:right center;
-      box-shadow:inset 40px 0 100px rgba(0,0,0,0.7),-3px 0 6px rgba(0,0,0,0.5);
+      box-shadow:inset 60px 0 120px rgba(0,0,0,0.8),-3px 0 6px rgba(0,0,0,0.5);
     }
     .door-panel-inset {
       position:absolute; top:10%; bottom:10%; left:12%; right:12%;
@@ -442,6 +453,37 @@ function buildStyles(settings: SiteSettingRow | null): BuiltStyles {
       letter-spacing:0.06em; text-shadow:0 2px 20px rgba(255,180,50,0.2),0 0 60px rgba(255,150,30,0.1);
     }
     .door-cue { font-style:italic; color:rgba(255,210,90,0.45); font-size:0.82rem; letter-spacing:0.14em; }
+
+    /* Ground fog / smoke layer */
+    @keyframes door-cloud-drift-a {
+      0%,100% { transform:translateX(0) scaleX(1); opacity:0.55; }
+      50%     { transform:translateX(20px) scaleX(1.08); opacity:0.7; }
+    }
+    @keyframes door-cloud-drift-b {
+      0%,100% { transform:translateX(0) scaleX(1); opacity:0.45; }
+      50%     { transform:translateX(-18px) scaleX(1.06); opacity:0.62; }
+    }
+    @keyframes door-cloud-drift-c {
+      0%,100% { transform:translateX(0); opacity:0.32; }
+      50%     { transform:translateX(14px); opacity:0.5; }
+    }
+    .door-smoke {
+      position:absolute; bottom:0; left:0; right:0; height:35%;
+      z-index:3; pointer-events:none; overflow:hidden;
+    }
+    .door-smoke-cloud {
+      position:absolute; bottom:0; border-radius:50%;
+      background:radial-gradient(ellipse at 50% 80%,rgba(40,20,8,0.55) 0%,rgba(30,15,5,0.3) 40%,transparent 75%);
+      pointer-events:none;
+    }
+    /* Warm light flood on door open */
+    .door-light-flood {
+      position:absolute; top:50%; left:50%;
+      transform:translate(-50%,-50%) scaleX(0.1) scaleY(0.1);
+      width:100%; height:100%;
+      background:radial-gradient(ellipse at 50% 50%,rgba(255,200,100,0.85) 0%,rgba(255,160,50,0.45) 30%,transparent 68%);
+      z-index:5; pointer-events:none; opacity:0;
+    }
 
     /* ════════════════════════════════
        STORYBOOK — Full-screen Disney book
@@ -1771,6 +1813,15 @@ function buildIntroHtml(
   <div class="door-glow"></div>
   <div class="door door-l"><div class="door-panel-inset"></div><div class="door-knob door-knob-l"></div></div>
   <div class="door door-r"><div class="door-panel-inset"></div><div class="door-knob door-knob-r"></div></div>
+  <div class="door-smoke">
+    <div class="door-smoke-cloud" style="width:90%;height:60%;left:5%;animation:door-cloud-drift-a 11s ease-in-out infinite;"></div>
+    <div class="door-smoke-cloud" style="width:58%;height:78%;left:-4%;animation:door-cloud-drift-b 8s ease-in-out 1.2s infinite;"></div>
+    <div class="door-smoke-cloud" style="width:56%;height:72%;right:-4%;left:auto;animation:door-cloud-drift-a 9.5s ease-in-out 0.6s infinite;"></div>
+    <div class="door-smoke-cloud" style="width:70%;height:55%;left:15%;animation:door-cloud-drift-c 13s ease-in-out 2.1s infinite;"></div>
+    <div class="door-smoke-cloud" style="width:48%;height:65%;left:12%;animation:door-cloud-drift-b 10s ease-in-out 3.5s infinite;"></div>
+    <div class="door-smoke-cloud" style="width:44%;height:60%;right:10%;left:auto;animation:door-cloud-drift-a 12s ease-in-out 1.8s infinite;"></div>
+  </div>
+  <div class="door-light-flood"></div>
   <div class="door-centre-text">
     <p class="door-title">${title}</p>
     <p class="door-cue">click to enter</p>
@@ -2038,6 +2089,8 @@ function _addReplayBtn() {
       gsap.set('.door-glow', { width:'3px', filter:'blur(2px)', opacity:1 });
       gsap.set('.door-cue', { opacity:1 });
       gsap.set('.door-centre-text', { opacity:1 });
+      gsap.set('.door-smoke-cloud', { scaleY:1, scaleX:1, y:'0%', opacity:1, clearProps:'background' });
+      gsap.set('.door-light-flood', { scaleX:0.1, scaleY:0.1, opacity:0 });
       ` : animation === "storybook" ? `
       gsap.set('.book-cover', { rotateY:0 });
       gsap.set('.book-page-bg', { filter:'none' });
@@ -2094,16 +2147,22 @@ function openIntro() {
   var tl = gsap.timeline({ onComplete: function(){
     if (_bundleCard) {
       el.removeEventListener('click', openIntro);
-      gsap.set(el, { background:'rgba(0,0,0,0.88)' });
-      gsap.to(_bundleCard, { opacity:1, scale:1, duration:0.4, ease:'back.out(1.2)', pointerEvents:'auto' });
+      gsap.set(el, { background:'rgba(8,4,1,0.92)' });
+      gsap.to('.door-smoke-cloud', { background:'radial-gradient(ellipse at 50% 80%,rgba(190,140,55,0.22) 0%,rgba(170,110,35,0.12) 40%,transparent 72%)', duration:0.65 });
+      gsap.to(_bundleCard, { opacity:1, scale:1, y:0, duration:0.55, ease:'back.out(1.1)', pointerEvents:'auto', delay:0.18 });
     } else { _afterAnimDone(el); }
   } });
-  tl.to('.door-cue',  { opacity:0, duration:0.2 })
-    .to('.door-glow', { width:'90px', filter:'blur(18px)', opacity:1.0, duration:0.55, ease:'power3.in' }, 0)
-    .to('.door-l',    { rotateY:-122, duration:1.45, ease:'power4.inOut' }, 0.28)
-    .to('.door-r',    { rotateY:122,  duration:1.45, ease:'power4.inOut' }, 0.28)
-    .to('.door-glow', { width:'320px', filter:'blur(40px)', opacity:0.55, duration:0.5, ease:'power1.out' }, 0.7)
-    .to('.door-glow', { opacity:0, duration:0.55, ease:'power2.in' }, '-=0.15')
+  tl
+    .to('.door-cue',         { opacity:0, duration:0.2 }, 0)
+    .to('.door-smoke-cloud', { scaleY:1.65, opacity:0.9, duration:0.35, ease:'power2.out', stagger:0.04 }, 0)
+    .to('.door-glow',        { width:'110px', filter:'blur(20px)', opacity:1.0, duration:0.55, ease:'power3.in' }, 0)
+    .to('.door-l',           { rotateY:-122, duration:1.45, ease:'power4.inOut' }, 0.28)
+    .to('.door-r',           { rotateY:122,  duration:1.45, ease:'power4.inOut' }, 0.28)
+    .to('.door-light-flood', { scaleX:6, scaleY:4, opacity:1, duration:0.28, ease:'power3.out' }, 0.55)
+    .to('.door-light-flood', { opacity:0, duration:0.88, ease:'power1.in' }, 0.83)
+    .to('.door-smoke-cloud', { y:'-30%', scaleX:2, opacity:0.35, duration:0.85, ease:'power1.out' }, 0.72)
+    .to('.door-glow',        { width:'360px', filter:'blur(44px)', opacity:0.55, duration:0.5, ease:'power1.out' }, 0.72)
+    .to('.door-glow',        { opacity:0, duration:0.55, ease:'power2.in' }, '-=0.15')
     ${popupBundleActive ? `.to(['.door-l','.door-r','.door-centre-text'], { opacity:0, duration:0.4 }, '-=0.35')` : `.to(el, { opacity:0, duration:0.52, ease:'power2.in' }, '-=0.38')`};
   ` : animation === "storybook" ? `
   var _bundleCard = document.getElementById('intro-bundle-card');
