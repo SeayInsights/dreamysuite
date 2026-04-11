@@ -58,6 +58,16 @@ interface Photo {
   createdAt: number;
 }
 
+interface MediaItem {
+  id: string;
+  siteId: string;
+  mediaType: "video" | "music";
+  url: string;
+  title: string | null;
+  sortOrder: number;
+  createdAt: number;
+}
+
 interface Guest {
   id: string;
   siteId: string;
@@ -149,7 +159,7 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
-type Section = "website" | "photos" | "guestlist" | "templates" | "site-setup" | "analytics";
+type Section = "website" | "media" | "guestlist" | "templates" | "site-setup" | "analytics";
 
 const EVENT_TYPES = [
   { type: "wedding",     icon: "💍", label: "Wedding" },
@@ -378,6 +388,23 @@ export default function SiteEditor() {
   const [photoPickerOpen, setPhotoPickerOpen] = useState(false);
   const [photoPickerTarget, setPhotoPickerTarget] = useState<((url: string) => void) | null>(null);
 
+  // Media section sub-tab
+  const [mediaTab, setMediaTab] = useState<"photos" | "videos" | "music">("photos");
+
+  // Video items state
+  const [videos, setVideos]               = useState<MediaItem[]>([]);
+  const [videosLoading, setVideosLoading] = useState(false);
+  const [newVideoUrl, setNewVideoUrl]     = useState("");
+  const [newVideoTitle, setNewVideoTitle] = useState("");
+  const [addingVideo, setAddingVideo]     = useState(false);
+
+  // Music tracks state
+  const [musicTracks, setMusicTracks]         = useState<MediaItem[]>([]);
+  const [musicLoading, setMusicLoading]       = useState(false);
+  const [newMusicUrl, setNewMusicUrl]         = useState("");
+  const [newMusicTitle, setNewMusicTitle]     = useState("");
+  const [addingMusicTrack, setAddingMusicTrack] = useState(false);
+
   // Guests section state
   const [guests, setGuests]                 = useState<Guest[]>([]);
   const [guestsLoading, setGuestsLoading]   = useState(false);
@@ -569,6 +596,30 @@ export default function SiteEditor() {
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
+  const fetchVideos = useCallback(async () => {
+    setVideosLoading(true);
+    try {
+      const data = await apiFetch("/media?type=video") as { items: MediaItem[] };
+      setVideos(data.items);
+    } catch (err) {
+      toast(err instanceof Error ? err.message : "Failed to load videos", true);
+    } finally {
+      setVideosLoading(false);
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const fetchMusicTracks = useCallback(async () => {
+    setMusicLoading(true);
+    try {
+      const data = await apiFetch("/media?type=music") as { items: MediaItem[] };
+      setMusicTracks(data.items);
+    } catch (err) {
+      toast(err instanceof Error ? err.message : "Failed to load music", true);
+    } finally {
+      setMusicLoading(false);
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   const fetchPhotos = useCallback(async () => {
     setPhotosLoading(true);
     try {
@@ -732,7 +783,7 @@ export default function SiteEditor() {
   }, [section]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
-    if (section === "photos") fetchPhotos();
+    if (section === "media") { fetchPhotos(); fetchVideos(); fetchMusicTracks(); }
   }, [section]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
@@ -764,6 +815,7 @@ export default function SiteEditor() {
 
   useEffect(() => {
     if (settingsOpen && !settings) fetchSettings();
+    if (settingsOpen && musicTracks.length === 0) fetchMusicTracks();
   }, [settingsOpen]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Sync active page when user clicks a nav link in the preview iframe
@@ -1147,6 +1199,66 @@ export default function SiteEditor() {
       toast("Photo deleted");
     } catch (err) {
       toast(err instanceof Error ? err.message : "Failed to delete photo", true);
+    }
+  }
+
+  async function handleAddVideo() {
+    if (!newVideoUrl.trim()) return;
+    setAddingVideo(true);
+    try {
+      const data = await apiFetch("/media", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ url: newVideoUrl.trim(), title: newVideoTitle.trim() || null, mediaType: "video" }),
+      }) as { item: MediaItem };
+      setVideos((prev) => [...prev, data.item]);
+      setNewVideoUrl("");
+      setNewVideoTitle("");
+      toast("Video added");
+    } catch (err) {
+      toast(err instanceof Error ? err.message : "Failed to add video", true);
+    } finally {
+      setAddingVideo(false);
+    }
+  }
+
+  async function handleDeleteVideo(videoId: string) {
+    try {
+      await apiFetch(`/media/${videoId}`, { method: "DELETE" });
+      setVideos((prev) => prev.filter((v) => v.id !== videoId));
+      toast("Video removed");
+    } catch (err) {
+      toast(err instanceof Error ? err.message : "Failed to remove video", true);
+    }
+  }
+
+  async function handleAddMusicTrack() {
+    if (!newMusicUrl.trim()) return;
+    setAddingMusicTrack(true);
+    try {
+      const data = await apiFetch("/media", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ url: newMusicUrl.trim(), title: newMusicTitle.trim() || null, mediaType: "music" }),
+      }) as { item: MediaItem };
+      setMusicTracks((prev) => [...prev, data.item]);
+      setNewMusicUrl("");
+      setNewMusicTitle("");
+      toast("Music added");
+    } catch (err) {
+      toast(err instanceof Error ? err.message : "Failed to add music", true);
+    } finally {
+      setAddingMusicTrack(false);
+    }
+  }
+
+  async function handleDeleteMusicTrack(trackId: string) {
+    try {
+      await apiFetch(`/media/${trackId}`, { method: "DELETE" });
+      setMusicTracks((prev) => prev.filter((m) => m.id !== trackId));
+      toast("Music removed");
+    } catch (err) {
+      toast(err instanceof Error ? err.message : "Failed to remove music", true);
     }
   }
 
@@ -2323,83 +2435,204 @@ export default function SiteEditor() {
         </div>
       )}
 
-      {/* ── PHOTOS ──────────────────────────────────────────── */}
-      {section === "photos" && (
+      {/* ── MEDIA ───────────────────────────────────────────── */}
+      {section === "media" && (
         <div style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}>
           <div className="section-topbar">
-            <span className="section-topbar-title">Photos</span>
+            <span className="section-topbar-title">Media</span>
             <div className="section-topbar-spacer" />
-            <button className="btn-ghost" onClick={() => setSection("templates")}>Save Template</button>
           </div>
-          <div className="lib-content" style={{ overflowY: "auto", flex: 1 }}>
-            <label className="upload-zone" aria-label="Upload photos">
-              <input
-                type="file"
-                accept="image/*"
-                multiple
-                style={{ display: "none" }}
-                onChange={(e) => handleUploadPhoto(e.target.files)}
-                disabled={uploading}
-              />
-              <div style={{ fontSize: "2rem", marginBottom: "0.5rem" }}>📷</div>
-              <div style={{ fontSize: "0.9rem", fontWeight: 600, color: "#1c1917", marginBottom: "0.25rem" }}>
-                {uploading ? "Uploading…" : "Drop photos here or click to upload"}
-              </div>
-              <div style={{ fontSize: "0.75rem", color: "#9b8e85" }}>
-                JPG, PNG, WebP — max 10 MB each
-              </div>
-            </label>
 
-            {photosLoading ? (
-              <p style={{ fontSize: "0.8rem", color: "#b0a99f", textAlign: "center", padding: "2rem 0" }}>
-                Loading photos…
-              </p>
-            ) : (
-              <div className="lib-grid">
-                {photos.length === 0 ? (
-                  <div
-                    className="lib-item"
-                    style={{ height: "120px", background: "#f0fdfa", display: "flex", alignItems: "center", justifyContent: "center" }}
-                  >
-                    <span style={{ fontSize: "0.7rem", color: "#9b8e85" }}>No photos yet</span>
-                  </div>
-                ) : (
-                  photos.map((photo) => (
-                    <div key={photo.id} className="lib-item" style={{ position: "relative" }}>
-                      <img
-                        src={`/api/sites/${site.id}/photos/${photo.id}`}
-                        alt={photo.filename}
-                        title={photo.filename}
-                        style={{ width: "100%", aspectRatio: "1", objectFit: "cover", display: "block", background: "#f0ede8" }}
-                      />
-                      <button
-                        onClick={() => handleDeletePhoto(photo.id)}
-                        aria-label={`Delete photo ${photo.filename}`}
-                        style={{
-                          position: "absolute",
-                          top: "4px",
-                          right: "4px",
-                          background: "rgba(28,25,23,0.65)",
-                          color: "#fff",
-                          border: "none",
-                          borderRadius: "4px",
-                          width: "22px",
-                          height: "22px",
-                          cursor: "pointer",
-                          fontSize: "0.7rem",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                        }}
-                      >
-                        ✕
-                      </button>
-                    </div>
-                  ))
-                )}
-              </div>
-            )}
+          {/* Sub-tabs */}
+          <div style={{ display: "flex", gap: 0, borderBottom: "1px solid #e8e4e0", background: "#fff", flexShrink: 0, padding: "0 1.25rem" }}>
+            {(["photos", "videos", "music"] as const).map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setMediaTab(tab)}
+                style={{
+                  padding: "0.6rem 1rem",
+                  fontSize: "0.8rem",
+                  fontWeight: mediaTab === tab ? 600 : 400,
+                  color: mediaTab === tab ? "#0d9488" : "#9b8e85",
+                  background: "none",
+                  border: "none",
+                  borderBottom: mediaTab === tab ? "2px solid #0d9488" : "2px solid transparent",
+                  cursor: "pointer",
+                  textTransform: "capitalize",
+                  marginBottom: "-1px",
+                }}
+              >
+                {tab}
+              </button>
+            ))}
           </div>
+
+          {/* ── Photos tab ── */}
+          {mediaTab === "photos" && (
+            <div className="lib-content" style={{ overflowY: "auto", flex: 1 }}>
+              <label className="upload-zone" aria-label="Upload photos">
+                <input
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  style={{ display: "none" }}
+                  onChange={(e) => handleUploadPhoto(e.target.files)}
+                  disabled={uploading}
+                />
+                <div style={{ fontSize: "2rem", marginBottom: "0.5rem" }}>📷</div>
+                <div style={{ fontSize: "0.9rem", fontWeight: 600, color: "#1c1917", marginBottom: "0.25rem" }}>
+                  {uploading ? "Uploading…" : "Drop photos here or click to upload"}
+                </div>
+                <div style={{ fontSize: "0.75rem", color: "#9b8e85" }}>
+                  JPG, PNG, WebP, GIF — max 10 MB each
+                </div>
+              </label>
+
+              {photosLoading ? (
+                <p style={{ fontSize: "0.8rem", color: "#b0a99f", textAlign: "center", padding: "2rem 0" }}>Loading photos…</p>
+              ) : (
+                <div className="lib-grid">
+                  {photos.length === 0 ? (
+                    <div className="lib-item" style={{ height: "120px", background: "#f0fdfa", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      <span style={{ fontSize: "0.7rem", color: "#9b8e85" }}>No photos yet</span>
+                    </div>
+                  ) : (
+                    photos.map((photo) => (
+                      <div key={photo.id} className="lib-item" style={{ position: "relative" }}>
+                        <img
+                          src={`/api/sites/${site.id}/photos/${photo.id}`}
+                          alt={photo.filename}
+                          title={photo.filename}
+                          style={{ width: "100%", aspectRatio: "1", objectFit: "cover", display: "block", background: "#f0ede8" }}
+                        />
+                        <button
+                          onClick={() => handleDeletePhoto(photo.id)}
+                          aria-label={`Delete photo ${photo.filename}`}
+                          style={{ position: "absolute", top: "4px", right: "4px", background: "rgba(28,25,23,0.65)", color: "#fff", border: "none", borderRadius: "4px", width: "22px", height: "22px", cursor: "pointer", fontSize: "0.7rem", display: "flex", alignItems: "center", justifyContent: "center" }}
+                        >✕</button>
+                      </div>
+                    ))
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ── Videos tab ── */}
+          {mediaTab === "videos" && (
+            <div className="lib-content" style={{ overflowY: "auto", flex: 1 }}>
+              <div style={{ background: "#fff", border: "1px solid #e8e4e0", borderRadius: "10px", padding: "1rem", marginBottom: "1.25rem" }}>
+                <div style={{ fontSize: "0.72rem", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: "#9b8e85", marginBottom: "0.75rem" }}>Add Video</div>
+                <div className="sf-group">
+                  <label className="sf-lbl">YouTube or Vimeo URL</label>
+                  <input
+                    className="sf-input"
+                    type="url"
+                    placeholder="https://youtube.com/watch?v=… or https://vimeo.com/…"
+                    value={newVideoUrl}
+                    onChange={(e) => setNewVideoUrl(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === "Enter") handleAddVideo(); }}
+                  />
+                </div>
+                <div className="sf-group">
+                  <label className="sf-lbl">Title (optional)</label>
+                  <input
+                    className="sf-input"
+                    type="text"
+                    placeholder="Our highlight reel"
+                    value={newVideoTitle}
+                    onChange={(e) => setNewVideoTitle(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === "Enter") handleAddVideo(); }}
+                  />
+                </div>
+                <button
+                  className="btn-primary-sm"
+                  onClick={handleAddVideo}
+                  disabled={addingVideo || !newVideoUrl.trim()}
+                  style={{ width: "100%" }}
+                >
+                  {addingVideo ? "Adding…" : "Add Video"}
+                </button>
+              </div>
+
+              {videosLoading ? (
+                <p style={{ fontSize: "0.8rem", color: "#b0a99f", textAlign: "center", padding: "2rem 0" }}>Loading…</p>
+              ) : videos.length === 0 ? (
+                <p style={{ fontSize: "0.8rem", color: "#9b8e85", textAlign: "center", padding: "2rem 0" }}>No videos yet. Add a YouTube or Vimeo link above.</p>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                  {videos.map((v) => (
+                    <div key={v.id} style={{ display: "flex", alignItems: "center", gap: "10px", background: "#fff", border: "1px solid #e8e4e0", borderRadius: "8px", padding: "0.6rem 0.75rem" }}>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <p style={{ fontSize: "0.8rem", fontWeight: 600, color: "#1c1917", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", margin: 0 }}>{v.title ?? "Untitled"}</p>
+                        <p style={{ fontSize: "0.7rem", color: "#9b8e85", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", margin: 0 }}>{v.url}</p>
+                      </div>
+                      <button onClick={() => handleDeleteVideo(v.id)} aria-label="Remove video" style={{ background: "none", border: "none", cursor: "pointer", color: "#c42a22", fontSize: "0.8rem", padding: "2px 6px" }}>✕</button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ── Music tab ── */}
+          {mediaTab === "music" && (
+            <div className="lib-content" style={{ overflowY: "auto", flex: 1 }}>
+              <div style={{ background: "#fff", border: "1px solid #e8e4e0", borderRadius: "10px", padding: "1rem", marginBottom: "1.25rem" }}>
+                <div style={{ fontSize: "0.72rem", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: "#9b8e85", marginBottom: "0.75rem" }}>Add Music</div>
+                <div className="sf-group">
+                  <label className="sf-lbl">YouTube or SoundCloud URL</label>
+                  <input
+                    className="sf-input"
+                    type="url"
+                    placeholder="https://youtube.com/watch?v=… or https://soundcloud.com/…"
+                    value={newMusicUrl}
+                    onChange={(e) => setNewMusicUrl(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === "Enter") handleAddMusicTrack(); }}
+                  />
+                </div>
+                <div className="sf-group">
+                  <label className="sf-lbl">Title (optional)</label>
+                  <input
+                    className="sf-input"
+                    type="text"
+                    placeholder="Perfect — Ed Sheeran"
+                    value={newMusicTitle}
+                    onChange={(e) => setNewMusicTitle(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === "Enter") handleAddMusicTrack(); }}
+                  />
+                </div>
+                <button
+                  className="btn-primary-sm"
+                  onClick={handleAddMusicTrack}
+                  disabled={addingMusicTrack || !newMusicUrl.trim()}
+                  style={{ width: "100%" }}
+                >
+                  {addingMusicTrack ? "Adding…" : "Add Music"}
+                </button>
+              </div>
+
+              {musicLoading ? (
+                <p style={{ fontSize: "0.8rem", color: "#b0a99f", textAlign: "center", padding: "2rem 0" }}>Loading…</p>
+              ) : musicTracks.length === 0 ? (
+                <p style={{ fontSize: "0.8rem", color: "#9b8e85", textAlign: "center", padding: "2rem 0" }}>No music yet. Add a YouTube or SoundCloud link above.</p>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                  {musicTracks.map((m) => (
+                    <div key={m.id} style={{ display: "flex", alignItems: "center", gap: "10px", background: "#fff", border: "1px solid #e8e4e0", borderRadius: "8px", padding: "0.6rem 0.75rem" }}>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0d9488" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <p style={{ fontSize: "0.8rem", fontWeight: 600, color: "#1c1917", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", margin: 0 }}>{m.title ?? "Untitled"}</p>
+                        <p style={{ fontSize: "0.7rem", color: "#9b8e85", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", margin: 0 }}>{m.url}</p>
+                      </div>
+                      <button onClick={() => handleDeleteMusicTrack(m.id)} aria-label="Remove music" style={{ background: "none", border: "none", cursor: "pointer", color: "#c42a22", fontSize: "0.8rem", padding: "2px 6px" }}>✕</button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </div>
       )}
 
@@ -3196,7 +3429,7 @@ export default function SiteEditor() {
             {photosLoading ? (
               <p style={{ fontSize: "0.82rem", color: "#b0a99f", textAlign: "center", padding: "2rem 0" }}>Loading…</p>
             ) : photos.length === 0 ? (
-              <p style={{ fontSize: "0.82rem", color: "#9b8e85" }}>No photos yet. Upload photos in the Photos section first.</p>
+              <p style={{ fontSize: "0.82rem", color: "#9b8e85" }}>No photos yet. Upload photos in Media → Photos first.</p>
             ) : (
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(120px, 1fr))", gap: "8px", overflowY: "auto", flex: 1 }}>
                 {photos.map((photo) => (
@@ -3773,26 +4006,19 @@ export default function SiteEditor() {
                                   </button>
                                 </div>
                               ) : null}
-                              <label style={{ display: "flex", alignItems: "center", gap: "8px", padding: "7px 12px", border: "1px dashed #c4bdb6", borderRadius: "7px", cursor: "pointer", fontSize: "0.78rem", color: "#6b5e56", background: "#fafaf9", justifyContent: "center" }}>
-                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                                {settingsForm.cardImage ? "Replace photo" : "Upload photo"}
-                                <input type="file" accept="image/jpeg,image/png,image/webp,image/gif"
-                                  style={{ display: "none" }}
-                                  onChange={async (e) => {
-                                    const file = e.target.files?.[0];
-                                    if (!file) return;
-                                    if (file.size > 10 * 1024 * 1024) { toast("File exceeds 10 MB limit", true); return; }
-                                    try {
-                                      const fd = new FormData();
-                                      fd.append("file", file);
-                                      const res = await fetch(`/api/sites/${site.id}/photos`, { method: "POST", body: fd });
-                                      if (!res.ok) { const body = await res.json() as { error?: { message?: string } }; throw new Error(body?.error?.message ?? "Upload failed"); }
-                                      const data = await res.json() as { photo: { id: string } };
-                                      setSettingsForm((f) => ({ ...f, cardImage: `/api/sites/${site.id}/photos/${data.photo.id}` }));
-                                    } catch (err) { toast(err instanceof Error ? err.message : "Upload failed", true); }
-                                  }} />
-                              </label>
-                              <div style={{ fontSize: "0.68rem", color: "#b0a99f", marginTop: "3px" }}>Shows as card background; color fill is used if no photo</div>
+                              <button
+                                type="button"
+                                style={{ display: "flex", alignItems: "center", gap: "8px", padding: "7px 12px", border: "1px dashed #c4bdb6", borderRadius: "7px", cursor: "pointer", fontSize: "0.78rem", color: "#6b5e56", background: "#fafaf9", justifyContent: "center", width: "100%" }}
+                                onClick={() => {
+                                  if (photos.length === 0) fetchPhotos();
+                                  setPhotoPickerTarget(() => (url: string) => setSettingsForm((f) => ({ ...f, cardImage: url })));
+                                  setPhotoPickerOpen(true);
+                                }}
+                              >
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                                {settingsForm.cardImage ? "Replace from Media Library" : "Pick from Media Library"}
+                              </button>
+                              <div style={{ fontSize: "0.68rem", color: "#b0a99f", marginTop: "3px" }}>Upload photos in Media first, then pick here. Color fill is used if no photo.</div>
                             </div>
                             <div className="sf-group" style={{ marginTop: "0.75rem" }}>
                               <label className="sf-lbl">Wax Seal Initials</label>
@@ -3830,41 +4056,19 @@ export default function SiteEditor() {
                             </button>
                           </div>
                         ) : null}
-                        <label
-                          style={{ display: "flex", alignItems: "center", gap: "8px", padding: "8px 14px", border: "1px dashed #c4bdb6", borderRadius: "7px", cursor: "pointer", fontSize: "0.8rem", color: "#6b5e56", background: "#fafaf9", justifyContent: "center" }}
-                          aria-label="Upload background image"
+                        <button
+                          type="button"
+                          style={{ display: "flex", alignItems: "center", gap: "8px", padding: "8px 14px", border: "1px dashed #c4bdb6", borderRadius: "7px", cursor: "pointer", fontSize: "0.8rem", color: "#6b5e56", background: "#fafaf9", justifyContent: "center", width: "100%" }}
+                          onClick={() => {
+                            if (photos.length === 0) fetchPhotos();
+                            setPhotoPickerTarget(() => (url: string) => setSettingsForm((f) => ({ ...f, bgImage: url })));
+                            setPhotoPickerOpen(true);
+                          }}
                         >
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                          Upload background image (JPG · PNG · WEBP · GIF, max 10 MB)
-                          <input
-                            type="file"
-                            accept="image/jpeg,image/png,image/webp,image/gif"
-                            style={{ display: "none" }}
-                            aria-label="Upload background image"
-                            onChange={async (e) => {
-                              const file = e.target.files?.[0];
-                              if (!file) return;
-                              if (file.size > 10 * 1024 * 1024) {
-                                toast("File exceeds 10 MB limit", true);
-                                return;
-                              }
-                              try {
-                                const fd = new FormData();
-                                fd.append("file", file);
-                                const res = await fetch(`/api/sites/${site.id}/photos`, { method: "POST", body: fd });
-                                if (!res.ok) {
-                                  const body = await res.json() as { error?: { message?: string } };
-                                  throw new Error(body?.error?.message ?? "Upload failed");
-                                }
-                                const data = await res.json() as { photo: { id: string } };
-                                const url = `/api/sites/${site.id}/photos/${data.photo.id}`;
-                                setSettingsForm((f) => ({ ...f, bgImage: url }));
-                              } catch (err) {
-                                toast(err instanceof Error ? err.message : "Upload failed", true);
-                              }
-                            }}
-                          />
-                        </label>
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                          {settingsForm.bgImage ? "Replace from Media Library" : "Pick from Media Library"}
+                        </button>
+                        <div style={{ fontSize: "0.68rem", color: "#b0a99f", marginTop: "4px" }}>Upload images in Media first, then pick here.</div>
                       </div>
                     </>
                   )}
@@ -3955,11 +4159,38 @@ export default function SiteEditor() {
                   {settingsDrawerTab === "music" && (
                     <>
                       <p style={{ fontSize: "0.75rem", color: "#9b8e85", marginBottom: "1rem", lineHeight: 1.6 }}>
-                        Add a YouTube or SoundCloud link. The music will play softly in the background when guests visit your site.
+                        Select a track from your Media library. The music will play softly in the background when guests visit your site.
                       </p>
                       <div className="sf-group">
-                        <label className="sf-lbl" htmlFor="s-music">Music URL</label>
-                        <input id="s-music" type="url" className="sf-input" placeholder="https://youtube.com/watch?v=…" value={settingsForm.musicUrl} onChange={(e) => setSettingsForm((f) => ({ ...f, musicUrl: e.target.value }))} />
+                        <label className="sf-lbl" htmlFor="s-music">Music Track</label>
+                        {musicLoading ? (
+                          <p style={{ fontSize: "0.78rem", color: "#b0a99f" }}>Loading music library…</p>
+                        ) : musicTracks.length === 0 ? (
+                          <p style={{ fontSize: "0.78rem", color: "#9b8e85", lineHeight: 1.5 }}>
+                            No music in your library yet.{" "}
+                            <button type="button" style={{ background: "none", border: "none", color: "#0d9488", cursor: "pointer", fontSize: "inherit", padding: 0, textDecoration: "underline" }}
+                              onClick={() => { setSettingsOpen(false); setSection("media"); setMediaTab("music"); }}>
+                              Add music in Media
+                            </button>
+                          </p>
+                        ) : (
+                          <>
+                            <select
+                              id="s-music"
+                              className="sf-input"
+                              value={settingsForm.musicUrl}
+                              onChange={(e) => setSettingsForm((f) => ({ ...f, musicUrl: e.target.value }))}
+                            >
+                              <option value="">— No music —</option>
+                              {musicTracks.map((m) => (
+                                <option key={m.id} value={m.url}>{m.title ?? m.url}</option>
+                              ))}
+                            </select>
+                            {settingsForm.musicUrl && (
+                              <div style={{ fontSize: "0.68rem", color: "#9b8e85", marginTop: "3px", wordBreak: "break-all" }}>{settingsForm.musicUrl}</div>
+                            )}
+                          </>
+                        )}
                       </div>
                       {pages.length > 0 && (() => {
                         const songArr: string[] = (() => { try { return JSON.parse(settingsForm.songPages || "[]"); } catch { return []; } })();

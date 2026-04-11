@@ -24,6 +24,10 @@ export default [
   route("api/sites/:id/photos", "routes/api.sites.$id.photos.ts"),
   route("api/sites/:id/photos/:photoId", "routes/api.sites.$id.photos.$photoId.ts"),
 
+  // Site media API (videos + music links)
+  route("api/sites/:id/media", "routes/api.sites.$id.media.ts"),
+  route("api/sites/:id/media/:mediaId", "routes/api.sites.$id.media.$mediaId.ts"),
+
   // Site guests API
   route("api/sites/:id/guests", "routes/api.sites.$id.guests.ts"),
   route("api/sites/:id/guests/:guestId", "routes/api.sites.$id.guests.$guestId.ts"),

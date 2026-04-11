@@ -59,7 +59,7 @@ export default function DashboardLayout() {
 
   const editorNavItems = [
     { key: "website",   label: "Website" },
-    { key: "photos",    label: "Photos" },
+    { key: "media",     label: "Media" },
     { key: "guestlist", label: "Guest List" },
     { key: "templates", label: "Templates" },
     { key: "site-setup",label: "Site Setup" },
