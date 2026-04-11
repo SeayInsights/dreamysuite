@@ -186,7 +186,7 @@ const EVENT_TYPES = [
 ];
 
 const BLOCK_TYPES = [
-  { type: "home-hero",     label: "Hero",             color: "#0d9488" },
+  { type: "home-hero",     label: "Hero",             color: "var(--accent)" },
   { type: "text",          label: "Text",             color: "#6b7280" },
   { type: "photo-split",   label: "Photo + Content",  color: "#4F8EDB" },
   { type: "images",        label: "Images",           color: "#ec4899" },
@@ -195,7 +195,7 @@ const BLOCK_TYPES = [
   { type: "header",        label: "Header",           color: "#8b5cf6" },
   { type: "schedule",      label: "Schedule",         color: "#d97706" },
   { type: "faq",           label: "Q & A",            color: "#0ea5e9" },
-  { type: "rsvp",          label: "RSVP",             color: "#0d9488" },
+  { type: "rsvp",          label: "RSVP",             color: "var(--accent)" },
   { type: "spacer",        label: "Spacer",           color: "#d4cec8" },
   { type: "registry-card", label: "Registry",         color: "#e86c4a" },
   { type: "hotel-card",    label: "Hotel",            color: "#3b82f6" },
@@ -262,7 +262,7 @@ function useToast() {
 
 // ── ColorSwatch ───────────────────────────────────────────────────────────────
 
-const COLOR_PRESETS = ["#ffffff","#000000","#9b8e85","#0d9488","#e75850","#f59e0b","#6366f1","#ec4899"];
+const COLOR_PRESETS = ["#ffffff","#000000","#9b8e85","#B8921A","#e75850","#f59e0b","#6366f1","#ec4899"];
 
 function hexToRgb(hex: string): [number, number, number] {
   const h = hex.replace('#', '').padEnd(6, '0');
@@ -461,7 +461,7 @@ function ColorSwatch({
               min={0} max={100}
               value={opacity}
               onChange={e => { const o = parseInt(e.target.value); setOpacity(o); commit(hex, o); }}
-              style={{ width: '100%', accentColor: '#0d9488', cursor: 'pointer' }}
+              style={{ width: '100%', accentColor: 'var(--accent)', cursor: 'pointer' }}
             />
           </div>
 
@@ -709,7 +709,7 @@ export default function SiteEditor() {
     guestPassword: "",
     headingFont: "Georgia",
     bodyFont: "Inter",
-    accentColor: "#0d9488",
+    accentColor: "#B8921A",
     bgColor: "#ffffff",
     isLive: 0 as 0 | 1,
     songPages: "[]",
@@ -726,7 +726,7 @@ export default function SiteEditor() {
     navPosition: "fixed",
     navBrandColor: "#1c1917",
     navLinkColor: "#6b6560",
-    navHighlightColor: "#0d9488",
+    navHighlightColor: "#B8921A",
     navItemsConfig: "[]",
     animation: "",
     bgImage: "",
@@ -888,7 +888,7 @@ export default function SiteEditor() {
         guestPassword:  data.settings.guestPassword  ?? "",
         headingFont:    data.settings.headingFont     ?? "Georgia",
         bodyFont:       data.settings.bodyFont        ?? "Inter",
-        accentColor:    data.settings.accentColor     ?? "#0d9488",
+        accentColor:    data.settings.accentColor     ?? "#B8921A",
         bgColor:            data.settings.bgColor            ?? "#ffffff",
         isLive:             (data.settings.isLive ?? 0) as 0 | 1,
         songPages:          data.settings.songPages          ?? "[]",
@@ -905,7 +905,7 @@ export default function SiteEditor() {
         navPosition:        data.settings.navPosition        ?? "fixed",
         navBrandColor:      data.settings.navBrandColor      ?? "#1c1917",
         navLinkColor:       data.settings.navLinkColor       ?? "#6b6560",
-        navHighlightColor:  data.settings.navHighlightColor  ?? "#0d9488",
+        navHighlightColor:  data.settings.navHighlightColor  ?? "#B8921A",
         navItemsConfig:     data.settings.navItemsConfig     ?? "[]",
         animation:          data.settings.animation          ?? "",
         bgImage:            data.settings.bgImage            ?? "",
@@ -1829,8 +1829,8 @@ export default function SiteEditor() {
           {(['left','center','right'] as const).map(a=>(
             <button key={a} onClick={()=>setF(ak,c[ak]===a?null:a)}
               style={{padding:'2px 5px',borderRadius:'4px',border:'1.5px solid',height:'26px',minWidth:'28px',
-                borderColor:c[ak]===a?'#0d9488':'#e0dbd4',
-                background:c[ak]===a?'#0d9488':'#fff',
+                borderColor:c[ak]===a?'var(--accent)':'#e0dbd4',
+                background:c[ak]===a?'var(--accent)':'#fff',
                 color:c[ak]===a?'#fff':'#6b5e56',fontSize:'0.72rem',cursor:'pointer'}}>
               {a==='left'?'L':a==='center'?'C':'R'}
             </button>
@@ -1838,8 +1838,8 @@ export default function SiteEditor() {
           {([['B',bk],['I',ik],['U',uk]] as [string,string][]).map(([lbl,key])=>(
             <button key={key} onClick={()=>setF(key,!c[key])}
               style={{padding:'2px 7px',borderRadius:'4px',border:'1.5px solid',height:'26px',
-                borderColor:c[key]?'#0d9488':'#e0dbd4',
-                background:c[key]?'#0d9488':'#fff',
+                borderColor:c[key]?'var(--accent)':'#e0dbd4',
+                background:c[key]?'var(--accent)':'#fff',
                 color:c[key]?'#fff':'#6b5e56',
                 fontSize:'0.82rem',fontWeight:lbl==='B'?700:400,
                 fontStyle:lbl==='I'?'italic':'normal',
@@ -2090,7 +2090,7 @@ export default function SiteEditor() {
                                     <div className="sf-group">
                                       <label className="sf-lbl">Video</label>
                                       {videos.length === 0 ? (
-                                        <p style={{fontSize:'0.75rem',color:'#9b8e85',margin:0}}>No videos in Media yet. <button type="button" style={{background:'none',border:'none',color:'#0d9488',cursor:'pointer',fontSize:'inherit',padding:0,textDecoration:'underline'}} onClick={()=>setSection("media")}>Go to Media</button></p>
+                                        <p style={{fontSize:'0.75rem',color:'#9b8e85',margin:0}}>No videos in Media yet. <button type="button" style={{background:'none',border:'none',color:'var(--accent)',cursor:'pointer',fontSize:'inherit',padding:0,textDecoration:'underline'}} onClick={()=>setSection("media")}>Go to Media</button></p>
                                       ) : (
                                         <select className="sf-input" value={String(cfg.url??'')} onChange={e=>setField('url',e.target.value)}>
                                           <option value="">— Select a video —</option>
@@ -2160,7 +2160,7 @@ export default function SiteEditor() {
                                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                                           <label className="sf-lbl" style={{ margin: 0 }}>Button Background <span style={{ fontWeight: 400, fontSize: '0.68rem', color: '#b0a99f' }}>overrides global accent</span></label>
                                           {!!cfg.rsvpButtonColor && (
-                                            <button type="button" onClick={() => setField('rsvpButtonColor', null)} style={{ fontSize: '0.68rem', color: '#0d9488', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
+                                            <button type="button" onClick={() => setField('rsvpButtonColor', null)} style={{ fontSize: '0.68rem', color: 'var(--accent)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
                                               Reset to global
                                             </button>
                                           )}
@@ -2171,7 +2171,7 @@ export default function SiteEditor() {
                                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                                           <label className="sf-lbl" style={{ margin: 0 }}>Button Text <span style={{ fontWeight: 400, fontSize: '0.68rem', color: '#b0a99f' }}>overrides global accent</span></label>
                                           {!!cfg.rsvpButtonTextColor && (
-                                            <button type="button" onClick={() => setField('rsvpButtonTextColor', null)} style={{ fontSize: '0.68rem', color: '#0d9488', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
+                                            <button type="button" onClick={() => setField('rsvpButtonTextColor', null)} style={{ fontSize: '0.68rem', color: 'var(--accent)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
                                               Reset to global
                                             </button>
                                           )}
@@ -2182,7 +2182,7 @@ export default function SiteEditor() {
                                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                                           <label className="sf-lbl" style={{ margin: 0 }}>Button Border <span style={{ fontWeight: 400, fontSize: '0.68rem', color: '#b0a99f' }}>overrides global accent</span></label>
                                           {!!cfg.rsvpButtonBorderColor && (
-                                            <button type="button" onClick={() => setField('rsvpButtonBorderColor', null)} style={{ fontSize: '0.68rem', color: '#0d9488', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
+                                            <button type="button" onClick={() => setField('rsvpButtonBorderColor', null)} style={{ fontSize: '0.68rem', color: 'var(--accent)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
                                               Reset to global
                                             </button>
                                           )}
@@ -2305,7 +2305,7 @@ export default function SiteEditor() {
                                     <div className="sf-group">
                                       <label className="sf-lbl">Video</label>
                                       {videos.length === 0 ? (
-                                        <p style={{fontSize:'0.75rem',color:'#9b8e85',margin:0}}>No videos in Media yet. <button type="button" style={{background:'none',border:'none',color:'#0d9488',cursor:'pointer',fontSize:'inherit',padding:0,textDecoration:'underline'}} onClick={()=>setSection("media")}>Go to Media</button></p>
+                                        <p style={{fontSize:'0.75rem',color:'#9b8e85',margin:0}}>No videos in Media yet. <button type="button" style={{background:'none',border:'none',color:'var(--accent)',cursor:'pointer',fontSize:'inherit',padding:0,textDecoration:'underline'}} onClick={()=>setSection("media")}>Go to Media</button></p>
                                       ) : (
                                         <select className="sf-input" value={String(cfg.url??'')}
                                           onChange={e=>{const url=e.target.value;const vid=extractYoutubeId(url);setField('url',url);if(vid)setField('videoId',vid);}}>
@@ -2412,7 +2412,7 @@ export default function SiteEditor() {
                                         <span className="sf-lbl">Photo Side</span>
                                         <div style={{display:'flex',gap:'4px'}}>
                                           {(['left','right'] as const).map(s=>(
-                                            <button key={s} onClick={()=>setField('photoSide',s)} style={{padding:'4px 14px',borderRadius:'20px',border:'1.5px solid',borderColor:photoSide===s?'#0d9488':'#e0dbd4',background:photoSide===s?'#0d9488':'#fff',color:photoSide===s?'#fff':'#6b5e56',fontSize:'0.75rem',cursor:'pointer',textTransform:'capitalize'}}>{s}</button>
+                                            <button key={s} onClick={()=>setField('photoSide',s)} style={{padding:'4px 14px',borderRadius:'20px',border:'1.5px solid',borderColor:photoSide===s?'var(--accent)':'#e0dbd4',background:photoSide===s?'var(--accent)':'#fff',color:photoSide===s?'#fff':'#6b5e56',fontSize:'0.75rem',cursor:'pointer',textTransform:'capitalize'}}>{s}</button>
                                           ))}
                                         </div>
                                       </div>
@@ -2496,7 +2496,7 @@ export default function SiteEditor() {
                                       <div style={{display:'flex',gap:'4px',alignItems:'center'}}>
                                         {(['none','color'] as const).map(opt=>(
                                           <button key={opt} onClick={()=>setField('background', opt==='none' ? null : {type:'color',value:bgColor})}
-                                            style={{padding:'3px 10px',borderRadius:'20px',border:'1.5px solid',borderColor:bgMode===opt?'#0d9488':'#e0dbd4',background:bgMode===opt?'#0d9488':'#fff',color:bgMode===opt?'#fff':'#6b5e56',fontSize:'0.73rem',cursor:'pointer'}}>
+                                            style={{padding:'3px 10px',borderRadius:'20px',border:'1.5px solid',borderColor:bgMode===opt?'var(--accent)':'#e0dbd4',background:bgMode===opt?'var(--accent)':'#fff',color:bgMode===opt?'#fff':'#6b5e56',fontSize:'0.73rem',cursor:'pointer'}}>
                                             {opt==='none'?'None':'Color'}
                                           </button>
                                         ))}
@@ -2508,7 +2508,7 @@ export default function SiteEditor() {
                                       <div style={{display:'flex',gap:'4px',alignItems:'center'}}>
                                         {(['default','custom'] as const).map(opt=>(
                                           <button key={opt} onClick={()=>setField('textColor', opt==='default' ? null : tcVal)}
-                                            style={{padding:'3px 10px',borderRadius:'20px',border:'1.5px solid',borderColor:tcMode===opt?'#0d9488':'#e0dbd4',background:tcMode===opt?'#0d9488':'#fff',color:tcMode===opt?'#fff':'#6b5e56',fontSize:'0.73rem',cursor:'pointer'}}>
+                                            style={{padding:'3px 10px',borderRadius:'20px',border:'1.5px solid',borderColor:tcMode===opt?'var(--accent)':'#e0dbd4',background:tcMode===opt?'var(--accent)':'#fff',color:tcMode===opt?'#fff':'#6b5e56',fontSize:'0.73rem',cursor:'pointer'}}>
                                             {opt==='default'?'Default':'Custom'}
                                           </button>
                                         ))}
@@ -2522,7 +2522,7 @@ export default function SiteEditor() {
                                     <div style={{display:'flex',gap:'4px'}}>
                                       {(['show','none'] as const).map(opt=>(
                                         <button key={opt} onClick={()=>setField('hideBorder', opt==='none')}
-                                          style={{padding:'3px 10px',borderRadius:'20px',border:'1.5px solid',borderColor:borderMode===opt?'#0d9488':'#e0dbd4',background:borderMode===opt?'#0d9488':'#fff',color:borderMode===opt?'#fff':'#6b5e56',fontSize:'0.73rem',cursor:'pointer'}}>
+                                          style={{padding:'3px 10px',borderRadius:'20px',border:'1.5px solid',borderColor:borderMode===opt?'var(--accent)':'#e0dbd4',background:borderMode===opt?'var(--accent)':'#fff',color:borderMode===opt?'#fff':'#6b5e56',fontSize:'0.73rem',cursor:'pointer'}}>
                                           {opt==='show'?'Show':'None'}
                                         </button>
                                       ))}
@@ -2877,10 +2877,10 @@ export default function SiteEditor() {
                   padding: "0.6rem 1rem",
                   fontSize: "0.8rem",
                   fontWeight: mediaTab === tab ? 600 : 400,
-                  color: mediaTab === tab ? "#0d9488" : "#9b8e85",
+                  color: mediaTab === tab ? "var(--accent)" : "#9b8e85",
                   background: "none",
                   border: "none",
-                  borderBottom: mediaTab === tab ? "2px solid #0d9488" : "2px solid transparent",
+                  borderBottom: mediaTab === tab ? "2px solid var(--accent)" : "2px solid transparent",
                   cursor: "pointer",
                   textTransform: "capitalize",
                   marginBottom: "-1px",
@@ -2917,7 +2917,7 @@ export default function SiteEditor() {
               ) : (
                 <div className="lib-grid">
                   {photos.length === 0 ? (
-                    <div className="lib-item" style={{ height: "120px", background: "#f0fdfa", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <div className="lib-item" style={{ height: "120px", background: "var(--accent-light)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                       <span style={{ fontSize: "0.7rem", color: "#9b8e85" }}>No photos yet</span>
                     </div>
                   ) : (
@@ -3045,7 +3045,7 @@ export default function SiteEditor() {
                 <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
                   {musicTracks.map((m) => (
                     <div key={m.id} style={{ display: "flex", alignItems: "center", gap: "10px", background: "#fff", border: "1px solid #e8e4e0", borderRadius: "8px", padding: "0.6rem 0.75rem" }}>
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0d9488" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <p style={{ fontSize: "0.8rem", fontWeight: 600, color: "#1c1917", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", margin: 0 }}>{m.title ?? "Untitled"}</p>
                         <p style={{ fontSize: "0.7rem", color: "#9b8e85", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", margin: 0 }}>{m.url}</p>
@@ -3485,7 +3485,7 @@ export default function SiteEditor() {
               </div>
               {site.customDomain ? (
                 <div style={{ display: "flex", gap: "8px", alignItems: "center", flexWrap: "wrap" }}>
-                  <span style={{ fontSize: "0.82rem", color: "#0d9488", fontWeight: 600 }}>
+                  <span style={{ fontSize: "0.82rem", color: "var(--accent)", fontWeight: 600 }}>
                     ✓ {site.customDomain}
                   </span>
                   <button className="btn-ghost" style={{ fontSize: "0.78rem" }} onClick={() => setDomainModalOpen(true)}>
@@ -3538,7 +3538,7 @@ export default function SiteEditor() {
                         style={{
                           flex: 1, padding: "0.5rem", borderRadius: "8px", border: "none",
                           cursor: "pointer", fontSize: "0.82rem", fontWeight: 600,
-                          background: domainTab === tab ? "#0d9488" : "#f5f0eb",
+                          background: domainTab === tab ? "var(--accent)" : "#f5f0eb",
                           color: domainTab === tab ? "#fff" : "#6b5e56",
                           transition: "all 0.15s",
                         }}
@@ -3628,7 +3628,7 @@ export default function SiteEditor() {
                               {domainResult.domain}
                             </div>
                             {domainResult.available ? (
-                              <div style={{ fontSize: "0.76rem", color: "#0d9488", marginTop: "2px" }}>
+                              <div style={{ fontSize: "0.76rem", color: "var(--accent)", marginTop: "2px" }}>
                                 Available
                                 {domainResult.price
                                   ? ` · $${domainResult.price.toFixed(2)}/yr via Cloudflare`
@@ -3696,7 +3696,7 @@ export default function SiteEditor() {
                 </div>
                 <div>
                   <div style={{ fontSize: "0.85rem", fontWeight: 600, color: "#1c1917" }}>Canva</div>
-                  <div style={{ fontSize: "0.73rem", color: canvaConnected ? "#0d9488" : "#9b8e85" }}>
+                  <div style={{ fontSize: "0.73rem", color: canvaConnected ? "var(--accent)" : "#9b8e85" }}>
                     {canvaConnected ? "Connected" : "Not connected"}
                   </div>
                 </div>
@@ -3733,17 +3733,17 @@ export default function SiteEditor() {
                   <div style={{
                     display: "inline-flex", alignItems: "center", gap: "8px",
                     padding: "6px 14px", borderRadius: "20px",
-                    background: settingsForm.isLive ? "#f0fdfa" : "#f5f0eb",
+                    background: settingsForm.isLive ? "var(--accent-light)" : "#f5f0eb",
                     border: `1.5px solid ${settingsForm.isLive ? "#99f6e4" : "#e0dbd4"}`,
                   }}>
                     <span style={{
                       width: "8px", height: "8px", borderRadius: "50%",
-                      background: settingsForm.isLive ? "#0d9488" : "#b0a99f",
+                      background: settingsForm.isLive ? "var(--accent)" : "#b0a99f",
                       flexShrink: 0,
                     }} />
                     <span style={{
                       fontSize: "0.82rem", fontWeight: 600,
-                      color: settingsForm.isLive ? "#0d9488" : "#6b5e56",
+                      color: settingsForm.isLive ? "var(--accent)" : "#6b5e56",
                     }}>
                       {settingsForm.isLive ? "Site is Live" : "Site is Offline"}
                     </span>
@@ -4104,7 +4104,7 @@ export default function SiteEditor() {
                 <div className="sf-group">
                   <label className="sf-lbl">Video</label>
                   {videos.length === 0 ? (
-                    <p style={{fontSize:'0.75rem',color:'#9b8e85',margin:0}}>No videos in Media yet. <button type="button" style={{background:'none',border:'none',color:'#0d9488',cursor:'pointer',fontSize:'inherit',padding:0,textDecoration:'underline'}} onClick={()=>{setBlockEditOpen(false);setSection("media");}}>Go to Media</button></p>
+                    <p style={{fontSize:'0.75rem',color:'#9b8e85',margin:0}}>No videos in Media yet. <button type="button" style={{background:'none',border:'none',color:'var(--accent)',cursor:'pointer',fontSize:'inherit',padding:0,textDecoration:'underline'}} onClick={()=>{setBlockEditOpen(false);setSection("media");}}>Go to Media</button></p>
                   ) : (
                     <select className="sf-input" value={String(cfg.url??"")} onChange={e=>setField("url",e.target.value)}>
                       <option value="">— Select a video —</option>
@@ -4152,8 +4152,8 @@ export default function SiteEditor() {
                     {(['top','center','bottom'] as const).map(v=>(
                       <button key={v} onClick={()=>setField('imageFocusY',cfg.imageFocusY===v?null:v)}
                         style={{flex:1,padding:'3px 0',borderRadius:'4px',border:'1.5px solid',fontSize:'0.72rem',cursor:'pointer',textTransform:'capitalize',
-                          borderColor:(cfg.imageFocusY??'center')===v?'#0d9488':'#e0dbd4',
-                          background:(cfg.imageFocusY??'center')===v?'#0d9488':'#fff',
+                          borderColor:(cfg.imageFocusY??'center')===v?'var(--accent)':'#e0dbd4',
+                          background:(cfg.imageFocusY??'center')===v?'var(--accent)':'#fff',
                           color:(cfg.imageFocusY??'center')===v?'#fff':'#6b5e56'}}>{v}</button>
                     ))}
                   </div>
@@ -4161,8 +4161,8 @@ export default function SiteEditor() {
                     {(['left','center','right'] as const).map(h=>(
                       <button key={h} onClick={()=>setField('imageFocusX',cfg.imageFocusX===h?null:h)}
                         style={{flex:1,padding:'3px 0',borderRadius:'4px',border:'1.5px solid',fontSize:'0.72rem',cursor:'pointer',textTransform:'capitalize',
-                          borderColor:(cfg.imageFocusX??'center')===h?'#0d9488':'#e0dbd4',
-                          background:(cfg.imageFocusX??'center')===h?'#0d9488':'#fff',
+                          borderColor:(cfg.imageFocusX??'center')===h?'var(--accent)':'#e0dbd4',
+                          background:(cfg.imageFocusX??'center')===h?'var(--accent)':'#fff',
                           color:(cfg.imageFocusX??'center')===h?'#fff':'#6b5e56'}}>{h}</button>
                     ))}
                   </div>
@@ -4188,7 +4188,7 @@ export default function SiteEditor() {
                 <div className="sf-group">
                   <label className="sf-lbl">Video</label>
                   {videos.length === 0 ? (
-                    <p style={{fontSize:'0.75rem',color:'#9b8e85',margin:0}}>No videos in Media yet. <button type="button" style={{background:'none',border:'none',color:'#0d9488',cursor:'pointer',fontSize:'inherit',padding:0,textDecoration:'underline'}} onClick={()=>{setBlockEditOpen(false);setSection("media");}}>Go to Media</button></p>
+                    <p style={{fontSize:'0.75rem',color:'#9b8e85',margin:0}}>No videos in Media yet. <button type="button" style={{background:'none',border:'none',color:'var(--accent)',cursor:'pointer',fontSize:'inherit',padding:0,textDecoration:'underline'}} onClick={()=>{setBlockEditOpen(false);setSection("media");}}>Go to Media</button></p>
                   ) : (
                     <select className="sf-input" value={String(cfg.url??"")}
                       onChange={e=>{const url=e.target.value;const vid=extractYoutubeId(url);setField("url",url);if(vid)setField("videoId",vid);}}>
@@ -4329,7 +4329,7 @@ export default function SiteEditor() {
                     <span className="sf-lbl">Photo Side</span>
                     <div style={{display:"flex",gap:"4px"}}>
                       {(["left","right"] as const).map(s=>(
-                        <button key={s} onClick={()=>setField("photoSide",s)} style={{padding:"4px 16px",borderRadius:"20px",border:"1.5px solid",borderColor:photoSide===s?"#0d9488":"#e0dbd4",background:photoSide===s?"#0d9488":"#fff",color:photoSide===s?"#fff":"#6b5e56",fontSize:"0.75rem",cursor:"pointer",textTransform:"capitalize"}}>{s}</button>
+                        <button key={s} onClick={()=>setField("photoSide",s)} style={{padding:"4px 16px",borderRadius:"20px",border:"1.5px solid",borderColor:photoSide===s?"var(--accent)":"#e0dbd4",background:photoSide===s?"var(--accent)":"#fff",color:photoSide===s?"#fff":"#6b5e56",fontSize:"0.75rem",cursor:"pointer",textTransform:"capitalize"}}>{s}</button>
                       ))}
                     </div>
                   </div>
@@ -4427,10 +4427,10 @@ export default function SiteEditor() {
                     padding: "0.6rem 0.9rem",
                     fontSize: "0.73rem",
                     fontWeight: settingsDrawerTab === tab ? 600 : 400,
-                    color: settingsDrawerTab === tab ? "#0d9488" : "#9b8e85",
+                    color: settingsDrawerTab === tab ? "var(--accent)" : "#9b8e85",
                     background: "none",
                     border: "none",
-                    borderBottom: settingsDrawerTab === tab ? "2px solid #0d9488" : "2px solid transparent",
+                    borderBottom: settingsDrawerTab === tab ? "2px solid var(--accent)" : "2px solid transparent",
                     cursor: "pointer",
                     whiteSpace: "nowrap",
                     textTransform: "capitalize",
@@ -4516,7 +4516,7 @@ export default function SiteEditor() {
                         <label className="sf-lbl">Style</label>
                         <div style={{ display: "flex", gap: "6px" }}>
                           {(["filled", "outline"] as const).map((s) => (
-                            <button key={s} onClick={() => setSettingsForm((f) => ({ ...f, buttonStyle: s }))} style={{ flex: 1, padding: "5px 0", fontSize: "0.78rem", borderRadius: "6px", border: "1px solid", borderColor: settingsForm.buttonStyle === s ? "#0d9488" : "#e0dbd4", background: settingsForm.buttonStyle === s ? "#f0fdfa" : "#fff", color: settingsForm.buttonStyle === s ? "#0d9488" : "#6b5e56", cursor: "pointer", fontWeight: settingsForm.buttonStyle === s ? 600 : 400 }}>
+                            <button key={s} onClick={() => setSettingsForm((f) => ({ ...f, buttonStyle: s }))} style={{ flex: 1, padding: "5px 0", fontSize: "0.78rem", borderRadius: "6px", border: "1px solid", borderColor: settingsForm.buttonStyle === s ? "var(--accent)" : "#e0dbd4", background: settingsForm.buttonStyle === s ? "var(--accent-light)" : "#fff", color: settingsForm.buttonStyle === s ? "var(--accent)" : "#6b5e56", cursor: "pointer", fontWeight: settingsForm.buttonStyle === s ? 600 : 400 }}>
                               {s.charAt(0).toUpperCase() + s.slice(1)}
                             </button>
                           ))}
@@ -4570,7 +4570,7 @@ export default function SiteEditor() {
                                 <rect x="0" y="0" width="48" height="32" rx="3" fill="#faf6f0" />
                                 <rect x="0" y="0" width="48" height="14" rx="3" fill="#e8e0d4" />
                                 <rect x="0" y="18" width="48" height="14" rx="3" fill="#e8e0d4" style={{ transform: "translateY(0)" }} />
-                                <circle cx="24" cy="16" r="4" fill="#0d9488" />
+                                <circle cx="24" cy="16" r="4" fill="var(--accent)" />
                               </svg>
                             ),
                           },
@@ -4592,8 +4592,8 @@ export default function SiteEditor() {
                             label: "Doors",
                             diagram: (
                               <svg viewBox="0 0 48 32" width="48" height="32" style={{ display: "block" }}>
-                                <rect x="0" y="0" width="22" height="32" rx="3" fill="#0d9488" opacity="0.85" />
-                                <rect x="26" y="0" width="22" height="32" rx="3" fill="#0d9488" opacity="0.85" />
+                                <rect x="0" y="0" width="22" height="32" rx="3" fill="var(--accent)" opacity="0.85" />
+                                <rect x="26" y="0" width="22" height="32" rx="3" fill="var(--accent)" opacity="0.85" />
                                 <line x1="24" y1="0" x2="24" y2="32" stroke="rgba(255,255,255,0.4)" strokeWidth="1" />
                                 <text x="24" y="20" textAnchor="middle" fontSize="8" fill="white" opacity="0.9">✦</text>
                               </svg>
@@ -4612,9 +4612,9 @@ export default function SiteEditor() {
                                 alignItems: "center",
                                 gap: "6px",
                                 padding: "10px 6px 8px",
-                                border: `2px solid ${isSelected ? "#0d9488" : "#e0dbd4"}`,
+                                border: `2px solid ${isSelected ? "var(--accent)" : "#e0dbd4"}`,
                                 borderRadius: "8px",
-                                background: isSelected ? "#f0fdfa" : "#fff",
+                                background: isSelected ? "var(--accent-light)" : "#fff",
                                 cursor: "pointer",
                                 transition: "border-color 0.15s, background 0.15s",
                               }}
@@ -4622,7 +4622,7 @@ export default function SiteEditor() {
                               aria-label={label}
                             >
                               {diagram}
-                              <span style={{ fontSize: "0.7rem", fontWeight: isSelected ? 600 : 400, color: isSelected ? "#0d9488" : "#6b5e56" }}>{label}</span>
+                              <span style={{ fontSize: "0.7rem", fontWeight: isSelected ? 600 : 400, color: isSelected ? "var(--accent)" : "#6b5e56" }}>{label}</span>
                             </button>
                           );
                         })}
@@ -4637,7 +4637,7 @@ export default function SiteEditor() {
                           <div style={{ fontSize: "0.72rem", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: "#9b8e85", margin: "1.1rem 0 0.5rem" }}>Envelope Colors</div>
                           {[
                             { label: "Envelope paper", key: "envelopeColor" as const, def: "#f5ede0" },
-                            { label: "Wax seal", key: "accentColor" as const, def: "#0d9488" },
+                            { label: "Wax seal", key: "accentColor" as const, def: "#B8921A" },
                           ].map(({ label, key, def }) => (
                             <div key={key} style={{ display: "flex", alignItems: "center", gap: "10px", padding: "6px 0", borderBottom: "1px solid #f5f2ee" }}>
                               <ColorSwatch value={settingsForm[key] || def} onChange={v => setSettingsForm((f) => ({ ...f, [key]: v }))} />
@@ -4659,7 +4659,7 @@ export default function SiteEditor() {
                                 <button
                                   type="button"
                                   onClick={() => { if (photos.length === 0) fetchPhotos(); setPhotoPickerTarget(() => (url: string) => setSettingsForm((f) => ({ ...f, cardImage: url }))); setPhotoPickerOpen(true); }}
-                                  style={{ flexShrink: 0, width: "72px", height: "72px", border: settingsForm.cardImage ? "2px solid #0d9488" : "1.5px dashed #c4bdb6", borderRadius: "8px", overflow: "hidden", cursor: "pointer", background: "#f7f5f0", display: "flex", alignItems: "center", justifyContent: "center", padding: 0, position: "relative" }}
+                                  style={{ flexShrink: 0, width: "72px", height: "72px", border: settingsForm.cardImage ? "2px solid var(--accent)" : "1.5px dashed #c4bdb6", borderRadius: "8px", overflow: "hidden", cursor: "pointer", background: "#f7f5f0", display: "flex", alignItems: "center", justifyContent: "center", padding: 0, position: "relative" }}
                                   aria-label="Pick card photo"
                                 >
                                   {settingsForm.cardImage
@@ -4704,7 +4704,7 @@ export default function SiteEditor() {
                           <button
                             type="button"
                             onClick={() => { if (photos.length === 0) fetchPhotos(); setPhotoPickerTarget(() => (url: string) => setSettingsForm((f) => ({ ...f, bgImage: url }))); setPhotoPickerOpen(true); }}
-                            style={{ flexShrink: 0, width: "80px", height: "56px", border: settingsForm.bgImage ? "2px solid #0d9488" : "1.5px dashed #c4bdb6", borderRadius: "8px", overflow: "hidden", cursor: "pointer", background: "#f7f5f0", display: "flex", alignItems: "center", justifyContent: "center", padding: 0 }}
+                            style={{ flexShrink: 0, width: "80px", height: "56px", border: settingsForm.bgImage ? "2px solid var(--accent)" : "1.5px dashed #c4bdb6", borderRadius: "8px", overflow: "hidden", cursor: "pointer", background: "#f7f5f0", display: "flex", alignItems: "center", justifyContent: "center", padding: 0 }}
                             aria-label="Pick background image"
                           >
                             {settingsForm.bgImage
@@ -4736,7 +4736,7 @@ export default function SiteEditor() {
                       <div style={{ display: "flex", gap: "6px", marginBottom: "1rem" }}>
                         {(["fixed", "scroll-away"] as const).map((opt) => (
                           <button key={opt} onClick={() => setSettingsForm((f) => ({ ...f, navPosition: opt }))}
-                            style={{ flex: 1, padding: "5px 0", fontSize: "0.78rem", borderRadius: "6px", border: "1px solid", borderColor: settingsForm.navPosition === opt ? "#0d9488" : "#e0dbd4", background: settingsForm.navPosition === opt ? "#f0fdfa" : "#fff", color: settingsForm.navPosition === opt ? "#0d9488" : "#6b5e56", cursor: "pointer", fontWeight: settingsForm.navPosition === opt ? 600 : 400 }}>
+                            style={{ flex: 1, padding: "5px 0", fontSize: "0.78rem", borderRadius: "6px", border: "1px solid", borderColor: settingsForm.navPosition === opt ? "var(--accent)" : "#e0dbd4", background: settingsForm.navPosition === opt ? "var(--accent-light)" : "#fff", color: settingsForm.navPosition === opt ? "var(--accent)" : "#6b5e56", cursor: "pointer", fontWeight: settingsForm.navPosition === opt ? 600 : 400 }}>
                             {opt === "fixed" ? "Fixed" : "Scroll Away"}
                           </button>
                         ))}
@@ -4753,7 +4753,7 @@ export default function SiteEditor() {
                               { value: "floating", label: "Floating" },
                             ] as const).map(({ value, label }) => (
                               <button key={value} onClick={() => setSettingsForm((f) => ({ ...f, navShape: value }))}
-                                style={{ flex: 1, padding: "5px 0", fontSize: "0.78rem", borderRadius: "6px", border: "1px solid", borderColor: settingsForm.navShape === value ? "#0d9488" : "#e0dbd4", background: settingsForm.navShape === value ? "#f0fdfa" : "#fff", color: settingsForm.navShape === value ? "#0d9488" : "#6b5e56", cursor: "pointer", fontWeight: settingsForm.navShape === value ? 600 : 400 }}>
+                                style={{ flex: 1, padding: "5px 0", fontSize: "0.78rem", borderRadius: "6px", border: "1px solid", borderColor: settingsForm.navShape === value ? "var(--accent)" : "#e0dbd4", background: settingsForm.navShape === value ? "var(--accent-light)" : "#fff", color: settingsForm.navShape === value ? "var(--accent)" : "#6b5e56", cursor: "pointer", fontWeight: settingsForm.navShape === value ? 600 : 400 }}>
                                 {label}
                               </button>
                             ))}
@@ -4783,7 +4783,7 @@ export default function SiteEditor() {
                             : settingsForm.navBg === opt;
                           return (
                             <button key={opt} onClick={() => setSettingsForm((f) => ({ ...f, navBg: opt === "custom" ? "#f7f5f0" : opt }))}
-                              style={{ flex: 1, padding: "5px 0", fontSize: "0.78rem", borderRadius: "6px", border: "1px solid", borderColor: isActive ? "#0d9488" : "#e0dbd4", background: isActive ? "#f0fdfa" : "#fff", color: isActive ? "#0d9488" : "#6b5e56", cursor: "pointer", fontWeight: isActive ? 600 : 400, textTransform: "capitalize" }}>
+                              style={{ flex: 1, padding: "5px 0", fontSize: "0.78rem", borderRadius: "6px", border: "1px solid", borderColor: isActive ? "var(--accent)" : "#e0dbd4", background: isActive ? "var(--accent-light)" : "#fff", color: isActive ? "var(--accent)" : "#6b5e56", cursor: "pointer", fontWeight: isActive ? 600 : 400, textTransform: "capitalize" }}>
                               {opt === "glass" ? "Glass" : opt === "custom" ? "Custom" : "White"}
                             </button>
                           );
@@ -4802,7 +4802,7 @@ export default function SiteEditor() {
                       {[
                         { label: "Couple name", key: "navBrandColor" as const, def: "#1c1917" },
                         { label: "Nav links", key: "navLinkColor" as const, def: "#6b6560" },
-                        { label: "Highlight / Active", key: "navHighlightColor" as const, def: "#0d9488" },
+                        { label: "Highlight / Active", key: "navHighlightColor" as const, def: "#B8921A" },
                       ].map(({ label, key, def }) => (
                         <div key={key} style={{ display: "flex", alignItems: "center", gap: "10px", padding: "6px 0", borderBottom: "1px solid #f5f2ee" }}>
                           <ColorSwatch value={settingsForm[key] || def} onChange={v => { setSettingsForm((f) => ({ ...f, [key]: v })); fireSettingsPreview({ [key]: v }); }} />
@@ -4820,7 +4820,7 @@ export default function SiteEditor() {
                         <button
                           type="button"
                           onClick={() => setSettingsForm((f) => ({ ...f, navUnderline: f.navUnderline === "off" ? "on" : "off" }))}
-                          style={{ position: "relative", width: "44px", height: "24px", borderRadius: "12px", background: settingsForm.navUnderline !== "off" ? "#0d9488" : "#e0dbd4", border: "none", cursor: "pointer", flexShrink: 0, transition: "background 0.2s" }}
+                          style={{ position: "relative", width: "44px", height: "24px", borderRadius: "12px", background: settingsForm.navUnderline !== "off" ? "var(--accent)" : "#e0dbd4", border: "none", cursor: "pointer", flexShrink: 0, transition: "background 0.2s" }}
                           aria-pressed={settingsForm.navUnderline !== "off"}
                           aria-label="Toggle active page underline"
                         >
@@ -4842,7 +4842,7 @@ export default function SiteEditor() {
                         ) : musicTracks.length === 0 ? (
                           <p style={{ fontSize: "0.78rem", color: "#9b8e85", lineHeight: 1.5 }}>
                             No music in your library yet.{" "}
-                            <button type="button" style={{ background: "none", border: "none", color: "#0d9488", cursor: "pointer", fontSize: "inherit", padding: 0, textDecoration: "underline" }}
+                            <button type="button" style={{ background: "none", border: "none", color: "var(--accent)", cursor: "pointer", fontSize: "inherit", padding: 0, textDecoration: "underline" }}
                               onClick={() => { setSettingsOpen(false); setSection("media"); setMediaTab("music"); }}>
                               Add music in Media
                             </button>
@@ -4887,7 +4887,7 @@ export default function SiteEditor() {
                                       <input type="checkbox" checked={showChecked}
                                         onChange={() => { const next = showChecked ? songArr.filter(id => id !== p.id) : [...songArr, p.id]; setSettingsForm(f => ({ ...f, songPages: JSON.stringify(next) })); }}
                                         style={{ display: "none" }} />
-                                      <span style={{ display: "block", width: "30px", height: "17px", borderRadius: "9px", background: showChecked ? "#0d9488" : "#d1cdc7", position: "relative", transition: "background 0.2s", flexShrink: 0 }}>
+                                      <span style={{ display: "block", width: "30px", height: "17px", borderRadius: "9px", background: showChecked ? "var(--accent)" : "#d1cdc7", position: "relative", transition: "background 0.2s", flexShrink: 0 }}>
                                         <span style={{ position: "absolute", top: "2px", left: showChecked ? "13px" : "2px", width: "13px", height: "13px", borderRadius: "50%", background: "#fff", transition: "left 0.2s", boxShadow: "0 1px 3px rgba(0,0,0,0.2)" }} />
                                       </span>
                                     </label>
@@ -4897,7 +4897,7 @@ export default function SiteEditor() {
                                       <input type="checkbox" checked={resetChecked}
                                         onChange={() => { const next = resetChecked ? resetArr.filter(id => id !== p.id) : [...resetArr, p.id]; setSettingsForm(f => ({ ...f, songResetPages: JSON.stringify(next) })); }}
                                         style={{ display: "none" }} />
-                                      <span style={{ display: "block", width: "30px", height: "17px", borderRadius: "9px", background: resetChecked ? "#0d9488" : "#d1cdc7", position: "relative", transition: "background 0.2s", flexShrink: 0 }}>
+                                      <span style={{ display: "block", width: "30px", height: "17px", borderRadius: "9px", background: resetChecked ? "var(--accent)" : "#d1cdc7", position: "relative", transition: "background 0.2s", flexShrink: 0 }}>
                                         <span style={{ position: "absolute", top: "2px", left: resetChecked ? "13px" : "2px", width: "13px", height: "13px", borderRadius: "50%", background: "#fff", transition: "left 0.2s", boxShadow: "0 1px 3px rgba(0,0,0,0.2)" }} />
                                       </span>
                                     </label>
@@ -4916,7 +4916,7 @@ export default function SiteEditor() {
                       <div style={{ marginTop: "1.25rem" }}>
                         <div style={{ fontSize: "0.72rem", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: "#9b8e85", marginBottom: "0.5rem" }}>Music Button Style</div>
                         {[
-                          { label: "Button background", key: "musicBtnBg" as const, def: settingsForm.accentColor || "#0d9488" },
+                          { label: "Button background", key: "musicBtnBg" as const, def: settingsForm.accentColor || "#B8921A" },
                           { label: "Icon color", key: "musicBtnColor" as const, def: "#ffffff" },
                         ].map(({ label, key, def }) => (
                           <div key={key} style={{ display: "flex", alignItems: "center", gap: "10px", padding: "6px 0", borderBottom: "1px solid #f5f2ee" }}>
@@ -4969,7 +4969,7 @@ export default function SiteEditor() {
                         <button
                           type="button"
                           onClick={() => setSettingsForm((f) => ({ ...f, popupEnabled: f.popupEnabled ? 0 : 1 }))}
-                          style={{ position: "relative", width: "44px", height: "24px", borderRadius: "12px", background: settingsForm.popupEnabled ? "#0d9488" : "#e0dbd4", border: "none", cursor: "pointer", flexShrink: 0, transition: "background 0.2s" }}
+                          style={{ position: "relative", width: "44px", height: "24px", borderRadius: "12px", background: settingsForm.popupEnabled ? "var(--accent)" : "#e0dbd4", border: "none", cursor: "pointer", flexShrink: 0, transition: "background 0.2s" }}
                           aria-pressed={!!settingsForm.popupEnabled}
                           aria-label="Toggle welcome popup"
                         >
@@ -5000,7 +5000,7 @@ export default function SiteEditor() {
                             <button
                               type="button"
                               onClick={() => setSettingsForm((f) => ({ ...f, popupTicker: f.popupTicker ? 0 : 1 }))}
-                              style={{ position: "relative", width: "44px", height: "24px", borderRadius: "12px", background: settingsForm.popupTicker ? "#0d9488" : "#e0dbd4", border: "none", cursor: "pointer", flexShrink: 0, transition: "background 0.2s" }}
+                              style={{ position: "relative", width: "44px", height: "24px", borderRadius: "12px", background: settingsForm.popupTicker ? "var(--accent)" : "#e0dbd4", border: "none", cursor: "pointer", flexShrink: 0, transition: "background 0.2s" }}
                               aria-pressed={!!settingsForm.popupTicker}
                               aria-label="Toggle scrolling ticker"
                             >
@@ -5026,7 +5026,7 @@ export default function SiteEditor() {
                               <button
                                 type="button"
                                 onClick={() => setSettingsForm((f) => ({ ...f, popupBundle: f.popupBundle ? 0 : 1 }))}
-                                style={{ position: "relative", width: "44px", height: "24px", borderRadius: "12px", background: settingsForm.popupBundle ? "#0d9488" : "#e0dbd4", border: "none", cursor: "pointer", flexShrink: 0, transition: "background 0.2s" }}
+                                style={{ position: "relative", width: "44px", height: "24px", borderRadius: "12px", background: settingsForm.popupBundle ? "var(--accent)" : "#e0dbd4", border: "none", cursor: "pointer", flexShrink: 0, transition: "background 0.2s" }}
                                 aria-pressed={!!settingsForm.popupBundle}
                                 aria-label="Toggle bundle popup with entrance animation"
                               >
@@ -5045,7 +5045,7 @@ export default function SiteEditor() {
                               <button
                                 type="button"
                                 onClick={() => setSettingsForm((f) => ({ ...f, popupAfterAnimation: f.popupAfterAnimation ? 0 : 1 }))}
-                                style={{ position: "relative", width: "44px", height: "24px", borderRadius: "12px", background: settingsForm.popupAfterAnimation ? "#0d9488" : "#e0dbd4", border: "none", cursor: "pointer", flexShrink: 0, transition: "background 0.2s" }}
+                                style={{ position: "relative", width: "44px", height: "24px", borderRadius: "12px", background: settingsForm.popupAfterAnimation ? "var(--accent)" : "#e0dbd4", border: "none", cursor: "pointer", flexShrink: 0, transition: "background 0.2s" }}
                                 aria-pressed={!!settingsForm.popupAfterAnimation}
                                 aria-label="Toggle show after animation"
                               >
@@ -5068,7 +5068,7 @@ export default function SiteEditor() {
                             onClick={() => setSettingsForm((f) => ({ ...f, isLive: f.isLive ? 0 : 1 }))}
                             style={{
                               position: "relative", width: "44px", height: "24px", borderRadius: "12px",
-                              background: settingsForm.isLive ? "#0d9488" : "#e0dbd4",
+                              background: settingsForm.isLive ? "var(--accent)" : "#e0dbd4",
                               border: "none", cursor: "pointer", flexShrink: 0, transition: "background 0.2s",
                             }}
                             aria-pressed={!!settingsForm.isLive}
@@ -5082,7 +5082,7 @@ export default function SiteEditor() {
                               transition: "left 0.2s", boxShadow: "0 1px 4px rgba(0,0,0,0.2)",
                             }} />
                           </button>
-                          <span style={{ fontSize: "0.8rem", color: settingsForm.isLive ? "#0d9488" : "#9b8e85", fontWeight: 500 }}>
+                          <span style={{ fontSize: "0.8rem", color: settingsForm.isLive ? "var(--accent)" : "#9b8e85", fontWeight: 500 }}>
                             {settingsForm.isLive ? "Published — visible to guests" : "Draft — only you can see this"}
                           </span>
                         </div>
