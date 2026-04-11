@@ -133,6 +133,8 @@ interface SiteSettings {
   popupTitle: string | null;
   popupTicker: number;
   popupAfterAnimation: number;
+  musicBtnBg: string | null;
+  musicBtnColor: string | null;
 }
 
 interface AnalyticsData {
@@ -539,6 +541,8 @@ export default function SiteEditor() {
     popupTitle: "",
     popupTicker: 0 as 0 | 1,
     popupAfterAnimation: 0 as 0 | 1,
+    musicBtnBg: "",
+    musicBtnColor: "",
   });
 
   // CSV import state
@@ -715,6 +719,8 @@ export default function SiteEditor() {
         popupTitle:         data.settings.popupTitle         ?? "",
         popupTicker:        (data.settings.popupTicker       ?? 0) as 0 | 1,
         popupAfterAnimation:(data.settings.popupAfterAnimation ?? 0) as 0 | 1,
+        musicBtnBg:         data.settings.musicBtnBg         ?? "",
+        musicBtnColor:      data.settings.musicBtnColor      ?? "",
       });
       setStyleHeadingFont(data.settings.headingFont ?? "Georgia");
       setStyleBodyFont(data.settings.bodyFont ?? "Inter");
@@ -1580,15 +1586,17 @@ export default function SiteEditor() {
               Guest Preview
             </button>
             <div className="section-topbar-divider" />
-            <button className="btn-ghost" onClick={handleUndo} disabled={blockHistory.length === 0} title="Undo" aria-label="Undo">
+            <button className="btn-ghost" onClick={handleUndo} disabled={blockHistory.length === 0} title="Undo" aria-label="Undo" style={{ padding: "6px 10px", gap: "5px" }}>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <path d="M3 7v6h6"/><path d="M3 13A9 9 0 1 0 5.5 5.5L3 8"/>
+                <path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/>
               </svg>
+              Undo
             </button>
-            <button className="btn-ghost" onClick={handleRedo} disabled={blockFuture.length === 0} title="Redo" aria-label="Redo">
+            <button className="btn-ghost" onClick={handleRedo} disabled={blockFuture.length === 0} title="Redo" aria-label="Redo" style={{ padding: "6px 10px", gap: "5px" }}>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <path d="M21 7v6h-6"/><path d="M21 13A9 9 0 1 1 18.5 5.5L21 8"/>
+                <path d="m15 14 5-5-5-5"/><path d="M20 9H9.5A5.5 5.5 0 0 0 4 14.5v0A5.5 5.5 0 0 0 9.5 20H13"/>
               </svg>
+              Redo
             </button>
             <div className="section-topbar-divider" />
             <button className="btn-ghost" onClick={() => setSection("templates")}>Save Template</button>
@@ -4357,6 +4365,21 @@ export default function SiteEditor() {
                           </div>
                         );
                       })()}
+
+                      {/* Music Button Colors */}
+                      <div style={{ marginTop: "1.25rem" }}>
+                        <div style={{ fontSize: "0.72rem", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: "#9b8e85", marginBottom: "0.5rem" }}>Music Button Style</div>
+                        {[
+                          { label: "Button background", key: "musicBtnBg" as const, def: settingsForm.accentColor || "#0d9488" },
+                          { label: "Icon color", key: "musicBtnColor" as const, def: "#ffffff" },
+                        ].map(({ label, key, def }) => (
+                          <div key={key} style={{ display: "flex", alignItems: "center", gap: "10px", padding: "6px 0", borderBottom: "1px solid #f5f2ee" }}>
+                            <ColorSwatch value={settingsForm[key] || def} onChange={v => setSettingsForm(f => ({ ...f, [key]: v }))} />
+                            <span style={{ fontSize: "0.8rem", color: "#6b5e56", flex: 1 }}>{label}</span>
+                            <code style={{ fontSize: "0.72rem", color: "#a09690", fontFamily: "monospace" }}>{(settingsForm[key] || def).toUpperCase()}</code>
+                          </div>
+                        ))}
+                      </div>
                     </>
                   )}
 

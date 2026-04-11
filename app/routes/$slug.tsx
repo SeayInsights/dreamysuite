@@ -65,6 +65,8 @@ interface SiteSettingRow {
   popupTitle: string | null;
   popupTicker: number | null;
   popupAfterAnimation: number | null;
+  musicBtnBg: string | null;
+  musicBtnColor: string | null;
 }
 
 interface PageRow {
@@ -197,6 +199,8 @@ function buildStyles(settings: SiteSettingRow | null): BuiltStyles {
       --nav-link: ${escHtml(settings?.navLinkColor ?? "var(--muted)")};
       --nav-highlight: ${escHtml(settings?.navHighlightColor ?? "var(--accent)")};
       --nav-link-padding: ${escHtml(navLinkPadding)};
+      --music-btn-bg: ${escHtml(settings?.musicBtnBg ?? "var(--accent)")};
+      --music-btn-color: ${escHtml(settings?.musicBtnColor ?? "#ffffff")};
     }
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -849,8 +853,8 @@ function buildStyles(settings: SiteSettingRow | null): BuiltStyles {
       width: 48px;
       height: 48px;
       border-radius: 50%;
-      background: var(--accent);
-      color: #fff;
+      background: var(--music-btn-bg);
+      color: var(--music-btn-color);
       border: none;
       font-size: 1.25rem;
       cursor: pointer;
@@ -861,7 +865,7 @@ function buildStyles(settings: SiteSettingRow | null): BuiltStyles {
       transition: opacity 0.15s, transform 0.15s;
     }
     .music-btn:hover { opacity: 0.88; transform: scale(1.07); }
-    .music-btn.playing { background: var(--accent); opacity: 1; }
+    .music-btn.playing { background: var(--music-btn-bg); opacity: 1; }
 
     /* ── Language toggle ── */
     .lang-toggle {
@@ -1743,9 +1747,11 @@ function switchLang() {
   const triggerPopupAfterAnim = showPopup && popupAfterAnimation;
   const introScript = introHtml
     ? `<script>
-var _introOpened = false;
+var _animKey = 'dsuite_intro_${escHtml(siteSlug)}_${escHtml(animation ?? "")}';
+var _introOpened = !!sessionStorage.getItem(_animKey);
 function _afterAnimDone(el) {
   el.style.display='none';
+  try { sessionStorage.setItem(_animKey, '1'); } catch(e) {}
   ${triggerPopupAfterAnim ? `var g=document.getElementById('greeting-overlay');if(g)g.classList.remove('hidden');` : ""}
 }
 function openIntro() {
@@ -1786,11 +1792,16 @@ function openIntro() {
   gsap.to(el, { opacity:0, duration:0.4, onComplete:function(){ _afterAnimDone(el); } });
   `}
 }
-${animation === "envelope" ? `gsap.set('.envfs-card',{xPercent:-50,yPercent:-50,y:'100vh',opacity:0});` : ""}
-document.getElementById('intro-overlay').addEventListener('click', openIntro);
-document.addEventListener('keydown', function(e){
-  if (e.key==='Enter' || e.key===' ') openIntro();
-});
+${animation === "envelope" ? `if (!_introOpened) gsap.set('.envfs-card',{xPercent:-50,yPercent:-50,y:'100vh',opacity:0});` : ""}
+if (_introOpened) {
+  var _skipEl = document.getElementById('intro-overlay');
+  if (_skipEl) _afterAnimDone(_skipEl);
+} else {
+  document.getElementById('intro-overlay').addEventListener('click', openIntro);
+  document.addEventListener('keydown', function(e){
+    if (e.key==='Enter' || e.key===' ') openIntro();
+  });
+}
 </script>`
     : "";
 

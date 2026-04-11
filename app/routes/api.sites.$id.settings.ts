@@ -72,6 +72,8 @@ const DEFAULTS = {
   popupTitle: null,
   popupTicker: 0,
   popupAfterAnimation: 0,
+  musicBtnBg: null,
+  musicBtnColor: null,
 };
 
 export async function loader({ request, context, params }: Route.LoaderArgs) {
@@ -121,6 +123,7 @@ export async function action({ request, context, params }: Route.ActionArgs) {
     "animation", "bgImage", "envelopeColor", "sealInitials", "cardColor", "cardImage", "navShape",
     "navLinkPadding", "navUnderline",
     "popupEnabled", "popupTitle", "popupTicker", "popupAfterAnimation",
+    "musicBtnBg", "musicBtnColor",
   ];
 
   const fields: string[] = [];
@@ -145,8 +148,8 @@ export async function action({ request, context, params }: Route.ActionArgs) {
     const merged = { ...DEFAULTS, ...Object.fromEntries(ALLOWED_FIELDS.filter(f => f in body).map(f => [f, f === "isLive" ? (body[f] ? 1 : 0) : body[f]])) };
     await context.cloudflare.env.DB
       .prepare(
-        `INSERT INTO site_setting (siteId, eventName, eventDate, eventLocation, greeting, musicUrl, mainLanguage, secondLanguage, guestPassword, isLive, headingFont, bodyFont, accentColor, bgColor, songPages, songResetPages, headingColor, bodyColor, siteTextColor, siteBorderColor, buttonStyle, buttonBorderWidth, headingFontVi, bodyFontVi, navBg, navPosition, navBrandColor, navLinkColor, navHighlightColor, navItemsConfig, animation, bgImage, envelopeColor, sealInitials, cardColor, cardImage, navShape, navLinkPadding, navUnderline, popupEnabled, popupTitle, popupTicker, popupAfterAnimation, updatedAt)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+        `INSERT INTO site_setting (siteId, eventName, eventDate, eventLocation, greeting, musicUrl, mainLanguage, secondLanguage, guestPassword, isLive, headingFont, bodyFont, accentColor, bgColor, songPages, songResetPages, headingColor, bodyColor, siteTextColor, siteBorderColor, buttonStyle, buttonBorderWidth, headingFontVi, bodyFontVi, navBg, navPosition, navBrandColor, navLinkColor, navHighlightColor, navItemsConfig, animation, bgImage, envelopeColor, sealInitials, cardColor, cardImage, navShape, navLinkPadding, navUnderline, popupEnabled, popupTitle, popupTicker, popupAfterAnimation, musicBtnBg, musicBtnColor, updatedAt)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
       )
       .bind(
         siteId,
@@ -192,6 +195,8 @@ export async function action({ request, context, params }: Route.ActionArgs) {
         merged.popupTitle ?? null,
         merged.popupTicker ?? 0,
         merged.popupAfterAnimation ?? 0,
+        merged.musicBtnBg ?? null,
+        merged.musicBtnColor ?? null,
         now
       )
       .run();
