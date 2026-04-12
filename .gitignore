@@ -9,3 +9,9 @@
 
 # Wrangler
 /.wrangler/
+
+# Local tooling
+/.claude/
+/graphify-out/
+/preview/
+/scripts/
