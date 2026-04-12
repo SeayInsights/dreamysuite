@@ -1,0 +1,148 @@
+DREAMYSUITE HANDOFF — 2026-04-11
+=================================
+
+PROJECT: DreamySuite (dreamysuite)
+PATH: C:\Users\Dannis Seay\studio\builds\dreamysuite
+REPO: https://github.com/SeayInsights/dreamysuite.git (branch: main)
+SITE ID: site_dannis_naomi_01
+LIVE URL: https://dreamysuite.com/sites/site_dannis_naomi_01
+
+PYTHON: C:\Users\Dannis Seay\AppData\Local\Programs\Python\Python312\python.exe
+DEPLOY: Never run wrangler deploy directly. Push to GitHub only — CI deploys the worker.
+DB: wrangler d1 execute dreamysuite-db --remote --file=<file.sql> is OK for migrations.
+COMMITS: Never add Co-Authored-By to git commits.
+
+=================================
+WHAT WAS COMPLETED THIS SESSION
+=================================
+
+1. DASHBOARD REDESIGN — merged + pushed to main
+   - New design system: warm cream (#FDFBF7), amber gold (#B8921A), Bodoni Moda display font
+   - app/styles/dashboard.css — full token set (ds-* vars, animations, stagger, shell, sidebar,
+     site cards, empty state, buttons)
+   - app/routes/_dashboard.tsx — sidebar rewritten with CSS classes: new logo (italic Bodoni Moda),
+     gold active nav indicator, per-section icons, CSS hover (no JS handlers)
+   - app/routes/_dashboard._index.tsx — sites index rewritten: double-bezel site cards,
+     staggered entrance animation, editorial heading, gold badges
+   - Merged feat/dashboard-redesign → main, pushed
+
+2. COLLABORATOR INVITES — committed + pushed to main
+   - migrations/0018_invites.sql — site_invite table (id, siteId, email, invitedBy, createdAt,
+     CASCADE on site delete), applied to production D1
+   - app/routes/api.sites.$id.invites.ts — GET (list) + POST (send via Resend + save to D1)
+     Duplicate guard, email validation, sends branded HTML email from hello@dreamysuite.com
+   - workers/app.ts — added RESEND_API_KEY: string to Env interface
+   - app/routes/_dashboard.sites.$id.tsx — Collaborators section now has email input,
+     "Send Invite" button (disabled while sending), invite list with email + date
+
+=================================
+WHAT STILL NEEDS TO BE DONE
+=================================
+
+TASK — EDITOR TOKEN UNIFICATION (full plan at docs/superpowers/plans/2026-04-11-editor-token-unification.md)
+-------------------------------------------------------------------------------------------------------------
+The dashboard sidebar now uses the gold design system but the editor interior
+(topbar, tile panel, block cards, guest list, site setup, analytics) still shows
+the old teal (#0d9488). This is a pure token-swap — no markup changes.
+
+ROOT CAUSE:
+  site-editor.css root vars were already updated to gold but 28 rules still
+  hardcode #0d9488/#f0fdfa directly. The dashboard TSX has 66 inline-style
+  teal occurrences.
+
+TWO FILES TO FIX:
+
+  A) app/styles/site-editor.css (28 occurrences)
+     Replacements:
+       #0d9488              → var(--accent)
+       #0f766e              → var(--accent-hover)
+       #f0fdfa              → var(--accent-light)
+       rgba(13,148,136,...) → var(--accent-ring) or rgba(184,146,26,...)
+     Key rules to hit:
+       .btn-primary-sm background
+       .btn-publish background + hover
+       .bl-card.active border + shadow + bg
+       .bl-drag-ghost / .bl-sortable-ghost
+       .add-block-btn:hover
+       .block-type-tile:hover
+       .page-sel-row.active
+       .page-row.active / .page-row-icon / .page-row:hover chevron
+       .page-selector-btn.open box-shadow
+       .style-toggle checkbox:checked
+       .upload-zone:hover / .lib-item:hover
+       .gl-add-btn + hover
+       .analytics-views-count
+       .setup-type-card.active
+       .hub-tile hover shadow
+       .layout-tile.active / .clr-pill.active / .bsel-btn.active
+
+  B) app/routes/_dashboard.sites.$id.tsx (66 occurrences)
+     Fix TextStyleRow (~line 1821) manually:
+       Active alignment + B/I/U buttons: '#0d9488' → 'var(--accent)'
+     Then global string replace:
+       '#0d9488'  → 'var(--accent)'
+       '#0f766e'  → 'var(--accent-hover)'
+       '#f0fdfa'  → 'var(--accent-light)'
+       '#ccfbf1'  → 'var(--accent-light)'
+
+  VERIFY AFTER:
+    grep -n "#0d9488\|#0f766e\|#f0fdfa\|#ccfbf1" app/styles/site-editor.css
+    grep -n "#0d9488\|#0f766e\|#f0fdfa\|#ccfbf1" app/routes/_dashboard.sites.$id.tsx
+    Both should return zero matches.
+
+  COMMIT:
+    git add app/styles/site-editor.css app/routes/_dashboard.sites.$id.tsx
+    git commit -m "fix: replace hardcoded teal with CSS variables — full editor token unification"
+    git push origin main
+
+=================================
+KEY FILE LOCATIONS
+=================================
+
+app/styles/dashboard.css              — new dashboard design system tokens + components
+app/styles/site-editor.css            — editor styles (still needs teal → token swap)
+app/routes/_dashboard.tsx             — sidebar layout (redesigned ✅)
+app/routes/_dashboard._index.tsx      — sites index page (redesigned ✅)
+app/routes/_dashboard.sites.$id.tsx   — main editor (inline teal still needs fixing)
+app/routes/api.sites.$id.invites.ts   — invite API (GET list + POST send)
+workers/app.ts                        — Cloudflare Worker env interface
+migrations/0018_invites.sql           — site_invite table (applied to prod ✅)
+docs/superpowers/plans/2026-04-11-editor-token-unification.md — full step-by-step plan
+
+=================================
+DESIGN SYSTEM REFERENCE
+=================================
+
+TOKENS (defined in both dashboard.css and site-editor.css :root):
+  --accent:        #B8921A   warm amber gold
+  --accent-hover:  #9A780E   darker gold
+  --accent-light:  #FDF6E0   pale gold tint (replaces #f0fdfa teal tint)
+  --accent-ring:   rgba(184,146,26,0.18)  focus ring
+  --bg:            #FDFBF7   warm cream
+  --bg-subtle:     #F7F2EA   slightly darker cream
+  --border:        #E5DDD3   warm border
+  --text:          #1A1714   near-black
+  --muted:         #8B7F76   warm gray
+  --font-display:  'Bodoni Moda', Georgia, serif
+  --font-ui:       'Figtree', system-ui, sans-serif
+
+BRAND: anti-teal, anti-wedding-pink. A24 film / Kinfolk editorial.
+Every interactive accent = gold. No teal anywhere.
+
+=================================
+INVITE SYSTEM ARCHITECTURE
+=================================
+
+POST /api/sites/:id/invites
+  body: { email: string }
+  → validates email, checks for duplicate (409 if exists)
+  → sends HTML email via Resend (RESEND_API_KEY secret already in CF)
+  → inserts into site_invite table
+  → returns 201 { invite: { id, email, invitedBy, createdAt } }
+
+GET /api/sites/:id/invites
+  → returns { invites: [...] } newest first
+
+Both routes require session + site ownership.
+Email sent from: hello@dreamysuite.com
+Editor link sent: https://dreamysuite.com/sites/{siteId}
