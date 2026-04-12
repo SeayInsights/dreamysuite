@@ -4855,7 +4855,19 @@ export default function SiteEditor() {
                                 style={{ textAlign: "center", padding: "5px 4px" }}
                                 value={settingsForm[key]}
                                 placeholder="0"
-                                onChange={(e) => setSettingsForm((f) => ({ ...f, [key]: e.target.value }))}
+                                onChange={(e) => {
+                                  const newVal = e.target.value;
+                                  setSettingsForm((f) => {
+                                    const updated = { ...f, [key]: newVal };
+                                    fireSettingsPreview({
+                                      marginTop:    updated.marginTop,
+                                      marginRight:  updated.marginRight,
+                                      marginBottom: updated.marginBottom,
+                                      marginLeft:   updated.marginLeft,
+                                    });
+                                    return updated;
+                                  });
+                                }}
                               />
                             </div>
                           ))}
