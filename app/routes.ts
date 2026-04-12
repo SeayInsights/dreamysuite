@@ -45,6 +45,9 @@ export default [
   // Site analytics API
   route("api/sites/:id/analytics", "routes/api.sites.$id.analytics.ts"),
 
+  // Site collaborator invites API
+  route("api/sites/:id/invites", "routes/api.sites.$id.invites.ts"),
+
   // Canva OAuth + design import
   route("api/canva/connect", "routes/api.canva.connect.ts"),
   route("api/canva/callback", "routes/api.canva.callback.ts"),
