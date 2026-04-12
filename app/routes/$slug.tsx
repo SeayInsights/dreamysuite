@@ -226,7 +226,7 @@ function buildStyles(settings: SiteSettingRow | null): BuiltStyles {
     ════════════════════════════════ */
     @keyframes envfs-seal-pulse {
       0%,100% { box-shadow:0 4px 18px rgba(0,0,0,0.55); }
-      50%     { box-shadow:0 4px 18px rgba(0,0,0,0.55),0 0 32px 12px rgba(255,200,110,0.32); }
+      50%     { box-shadow:0 4px 18px rgba(0,0,0,0.55),0 0 32px 12px rgba(180,20,20,0.35); }
     }
     .intro-env-fs {
       perspective:1600px;
@@ -234,21 +234,21 @@ function buildStyles(settings: SiteSettingRow | null): BuiltStyles {
       cursor:pointer;
     }
     /* Envelope body — fills entire screen */
-    .envfs-body { position:absolute; inset:0; background:var(--env-color,#f2e8d8); overflow:hidden; }
+    .envfs-body { position:absolute; inset:0; background:linear-gradient(135deg,var(--env-color,#e6d5b3),color-mix(in srgb,var(--env-color,#e6d5b3) 78%,#8a6535)); overflow:hidden; }
     /* Inner crease folds */
     .envfs-left-fold {
       position:absolute; top:0; left:0; bottom:0; width:62%;
-      background:linear-gradient(to right,color-mix(in srgb,var(--env-color,#f2e8d8) 72%,#6b4c2a) 0%,transparent 100%);
+      background:linear-gradient(to right,color-mix(in srgb,var(--env-color,#e6d5b3) 72%,#6b4c2a) 0%,transparent 100%);
       clip-path:polygon(0 0,100% 50%,0 100%);
     }
     .envfs-right-fold {
       position:absolute; top:0; right:0; bottom:0; width:62%;
-      background:linear-gradient(to left,color-mix(in srgb,var(--env-color,#f2e8d8) 72%,#6b4c2a) 0%,transparent 100%);
+      background:linear-gradient(to left,color-mix(in srgb,var(--env-color,#e6d5b3) 72%,#6b4c2a) 0%,transparent 100%);
       clip-path:polygon(100% 0,0 50%,100% 100%);
     }
     .envfs-bottom-fold {
       position:absolute; bottom:0; left:0; right:0; height:56%;
-      background:linear-gradient(to top,color-mix(in srgb,var(--env-color,#f2e8d8) 83%,#6b4c2a) 0%,transparent 100%);
+      background:linear-gradient(to top,color-mix(in srgb,var(--env-color,#e6d5b3) 83%,#6b4c2a) 0%,transparent 100%);
       clip-path:polygon(0 100%,50% 0,100% 100%);
     }
     /* Warm glow — hidden until flap opens */
@@ -285,7 +285,7 @@ function buildStyles(settings: SiteSettingRow | null): BuiltStyles {
     /* Flap — large triangular top section that rotates open */
     .envfs-flap {
       position:absolute; top:0; left:0; right:0; height:58vh;
-      background:linear-gradient(168deg,var(--env-color,#f2e8d8) 28%,color-mix(in srgb,var(--env-color,#f2e8d8) 80%,#5a3820) 100%);
+      background:linear-gradient(168deg,var(--env-color,#f0e2c8) 28%,color-mix(in srgb,var(--env-color,#f0e2c8) 80%,#5a3820) 100%);
       clip-path:polygon(0 0,100% 0,50% 100%);
       transform-origin:top center; transform-style:preserve-3d;
       z-index:20; will-change:transform;
@@ -293,7 +293,7 @@ function buildStyles(settings: SiteSettingRow | null): BuiltStyles {
     .envfs-flap::after {
       content:''; position:absolute; inset:0;
       clip-path:polygon(0 0,100% 0,50% 100%);
-      background:linear-gradient(168deg,color-mix(in srgb,var(--env-color,#f2e8d8) 55%,#3d2210) 0%,color-mix(in srgb,var(--env-color,#f2e8d8) 40%,#3d2210) 100%);
+      background:linear-gradient(168deg,color-mix(in srgb,var(--env-color,#f0e2c8) 55%,#3d2210) 0%,color-mix(in srgb,var(--env-color,#f0e2c8) 40%,#3d2210) 100%);
       transform:rotateX(180deg); backface-visibility:visible;
     }
     /* Wax seal on the flap */
@@ -301,41 +301,40 @@ function buildStyles(settings: SiteSettingRow | null): BuiltStyles {
       position:absolute; top:78%; left:50%;
       transform:translate(-50%,-50%);
       width:clamp(70px,9vw,110px); height:clamp(70px,9vw,110px); border-radius:50%;
-      /* Gold wax: specular gloss + warm amber depth */
+      /* Red wax — top half, crack splits at midpoint */
       background:
-        radial-gradient(circle at 28% 22%, rgba(255,248,200,0.72) 0%, transparent 34%),
-        radial-gradient(circle at 68% 72%, rgba(140,80,0,0.35) 0%, transparent 38%),
+        radial-gradient(circle at 30% 30%, rgba(255,160,160,0.42) 0%, transparent 35%),
         radial-gradient(circle at 50% 50%,
-          var(--seal-color,#d4a843) 0%,
-          color-mix(in srgb,var(--seal-color,#d4a843) 72%,#5a3000) 45%,
-          color-mix(in srgb,var(--seal-color,#d4a843) 48%,#2a1000) 80%,
-          color-mix(in srgb,var(--seal-color,#d4a843) 30%,#000) 100%);
+          var(--seal-color,#b30000) 0%,
+          color-mix(in srgb,var(--seal-color,#b30000) 72%,#400000) 45%,
+          color-mix(in srgb,var(--seal-color,#b30000) 48%,#200000) 80%,
+          color-mix(in srgb,var(--seal-color,#b30000) 30%,#000) 100%);
       box-shadow:
         0 8px 36px rgba(0,0,0,0.62),
-        0 2px 10px rgba(0,0,0,0.38),
-        inset 0 4px 7px rgba(255,248,180,0.38),
-        inset 0 -5px 9px rgba(80,40,0,0.5),
-        inset 0 0 18px rgba(0,0,0,0.18);
+        0 2px 8px rgba(0,0,0,0.38),
+        inset 0 4px 7px rgba(255,180,180,0.28),
+        inset 0 -5px 9px rgba(80,0,0,0.5),
+        inset 0 0 10px #400000;
+      clip-path:polygon(0 0,100% 0,100% 50%,75% 60%,50% 45%,25% 60%,0 50%);
       display:flex; align-items:center; justify-content:center;
       z-index:25; pointer-events:none; overflow:hidden;
       animation:envfs-seal-pulse 2.4s ease-in-out infinite;
     }
-    /* Edge rim — multiple concentric rings (signet stamp look) */
+    /* Edge rim */
     .envfs-seal::before {
       content:''; position:absolute; inset:0; border-radius:50%;
-      border:2px solid rgba(200,140,10,0.42);
+      border:2px solid rgba(180,30,30,0.42);
       box-shadow:
-        inset 0 0 0 5px rgba(180,110,0,0.11),
-        inset 0 0 0 9px rgba(150,90,0,0.07),
-        0 0 0 3px rgba(160,100,0,0.10),
-        inset 0 0 8px rgba(255,220,100,0.18),
+        inset 0 0 0 5px rgba(140,0,0,0.11),
+        inset 0 0 0 9px rgba(100,0,0,0.07),
+        inset 0 0 8px rgba(255,120,120,0.12),
         inset 0 2px 4px rgba(0,0,0,0.22);
       pointer-events:none;
     }
     /* Inner signet ring */
     .envfs-seal::after {
       content:''; position:absolute; inset:14%; border-radius:50%;
-      border:1px solid rgba(255,235,145,0.28);
+      border:1px solid rgba(255,180,180,0.22);
       pointer-events:none;
     }
     /* Rose motif SVG positioned behind initials */
@@ -413,6 +412,21 @@ function buildStyles(settings: SiteSettingRow | null): BuiltStyles {
       opacity:0.062; mix-blend-mode:overlay;
       background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='waxn'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.88' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23waxn)'/%3E%3C/svg%3E");
       background-size:100px 100px;
+    }
+    /* Bottom half of cracked wax seal — stays on envelope body */
+    .envfs-seal-bottom {
+      position:absolute; left:50%; top:calc(0.78 * 58vh);
+      transform:translate(-50%,-50%);
+      width:clamp(70px,9vw,110px); height:clamp(70px,9vw,110px); border-radius:50%;
+      background:
+        radial-gradient(circle at 50% 50%,
+          var(--seal-color,#b30000) 0%,
+          color-mix(in srgb,var(--seal-color,#b30000) 72%,#400000) 45%,
+          color-mix(in srgb,var(--seal-color,#b30000) 48%,#200000) 80%,
+          color-mix(in srgb,var(--seal-color,#b30000) 30%,#000) 100%);
+      box-shadow:inset 0 0 10px #400000, 0 3px 6px rgba(0,0,0,0.4);
+      clip-path:polygon(0 50%,25% 60%,50% 45%,75% 60%,100% 50%,100% 100%,0 100%);
+      z-index:3; pointer-events:none; overflow:hidden;
     }
 
     /* ════════════════════════════════
@@ -1882,6 +1896,7 @@ function buildIntroHtml(
     <div class="envfs-right-fold"></div>
     <div class="envfs-bottom-fold"></div>
     <div class="envfs-glow"></div>
+    <div class="envfs-seal-bottom"></div>
     <div class="intro-dust">
       <div class="dust-mote" style="--sz:2px;--by:14%;--bx:27%;--dur:11s;--delay:0.4s;--dx:-28px;--op:0.5"></div>
       <div class="dust-mote" style="--sz:3px;--by:21%;--bx:64%;--dur:9s;--delay:2.0s;--dx:22px;--op:0.6"></div>
@@ -2245,6 +2260,7 @@ function _addReplayBtn() {
       gsap.set('.envfs-flap',         { rotateX:0 });
       gsap.set('.envfs-glow',         { opacity:0 });
       gsap.set('.envfs-seal',         { y:0, opacity:1, scale:1, rotation:0, rotateX:0 });
+      gsap.set('.envfs-seal-bottom',  { opacity:1 });
       gsap.set('.envfs-seal-specular',{ x:0, y:0, opacity:1 });
       gsap.set('.envfs-light-sweep',  { opacity:0, backgroundPosition:'160% 160%' });
       gsap.set('.envfs-cue',          { opacity:1 });
@@ -2302,6 +2318,7 @@ function openIntro() {
   gsap.set('#intro-lbox-t',       { height:48 });
   gsap.set('#intro-lbox-b',       { height:48 });
   gsap.set('.envfs-opener',       { opacity:0, x:-80 });
+  gsap.set('.envfs-seal-bottom',  { opacity:1 });
   gsap.set('.envfs-seal-specular',{ x:0, y:0, opacity:1 });
   gsap.set('.envfs-light-sweep',  { opacity:0, backgroundPosition:'160% 160%' });
   /* Heavy-start, fast-mid, feather-soft landing — like a real weighted flap */
@@ -2318,6 +2335,7 @@ function openIntro() {
     /* Seal peels off — expo departure, floats away */
     .to('.envfs-seal',        { y:'-130%', rotateX:55, opacity:0, duration:1.0, ease:'expo.out' }, 1.14)
     .to('.envfs-opener',      { opacity:0, duration:0.35 }, 1.42)
+    .to('.envfs-seal-bottom', { opacity:0, duration:0.55, ease:'power2.in' }, 1.4)
     .to(['#intro-lbox-t','#intro-lbox-b'], { height:0, duration:1.25, ease:'power4.inOut' }, 1.4)
     /* Flap opens — custom heavy curve: barely moves then sweeps then settles */
     .to('.envfs-flap',        { rotateX:-200, duration:2.2, ease:'flapHeavy', transformOrigin:'top center' }, 1.62)
