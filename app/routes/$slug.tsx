@@ -1705,6 +1705,16 @@ function buildMessageListenerScript(): string {
     Object.keys(delta).forEach(function(k) {
       if (map[k]) root.style.setProperty(map[k], String(delta[k]));
     });
+    if ('marginTop' in delta || 'marginRight' in delta || 'marginBottom' in delta || 'marginLeft' in delta) {
+      var siteContent = document.getElementById('site-content');
+      if (siteContent) {
+        var mt = delta.marginTop  != null ? Number(delta.marginTop)  : 0;
+        var mr = delta.marginRight != null ? Number(delta.marginRight) : 0;
+        var mb = delta.marginBottom != null ? Number(delta.marginBottom) : 0;
+        var ml = delta.marginLeft != null ? Number(delta.marginLeft) : 0;
+        siteContent.style.padding = mt + 'px ' + mr + 'px ' + mb + 'px ' + ml + 'px';
+      }
+    }
   }
 
   function applyBlockConfig(blockId, cfg) {
