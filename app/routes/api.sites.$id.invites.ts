@@ -90,7 +90,7 @@ export async function action({ request, context, params }: Route.ActionArgs) {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      from: "DreamySuite <hello@dreamysuite.com>",
+      from: "DreamySuite <hello@mail.dreamysuite.com>",
       to: [email],
       subject: `You've been invited to collaborate on ${check.siteName}`,
       html: `
