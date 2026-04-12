@@ -2616,12 +2616,14 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
   const { slug } = params;
   const db = context.cloudflare.env.DB;
 
-  // Attempt to identify a logged-in owner so they can preview unpublished sites.
+  // Attempt to identify a logged-in owner/collaborator so they can preview unpublished sites.
   let viewerUserId: string | null = null;
+  let viewerEmail: string | null = null;
   try {
     const auth = createAuth(context.cloudflare.env);
     const session = await auth.api.getSession({ headers: request.headers });
     viewerUserId = session?.user?.id ?? null;
+    viewerEmail = session?.user?.email ?? null;
   } catch {
     // Unauthenticated visitor — continue as public.
   }
@@ -2636,6 +2638,15 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
       .bind(slug, viewerUserId)
       .first<SiteRow>();
     if (site) isOwner = true;
+  }
+
+  // Collaborators (invited via site_invite) can also preview draft sites.
+  if (!site && viewerEmail) {
+    const invited = await db
+      .prepare("SELECT s.* FROM site s JOIN site_invite i ON i.siteId = s.id WHERE s.slug = ? AND i.email = ?")
+      .bind(slug, viewerEmail.toLowerCase())
+      .first<SiteRow>();
+    if (invited) { site = invited; isOwner = true; }
   }
 
   if (!site) {
