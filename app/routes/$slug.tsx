@@ -315,7 +315,7 @@ function buildStyles(settings: SiteSettingRow | null): BuiltStyles {
         inset 0 4px 7px rgba(255,180,180,0.28),
         inset 0 -5px 9px rgba(80,0,0,0.5),
         inset 0 0 10px #400000;
-      clip-path:polygon(0 0,100% 0,100% 50%,75% 60%,50% 45%,25% 60%,0 50%);
+      clip-path:polygon(0 0,100% 0,100% 100%,75% 100%,50% 100%,25% 100%,0 100%);
       display:flex; align-items:center; justify-content:center;
       z-index:25; pointer-events:none; overflow:hidden;
       animation:envfs-seal-pulse 2.4s ease-in-out infinite;
@@ -426,7 +426,7 @@ function buildStyles(settings: SiteSettingRow | null): BuiltStyles {
           color-mix(in srgb,var(--seal-color,#b30000) 30%,#000) 100%);
       box-shadow:inset 0 0 10px #400000, 0 3px 6px rgba(0,0,0,0.4);
       clip-path:polygon(0 50%,25% 60%,50% 45%,75% 60%,100% 50%,100% 100%,0 100%);
-      z-index:3; pointer-events:none; overflow:hidden;
+      z-index:3; pointer-events:none; overflow:hidden; opacity:0;
     }
 
     /* ════════════════════════════════
@@ -2259,8 +2259,8 @@ function _addReplayBtn() {
       gsap.set('.envfs-card',         { xPercent:-50, yPercent:-50, y:'100vh', opacity:0, scale:1, filter:'blur(12px)' });
       gsap.set('.envfs-flap',         { rotateX:0 });
       gsap.set('.envfs-glow',         { opacity:0 });
-      gsap.set('.envfs-seal',         { y:0, opacity:1, scale:1, rotation:0, rotateX:0 });
-      gsap.set('.envfs-seal-bottom',  { opacity:1 });
+      gsap.set('.envfs-seal',         { y:0, opacity:1, scale:1, rotation:0, rotateX:0, clipPath:'polygon(0 0,100% 0,100% 100%,75% 100%,50% 100%,25% 100%,0 100%)' });
+      gsap.set('.envfs-seal-bottom',  { opacity:0 });
       gsap.set('.envfs-seal-specular',{ x:0, y:0, opacity:1 });
       gsap.set('.envfs-light-sweep',  { opacity:0, backgroundPosition:'160% 160%' });
       gsap.set('.envfs-cue',          { opacity:1 });
@@ -2318,7 +2318,8 @@ function openIntro() {
   gsap.set('#intro-lbox-t',       { height:48 });
   gsap.set('#intro-lbox-b',       { height:48 });
   gsap.set('.envfs-opener',       { opacity:0, x:-80 });
-  gsap.set('.envfs-seal-bottom',  { opacity:1 });
+  gsap.set('.envfs-seal',         { clipPath:'polygon(0 0,100% 0,100% 100%,75% 100%,50% 100%,25% 100%,0 100%)' });
+  gsap.set('.envfs-seal-bottom',  { opacity:0 });
   gsap.set('.envfs-seal-specular',{ x:0, y:0, opacity:1 });
   gsap.set('.envfs-light-sweep',  { opacity:0, backgroundPosition:'160% 160%' });
   /* Heavy-start, fast-mid, feather-soft landing — like a real weighted flap */
@@ -2326,15 +2327,15 @@ function openIntro() {
   var tl = gsap.timeline({ onComplete: function(){ _afterAnimDone(el); } });
   tl
     .to('.envfs-cue',         { opacity:0, duration:0.3 }, 0)
-    /* Blade swipe — decisive, power4 deceleration */
-    .to('.envfs-opener',      { x:0, opacity:1, duration:0.38, ease:'power4.out' }, 0)
+    /* Seal cracks — clip-path snaps from whole circle to broken top half */
+    .to('.envfs-seal',        { clipPath:'polygon(0 0,100% 0,100% 50%,75% 60%,50% 45%,25% 60%,0 50%)', duration:0.14, ease:'power4.in' }, 0.18)
+    .to('.envfs-seal-bottom', { opacity:1, duration:0.1 }, 0.18)
     /* Seal specular shifts as light angle changes during peel */
     .to('.envfs-seal-specular',{ x:12, y:7, opacity:0.55, duration:0.8, ease:'power2.out' }, 0.38)
     /* Seal levered up — weighted */
     .to('.envfs-seal',        { y:'-14%', rotateX:-28, scale:1.04, duration:0.72, ease:'power4.out', transformPerspective:700 }, 0.38)
     /* Seal peels off — expo departure, floats away */
     .to('.envfs-seal',        { y:'-130%', rotateX:55, opacity:0, duration:1.0, ease:'expo.out' }, 1.14)
-    .to('.envfs-opener',      { opacity:0, duration:0.35 }, 1.42)
     .to('.envfs-seal-bottom', { opacity:0, duration:0.55, ease:'power2.in' }, 1.4)
     .to(['#intro-lbox-t','#intro-lbox-b'], { height:0, duration:1.25, ease:'power4.inOut' }, 1.4)
     /* Flap opens — custom heavy curve: barely moves then sweeps then settles */
