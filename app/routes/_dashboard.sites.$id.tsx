@@ -759,6 +759,10 @@ export default function SiteEditor() {
     popupBundle: 0 as 0 | 1,
     musicBtnBg: "",
     musicBtnColor: "",
+    marginTop: "" as string,
+    marginRight: "" as string,
+    marginBottom: "" as string,
+    marginLeft: "" as string,
   });
 
   // CSV import state
@@ -938,6 +942,10 @@ export default function SiteEditor() {
         popupBundle:        (data.settings.popupBundle        ?? 0) as 0 | 1,
         musicBtnBg:         data.settings.musicBtnBg         ?? "",
         musicBtnColor:      data.settings.musicBtnColor      ?? "",
+        marginTop:          String(data.settings.marginTop    ?? ""),
+        marginRight:        String(data.settings.marginRight  ?? ""),
+        marginBottom:       String(data.settings.marginBottom ?? ""),
+        marginLeft:         String(data.settings.marginLeft   ?? ""),
       });
       setStyleHeadingFont(data.settings.headingFont ?? "Georgia");
       setStyleBodyFont(data.settings.bodyFont ?? "Inter");
@@ -4826,6 +4834,28 @@ export default function SiteEditor() {
                         >
                           <span style={{ position: "absolute", top: "3px", left: settingsForm.navUnderline !== "off" ? "23px" : "3px", width: "18px", height: "18px", borderRadius: "50%", background: "#fff", transition: "left 0.2s", boxShadow: "0 1px 4px rgba(0,0,0,0.2)" }} />
                         </button>
+                      </div>
+
+                      {/* Content margins */}
+                      <div style={{ borderTop: "1px solid #f5f2ee", marginTop: "0.5rem", paddingTop: "0.75rem" }}>
+                        <div style={{ fontSize: "0.8rem", fontWeight: 600, color: "#1c1917", marginBottom: "4px" }}>Content Margins</div>
+                        <div style={{ fontSize: "0.7rem", color: "#9b8e85", marginBottom: "0.75rem" }}>Extra spacing around site content (px). Does not affect the nav bar.</div>
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: "8px" }}>
+                          {([["Top", "marginTop"], ["Right", "marginRight"], ["Bottom", "marginBottom"], ["Left", "marginLeft"]] as const).map(([label, key]) => (
+                            <div key={key}>
+                              <label style={{ display: "block", fontSize: "0.68rem", color: "#9b8e85", marginBottom: "3px", textAlign: "center" }}>{label}</label>
+                              <input
+                                type="number"
+                                min={0}
+                                className="sf-input"
+                                style={{ textAlign: "center", padding: "5px 4px" }}
+                                value={settingsForm[key]}
+                                placeholder="0"
+                                onChange={(e) => setSettingsForm((f) => ({ ...f, [key]: e.target.value }))}
+                              />
+                            </div>
+                          ))}
+                        </div>
                       </div>
                     </>
                   )}

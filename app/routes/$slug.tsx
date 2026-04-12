@@ -68,6 +68,10 @@ interface SiteSettingRow {
   popupBundle: number | null;
   musicBtnBg: string | null;
   musicBtnColor: string | null;
+  marginTop: number | null;
+  marginRight: number | null;
+  marginBottom: number | null;
+  marginLeft: number | null;
 }
 
 interface PageRow {
@@ -2020,6 +2024,14 @@ function buildHtml(
     })
     .join("\n");
 
+  // Content margin padding
+  const mTop    = settings?.marginTop    ?? 0;
+  const mRight  = settings?.marginRight  ?? 0;
+  const mBottom = settings?.marginBottom ?? 0;
+  const mLeft   = settings?.marginLeft   ?? 0;
+  const contentPadStyle = (mTop || mRight || mBottom || mLeft)
+    ? ` style="padding:${mTop}px ${mRight}px ${mBottom}px ${mLeft}px"` : '';
+
   // No-pages fallback — site exists but has no pages yet
   const fallbackHtml = visiblePages.length === 0
     ? `<div class="site-wrapper"><p style="text-align:center;padding:4rem 1rem;color:var(--muted);font-style:italic;">This site has no published content yet.</p></div>`
@@ -2381,8 +2393,10 @@ function toggleMusic() {
   ${introScript}
   ${greetingHtml}
   ${navHtml}
+  <div id="site-content"${contentPadStyle}>
   ${fallbackHtml}
   ${pageSectionsHtml}
+  </div>
   ${musicPlayerHtml}
   ${langToggleHtml}
   ${langContentJson ? `<script type="application/json" id="lang-content-data">${langContentJson}</script>` : ""}
