@@ -4804,7 +4804,12 @@ export default function SiteEditor() {
                             ? (settingsForm.navBg !== "white" && settingsForm.navBg !== "glass")
                             : settingsForm.navBg === opt;
                           return (
-                            <button key={opt} onClick={() => setSettingsForm((f) => ({ ...f, navBg: opt === "custom" ? "#f7f5f0" : opt }))}
+                            <button key={opt} onClick={() => {
+                                const newVal = opt === "custom" ? "#f7f5f0" : opt;
+                                setSettingsForm((f) => ({ ...f, navBg: newVal }));
+                                const resolved = newVal === "white" ? "rgba(255,255,255,0.96)" : newVal === "glass" ? "rgba(255,255,255,0.65)" : newVal;
+                                fireSettingsPreview({ navBg: resolved });
+                              }}
                               style={{ flex: 1, padding: "5px 0", fontSize: "0.78rem", borderRadius: "6px", border: "1px solid", borderColor: isActive ? "var(--accent)" : "#e0dbd4", background: isActive ? "var(--accent-light)" : "#fff", color: isActive ? "var(--accent)" : "#6b5e56", cursor: "pointer", fontWeight: isActive ? 600 : 400, textTransform: "capitalize" }}>
                               {opt === "glass" ? "Glass" : opt === "custom" ? "Custom" : "White"}
                             </button>

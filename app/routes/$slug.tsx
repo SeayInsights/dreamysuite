@@ -1165,6 +1165,14 @@ function renderBlock(
   const cnt = (contentKey: string, cfgKey?: string, fallback = "") =>
     String(pageContent?.[contentKey] ?? (cfgKey ? cfg[cfgKey] : undefined) ?? fallback);
 
+  // Compute inline style for block container (background color + text color from tile settings)
+  const _bsParts: string[] = [];
+  const _bgCfg = cfg.background as { type?: string; value?: string } | null | undefined;
+  if (_bgCfg?.type === 'color' && _bgCfg?.value) _bsParts.push(`background-color:${escHtml(String(_bgCfg.value))}`);
+  const _tcCfg = cfg.textColor as string | undefined;
+  if (_tcCfg) _bsParts.push(`color:${escHtml(_tcCfg)}`);
+  const bsAttr = _bsParts.length ? ` style="${_bsParts.join(';')}"` : '';
+
   switch (block.type) {
     case "home-hero":
     case "couple": {
@@ -1172,7 +1180,7 @@ function renderBlock(
       const date = cnt("date", "dateText", settings?.eventDate ?? "");
       const location = cnt("location", "locationText", settings?.eventLocation ?? "");
       return `
-        <section class="block block-home-hero" aria-label="Hero" data-block-id="${escHtml(block.id)}" data-block-type="${escHtml(block.type)}">
+        <section class="block block-home-hero"${bsAttr} aria-label="Hero" data-block-id="${escHtml(block.id)}" data-block-type="${escHtml(block.type)}">
           <div class="hero-inner">
             <p class="hero-eyebrow">We&#39;re getting married</p>
             <h1 class="hero-title" data-lang-field="couple">${escHtml(title)}</h1>
@@ -1198,7 +1206,7 @@ function renderBlock(
         tUnder ? "text-decoration:underline" : "",
       ].filter(Boolean).join(";");
       return `
-        <section class="block block-header" data-block-id="${escHtml(block.id)}" data-block-type="${escHtml(block.type)}">
+        <section class="block block-header"${bsAttr} data-block-id="${escHtml(block.id)}" data-block-type="${escHtml(block.type)}">
           <h2 class="section-heading"${titleStyle ? ` style="${titleStyle}"` : ""}>${escHtml(text)}</h2>
           <div class="section-rule" aria-hidden="true"></div>
         </section>`;
@@ -1234,7 +1242,7 @@ function renderBlock(
         cfg.bodyUnderline ? "text-decoration:underline" : "",
       ].filter(Boolean).join(";");
       return `
-        <section class="block block-text" data-block-id="${escHtml(block.id)}" data-block-type="${escHtml(block.type)}">
+        <section class="block block-text"${bsAttr} data-block-id="${escHtml(block.id)}" data-block-type="${escHtml(block.type)}">
           ${heading ? `<h2 class="section-heading"${hStyle ? ` style="${hStyle}"` : ""}${contentKey ? ` data-lang-field="${escHtml(contentKey)}_heading"` : ""}>${escHtml(heading)}</h2><div class="section-rule" aria-hidden="true"></div>` : ""}
           <div class="text-body"${bStyle ? ` style="${bStyle}"` : ""}>
             ${body ? `<p${contentKey ? ` data-lang-field="${escHtml(contentKey)}"` : ""}>${escHtml(body)}</p>` : placeholder("Story text will appear here once added.")}
@@ -1252,7 +1260,7 @@ function renderBlock(
       const rsvpBorder = cfg.rsvpButtonBorderColor
         ? `border:2px solid ${escHtml(String(cfg.rsvpButtonBorderColor))};` : "";
       return `
-    <section class="block block-countdown" aria-label="Countdown" data-block-id="${escHtml(block.id)}" data-block-type="${escHtml(block.type)}">
+    <section class="block block-countdown"${bsAttr} aria-label="Countdown" data-block-id="${escHtml(block.id)}" data-block-type="${escHtml(block.type)}">
       <p class="countdown-label">${escHtml(label)}</p>
       ${targetDate
         ? `<div class="countdown-units" data-cd-clock data-date="${escHtml(targetDate)}" data-block-id="${escHtml(block.id)}">
@@ -1274,7 +1282,7 @@ function renderBlock(
         ? (pageContent.events as Array<{ name?: string; date?: string; time?: string; location?: string; description?: string }>)
         : [];
       return `
-    <section class="block block-schedule" aria-label="Schedule" data-block-id="${escHtml(block.id)}" data-block-type="${escHtml(block.type)}">
+    <section class="block block-schedule"${bsAttr} aria-label="Schedule" data-block-id="${escHtml(block.id)}" data-block-type="${escHtml(block.type)}">
       <h2 class="section-heading">The Day</h2>
       <div class="section-rule" aria-hidden="true"></div>
       ${events.length > 0
@@ -1300,7 +1308,7 @@ function renderBlock(
         ? (pageContent.questions as Array<{ q?: string; a?: string }>)
         : [];
       return `
-    <section class="block block-faq" aria-label="Frequently asked questions" data-block-id="${escHtml(block.id)}" data-block-type="${escHtml(block.type)}">
+    <section class="block block-faq"${bsAttr} aria-label="Frequently asked questions" data-block-id="${escHtml(block.id)}" data-block-type="${escHtml(block.type)}">
       <h2 class="section-heading">Questions &amp; Answers</h2>
       <div class="section-rule" aria-hidden="true"></div>
       ${questions.length > 0
@@ -1320,7 +1328,7 @@ function renderBlock(
       const formId = `rsvp-form-${escHtml(block.id)}`;
       const msgId = `rsvp-msg-${escHtml(block.id)}`;
       return `
-        <section class="block block-rsvp" aria-label="RSVP" data-block-id="${escHtml(block.id)}" data-block-type="${escHtml(block.type)}">
+        <section class="block block-rsvp"${bsAttr} aria-label="RSVP" data-block-id="${escHtml(block.id)}" data-block-type="${escHtml(block.type)}">
           <h2 class="section-heading">${escHtml(formTitle)}</h2>
           <div class="section-rule" aria-hidden="true"></div>
           <form class="rsvp-form" id="${formId}" aria-label="RSVP form" onsubmit="submitRsvp(event,'${escHtml(slug)}','${formId}','${msgId}')">
@@ -1351,7 +1359,7 @@ function renderBlock(
               <label class="form-label" for="rsvp-notes-${escHtml(block.id)}">Notes or Dietary Restrictions</label>
               <textarea class="form-input form-textarea" id="rsvp-notes-${escHtml(block.id)}" name="notes" placeholder="Optional"></textarea>
             </div>
-            <button class="rsvp-submit" type="submit" style="background:${escHtml(accent)}">Send RSVP</button>
+            <button class="rsvp-submit" type="submit" style="background:var(--accent)">Send RSVP</button>
           </form>
           <div id="${msgId}" role="alert" aria-live="polite" style="display:none;margin-top:1.25rem;text-align:center;font-size:0.9375rem;padding:0.875rem 1rem;border-radius:6px;"></div>
         </section>`;
@@ -1372,7 +1380,7 @@ function renderBlock(
       const offsetXRaw = Number(cfg.galleryOffsetX ?? 0);
       const gridStyle = offsetXRaw !== 0 ? `transform:translateX(${offsetXRaw}px)` : "";
       return `
-        <section class="block block-images" aria-label="Photo gallery" data-block-id="${escHtml(block.id)}" data-block-type="${escHtml(block.type)}">
+        <section class="block block-images"${bsAttr} aria-label="Photo gallery" data-block-id="${escHtml(block.id)}" data-block-type="${escHtml(block.type)}">
           ${
             urls && urls.length > 0
               ? `<div class="image-grid"${gridStyle ? ` style="${gridStyle}"` : ""}>
@@ -1429,7 +1437,7 @@ function renderBlock(
     case "youtube": {
       const videoId = cfg.videoId as string | undefined;
       return `
-        <section class="block block-youtube" aria-label="YouTube video" data-block-id="${escHtml(block.id)}" data-block-type="${escHtml(block.type)}">
+        <section class="block block-youtube"${bsAttr} aria-label="YouTube video" data-block-id="${escHtml(block.id)}" data-block-type="${escHtml(block.type)}">
           ${
             videoId
               ? `<div class="video-wrap">
@@ -1452,7 +1460,7 @@ function renderBlock(
       const url = cfg.url as string | undefined;
       const note = cfg.note as string | undefined;
       return `
-        <section class="block block-registry-card" aria-label="Gift registry" data-block-id="${escHtml(block.id)}" data-block-type="${escHtml(block.type)}">
+        <section class="block block-registry-card"${bsAttr} aria-label="Gift registry" data-block-id="${escHtml(block.id)}" data-block-type="${escHtml(block.type)}">
           <h2 class="section-heading">Registry</h2>
           <div class="section-rule" aria-hidden="true"></div>
           ${
@@ -1473,7 +1481,7 @@ function renderBlock(
       const url = cfg.url as string | undefined;
       const note = cfg.note as string | undefined;
       return `
-        <section class="block block-hotel-card" aria-label="Hotel and accommodations" data-block-id="${escHtml(block.id)}" data-block-type="${escHtml(block.type)}">
+        <section class="block block-hotel-card"${bsAttr} aria-label="Hotel and accommodations" data-block-id="${escHtml(block.id)}" data-block-type="${escHtml(block.type)}">
           <h2 class="section-heading">Hotels &amp; Accommodations</h2>
           <div class="section-rule" aria-hidden="true"></div>
           ${
@@ -1497,7 +1505,7 @@ function renderBlock(
         ? `https://maps.google.com/maps?q=${encodeURIComponent(address)}&output=embed`
         : null;
       return `
-        <section class="block block-venue-map" aria-label="Venue location" data-block-id="${escHtml(block.id)}" data-block-type="${escHtml(block.type)}">
+        <section class="block block-venue-map"${bsAttr} aria-label="Venue location" data-block-id="${escHtml(block.id)}" data-block-type="${escHtml(block.type)}">
           <h2 class="section-heading">Venue</h2>
           <div class="section-rule" aria-hidden="true"></div>
           ${name ? `<p class="venue-name">${escHtml(name)}</p>` : ""}
@@ -1534,7 +1542,7 @@ function renderBlock(
         ? "border:1px solid var(--site-border,var(--border));border-radius:12px;padding:1.25rem;text-align:center;color:var(--block-text,var(--site-text));"
         : "background:#fff;border:1px solid var(--site-border,var(--border));border-radius:12px;padding:1.25rem;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,0.05);color:var(--block-text,var(--text));";
       return `
-    <section class="block block-tidbits" aria-label="Fun facts" data-block-id="${escHtml(block.id)}" data-block-type="${escHtml(block.type)}">
+    <section class="block block-tidbits"${bsAttr} aria-label="Fun facts" data-block-id="${escHtml(block.id)}" data-block-type="${escHtml(block.type)}">
       ${cfg.showTitle !== false ? `<h2 class="section-heading">Fun Facts</h2><div class="section-rule" aria-hidden="true"></div>` : ""}
       ${items.length > 0
         ? `<div style="display:grid;grid-template-columns:${colsCss};gap:1rem;">
@@ -1555,7 +1563,7 @@ function renderBlock(
         ? (pageContent.travelItems as Array<{ heading?: string; body?: string; linkLabel?: string; linkUrl?: string }>)
         : [];
       return `
-    <section class="block block-travel" aria-label="Travel information" data-block-id="${escHtml(block.id)}" data-block-type="${escHtml(block.type)}">
+    <section class="block block-travel"${bsAttr} aria-label="Travel information" data-block-id="${escHtml(block.id)}" data-block-type="${escHtml(block.type)}">
       <h2 class="section-heading">${escHtml(title)}</h2>
       <div class="section-rule" aria-hidden="true"></div>
       ${travelItems.length > 0
@@ -1632,7 +1640,7 @@ function renderBlock(
         ? `${imgEl}<div class="ps-content" style="flex:1;min-width:200px;">${compsHtml}</div>`
         : `<div class="ps-content" style="flex:1;min-width:200px;">${compsHtml}</div>${imgEl}`;
 
-      return `<section class="block block-photo-split" data-block-id="${escHtml(block.id)}" data-block-type="${escHtml(block.type)}">
+      return `<section class="block block-photo-split"${bsAttr} data-block-id="${escHtml(block.id)}" data-block-type="${escHtml(block.type)}">
         <div style="display:flex;gap:2rem;align-items:center;flex-wrap:wrap;">${flex}</div>
       </section>`;
     }
@@ -1727,6 +1735,12 @@ function buildMessageListenerScript(): string {
       if (labelEl && cfg.label != null) labelEl.textContent = String(cfg.label);
       var rsvpWrap = node.querySelector('.rsvp-wrap');
       if (rsvpWrap) rsvpWrap.style.display = cfg.showRsvpButton ? '' : 'none';
+      var rsvpBtn = node.querySelector('.rsvp-wrap .rsvp-submit');
+      if (rsvpBtn) {
+        if ('rsvpButtonColor' in cfg) rsvpBtn.style.background = cfg.rsvpButtonColor ? String(cfg.rsvpButtonColor) : '';
+        if ('rsvpButtonTextColor' in cfg) rsvpBtn.style.color = cfg.rsvpButtonTextColor ? String(cfg.rsvpButtonTextColor) : '';
+        if ('rsvpButtonBorderColor' in cfg) rsvpBtn.style.border = cfg.rsvpButtonBorderColor ? '2px solid ' + String(cfg.rsvpButtonBorderColor) : '';
+      }
     }
 
     if (type === 'video') {
@@ -1751,14 +1765,14 @@ function buildMessageListenerScript(): string {
 
     // Generic: background / text color
     if (cfg.background && cfg.background.type === 'color') {
-      node.style.setProperty('--block-bg', cfg.background.value || '');
+      node.style.backgroundColor = cfg.background.value || '';
     } else if (cfg.background === null) {
-      node.style.removeProperty('--block-bg');
+      node.style.backgroundColor = '';
     }
     if (cfg.textColor) {
-      node.style.setProperty('--block-text', cfg.textColor);
+      node.style.color = String(cfg.textColor);
     } else if (cfg.textColor === null) {
-      node.style.removeProperty('--block-text');
+      node.style.color = '';
     }
   }
 
