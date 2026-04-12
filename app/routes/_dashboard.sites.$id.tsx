@@ -694,6 +694,20 @@ export default function SiteEditor() {
     }
   }
 
+  async function removeInvite(inviteId: string) {
+    try {
+      await fetch(`/api/sites/${site.id}/invites`, {
+        method: "DELETE",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ inviteId }),
+      });
+      setInvites((prev) => prev.filter((i) => i.id !== inviteId));
+      toast("Collaborator removed");
+    } catch {
+      toast("Failed to remove collaborator", true);
+    }
+  }
+
   async function sendInvite() {
     if (!inviteEmail.trim()) return;
     setInviteSending(true);
@@ -3406,19 +3420,6 @@ export default function SiteEditor() {
                     </button>
                   </div>
 
-                  {/* Action buttons row */}
-                  <div style={{ display: "flex", gap: "8px", marginBottom: "1.25rem", flexWrap: "wrap" }}>
-                    <a
-                      href={publicUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="btn-ghost"
-                      style={{ fontSize: "0.82rem", textDecoration: "none" }}
-                    >
-                      Open Site ↗
-                    </a>
-                  </div>
-
                   {/* ── Invite Collaborator ── */}
                   <div style={{ marginBottom: '1.25rem' }}>
                     <div style={{ fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: '#9b8e85', marginBottom: '0.5rem' }}>Collaborators</div>
@@ -3459,6 +3460,12 @@ export default function SiteEditor() {
                             <span style={{ fontSize: '0.68rem', color: '#b0a99f', flexShrink: 0, marginLeft: '0.5rem' }}>
                               {new Date(inv.createdAt).toLocaleDateString()}
                             </span>
+                            <button
+                              type="button"
+                              onClick={() => removeInvite(inv.id)}
+                              style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#b0a99f', fontSize: '0.75rem', flexShrink: 0, marginLeft: '0.5rem', padding: '2px 4px', lineHeight: 1 }}
+                              aria-label={`Remove ${inv.email}`}
+                            >✕</button>
                           </li>
                         ))}
                       </ul>

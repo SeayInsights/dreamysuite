@@ -55,8 +55,22 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
   return jsonResponse({ invites: result.results });
 }
 
-// POST /api/sites/:id/invites — send an invite email and record it
+// DELETE /api/sites/:id/invites — remove an invite by id
+// POST   /api/sites/:id/invites — send an invite email and record it
 export async function action({ request, context, params }: Route.ActionArgs) {
+  if (request.method === "DELETE") {
+    const siteId = params.id;
+    const check = await requireSiteOwnership(request, context, siteId);
+    if ("error" in check) return jsonResponse(check, check.status);
+    const body = await request.json<{ inviteId?: string }>();
+    if (!body.inviteId) return jsonResponse({ error: { code: "BAD_REQUEST", message: "inviteId required" } }, 400);
+    await context.cloudflare.env.DB
+      .prepare("DELETE FROM site_invite WHERE id = ? AND siteId = ?")
+      .bind(body.inviteId, siteId)
+      .run();
+    return jsonResponse({ success: true });
+  }
+
   if (request.method !== "POST") return jsonResponse({ error: "Method not allowed" }, 405);
 
   const siteId = params.id;
