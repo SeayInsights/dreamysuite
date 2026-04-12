@@ -115,7 +115,7 @@ export async function action({ request, context, params }: Route.ActionArgs) {
   if (!resendRes.ok) {
     const err = await resendRes.text();
     console.error("Resend error:", err);
-    return jsonResponse({ error: { code: "EMAIL_FAILED", message: "Failed to send invite email" } }, 502);
+    return jsonResponse({ error: { code: "EMAIL_FAILED", message: `Resend: ${err}` } }, 502);
   }
 
   // Record the invite
