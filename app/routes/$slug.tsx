@@ -2035,10 +2035,10 @@ function buildHtml(
     .join("\n");
 
   // Content margin padding
-  const mTop    = settings?.marginTop    ?? 0;
-  const mRight  = settings?.marginRight  ?? 0;
-  const mBottom = settings?.marginBottom ?? 0;
-  const mLeft   = settings?.marginLeft   ?? 0;
+  const mTop    = Number(settings?.marginTop    ?? 0) || 0;
+  const mRight  = Number(settings?.marginRight  ?? 0) || 0;
+  const mBottom = Number(settings?.marginBottom ?? 0) || 0;
+  const mLeft   = Number(settings?.marginLeft   ?? 0) || 0;
   const contentPadStyle = (mTop || mRight || mBottom || mLeft)
     ? ` style="padding:${mTop}px ${mRight}px ${mBottom}px ${mLeft}px"` : '';
 
