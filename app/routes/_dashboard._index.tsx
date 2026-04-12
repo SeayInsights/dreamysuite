@@ -26,14 +26,30 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     throw redirect("/login");
   }
 
-  const result = await context.cloudflare.env.DB
-    .prepare(
-      "SELECT id, name, eventType, status, customDomain, slug, previewColor, updatedAt FROM site WHERE userId = ? ORDER BY updatedAt DESC"
-    )
-    .bind(session.user.id)
-    .all<Site>();
+  const db = context.cloudflare.env.DB;
 
-  return { sites: result.results };
+  const [owned, invited] = await Promise.all([
+    db
+      .prepare(
+        "SELECT id, name, eventType, status, customDomain, slug, previewColor, updatedAt FROM site WHERE userId = ? ORDER BY updatedAt DESC"
+      )
+      .bind(session.user.id)
+      .all<Site>(),
+    db
+      .prepare(
+        "SELECT s.id, s.name, s.eventType, s.status, s.customDomain, s.slug, s.previewColor, s.updatedAt FROM site s JOIN site_invite i ON i.siteId = s.id WHERE i.email = ? ORDER BY s.updatedAt DESC"
+      )
+      .bind(session.user.email.toLowerCase())
+      .all<Site>(),
+  ]);
+
+  const seenIds = new Set(owned.results.map((s) => s.id));
+  const sites = [
+    ...owned.results,
+    ...invited.results.filter((s) => !seenIds.has(s.id)),
+  ].sort((a, b) => b.updatedAt - a.updatedAt);
+
+  return { sites };
 }
 
 export default function DashboardIndex() {

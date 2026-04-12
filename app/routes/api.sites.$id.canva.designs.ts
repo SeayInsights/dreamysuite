@@ -53,7 +53,13 @@ export async function loader({ request, context, params }: LoaderFunctionArgs) {
     .prepare("SELECT id FROM site WHERE id = ? AND userId = ?")
     .bind(siteId, session.user.id)
     .first<{ id: string }>();
-  if (!site) return jsonResponse({ error: { code: "FORBIDDEN", message: "Site not found" } }, 403);
+  if (!site) {
+    const invite = await env.DB
+      .prepare("SELECT id FROM site_invite WHERE siteId = ? AND email = ?")
+      .bind(siteId, session.user.email.toLowerCase())
+      .first<{ id: string }>();
+    if (!invite) return jsonResponse({ error: { code: "FORBIDDEN", message: "Site not found or access denied" } }, 403);
+  }
 
   const conn = await env.DB
     .prepare("SELECT * FROM canva_connection WHERE userId = ?")
