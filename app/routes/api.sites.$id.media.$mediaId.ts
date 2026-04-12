@@ -22,12 +22,17 @@ export async function action({ request, context, params }: Route.ActionArgs) {
     return jsonResponse({ error: { code: "UNAUTHORIZED", message: "Not authenticated" } }, 401);
   }
 
-  const site = await context.cloudflare.env.DB
+  const _db = context.cloudflare.env.DB;
+  const site = await _db
     .prepare("SELECT id FROM site WHERE id = ? AND userId = ?")
     .bind(siteId, session.user.id)
     .first<{ id: string }>();
   if (!site) {
-    return jsonResponse({ error: { code: "FORBIDDEN", message: "Access denied" } }, 403);
+    const invite = await _db
+      .prepare("SELECT id FROM site_invite WHERE siteId = ? AND email = ?")
+      .bind(siteId, session.user.email.toLowerCase())
+      .first<{ id: string }>();
+    if (!invite) return jsonResponse({ error: { code: "FORBIDDEN", message: "Access denied" } }, 403);
   }
 
   await context.cloudflare.env.DB

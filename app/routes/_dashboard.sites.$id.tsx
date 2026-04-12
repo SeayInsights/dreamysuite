@@ -162,10 +162,25 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
   const session = await auth.api.getSession({ headers: request.headers });
   if (!session) throw redirect("/login");
 
-  const result = await context.cloudflare.env.DB
+  // Primary: owner check
+  let result = await context.cloudflare.env.DB
     .prepare("SELECT id, name, slug, customDomain, eventType, status, previewColor, updatedAt FROM site WHERE id = ? AND userId = ?")
     .bind(params.id, session.user.id)
     .first<Site>();
+
+  // Fallback: collaborator invite check
+  if (!result) {
+    const invite = await context.cloudflare.env.DB
+      .prepare("SELECT id FROM site_invite WHERE siteId = ? AND email = ?")
+      .bind(params.id, session.user.email.toLowerCase())
+      .first<{ id: string }>();
+    if (invite) {
+      result = await context.cloudflare.env.DB
+        .prepare("SELECT id, name, slug, customDomain, eventType, status, previewColor, updatedAt FROM site WHERE id = ?")
+        .bind(params.id)
+        .first<Site>();
+    }
+  }
 
   if (!result) throw redirect("/");
 
