@@ -137,6 +137,10 @@ interface SiteSettings {
   popupBundle: number | null;
   musicBtnBg: string | null;
   musicBtnColor: string | null;
+  marginTop: number | null;
+  marginRight: number | null;
+  marginBottom: number | null;
+  marginLeft: number | null;
 }
 
 interface CanvaDesign {
