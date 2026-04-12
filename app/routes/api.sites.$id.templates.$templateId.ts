@@ -81,8 +81,8 @@ export async function action({ request, context, params }: Route.ActionArgs) {
   }
 
   if (request.method === "POST") {
-    // Apply snapshot: restore pages and blocks
-    let snapshot: { pages: SnapshotPage[] };
+    // Apply snapshot: restore pages, blocks, and settings
+    let snapshot: { pages: SnapshotPage[]; settings?: Record<string, unknown> | null };
     try {
       snapshot = JSON.parse(template.snapshot);
     } catch {
@@ -123,6 +123,70 @@ export async function action({ request, context, params }: Route.ActionArgs) {
             now
           )
           .run();
+      }
+    }
+
+    // Restore settings if present in snapshot
+    if (snapshot.settings) {
+      const s = snapshot.settings;
+      const existing = await db
+        .prepare("SELECT siteId FROM site_setting WHERE siteId = ?")
+        .bind(siteId)
+        .first<{ siteId: string }>();
+
+      if (existing) {
+        await db.prepare(
+          `UPDATE site_setting SET
+            eventName=?, eventDate=?, eventLocation=?, greeting=?, musicUrl=?,
+            mainLanguage=?, secondLanguage=?, guestPassword=?, isLive=?,
+            headingFont=?, bodyFont=?, accentColor=?, bgColor=?,
+            songPages=?, songResetPages=?,
+            headingColor=?, bodyColor=?, siteTextColor=?, siteBorderColor=?,
+            buttonStyle=?, buttonBorderWidth=?, headingFontVi=?, bodyFontVi=?,
+            navBg=?, navPosition=?, navBrandColor=?, navLinkColor=?, navHighlightColor=?,
+            navItemsConfig=?, animation=?, bgImage=?, envelopeColor=?, sealInitials=?,
+            cardColor=?, cardImage=?, navShape=?, navLinkPadding=?, navUnderline=?,
+            popupEnabled=?, popupTitle=?, popupTicker=?, popupAfterAnimation=?, popupBundle=?,
+            musicBtnBg=?, musicBtnColor=?,
+            marginTop=?, marginRight=?, marginBottom=?, marginLeft=?,
+            updatedAt=?
+          WHERE siteId=?`
+        ).bind(
+          s.eventName ?? null, s.eventDate ?? null, s.eventLocation ?? null, s.greeting ?? null, s.musicUrl ?? null,
+          s.mainLanguage ?? null, s.secondLanguage ?? null, s.guestPassword ?? null, s.isLive ?? 0,
+          s.headingFont ?? null, s.bodyFont ?? null, s.accentColor ?? null, s.bgColor ?? null,
+          s.songPages ?? null, s.songResetPages ?? null,
+          s.headingColor ?? null, s.bodyColor ?? null, s.siteTextColor ?? null, s.siteBorderColor ?? null,
+          s.buttonStyle ?? null, s.buttonBorderWidth ?? null, s.headingFontVi ?? null, s.bodyFontVi ?? null,
+          s.navBg ?? null, s.navPosition ?? null, s.navBrandColor ?? null, s.navLinkColor ?? null, s.navHighlightColor ?? null,
+          s.navItemsConfig ?? null, s.animation ?? null, s.bgImage ?? null, s.envelopeColor ?? null, s.sealInitials ?? null,
+          s.cardColor ?? null, s.cardImage ?? null, s.navShape ?? null, s.navLinkPadding ?? null, s.navUnderline ?? null,
+          s.popupEnabled ?? 0, s.popupTitle ?? null, s.popupTicker ?? 0, s.popupAfterAnimation ?? 0, s.popupBundle ?? 0,
+          s.musicBtnBg ?? null, s.musicBtnColor ?? null,
+          s.marginTop ?? null, s.marginRight ?? null, s.marginBottom ?? null, s.marginLeft ?? null,
+          now,
+          siteId
+        ).run();
+      } else {
+        await db.prepare(
+          `INSERT INTO site_setting (siteId, eventName, eventDate, eventLocation, greeting, musicUrl, mainLanguage, secondLanguage, guestPassword, isLive, headingFont, bodyFont, accentColor, bgColor, songPages, songResetPages, headingColor, bodyColor, siteTextColor, siteBorderColor, buttonStyle, buttonBorderWidth, headingFontVi, bodyFontVi, navBg, navPosition, navBrandColor, navLinkColor, navHighlightColor, navItemsConfig, animation, bgImage, envelopeColor, sealInitials, cardColor, cardImage, navShape, navLinkPadding, navUnderline, popupEnabled, popupTitle, popupTicker, popupAfterAnimation, popupBundle, musicBtnBg, musicBtnColor, marginTop, marginRight, marginBottom, marginLeft, updatedAt)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+        ).bind(
+          siteId,
+          s.eventName ?? null, s.eventDate ?? null, s.eventLocation ?? null, s.greeting ?? null, s.musicUrl ?? null,
+          s.mainLanguage ?? null, s.secondLanguage ?? null, s.guestPassword ?? null, s.isLive ?? 0,
+          s.headingFont ?? null, s.bodyFont ?? null, s.accentColor ?? null, s.bgColor ?? null,
+          s.songPages ?? null, s.songResetPages ?? null,
+          s.headingColor ?? null, s.bodyColor ?? null, s.siteTextColor ?? null, s.siteBorderColor ?? null,
+          s.buttonStyle ?? null, s.buttonBorderWidth ?? null, s.headingFontVi ?? null, s.bodyFontVi ?? null,
+          s.navBg ?? null, s.navPosition ?? null, s.navBrandColor ?? null, s.navLinkColor ?? null, s.navHighlightColor ?? null,
+          s.navItemsConfig ?? null, s.animation ?? null, s.bgImage ?? null, s.envelopeColor ?? null, s.sealInitials ?? null,
+          s.cardColor ?? null, s.cardImage ?? null, s.navShape ?? null, s.navLinkPadding ?? null, s.navUnderline ?? null,
+          s.popupEnabled ?? 0, s.popupTitle ?? null, s.popupTicker ?? 0, s.popupAfterAnimation ?? 0, s.popupBundle ?? 0,
+          s.musicBtnBg ?? null, s.musicBtnColor ?? null,
+          s.marginTop ?? null, s.marginRight ?? null, s.marginBottom ?? null, s.marginLeft ?? null,
+          now
+        ).run();
       }
     }
 

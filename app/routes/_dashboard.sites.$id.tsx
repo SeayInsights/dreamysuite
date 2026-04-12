@@ -1609,7 +1609,7 @@ export default function SiteEditor() {
       setActivePage(null);
       setBlocks([]);
       await fetchPages();
-      if (settings) await fetchSettings();
+      await fetchSettings();
       setPreviewKey((k) => k + 1);
       setSection("website");
       toast("Snapshot applied");
