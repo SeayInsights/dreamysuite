@@ -114,7 +114,12 @@ export async function action({ request, context, params }: Route.ActionArgs) {
     })
   );
 
-  const snapshot = JSON.stringify({ pages: pagesWithBlocks });
+  const settingsRow = await context.cloudflare.env.DB
+    .prepare("SELECT * FROM site_setting WHERE siteId = ?")
+    .bind(siteId)
+    .first();
+
+  const snapshot = JSON.stringify({ pages: pagesWithBlocks, settings: settingsRow ?? null });
   const id = crypto.randomUUID();
   const now = Date.now();
 
