@@ -2226,8 +2226,8 @@ function openIntro() {
   CustomEase.create('flapHeavy','M0,0 C0.018,0 0.038,0.055 0.09,0.15 0.21,0.44 0.5,0.82 0.68,0.94 0.8,1.01 0.92,1.0 1,1');
   var tl = gsap.timeline({ onComplete: function(){ _afterAnimDone(el); } });
   tl
-    /* Names fade out and float up as the envelope begins to open */
-    .to('.envfs-names',       { opacity:0, y:-22, duration:0.45, ease:'power2.in' }, 0)
+    /* Names hold for 1s then float up and fade */
+    .to('.envfs-names',       { opacity:0, y:-22, duration:0.45, ease:'power2.in' }, 1.0)
     .to(['#intro-lbox-t','#intro-lbox-b'], { height:0, duration:1.25, ease:'power4.inOut' }, 0.3)
     /* Flap opens — custom heavy curve: barely moves then sweeps then settles */
     .to('.envfs-flap',        { rotateX:-200, duration:2.2, ease:'flapHeavy', transformOrigin:'top center' }, 1.62)
