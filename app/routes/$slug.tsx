@@ -224,9 +224,9 @@ function buildStyles(settings: SiteSettingRow | null): BuiltStyles {
     /* ════════════════════════════════
        FULL-SCREEN ENVELOPE
     ════════════════════════════════ */
-    @keyframes envfs-seal-pulse {
-      0%,100% { box-shadow:0 4px 18px rgba(0,0,0,0.55); }
-      50%     { box-shadow:0 4px 18px rgba(0,0,0,0.55),0 0 32px 12px rgba(180,20,20,0.35); }
+    @keyframes envfs-names-bounce {
+      0%,100% { transform:translate(-50%,-50%) translateY(0);    filter:drop-shadow(0 4px 18px rgba(0,0,0,0.55)); }
+      50%     { transform:translate(-50%,-50%) translateY(-10px); filter:drop-shadow(0 14px 28px rgba(0,0,0,0.32)); }
     }
     .intro-env-fs {
       perspective:1600px;
@@ -296,80 +296,28 @@ function buildStyles(settings: SiteSettingRow | null): BuiltStyles {
       background:linear-gradient(168deg,color-mix(in srgb,var(--env-color,#f0e2c8) 55%,#3d2210) 0%,color-mix(in srgb,var(--env-color,#f0e2c8) 40%,#3d2210) 100%);
       transform:rotateX(180deg); backface-visibility:visible;
     }
-    /* Wax seal on the flap */
-    .envfs-seal {
-      position:absolute; top:78%; left:50%;
+    /* Couple's names — bounce over the envelope tip until clicked */
+    .envfs-names {
+      position:absolute; top:56vh; left:50%;
       transform:translate(-50%,-50%);
-      width:clamp(70px,9vw,110px); height:clamp(70px,9vw,110px); border-radius:50%;
-      /* Red wax — top half, crack splits at midpoint */
-      background:
-        radial-gradient(circle at 30% 30%, rgba(255,160,160,0.42) 0%, transparent 35%),
-        radial-gradient(circle at 50% 50%,
-          var(--seal-color,#b30000) 0%,
-          color-mix(in srgb,var(--seal-color,#b30000) 72%,#400000) 45%,
-          color-mix(in srgb,var(--seal-color,#b30000) 48%,#200000) 80%,
-          color-mix(in srgb,var(--seal-color,#b30000) 30%,#000) 100%);
-      box-shadow:
-        0 8px 36px rgba(0,0,0,0.62),
-        0 2px 8px rgba(0,0,0,0.38),
-        inset 0 4px 7px rgba(255,180,180,0.28),
-        inset 0 -5px 9px rgba(80,0,0,0.5),
-        inset 0 0 10px #400000;
-      clip-path:polygon(0 0,100% 0,100% 100%,75% 100%,50% 100%,25% 100%,0 100%);
-      display:flex; align-items:center; justify-content:center;
-      z-index:25; pointer-events:none; overflow:hidden;
-      animation:envfs-seal-pulse 2.4s ease-in-out infinite;
+      display:flex; flex-direction:column; align-items:center; gap:0.1em;
+      z-index:30; pointer-events:none; text-align:center;
+      animation:envfs-names-bounce 2s ease-in-out infinite;
     }
-    /* Edge rim */
-    .envfs-seal::before {
-      content:''; position:absolute; inset:0; border-radius:50%;
-      border:2px solid rgba(180,30,30,0.42);
-      box-shadow:
-        inset 0 0 0 5px rgba(140,0,0,0.11),
-        inset 0 0 0 9px rgba(100,0,0,0.07),
-        inset 0 0 8px rgba(255,120,120,0.12),
-        inset 0 2px 4px rgba(0,0,0,0.22);
-      pointer-events:none;
-    }
-    /* Inner signet ring */
-    .envfs-seal::after {
-      content:''; position:absolute; inset:14%; border-radius:50%;
-      border:1px solid rgba(255,180,180,0.22);
-      pointer-events:none;
-    }
-    /* Rose motif SVG positioned behind initials */
-    .envfs-seal-rose {
-      position:absolute; inset:10%; pointer-events:none;
-      opacity:0.28; width:80%; height:80%;
-    }
-    .envfs-seal-text {
+    .envfs-name-line {
       font-family:var(--heading-font,'Georgia',serif);
-      font-size:clamp(1.7rem,5.2vw,3rem);
-      font-style:italic; font-weight:normal;
-      letter-spacing:-0.02em; line-height:1;
-      text-align:center; position:relative; z-index:1;
-      color:rgba(70,38,0,0.82);
-      text-shadow:
-        0 1px 1px rgba(255,235,155,0.55),
-        0 -1px 2px rgba(0,0,0,0.38),
-        0 2px 7px rgba(80,40,0,0.5);
+      font-size:clamp(1.6rem,4.5vw,2.8rem);
+      font-style:italic; font-weight:normal; line-height:1.1;
+      color:rgba(255,255,255,0.93);
+      text-shadow:0 2px 18px rgba(0,0,0,0.85),0 1px 4px rgba(0,0,0,0.65);
+      letter-spacing:0.01em;
     }
-    /* Cue text */
-    .envfs-cue {
-      position:absolute; bottom:clamp(1.5rem,4vh,2.5rem); left:50%; transform:translateX(-50%);
-      font-style:italic; color:rgba(255,255,255,0.5);
-      font-size:clamp(0.72rem,1.5vw,0.88rem); letter-spacing:0.12em;
-      white-space:nowrap; z-index:35; pointer-events:none;
-    }
-    /* Letter opener blade — slides in under seal on click */
-    .envfs-opener {
-      position:absolute; top:44vh; left:50%;
-      transform:translate(-80px,-50%);
-      width:52px; height:3px;
-      background:linear-gradient(to right,rgba(8,4,1,0.95),rgba(28,14,4,0.72));
-      border-radius:0 2px 2px 0;
-      z-index:26; pointer-events:none; opacity:0;
-      box-shadow:0 1px 5px rgba(0,0,0,0.65),0 0 2px rgba(180,120,40,0.12);
+    .envfs-names-amp {
+      font-family:var(--heading-font,'Georgia',serif);
+      font-size:clamp(0.85rem,2vw,1.15rem);
+      font-style:italic; color:rgba(255,220,110,0.88);
+      text-shadow:0 1px 8px rgba(0,0,0,0.7);
+      letter-spacing:0.1em; line-height:1.5;
     }
     /* Slow shimmer light pass across envelope surface (runs once after entrance) */
     @keyframes envfs-shimmer-move {
@@ -391,13 +339,6 @@ function buildStyles(settings: SiteSettingRow | null): BuiltStyles {
       background-size:260% 260%; background-position:160% 160%;
       opacity:0; mix-blend-mode:screen;
     }
-    /* Wax seal shifting specular highlight — moves as seal is levered up */
-    .envfs-seal-specular {
-      position:absolute; width:38%; height:38%; top:14%; left:18%;
-      border-radius:50%; pointer-events:none; z-index:2;
-      background:radial-gradient(circle,rgba(255,252,215,0.82) 0%,rgba(255,248,200,0.35) 45%,transparent 75%);
-      filter:blur(3px);
-    }
     /* Flap leather surface micro-noise — breaks up perfect digital gradients */
     .envfs-flap-noise {
       position:absolute; inset:0; pointer-events:none;
@@ -405,28 +346,6 @@ function buildStyles(settings: SiteSettingRow | null): BuiltStyles {
       opacity:0.042; mix-blend-mode:overlay;
       background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='flapn'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.72' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23flapn)'/%3E%3C/svg%3E");
       background-size:180px 180px;
-    }
-    /* Wax seal surface micro-noise — organic texture over the digital gradient */
-    .envfs-seal-noise {
-      position:absolute; inset:0; border-radius:50%; pointer-events:none; z-index:3;
-      opacity:0.062; mix-blend-mode:overlay;
-      background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='waxn'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.88' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23waxn)'/%3E%3C/svg%3E");
-      background-size:100px 100px;
-    }
-    /* Bottom half of cracked wax seal — stays on envelope body */
-    .envfs-seal-bottom {
-      position:absolute; left:50%; top:calc(0.78 * 58vh);
-      transform:translate(-50%,-50%);
-      width:clamp(70px,9vw,110px); height:clamp(70px,9vw,110px); border-radius:50%;
-      background:
-        radial-gradient(circle at 50% 50%,
-          var(--seal-color,#b30000) 0%,
-          color-mix(in srgb,var(--seal-color,#b30000) 72%,#400000) 45%,
-          color-mix(in srgb,var(--seal-color,#b30000) 48%,#200000) 80%,
-          color-mix(in srgb,var(--seal-color,#b30000) 30%,#000) 100%);
-      box-shadow:inset 0 0 10px #400000, 0 3px 6px rgba(0,0,0,0.4);
-      clip-path:polygon(0 50%,25% 60%,50% 45%,75% 60%,100% 50%,100% 100%,0 100%);
-      z-index:3; pointer-events:none; overflow:hidden; opacity:0;
     }
 
     /* ════════════════════════════════
@@ -1890,13 +1809,17 @@ function buildIntroHtml(
     const cardBody = popupGreeting
       ? `<p class="envfs-card-date">${escHtml(popupGreeting)}</p>`
       : (date ? `<p class="envfs-card-date">${date}</p>` : "");
+    // Split couple names for stacked display
+    const rawParts = eventTitle.split(/\s*[&+]\s*|\s+and\s+/i).map(s => s.trim()).filter(Boolean);
+    const namesHtml = rawParts.length >= 2
+      ? `<span class="envfs-name-line">${escHtml(rawParts[0])}</span><span class="envfs-names-amp">&amp;</span><span class="envfs-name-line">${escHtml(rawParts.slice(1).join(" "))}</span>`
+      : `<span class="envfs-name-line">${title}</span>`;
     return `<div id="intro-overlay" class="intro-overlay intro-env-fs" role="button" tabindex="0" aria-label="Click to open invitation"${envStyle}>
   <div class="envfs-body">
     <div class="envfs-left-fold"></div>
     <div class="envfs-right-fold"></div>
     <div class="envfs-bottom-fold"></div>
     <div class="envfs-glow"></div>
-    <div class="envfs-seal-bottom"></div>
     <div class="intro-dust">
       <div class="dust-mote" style="--sz:2px;--by:14%;--bx:27%;--dur:11s;--delay:0.4s;--dx:-28px;--op:0.5"></div>
       <div class="dust-mote" style="--sz:3px;--by:21%;--bx:64%;--dur:9s;--delay:2.0s;--dx:22px;--op:0.6"></div>
@@ -1912,26 +1835,10 @@ function buildIntroHtml(
   </div>
   <div class="envfs-flap">
     <div class="envfs-flap-noise"></div>
-    <div class="envfs-seal">
-      <div class="envfs-seal-specular"></div>
-      <svg class="envfs-seal-rose" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-        <path d="M20 19C20 14.5 24.5 12 25 17C25.5 22 21 23.5 20 19Z" stroke="rgba(255,228,140,0.9)" stroke-width="0.55"/>
-        <path d="M20 19C15.5 19 13 14.5 18 14C23 13.5 24.5 18 20 19Z" stroke="rgba(255,228,140,0.9)" stroke-width="0.55"/>
-        <path d="M20 19C20 23.5 15.5 26 15 21C14.5 16 19 14.5 20 19Z" stroke="rgba(255,228,140,0.9)" stroke-width="0.55"/>
-        <path d="M20 19C24.5 19 27 23.5 22 24C17 24.5 15.5 20 20 19Z" stroke="rgba(255,228,140,0.9)" stroke-width="0.55"/>
-        <circle cx="20" cy="19" r="1.8" stroke="rgba(255,228,140,0.7)" stroke-width="0.5"/>
-        <path d="M17 26C15.5 28 12 29.5 13.5 27.5C15 25.5 17 25.5 17 26Z" stroke="rgba(255,228,140,0.55)" stroke-width="0.5"/>
-        <path d="M23 26C24.5 28 28 28.5 26.5 27C25 25.5 23 25.5 23 26Z" stroke="rgba(255,228,140,0.55)" stroke-width="0.5"/>
-        <path d="M19.5 27 L19.5 31" stroke="rgba(255,228,140,0.45)" stroke-width="0.5"/>
-      </svg>
-      <div class="envfs-seal-noise"></div>
-      <span class="envfs-seal-text">${sealText}</span>
-    </div>
   </div>
-  <p class="envfs-cue">&#8212; click to open &#8212;</p>
+  <div class="envfs-names">${namesHtml}</div>
   <div class="envfs-shimmer"></div>
   <div class="envfs-light-sweep"></div>
-  <div class="envfs-opener"></div>
   <div class="intro-lbox intro-lbox-t" id="intro-lbox-t"></div>
   <div class="intro-lbox intro-lbox-b" id="intro-lbox-b"></div>
   <div class="intro-vignette"></div>
@@ -2256,20 +2163,16 @@ function _addReplayBtn() {
       el.style.display = '';
       gsap.set(el, { opacity:1, clearProps:'background' });
       ${animation === "envelope" ? `
-      gsap.set('.envfs-card',         { xPercent:-50, yPercent:-50, y:'100vh', opacity:0, scale:1, filter:'blur(12px)' });
-      gsap.set('.envfs-flap',         { rotateX:0 });
-      gsap.set('.envfs-glow',         { opacity:0 });
-      gsap.set('.envfs-seal',         { y:0, opacity:1, scale:1, rotation:0, rotateX:0, clipPath:'polygon(0 0,100% 0,100% 100%,75% 100%,50% 100%,25% 100%,0 100%)' });
-      gsap.set('.envfs-seal-bottom',  { opacity:0 });
-      gsap.set('.envfs-seal-specular',{ x:0, y:0, opacity:1 });
-      gsap.set('.envfs-light-sweep',  { opacity:0, backgroundPosition:'160% 160%' });
-      gsap.set('.envfs-cue',          { opacity:1 });
-      gsap.set('.envfs-opener',       { opacity:0, x:-80 });
-      gsap.set('#intro-lbox-t',       { height:48 });
-      gsap.set('#intro-lbox-b',       { height:48 });
-      gsap.set('.intro-env-fs',       { clearProps:'scale,y,opacity' });
-      var _sealEl = document.querySelector('.envfs-seal');
-      if (_sealEl) _sealEl.style.animation = 'envfs-seal-pulse 2.4s ease-in-out infinite';
+      gsap.set('.envfs-card',       { xPercent:-50, yPercent:-50, y:'100vh', opacity:0, scale:1, filter:'blur(12px)' });
+      gsap.set('.envfs-flap',       { rotateX:0 });
+      gsap.set('.envfs-glow',       { opacity:0 });
+      gsap.set('.envfs-names',      { opacity:1, y:0 });
+      gsap.set('.envfs-light-sweep',{ opacity:0, backgroundPosition:'160% 160%' });
+      gsap.set('#intro-lbox-t',     { height:48 });
+      gsap.set('#intro-lbox-b',     { height:48 });
+      gsap.set('.intro-env-fs',     { clearProps:'scale,y,opacity' });
+      var _namesEl = document.querySelector('.envfs-names');
+      if (_namesEl) _namesEl.style.animation = 'envfs-names-bounce 2s ease-in-out infinite';
       ` : animation === "doors" ? `
       gsap.set('.door-l', { rotateY:0, opacity:1 });
       gsap.set('.door-r', { rotateY:0, opacity:1 });
@@ -2312,32 +2215,20 @@ function openIntro() {
   if (!el) return;
   ${animation === "envelope" ? `
   gsap.killTweensOf('.intro-env-fs');
-  var _seal = document.querySelector('.envfs-seal');
-  if (_seal) _seal.style.animation = 'none';
-  gsap.set('.envfs-card',         { xPercent:-50, yPercent:-50, y:'100vh', opacity:0, filter:'blur(12px)' });
-  gsap.set('#intro-lbox-t',       { height:48 });
-  gsap.set('#intro-lbox-b',       { height:48 });
-  gsap.set('.envfs-opener',       { opacity:0, x:-80 });
-  gsap.set('.envfs-seal',         { clipPath:'polygon(0 0,100% 0,100% 100%,75% 100%,50% 100%,25% 100%,0 100%)' });
-  gsap.set('.envfs-seal-bottom',  { opacity:0 });
-  gsap.set('.envfs-seal-specular',{ x:0, y:0, opacity:1 });
-  gsap.set('.envfs-light-sweep',  { opacity:0, backgroundPosition:'160% 160%' });
+  var _namesEl2 = document.querySelector('.envfs-names');
+  if (_namesEl2) _namesEl2.style.animation = 'none';
+  gsap.set('.envfs-card',        { xPercent:-50, yPercent:-50, y:'100vh', opacity:0, filter:'blur(12px)' });
+  gsap.set('#intro-lbox-t',      { height:48 });
+  gsap.set('#intro-lbox-b',      { height:48 });
+  gsap.set('.envfs-names',       { opacity:1, y:0 });
+  gsap.set('.envfs-light-sweep', { opacity:0, backgroundPosition:'160% 160%' });
   /* Heavy-start, fast-mid, feather-soft landing — like a real weighted flap */
   CustomEase.create('flapHeavy','M0,0 C0.018,0 0.038,0.055 0.09,0.15 0.21,0.44 0.5,0.82 0.68,0.94 0.8,1.01 0.92,1.0 1,1');
   var tl = gsap.timeline({ onComplete: function(){ _afterAnimDone(el); } });
   tl
-    .to('.envfs-cue',         { opacity:0, duration:0.3 }, 0)
-    /* Seal cracks — clip-path snaps from whole circle to broken top half */
-    .to('.envfs-seal',        { clipPath:'polygon(0 0,100% 0,100% 50%,75% 60%,50% 45%,25% 60%,0 50%)', duration:0.14, ease:'power4.in' }, 0.18)
-    .to('.envfs-seal-bottom', { opacity:1, duration:0.1 }, 0.18)
-    /* Seal specular shifts as light angle changes during peel */
-    .to('.envfs-seal-specular',{ x:12, y:7, opacity:0.55, duration:0.8, ease:'power2.out' }, 0.38)
-    /* Seal levered up — weighted */
-    .to('.envfs-seal',        { y:'-14%', rotateX:-28, scale:1.04, duration:0.72, ease:'power4.out', transformPerspective:700 }, 0.38)
-    /* Seal peels off — expo departure, floats away */
-    .to('.envfs-seal',        { y:'-130%', rotateX:55, opacity:0, duration:1.0, ease:'expo.out' }, 1.14)
-    .to('.envfs-seal-bottom', { opacity:0, duration:0.55, ease:'power2.in' }, 1.4)
-    .to(['#intro-lbox-t','#intro-lbox-b'], { height:0, duration:1.25, ease:'power4.inOut' }, 1.4)
+    /* Names fade out and float up as the envelope begins to open */
+    .to('.envfs-names',       { opacity:0, y:-22, duration:0.45, ease:'power2.in' }, 0)
+    .to(['#intro-lbox-t','#intro-lbox-b'], { height:0, duration:1.25, ease:'power4.inOut' }, 0.3)
     /* Flap opens — custom heavy curve: barely moves then sweeps then settles */
     .to('.envfs-flap',        { rotateX:-200, duration:2.2, ease:'flapHeavy', transformOrigin:'top center' }, 1.62)
     /* Light sweeps across the surface as flap reveals interior */
@@ -2411,7 +2302,6 @@ function openIntro() {
 ${animation === "envelope" ? `
 if (!_introOpened) {
   gsap.set('.envfs-card',   { xPercent:-50, yPercent:-50, y:'100vh', opacity:0, filter:'blur(12px)' });
-  gsap.set('.envfs-opener', { opacity:0, x:-80 });
   gsap.set('.intro-env-fs', { scale:0.93, y:20, opacity:0 });
   gsap.set('#intro-lbox-t', { height:0 });
   gsap.set('#intro-lbox-b', { height:0 });
