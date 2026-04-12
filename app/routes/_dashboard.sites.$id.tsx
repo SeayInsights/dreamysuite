@@ -1611,6 +1611,7 @@ export default function SiteEditor() {
       await fetchPages();
       if (settings) await fetchSettings();
       setPreviewKey((k) => k + 1);
+      setSection("website");
       toast("Snapshot applied");
     } catch (err) {
       toast(err instanceof Error ? err.message : "Failed to apply template", true);
