@@ -1,4 +1,3 @@
-import Anthropic from "@anthropic-ai/sdk";
 import { createAuth } from "~/lib/auth.server";
 import type { Route } from "./+types/api.sites.$id.translate";
 import "~/lib/context";
@@ -31,9 +30,6 @@ export async function action({ request, context, params }: Route.ActionArgs) {
     if (!invite) return jsonResponse({ error: "Access denied" }, 403);
   }
 
-  const apiKey = (context.cloudflare.env as Record<string, string>).ANTHROPIC_API_KEY;
-  if (!apiKey) return jsonResponse({ error: "Translation not configured" }, 503);
-
   let body: { fromLang: string; toLang: string; content: Record<string, Record<string, string>> };
   try {
     body = await request.json();
@@ -46,7 +42,7 @@ export async function action({ request, context, params }: Route.ActionArgs) {
     return jsonResponse({ error: "Missing fromLang, toLang, or content" }, 400);
   }
 
-  // Flatten all text fields across all blocks into one batch
+  // Flatten all text fields across all blocks
   type FieldEntry = { blockId: string; field: string; text: string };
   const entries: FieldEntry[] = [];
   for (const [blockId, fields] of Object.entries(content)) {
@@ -61,33 +57,23 @@ export async function action({ request, context, params }: Route.ActionArgs) {
     return jsonResponse({ translations: {} });
   }
 
-  const inputJson = JSON.stringify(entries.map((e, i) => ({ id: i, text: e.text })));
+  const langPair = `${fromLang}|${toLang}`;
 
-  const client = new Anthropic({ apiKey });
-
-  const message = await client.messages.create({
-    model: "claude-haiku-4-5",
-    max_tokens: 4096,
-    system: `You are a professional wedding website translator. Translate text from ${fromLang} to ${toLang}. Preserve formatting, names, and special characters. Return ONLY a JSON array matching the input structure, with each object having "id" and "translated" fields. No explanation, no markdown.`,
-    messages: [{ role: "user", content: inputJson }],
-  });
-
-  const raw = message.content.find(b => b.type === "text")?.text ?? "[]";
-
-  let parsed: Array<{ id: number; translated: string }>;
-  try {
-    parsed = JSON.parse(raw);
-  } catch {
-    return jsonResponse({ error: "Translation parsing failed", raw }, 500);
-  }
-
-  // Rebuild into block → field → translated map
+  // Translate each field via MyMemory (free, no API key required)
   const translations: Record<string, Record<string, string>> = {};
-  for (const result of parsed) {
-    const entry = entries[result.id];
-    if (!entry) continue;
-    if (!translations[entry.blockId]) translations[entry.blockId] = {};
-    translations[entry.blockId][entry.field] = result.translated;
+  for (const entry of entries) {
+    try {
+      const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(entry.text)}&langpair=${encodeURIComponent(langPair)}`;
+      const res = await fetch(url);
+      const data = await res.json() as { responseData?: { translatedText?: string }; responseStatus?: number };
+      const translated = data.responseData?.translatedText;
+      if (translated) {
+        if (!translations[entry.blockId]) translations[entry.blockId] = {};
+        translations[entry.blockId][entry.field] = translated;
+      }
+    } catch {
+      // Skip fields that fail — partial translation is better than a hard error
+    }
   }
 
   return jsonResponse({ translations });
