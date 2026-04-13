@@ -1257,6 +1257,7 @@ export default function SiteEditor() {
         body: JSON.stringify({ pageId: activePage.id, type, config: {}, sortOrder: blocks.length }),
       });
       await fetchBlocks(activePage.id);
+      setPreviewKey((k) => k + 1);
       toast(`${type} tile added`);
     } catch (err) {
       toast(err instanceof Error ? err.message : "Failed to add tile", true);
@@ -4754,16 +4755,11 @@ export default function SiteEditor() {
                             <strong>Invitation card uses your Popup settings.</strong> Go to the <strong>Popup</strong> tab to set the card title and welcome message. If left blank, your event name and date appear instead.
                           </div>
                           <div style={{ fontSize: "0.72rem", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: "#9b8e85", margin: "1.1rem 0 0.5rem" }}>Envelope Colors</div>
-                          {[
-                            { label: "Envelope paper", key: "envelopeColor" as const, def: "#f5ede0" },
-                            { label: "Wax seal", key: "accentColor" as const, def: "#B8921A" },
-                          ].map(({ label, key, def }) => (
-                            <div key={key} style={{ display: "flex", alignItems: "center", gap: "10px", padding: "6px 0", borderBottom: "1px solid #f5f2ee" }}>
-                              <ColorSwatch value={settingsForm[key] || def} onChange={v => setSettingsForm((f) => ({ ...f, [key]: v }))} />
-                              <span style={{ fontSize: "0.8rem", color: "#6b5e56", flex: 1 }}>{label}</span>
-                              <code style={{ fontSize: "0.72rem", color: "#a09690", fontFamily: "monospace" }}>{(settingsForm[key] || def).toUpperCase()}</code>
-                            </div>
-                          ))}
+                          <div style={{ display: "flex", alignItems: "center", gap: "10px", padding: "6px 0", borderBottom: "1px solid #f5f2ee" }}>
+                            <ColorSwatch value={settingsForm.envelopeColor || "#f5ede0"} onChange={v => setSettingsForm((f) => ({ ...f, envelopeColor: v }))} />
+                            <span style={{ fontSize: "0.8rem", color: "#6b5e56", flex: 1 }}>Envelope paper</span>
+                            <code style={{ fontSize: "0.72rem", color: "#a09690", fontFamily: "monospace" }}>{(settingsForm.envelopeColor || "#f5ede0").toUpperCase()}</code>
+                          </div>
                           <div style={{ marginTop: "0.9rem" }}>
                             <div style={{ fontSize: "0.72rem", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: "#9b8e85", marginBottom: "0.5rem" }}>Invitation Card</div>
                             <div style={{ display: "flex", alignItems: "center", gap: "10px", padding: "6px 0", borderBottom: "1px solid #f5f2ee" }}>

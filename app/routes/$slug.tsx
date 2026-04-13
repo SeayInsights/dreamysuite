@@ -1908,6 +1908,7 @@ function buildMessageListenerScript(): string {
         var mb = delta.marginBottom != null ? Number(delta.marginBottom) : 0;
         var ml = delta.marginLeft != null ? Number(delta.marginLeft) : 0;
         siteContent.style.padding = mt + 'px ' + mr + 'px ' + mb + 'px ' + ml + 'px';
+        siteContent.style.overflow = (mt || mr || mb || ml) ? 'hidden' : '';
       }
     }
     if ('siteMaxWidth' in delta) {
@@ -2018,8 +2019,10 @@ function buildMessageListenerScript(): string {
     }
     if (cfg.textColor) {
       node.style.color = String(cfg.textColor);
+      node.style.setProperty('--block-text', String(cfg.textColor));
     } else if (cfg.textColor === null) {
       node.style.color = '';
+      node.style.removeProperty('--block-text');
     }
     if ('borderColor' in cfg) {
       node.style.border = (cfg.borderColor && !cfg.hideBorder) ? '1px solid ' + String(cfg.borderColor) : '';
@@ -2313,7 +2316,10 @@ function buildHtml(
   const mLeft   = Number(settings?.marginLeft   ?? 0) || 0;
   const mMaxWidth = Number(settings?.siteMaxWidth ?? 0) || 0;
   const contentStyles: string[] = [];
-  if (mTop || mRight || mBottom || mLeft) contentStyles.push(`padding:${mTop}px ${mRight}px ${mBottom}px ${mLeft}px`);
+  if (mTop || mRight || mBottom || mLeft) {
+    contentStyles.push(`padding:${mTop}px ${mRight}px ${mBottom}px ${mLeft}px`);
+    contentStyles.push(`overflow:hidden`);
+  }
   if (mMaxWidth) contentStyles.push(`max-width:${mMaxWidth}px`, `margin-left:auto`, `margin-right:auto`);
   const contentPadStyle = contentStyles.length ? ` style="${contentStyles.join(';')}"` : '';
 
