@@ -72,6 +72,9 @@ interface SiteSettingRow {
   marginRight: number | null;
   marginBottom: number | null;
   marginLeft: number | null;
+  bgImageLayer: string | null;
+  bgImageOpacity: number | null;
+  siteMaxWidth: number | null;
 }
 
 interface PageRow {
@@ -1709,6 +1712,8 @@ function buildMessageListenerScript(): string {
       navBrandColor: '--nav-brand',
       navLinkColor: '--nav-link',
       navHighlightColor: '--nav-highlight',
+      musicBtnBg: '--music-btn-bg',
+      musicBtnColor: '--music-btn-color',
     };
     Object.keys(delta).forEach(function(k) {
       if (map[k]) root.style.setProperty(map[k], String(delta[k]));
@@ -1721,6 +1726,15 @@ function buildMessageListenerScript(): string {
         var mb = delta.marginBottom != null ? Number(delta.marginBottom) : 0;
         var ml = delta.marginLeft != null ? Number(delta.marginLeft) : 0;
         siteContent.style.padding = mt + 'px ' + mr + 'px ' + mb + 'px ' + ml + 'px';
+      }
+    }
+    if ('siteMaxWidth' in delta) {
+      var sc = document.getElementById('site-content');
+      if (sc) {
+        var mw = delta.siteMaxWidth ? Number(delta.siteMaxWidth) : 0;
+        sc.style.maxWidth = mw ? mw + 'px' : '';
+        sc.style.marginLeft = mw ? 'auto' : '';
+        sc.style.marginRight = mw ? 'auto' : '';
       }
     }
   }
@@ -2053,8 +2067,11 @@ function buildHtml(
   const mRight  = Number(settings?.marginRight  ?? 0) || 0;
   const mBottom = Number(settings?.marginBottom ?? 0) || 0;
   const mLeft   = Number(settings?.marginLeft   ?? 0) || 0;
-  const contentPadStyle = (mTop || mRight || mBottom || mLeft)
-    ? ` style="padding:${mTop}px ${mRight}px ${mBottom}px ${mLeft}px"` : '';
+  const mMaxWidth = Number(settings?.siteMaxWidth ?? 0) || 0;
+  const contentStyles: string[] = [];
+  if (mTop || mRight || mBottom || mLeft) contentStyles.push(`padding:${mTop}px ${mRight}px ${mBottom}px ${mLeft}px`);
+  if (mMaxWidth) contentStyles.push(`max-width:${mMaxWidth}px`, `margin-left:auto`, `margin-right:auto`);
+  const contentPadStyle = contentStyles.length ? ` style="${contentStyles.join(';')}"` : '';
 
   // No-pages fallback — site exists but has no pages yet
   const fallbackHtml = visiblePages.length === 0

@@ -141,6 +141,9 @@ interface SiteSettings {
   marginRight: number | null;
   marginBottom: number | null;
   marginLeft: number | null;
+  bgImageLayer: string;
+  bgImageOpacity: number;
+  siteMaxWidth: string;
 }
 
 interface CanvaDesign {
@@ -781,6 +784,9 @@ export default function SiteEditor() {
     marginRight: "" as string,
     marginBottom: "" as string,
     marginLeft: "" as string,
+    bgImageLayer: "behind",
+    bgImageOpacity: 1,
+    siteMaxWidth: "",
   });
 
   // CSV import state
@@ -964,6 +970,9 @@ export default function SiteEditor() {
         marginRight:        String(data.settings.marginRight  ?? ""),
         marginBottom:       String(data.settings.marginBottom ?? ""),
         marginLeft:         String(data.settings.marginLeft   ?? ""),
+        bgImageLayer:       data.settings.bgImageLayer        ?? "behind",
+        bgImageOpacity:     data.settings.bgImageOpacity      ?? 1,
+        siteMaxWidth:       String(data.settings.siteMaxWidth ?? ""),
       });
       setStyleHeadingFont(data.settings.headingFont ?? "Georgia");
       setStyleBodyFont(data.settings.bodyFont ?? "Inter");
@@ -4981,7 +4990,7 @@ export default function SiteEditor() {
                           { label: "Icon color", key: "musicBtnColor" as const, def: "#ffffff" },
                         ].map(({ label, key, def }) => (
                           <div key={key} style={{ display: "flex", alignItems: "center", gap: "10px", padding: "6px 0", borderBottom: "1px solid #f5f2ee" }}>
-                            <ColorSwatch value={settingsForm[key] || def} onChange={v => setSettingsForm(f => ({ ...f, [key]: v }))} />
+                            <ColorSwatch value={settingsForm[key] || def} onChange={v => { setSettingsForm(f => ({ ...f, [key]: v })); fireSettingsPreview({ [key]: v }); }} />
                             <span style={{ fontSize: "0.8rem", color: "#6b5e56", flex: 1 }}>{label}</span>
                             <code style={{ fontSize: "0.72rem", color: "#a09690", fontFamily: "monospace" }}>{(settingsForm[key] || def).toUpperCase()}</code>
                           </div>
