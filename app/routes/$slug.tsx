@@ -1908,7 +1908,7 @@ function buildMessageListenerScript(): string {
         var mb = delta.marginBottom != null ? Number(delta.marginBottom) : 0;
         var ml = delta.marginLeft != null ? Number(delta.marginLeft) : 0;
         siteContent.style.padding = mt + 'px ' + mr + 'px ' + mb + 'px ' + ml + 'px';
-        siteContent.style.overflow = (mt || mr || mb || ml) ? 'hidden' : '';
+        siteContent.style.overflowX = (mt || mr || mb || ml) ? 'hidden' : '';
       }
     }
     if ('siteMaxWidth' in delta) {
@@ -2318,7 +2318,7 @@ function buildHtml(
   const contentStyles: string[] = [];
   if (mTop || mRight || mBottom || mLeft) {
     contentStyles.push(`padding:${mTop}px ${mRight}px ${mBottom}px ${mLeft}px`);
-    contentStyles.push(`overflow:hidden`);
+    contentStyles.push(`overflow-x:hidden`);
   }
   if (mMaxWidth) contentStyles.push(`max-width:${mMaxWidth}px`, `margin-left:auto`, `margin-right:auto`);
   const contentPadStyle = contentStyles.length ? ` style="${contentStyles.join(';')}"` : '';
