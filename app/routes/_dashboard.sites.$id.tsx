@@ -2138,7 +2138,7 @@ export default function SiteEditor() {
                                 <div className="bl-stripe" style={{ background: blockColor(block.type) }} />
                                 <div className="drag-handle" aria-hidden="true" onClick={e => e.stopPropagation()}>⠿</div>
                                 <div className="bl-body">
-                                  <div className={`bl-name${block.isVisible === 0 ? ' off' : ''}`}>{blockLabel(block.type)}</div>
+                                  <div className={`bl-name${block.isVisible === 0 ? ' off' : ''}`}>{(cfg.blockLabel as string | undefined) || blockLabel(block.type)}</div>
                                   <div className="bl-sub">{block.isVisible === 0 ? 'hidden' : 'default'}</div>
                                 </div>
                                 <div className="bl-acts" onClick={e => e.stopPropagation()}>
@@ -2157,6 +2157,7 @@ export default function SiteEditor() {
                               {isExpanded && (
                                 <div className="bl-inline-config" onClick={e => e.stopPropagation()}>
                                   <p className="bl-config-title">{blockLabel(block.type)}</p>
+                                  <div className="sf-group"><label className="sf-lbl">Block Name</label><input className="sf-input" value={String(cfg.blockLabel ?? '')} onChange={e => setField('blockLabel', e.target.value)} placeholder={blockLabel(block.type)}/></div>
 
                                   {/* Block-type specific fields */}
                                   {block.type === 'home-hero' && (
@@ -2168,13 +2169,29 @@ export default function SiteEditor() {
                                     <TextStyleRow prefix="title" cfg={cfg} setF={setField} />
                                   </>)}
 
-                                  {block.type === 'text' && (<>
-                                    <div className="sf-group"><label className="sf-lbl">Heading</label><input className="sf-input" value={String(cfg.heading??'')} onChange={e=>setField('heading',e.target.value)} placeholder="Section heading…"/></div>
-                                    <TextStyleRow prefix="heading" cfg={cfg} setF={setField} />
-                                    <div className="sf-group"><label className="sf-lbl">Body</label><textarea className="sf-input" rows={4} value={String(cfg.body??'')} onChange={e=>setField('body',e.target.value)} style={{resize:'vertical'}}/></div>
-                                    <TextStyleRow prefix="body" cfg={cfg} setF={setField} />
-                                    <div className="sf-group"><label className="sf-lbl">Content Key <span style={{fontWeight:400,color:'#b0a99f'}}>(advanced)</span></label><input className="sf-input" value={String(cfg.contentKey??'')} onChange={e=>setField('contentKey',e.target.value)} placeholder="story / home-welcome / registry…"/></div>
-                                  </>)}
+                                  {block.type === 'text' && (() => {
+                                    const textItems = Array.isArray(cfg.textItems)
+                                      ? (cfg.textItems as Array<{heading: string; body: string}>)
+                                      : [{ heading: String(cfg.heading ?? ''), body: String(cfg.body ?? '') }];
+                                    return (<>
+                                      {textItems.map((item, idx) => (
+                                        <div key={idx} style={{ border: '1px solid #f0ede8', borderRadius: '8px', padding: '0.6rem', marginBottom: '0.5rem' }}>
+                                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
+                                            <span style={{ fontSize: '0.72rem', fontWeight: 600, color: '#9b8e85' }}>{textItems.length > 1 ? `Text ${idx + 1}` : 'Content'}</span>
+                                            {textItems.length > 1 && (
+                                              <button type="button" onClick={() => setField('textItems', textItems.filter((_, i) => i !== idx))} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ccc', fontSize: '0.8rem' }}>×</button>
+                                            )}
+                                          </div>
+                                          <div className="sf-group"><label className="sf-lbl">Heading</label><input className="sf-input" value={item.heading} onChange={e => setField('textItems', textItems.map((it, i) => i === idx ? { ...it, heading: e.target.value } : it))} placeholder="Section heading…"/></div>
+                                          <div className="sf-group"><label className="sf-lbl">Body</label><textarea className="sf-input" rows={3} value={item.body} onChange={e => setField('textItems', textItems.map((it, i) => i === idx ? { ...it, body: e.target.value } : it))} style={{resize:'vertical'}}/></div>
+                                        </div>
+                                      ))}
+                                      <button type="button" className="btn-ghost" style={{ width: '100%', fontSize: '0.74rem', marginBottom: '0.5rem' }} onClick={() => setField('textItems', [...textItems, { heading: '', body: '' }])}>+ Add Text Section</button>
+                                      <TextStyleRow prefix="heading" cfg={cfg} setF={setField} />
+                                      <TextStyleRow prefix="body" cfg={cfg} setF={setField} />
+                                      <div className="sf-group"><label className="sf-lbl">Content Key <span style={{fontWeight:400,color:'#b0a99f'}}>(advanced)</span></label><input className="sf-input" value={String(cfg.contentKey??'')} onChange={e=>setField('contentKey',e.target.value)} placeholder="story / home-welcome / registry…"/></div>
+                                    </>);
+                                  })()}
 
                                   {block.type === 'video' && (<>
                                     <div className="sf-group">
@@ -2741,14 +2758,14 @@ export default function SiteEditor() {
                       <div className="cnt-lang-pills">
                         <button
                           className={`cnt-lang-pill${contentLang === "main" ? " active" : ""}`}
-                          onClick={() => setContentLang("main")}
+                          onClick={() => { setContentLang("main"); setPreviewLang(null); }}
                         >
                           {LANG_FLAGS[mainLang] ?? "🏳️"} {LANGUAGES.find(l => l.code === mainLang)?.label ?? mainLang}
                         </button>
                         {secondLang && (
                           <button
                             className={`cnt-lang-pill${contentLang === "second" ? " active" : ""}`}
-                            onClick={() => setContentLang("second")}
+                            onClick={() => { setContentLang("second"); setPreviewLang(secondLang); }}
                           >
                             {LANG_FLAGS[secondLang] ?? "🏳️"} {LANGUAGES.find(l => l.code === secondLang)?.label ?? secondLang}
                           </button>
@@ -4216,13 +4233,29 @@ export default function SiteEditor() {
 
               {/* multi-text — text mode editing */}
               {t === "multi-text" && (<>
-                {(cfg.mode ?? 'text') === 'text' && (<>
-                  <div className="sf-group"><label className="sf-lbl">Heading</label><input className="sf-input" value={String(cfg.heading ?? "")} onChange={e => setField("heading", e.target.value)} placeholder="Section heading…" /></div>
-                  <TextStyleRow prefix="heading" cfg={cfg} setF={setField} />
-                  <div className="sf-group"><label className="sf-lbl">Body</label><textarea className="sf-input" rows={5} value={String(cfg.body ?? "")} onChange={e => setField("body", e.target.value)} placeholder="Your text here…" style={{ resize: "vertical" }} /></div>
-                  <TextStyleRow prefix="body" cfg={cfg} setF={setField} />
-                  <div className="sf-group"><label className="sf-lbl">Content Key <span style={{ fontWeight: 400, color: "#b0a99f" }}>(advanced)</span></label><input className="sf-input" value={String(cfg.contentKey ?? "")} onChange={e => setField("contentKey", e.target.value)} placeholder="story / home-welcome / accommodations / registry" /></div>
-                </>)}
+                {(cfg.mode ?? 'text') === 'text' && (() => {
+                  const textItems = Array.isArray(cfg.textItems)
+                    ? (cfg.textItems as Array<{heading: string; body: string}>)
+                    : [{ heading: String(cfg.heading ?? ""), body: String(cfg.body ?? "") }];
+                  return (<>
+                    {textItems.map((item, idx) => (
+                      <div key={idx} style={{ border: "1px solid #f0ede8", borderRadius: "8px", padding: "0.6rem", marginBottom: "0.5rem" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.4rem" }}>
+                          <span style={{ fontSize: "0.72rem", fontWeight: 600, color: "#9b8e85" }}>{textItems.length > 1 ? `Text ${idx + 1}` : "Content"}</span>
+                          {textItems.length > 1 && (
+                            <button type="button" onClick={() => setField("textItems", textItems.filter((_, i) => i !== idx))} style={{ background: "none", border: "none", cursor: "pointer", color: "#ccc", fontSize: "0.8rem" }}>×</button>
+                          )}
+                        </div>
+                        <div className="sf-group"><label className="sf-lbl">Heading</label><input className="sf-input" value={item.heading} onChange={e => setField("textItems", textItems.map((it, i) => i === idx ? { ...it, heading: e.target.value } : it))} placeholder="Section heading…" /></div>
+                        <div className="sf-group"><label className="sf-lbl">Body</label><textarea className="sf-input" rows={4} value={item.body} onChange={e => setField("textItems", textItems.map((it, i) => i === idx ? { ...it, body: e.target.value } : it))} placeholder="Your text here…" style={{ resize: "vertical" }} /></div>
+                      </div>
+                    ))}
+                    <button type="button" className="btn-ghost" style={{ width: "100%", fontSize: "0.74rem", marginBottom: "0.5rem" }} onClick={() => setField("textItems", [...textItems, { heading: "", body: "" }])}>+ Add Text Section</button>
+                    <TextStyleRow prefix="heading" cfg={cfg} setF={setField} />
+                    <TextStyleRow prefix="body" cfg={cfg} setF={setField} />
+                    <div className="sf-group"><label className="sf-lbl">Content Key <span style={{ fontWeight: 400, color: "#b0a99f" }}>(advanced)</span></label><input className="sf-input" value={String(cfg.contentKey ?? "")} onChange={e => setField("contentKey", e.target.value)} placeholder="story / home-welcome / accommodations / registry" /></div>
+                  </>);
+                })()}
                 {(cfg.mode ?? 'text') !== 'text' && (
                   <p style={{ fontSize: "0.75rem", color: "#9b8e85", margin: "0.25rem 0 0.5rem", lineHeight: 1.5 }}>Content (events, Q&amp;A items, fun facts, etc.) is edited in the <strong>Content</strong> tab.</p>
                 )}
