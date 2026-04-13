@@ -2794,6 +2794,16 @@ export default function SiteEditor() {
                           </button>
                         )}
                       </div>
+                      {secondLang && activePage && (
+                        <button
+                          type="button"
+                          disabled={translating}
+                          onClick={handleTranslate}
+                          style={{ fontSize: "0.72rem", padding: "3px 9px", borderRadius: "5px", border: "1px solid var(--accent)", background: translating ? "#f5f2ee" : "var(--accent-light)", color: translating ? "#9b8e85" : "var(--accent)", cursor: translating ? "default" : "pointer", fontWeight: 600, flexShrink: 0 }}
+                        >
+                          {translating ? "…" : "Translate ↓"}
+                        </button>
+                      )}
                     </div>
 
                     {/* Scrollable content area */}
