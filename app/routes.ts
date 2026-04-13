@@ -42,6 +42,9 @@ export default [
   // Site content API (i18n editor)
   route("api/sites/:id/content", "routes/api.sites.$id.content.ts"),
 
+  // Translation API
+  route("api/sites/:id/translate", "routes/api.sites.$id.translate.ts"),
+
   // Site analytics API
   route("api/sites/:id/analytics", "routes/api.sites.$id.analytics.ts"),
 
