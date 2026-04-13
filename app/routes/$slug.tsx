@@ -45,6 +45,7 @@ interface SiteSettingRow {
   siteTextColor: string | null;
   siteBorderColor: string | null;
   navBg: string | null;
+  showNavBrand?: boolean;
   navPosition: string | null;       // "fixed" | "scroll-away" | null
   navShape: string | null;          // "bar" | "pill" | "floating" | null
   navBrandColor: string | null;
@@ -744,7 +745,7 @@ function buildStyles(settings: SiteSettingRow | null): BuiltStyles {
       font-size: clamp(1.5rem, 3.5vw, 2rem);
       font-weight: normal;
       text-align: center;
-      color: var(--heading-color);
+      color: var(--block-text, var(--heading-color));
       margin-bottom: 0.75rem;
     }
     .section-rule {
@@ -755,7 +756,7 @@ function buildStyles(settings: SiteSettingRow | null): BuiltStyles {
     }
 
     /* ── Text ── */
-    .text-body { max-width: 640px; margin: 0 auto; text-align: center; color: var(--body-color); font-size: 1.0625rem; }
+    .text-body { max-width: 640px; margin: 0 auto; text-align: center; color: var(--block-text, var(--body-color)); font-size: 1.0625rem; }
 
     /* ── Countdown ── */
     .block-countdown { text-align: center; }
@@ -1182,7 +1183,7 @@ function renderBlock(
   const _bgCfg = cfg.background as { type?: string; value?: string } | null | undefined;
   if (_bgCfg?.type === 'color' && _bgCfg?.value) _bsParts.push(`background-color:${escHtml(String(_bgCfg.value))}`);
   const _tcCfg = cfg.textColor as string | undefined;
-  if (_tcCfg) _bsParts.push(`color:${escHtml(_tcCfg)}`);
+  if (_tcCfg) _bsParts.push(`color:${escHtml(_tcCfg)}`, `--block-text:${escHtml(_tcCfg)}`);
   const _bcCfg = cfg.borderColor as string | undefined;
   if (_bcCfg && !cfg.hideBorder) _bsParts.push(`border:1px solid ${escHtml(_bcCfg)}`);
   const bsAttr = _bsParts.length ? ` style="${_bsParts.join(';')}"` : '';
@@ -2261,10 +2262,11 @@ function buildHtml(
         >${isSecondActive ? escHtml(mainNative) : escHtml(secondNative)}</button>
       </div>`
     : "";
+  const showNavBrand = settings?.showNavBrand !== false;
   const navHtml = hasMultiplePages
     ? isPillOrFloating
       ? `<div class="site-nav-row" role="navigation" aria-label="Site navigation">
-          <a class="site-nav-brand-outside" href="#" onclick="return false;">${escHtml(eventTitle)}</a>
+          ${showNavBrand ? `<a class="site-nav-brand-outside" href="#" onclick="return false;">${escHtml(eventTitle)}</a>` : `<div></div>`}
           <nav class="site-nav${navShapeClass}">
             <div class="site-nav-inner">
               <ul class="site-nav-links" role="list">
@@ -2276,7 +2278,7 @@ function buildHtml(
         </div>`
       : `<nav class="site-nav${navShapeClass}" aria-label="Site navigation">
           <div class="site-nav-inner">
-            <a class="site-nav-brand" href="#" onclick="return false;">${escHtml(eventTitle)}</a>
+            ${showNavBrand ? `<a class="site-nav-brand" href="#" onclick="return false;">${escHtml(eventTitle)}</a>` : ""}
             <ul class="site-nav-links" role="list">
               ${navLinksHtml}
             </ul>
