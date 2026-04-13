@@ -116,6 +116,7 @@ interface SiteSettings {
   headingFontVi: string | null;
   bodyFontVi: string | null;
   navBg: string;
+  showNavBrand: boolean;
   navPosition: string;
   navBrandColor: string;
   navLinkColor: string;
@@ -758,6 +759,7 @@ export default function SiteEditor() {
     headingFontVi: "",
     bodyFontVi: "",
     navBg: "white",
+    showNavBrand: true,
     navPosition: "fixed",
     navBrandColor: "#1c1917",
     navLinkColor: "#6b6560",
@@ -944,6 +946,7 @@ export default function SiteEditor() {
         headingFontVi:      data.settings.headingFontVi      ?? "",
         bodyFontVi:         data.settings.bodyFontVi         ?? "",
         navBg:              data.settings.navBg              ?? "white",
+        showNavBrand:       data.settings.showNavBrand !== false,
         navPosition:        data.settings.navPosition        ?? "fixed",
         navBrandColor:      data.settings.navBrandColor      ?? "#1c1917",
         navLinkColor:       data.settings.navLinkColor       ?? "#6b6560",
@@ -2138,7 +2141,7 @@ export default function SiteEditor() {
                                 <div className="bl-stripe" style={{ background: blockColor(block.type) }} />
                                 <div className="drag-handle" aria-hidden="true" onClick={e => e.stopPropagation()}>⠿</div>
                                 <div className="bl-body">
-                                  <div className={`bl-name${block.isVisible === 0 ? ' off' : ''}`}>{(cfg.blockLabel as string | undefined) || blockLabel(block.type)}</div>
+                                  <div className={`bl-name${block.isVisible === 0 ? ' off' : ''}`}>{(cfg.blockLabel as string | undefined) || (block.type === 'multi-text' ? ({text:'Text / List',schedule:'Schedule',faq:'Q & A',tidbits:'Fun Facts',travel:'Travel Info'} as Record<string,string>)[(cfg.mode as string) ?? 'text'] ?? blockLabel(block.type) : blockLabel(block.type))}</div>
                                   <div className="bl-sub">{block.isVisible === 0 ? 'hidden' : 'default'}</div>
                                 </div>
                                 <div className="bl-acts" onClick={e => e.stopPropagation()}>
@@ -2585,7 +2588,7 @@ export default function SiteEditor() {
                                           {id:'travel', label:'Travel'},
                                         ]).map(m=>(
                                           <button key={m.id} className={`bsel-btn${(cfg.mode??'text')===m.id?' active':''}`}
-                                            onClick={()=>setField('mode',m.id)}>{m.label}</button>
+                                            onClick={()=>{ setField('mode',m.id); if(!cfg.blockLabel) setField('blockLabel',m.label); }}>{m.label}</button>
                                         ))}
                                       </div>
                                     </div>
@@ -2987,12 +2990,6 @@ export default function SiteEditor() {
                     {activePage ? activePage.label : (pagesLoading ? "Loading…" : "No pages")}
                   </span>
                 </div>
-                {settingsForm.secondLanguage && (
-                  <div className="device-toggle" style={{ marginRight: "6px" }}>
-                    <button className={`device-btn${!previewLang ? " active" : ""}`} onClick={() => setPreviewLang(null)}>{settingsForm.mainLanguage?.toUpperCase() || "EN"}</button>
-                    <button className={`device-btn${previewLang === settingsForm.secondLanguage ? " active" : ""}`} onClick={() => setPreviewLang(settingsForm.secondLanguage)}>{settingsForm.secondLanguage.toUpperCase()}</button>
-                  </div>
-                )}
                 <div className="device-toggle">
                   <button
                     className={`device-btn${previewDevice === "mobile" ? " active" : ""}`}
@@ -4919,6 +4916,16 @@ export default function SiteEditor() {
                           onChange={(e) => setSettingsForm((f) => ({ ...f, navLinkPadding: e.target.value + "px" }))}
                         />
                         <span style={{ fontSize: "0.78rem", color: "#9b8e85" }}>px — controls how tall or short the nav bar is</span>
+                      </div>
+                      {/* Brand name visibility */}
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "0.75rem" }}>
+                        <span style={{ fontSize: "0.78rem", color: "#1c1917" }}>Show name in top-left</span>
+                        <label style={{ display: "inline-flex", cursor: "pointer" }}>
+                          <input type="checkbox" checked={settingsForm.showNavBrand !== false} onChange={e => setSettingsForm(f => ({ ...f, showNavBrand: e.target.checked }))} style={{ display: "none" }} />
+                          <span style={{ display: "block", width: "30px", height: "17px", borderRadius: "9px", background: settingsForm.showNavBrand !== false ? "var(--accent)" : "#d1cdc7", position: "relative", transition: "background 0.2s", flexShrink: 0 }}>
+                            <span style={{ position: "absolute", top: "2px", left: settingsForm.showNavBrand !== false ? "13px" : "2px", width: "13px", height: "13px", borderRadius: "50%", background: "#fff", transition: "left 0.2s", boxShadow: "0 1px 3px rgba(0,0,0,0.2)" }} />
+                          </span>
+                        </label>
                       </div>
 
                       {/* Background */}
