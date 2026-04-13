@@ -1127,19 +1127,28 @@ function buildStyles(settings: SiteSettingRow | null): BuiltStyles {
       padding-left: 0.75rem;
     }
     .lang-btn {
-      display: block;
-      padding: 0.875rem 0.875rem;
-      font-size: 0.85rem;
-      letter-spacing: 0.03em;
+      display: inline-flex;
+      align-items: center;
+      padding: 0.35rem 0.9rem;
+      font-size: 0.78rem;
+      letter-spacing: 0.04em;
       color: var(--nav-link);
-      background: none;
-      border: none;
+      background: rgba(255,255,255,0.14);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,255,255,0.28);
+      border-radius: 999px;
       font-family: var(--body-font);
       cursor: pointer;
       white-space: nowrap;
-      transition: color 0.15s;
+      transition: background 0.2s, border-color 0.2s, color 0.15s;
+      font-weight: 500;
     }
-    .lang-btn:hover { color: var(--nav-brand); }
+    .lang-btn:hover {
+      background: rgba(255,255,255,0.24);
+      border-color: rgba(255,255,255,0.45);
+      color: var(--nav-brand);
+    }
 
     /* ── Responsive ── */
     @media (max-width: 600px) {
@@ -1174,6 +1183,8 @@ function renderBlock(
   if (_bgCfg?.type === 'color' && _bgCfg?.value) _bsParts.push(`background-color:${escHtml(String(_bgCfg.value))}`);
   const _tcCfg = cfg.textColor as string | undefined;
   if (_tcCfg) _bsParts.push(`color:${escHtml(_tcCfg)}`);
+  const _bcCfg = cfg.borderColor as string | undefined;
+  if (_bcCfg && !cfg.hideBorder) _bsParts.push(`border:1px solid ${escHtml(_bcCfg)}`);
   const bsAttr = _bsParts.length ? ` style="${_bsParts.join(';')}"` : '';
 
   switch (block.type) {
@@ -1376,9 +1387,17 @@ function renderBlock(
       const objPos = `${focusX} ${focusY}`;
       const phRaw = Number(cfg.photoHeight);
       const photoH = phRaw > 0 ? `${phRaw}px` : null;
+      const pwRaw = Number(cfg.photoWidth);
+      const photoW = pwRaw > 0 ? `${pwRaw}px` : null;
+      const photoR = escHtml(String(cfg.photoRadius ?? '8px'));
+      const photoBW = String(cfg.photoBorder ?? '0');
+      const photoBColor = escHtml(String(cfg.photoBorderColor ?? '#e0dbd4'));
       const imgStyle = [
         `object-position:${objPos}`,
+        `border-radius:${photoR}`,
+        photoBW !== '0' ? `border:${escHtml(photoBW)} solid ${photoBColor}` : '',
         photoH ? `height:${photoH}` : "",
+        photoW ? `width:${photoW}` : "",
       ].filter(Boolean).join(";");
       const offsetXRaw = Number(cfg.galleryOffsetX ?? 0);
       const gridStyle = offsetXRaw !== 0 ? `transform:translateX(${offsetXRaw}px)` : "";
@@ -1648,6 +1667,140 @@ function renderBlock(
       </section>`;
     }
 
+    case "multi-text": {
+      const mode = String(cfg.mode ?? 'text');
+      const sectionTitle = escHtml(String(cfg.title ?? ""));
+
+      if (mode === 'schedule') {
+        const events = Array.isArray(pageContent?.events)
+          ? (pageContent.events as Array<{ name?: string; date?: string; time?: string; location?: string; description?: string }>)
+          : [];
+        return `
+  <section class="block block-schedule"${bsAttr} aria-label="Schedule" data-block-id="${escHtml(block.id)}" data-block-type="${escHtml(block.type)}">
+    <h2 class="section-heading">${sectionTitle || "The Day"}</h2>
+    <div class="section-rule" aria-hidden="true"></div>
+    ${events.length > 0
+      ? `<ol class="timeline">
+           ${events.map(ev => `
+             <li class="timeline-item">
+               ${ev.time ? `<span class="timeline-time">${escHtml(ev.time)}</span>` : ""}
+               <div class="timeline-content">
+                 ${ev.name ? `<strong>${escHtml(ev.name)}</strong>` : ""}
+                 ${ev.date ? `<p style="font-size:0.85em;color:var(--muted);margin:0.2rem 0 0;">${escHtml(ev.date)}</p>` : ""}
+                 ${ev.location ? `<p style="font-size:0.85em;color:var(--muted);margin:0.2rem 0 0;">📍 ${escHtml(ev.location)}</p>` : ""}
+                 ${ev.description ? `<p>${escHtml(ev.description)}</p>` : ""}
+               </div>
+             </li>`).join("")}
+         </ol>`
+      : placeholder("The schedule will appear here once added in the Content tab.")
+    }
+  </section>`;
+      }
+
+      if (mode === 'faq') {
+        const questions = Array.isArray(pageContent?.questions)
+          ? (pageContent.questions as Array<{ q?: string; a?: string }>)
+          : [];
+        return `
+  <section class="block block-faq"${bsAttr} aria-label="Frequently asked questions" data-block-id="${escHtml(block.id)}" data-block-type="${escHtml(block.type)}">
+    <h2 class="section-heading">${sectionTitle || "Questions &amp; Answers"}</h2>
+    <div class="section-rule" aria-hidden="true"></div>
+    ${questions.length > 0
+      ? `<dl class="faq-list">
+           ${questions.map(item =>
+             `${item.q ? `<dt class="faq-question">${escHtml(item.q)}</dt>` : ""}${item.a ? `<dd class="faq-answer">${escHtml(item.a)}</dd>` : ""}`
+           ).join("")}
+         </dl>`
+      : placeholder("Q&A items will appear here once added in the Content tab.")
+    }
+  </section>`;
+      }
+
+      if (mode === 'tidbits') {
+        const items = Array.isArray(pageContent?.tidbits)
+          ? (pageContent.tidbits as Array<{ icon?: string; title?: string; body?: string }>)
+          : [];
+        const cols = String(cfg.columns ?? "auto");
+        const colsCss = cols === "2" ? "repeat(2,1fr)" : cols === "3" ? "repeat(3,1fr)" : "repeat(auto-fill,minmax(200px,1fr))";
+        const cardStyle = String(cfg.cardStyle ?? "card");
+        const cardCss = cardStyle === "flat"
+          ? "padding:1.25rem;text-align:center;color:var(--block-text,var(--site-text));"
+          : cardStyle === "bordered"
+          ? "border:1px solid var(--site-border,var(--border));border-radius:12px;padding:1.25rem;text-align:center;color:var(--block-text,var(--site-text));"
+          : "background:#fff;border:1px solid var(--site-border,var(--border));border-radius:12px;padding:1.25rem;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,0.05);color:var(--block-text,var(--text));";
+        return `
+  <section class="block block-tidbits"${bsAttr} aria-label="Fun facts" data-block-id="${escHtml(block.id)}" data-block-type="${escHtml(block.type)}">
+    ${sectionTitle ? `<h2 class="section-heading">${sectionTitle}</h2><div class="section-rule" aria-hidden="true"></div>` : cfg.showTitle !== false ? `<h2 class="section-heading">Fun Facts</h2><div class="section-rule" aria-hidden="true"></div>` : ""}
+    ${items.length > 0
+      ? `<div style="display:grid;grid-template-columns:${colsCss};gap:1rem;">
+           ${items.map(it => `<div style="${cardCss}">
+             ${it.icon ? `<div style="font-size:2rem;margin-bottom:0.5rem;">${escHtml(it.icon)}</div>` : ""}
+             ${it.title ? `<strong style="display:block;margin-bottom:0.375rem;">${escHtml(it.title)}</strong>` : ""}
+             ${it.body ? `<p style="color:var(--block-text,var(--muted));font-size:0.9375rem;margin:0;">${escHtml(it.body)}</p>` : ""}
+           </div>`).join("")}
+         </div>`
+      : placeholder("Fun facts will appear here once added in the Content tab.")
+    }
+  </section>`;
+      }
+
+      if (mode === 'travel') {
+        const travelItems = Array.isArray(pageContent?.travelItems)
+          ? (pageContent.travelItems as Array<{ heading?: string; body?: string; linkLabel?: string; linkUrl?: string }>)
+          : [];
+        return `
+  <section class="block block-travel"${bsAttr} aria-label="Travel information" data-block-id="${escHtml(block.id)}" data-block-type="${escHtml(block.type)}">
+    <h2 class="section-heading">${sectionTitle || "Getting There"}</h2>
+    <div class="section-rule" aria-hidden="true"></div>
+    ${travelItems.length > 0
+      ? travelItems.map(item => `
+          <div style="margin-bottom:1.5rem;">
+            ${item.heading ? `<h3 style="font-size:1.05rem;margin:0 0 0.4rem;">${escHtml(item.heading)}</h3>` : ""}
+            ${item.body ? `<p style="margin:0 0 0.4rem;line-height:1.7;">${escHtml(item.body)}</p>` : ""}
+            ${item.linkUrl && item.linkLabel
+              ? `<a href="${escHtml(safeUrl(item.linkUrl))}" target="_blank" rel="noopener noreferrer" style="color:var(--accent)">${escHtml(item.linkLabel)}</a>`
+              : ""}
+          </div>`).join("")
+      : placeholder("Travel details will appear here once added in the Content tab.")
+    }
+  </section>`;
+      }
+
+      // Default: text mode
+      const contentKey = cfg.contentKey as string | undefined;
+      const heading = contentKey
+        ? String(pageContent?.[`${contentKey}_heading`] ?? cfg.heading ?? sectionTitle)
+        : String(cfg.heading ?? sectionTitle ?? "");
+      const body = contentKey
+        ? String(pageContent?.[contentKey] ?? cfg.body ?? "")
+        : String(cfg.body ?? cfg.text ?? cfg.content ?? "");
+      const hSize = cfg.headingSize as string | undefined;
+      const hAlign = cfg.headingAlign as string | undefined;
+      const hStyle = [
+        hSize ? `font-size:${escHtml(hSize)}` : "",
+        hAlign ? `text-align:${escHtml(hAlign)}` : "",
+        cfg.headingBold ? "font-weight:700" : "",
+        cfg.headingItalic ? "font-style:italic" : "",
+        cfg.headingUnderline ? "text-decoration:underline" : "",
+      ].filter(Boolean).join(";");
+      const bSize = cfg.bodySize as string | undefined;
+      const bAlign = cfg.bodyAlign as string | undefined;
+      const bStyle = [
+        bSize ? `font-size:${escHtml(bSize)}` : "",
+        bAlign ? `text-align:${escHtml(bAlign)}` : "",
+        cfg.bodyBold ? "font-weight:700" : "",
+        cfg.bodyItalic ? "font-style:italic" : "",
+        cfg.bodyUnderline ? "text-decoration:underline" : "",
+      ].filter(Boolean).join(";");
+      return `
+    <section class="block block-text"${bsAttr} data-block-id="${escHtml(block.id)}" data-block-type="${escHtml(block.type)}">
+      ${heading ? `<h2 class="section-heading"${hStyle ? ` style="${hStyle}"` : ""}${contentKey ? ` data-lang-field="${escHtml(contentKey)}_heading"` : ""}>${escHtml(heading)}</h2><div class="section-rule" aria-hidden="true"></div>` : ""}
+      <div class="text-body"${bStyle ? ` style="${bStyle}"` : ""}>
+        ${body ? `<p${contentKey ? ` data-lang-field="${escHtml(contentKey)}"` : ""}>${escHtml(body)}</p>` : placeholder("Text will appear here once added.")}
+      </div>
+    </section>`;
+    }
+
     default:
       return `<section class="block block-unknown">${placeholder(`This block (${escHtml(block.type)}) is not yet supported.`)}</section>`;
   }
@@ -1790,6 +1943,44 @@ function buildMessageListenerScript(): string {
       if (body && cfg.body != null) body.textContent = String(cfg.body);
     }
 
+    if (type === 'images') {
+      var imgs = node.querySelectorAll('.gallery-img');
+      var photoR = cfg.photoRadius ? String(cfg.photoRadius) : '8px';
+      var photoBW = cfg.photoBorder ? String(cfg.photoBorder) : '0';
+      var photoBColor = cfg.photoBorderColor ? String(cfg.photoBorderColor) : '#e0dbd4';
+      var phH = cfg.photoHeight ? String(Number(cfg.photoHeight)) + 'px' : '';
+      var phW = cfg.photoWidth ? String(Number(cfg.photoWidth)) + 'px' : '';
+      imgs.forEach(function(img) {
+        img.style.borderRadius = photoR;
+        img.style.border = (photoBW && photoBW !== '0') ? photoBW + ' solid ' + photoBColor : '';
+        if (phH) img.style.height = phH;
+        if (phW) img.style.width = phW;
+      });
+      var grid = node.querySelector('.image-grid');
+      if (grid && cfg.galleryOffsetX != null) {
+        var ox = Number(cfg.galleryOffsetX);
+        grid.style.transform = ox !== 0 ? 'translateX(' + ox + 'px)' : '';
+      }
+    }
+
+    if (type === 'photo-split') {
+      var psImg = node.querySelector('.ps-photo img');
+      if (psImg && cfg.photo) {
+        var ph = cfg.photo;
+        if (ph.widthPx) psImg.style.width = String(Number(ph.widthPx)) + 'px';
+        else psImg.style.width = 'auto';
+        if (ph.heightPx) psImg.style.height = String(Number(ph.heightPx)) + 'px';
+        else psImg.style.height = 'auto';
+        if (ph.crop) psImg.style.objectPosition = String(ph.crop);
+        var psContainer = node.querySelector('.ps-photo');
+        if (psContainer && ph.offsetX != null) {
+          var pox = Number(ph.offsetX);
+          psContainer.style.marginLeft = (cfg.photoSide !== 'right' && pox !== 0) ? pox + 'px' : '';
+          psContainer.style.marginRight = (cfg.photoSide === 'right' && pox !== 0) ? pox + 'px' : '';
+        }
+      }
+    }
+
     // Generic: background / text color
     if (cfg.background && cfg.background.type === 'color') {
       node.style.backgroundColor = cfg.background.value || '';
@@ -1800,6 +1991,9 @@ function buildMessageListenerScript(): string {
       node.style.color = String(cfg.textColor);
     } else if (cfg.textColor === null) {
       node.style.color = '';
+    }
+    if ('borderColor' in cfg) {
+      node.style.border = (cfg.borderColor && !cfg.hideBorder) ? '1px solid ' + String(cfg.borderColor) : '';
     }
   }
 
@@ -2143,7 +2337,7 @@ function showPage(pageId) {
           data-main="${escHtml(mainLang)}" data-second="${escHtml(secondLang)}"
           data-main-label="${escHtml(mainNative)}" data-second-label="${escHtml(secondNative)}"
           onclick="switchLang()"
-          style="background:var(--nav-bg);border:1px solid var(--site-border);border-radius:999px;padding:0.35rem 0.85rem;backdrop-filter:blur(8px)"
+          aria-label="Switch language"
         >${escHtml(secondNative)}</button>
       </div>`
     : "";
