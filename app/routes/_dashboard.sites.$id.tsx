@@ -570,6 +570,7 @@ export default function SiteEditor() {
   const [contentLoading, setContentLoading] = useState(false);
   const [contentSaving, setContentSaving]   = useState(false);
   const [translating, setTranslating]       = useState(false);
+  const [textBlockEdits, setTextBlockEdits] = useState<Record<string, Array<{heading: string; body: string}>>>({});
 
   // Photo picker (for photo-split inline editor)
   const [photoPickerOpen, setPhotoPickerOpen] = useState(false);
@@ -1031,6 +1032,19 @@ export default function SiteEditor() {
           body: JSON.stringify({ pageSlug: slug, lang, content }),
         })
       ));
+      // Also save text block edits
+      const textEditsForPage = Object.entries(textBlockEdits);
+      if (textEditsForPage.length > 0) {
+        await Promise.all(textEditsForPage.map(([blockId, items]) =>
+          apiFetch(`/blocks/${blockId}`, {
+            method: "PUT",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({ config: JSON.stringify({ ...(() => { try { return JSON.parse(blocks.find(b => b.id === blockId)?.config || '{}'); } catch { return {}; } })(), textItems: items }) }),
+          })
+        ));
+        setTextBlockEdits({});
+        if (activePage) { await fetchBlocks(activePage.id); setPreviewKey(k => k + 1); }
+      }
       toast("Content saved");
     } catch (err) {
       toast(err instanceof Error ? err.message : "Failed to save content", true);
@@ -2617,32 +2631,11 @@ export default function SiteEditor() {
                                         </label>
                                       </div>
                                     </>)}
-                                    {(cfg.mode === 'text' || !cfg.mode) ? (() => {
-                                      const textItems = Array.isArray(cfg.textItems)
-                                        ? (cfg.textItems as Array<{heading: string; body: string}>)
-                                        : [{ heading: String(cfg.heading ?? ''), body: String(cfg.body ?? '') }];
-                                      return (<>
-                                        {textItems.map((item, idx) => (
-                                          <div key={idx} style={{ border: '1px solid #f0ede8', borderRadius: '8px', padding: '0.6rem', marginBottom: '0.5rem' }}>
-                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
-                                              <span style={{ fontSize: '0.72rem', fontWeight: 600, color: '#9b8e85' }}>{textItems.length > 1 ? `Text ${idx + 1}` : 'Content'}</span>
-                                              {textItems.length > 1 && (
-                                                <button type="button" onClick={() => setField('textItems', textItems.filter((_, i) => i !== idx))} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ccc', fontSize: '0.8rem' }}>×</button>
-                                              )}
-                                            </div>
-                                            <div className="sf-group"><label className="sf-lbl">Heading</label><input className="sf-input" value={item.heading} onChange={e => setField('textItems', textItems.map((it, i) => i === idx ? { ...it, heading: e.target.value } : it))} placeholder="Section heading…"/></div>
-                                            <div className="sf-group"><label className="sf-lbl">Body</label><textarea className="sf-input" rows={3} value={item.body} onChange={e => setField('textItems', textItems.map((it, i) => i === idx ? { ...it, body: e.target.value } : it))} style={{resize:'vertical'}}/></div>
-                                          </div>
-                                        ))}
-                                        <button type="button" className="btn-ghost" style={{ width: '100%', fontSize: '0.74rem', marginBottom: '0.5rem' }} onClick={() => setField('textItems', [...textItems, { heading: '', body: '' }])}>+ Add Text Section</button>
-                                      </>);
-                                    })() : (
-                                      <div className="sf-group" style={{ background: '#faf9f8', borderRadius: 8, padding: '0.75rem', textAlign: 'center', marginTop: '0.5rem' }}>
-                                        <p style={{ fontSize: '0.75rem', color: '#9b8e85', margin: 0, lineHeight: 1.5 }}>
-                                          Content (items, questions, events, etc.) is edited in the <strong>Content</strong> tab above.
-                                        </p>
-                                      </div>
-                                    )}
+                                    <div className="sf-group" style={{ background: '#faf9f8', borderRadius: 8, padding: '0.75rem', textAlign: 'center', marginTop: '0.5rem' }}>
+                                      <p style={{ fontSize: '0.75rem', color: '#9b8e85', margin: 0, lineHeight: 1.5 }}>
+                                        Content (items, questions, events, etc.) is edited in the <strong>Content</strong> tab above.
+                                      </p>
+                                    </div>
                                   </>)}
 
                                   {/* APPEARANCE section */}
@@ -2769,6 +2762,16 @@ export default function SiteEditor() {
                     .filter(b => b.type === 'multi-text')
                     .map(b => { try { return String((JSON.parse(b.config || '{}') as Record<string,unknown>).mode || 'text'); } catch { return 'text'; } })
                 );
+
+                // True when at least one dedicated content section is visible — suppresses the GENERIC fallback
+                const hasDedicatedSection =
+                  slug === "home" || slug === "story" || slug === "accommodations" ||
+                  slug === "registry" || slug === "rsvp" ||
+                  slug === "schedule" || pageBlockTypes.has("schedule") || multiTextModes.has("schedule") ||
+                  slug === "faq" || pageBlockTypes.has("faq") || multiTextModes.has("faq") ||
+                  pageBlockTypes.has("tidbits") || multiTextModes.has("tidbits") ||
+                  pageBlockTypes.has("travel-section") || multiTextModes.has("travel") ||
+                  blocks.some(b => b.type === 'multi-text' && (() => { try { const m = (JSON.parse(b.config||'{}') as Record<string,unknown>).mode; return !m || m === 'text'; } catch { return true; } })());
 
                 const fieldStyle: React.CSSProperties = { display: "flex", flexDirection: "column", gap: "4px", marginBottom: "0.75rem" };
                 const lblStyle: React.CSSProperties = { fontSize: "0.72rem", color: "#6b5e56", fontWeight: 500 };
@@ -2975,8 +2978,32 @@ export default function SiteEditor() {
                             </div>
                           )}
 
-                          {/* GENERIC (travel, custom pages, etc.) */}
-                          {!["home","story","accommodations","registry","schedule","faq","rsvp"].includes(slug) && (
+                          {/* TEXT BLOCKS — multi-text in text mode */}
+                          {blocks.filter(b => b.type === 'multi-text' && (() => { try { const m = (JSON.parse(b.config||'{}') as Record<string,unknown>).mode; return !m || m === 'text'; } catch { return true; } })()).map(b => {
+                            const bCfg = (() => { try { return JSON.parse(b.config||'{}') as Record<string,unknown>; } catch { return {} as Record<string,unknown>; } })();
+                            const blockLabel = (bCfg.blockLabel as string | undefined) || 'Text / List';
+                            const items: Array<{heading: string; body: string}> = textBlockEdits[b.id] ?? (Array.isArray(bCfg.textItems) ? (bCfg.textItems as Array<{heading:string;body:string}>) : [{ heading: String(bCfg.heading ?? ''), body: String(bCfg.body ?? '') }]);
+                            const setItems = (next: Array<{heading: string; body: string}>) => setTextBlockEdits(prev => ({ ...prev, [b.id]: next }));
+                            return (
+                              <div key={b.id} style={{ border: "1px solid #e8e4e0", borderRadius: "10px", padding: "1rem", marginBottom: "0.75rem" }}>
+                                <p style={sectionHeadStyle}>{blockLabel}</p>
+                                {items.map((item, i) => (
+                                  <div key={i} style={{ border: "1px solid #f0ede8", borderRadius: "8px", padding: "0.75rem", marginBottom: "0.6rem" }}>
+                                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem" }}>
+                                      <span style={{ fontSize: "0.72rem", fontWeight: 600, color: "#9b8e85" }}>{items.length > 1 ? `Text ${i + 1}` : 'Content'}</span>
+                                      {items.length > 1 && <button onClick={() => setItems(items.filter((_,j) => j !== i))} style={{ background: "none", border: "none", cursor: "pointer", color: "#ccc", fontSize: "0.8rem" }}>×</button>}
+                                    </div>
+                                    <div style={fieldStyle}><label style={lblStyle}>Heading</label><input style={inputStyle} value={item.heading} onChange={e => { const n=[...items]; n[i]={...n[i],heading:e.target.value}; setItems(n); }} /></div>
+                                    <div style={fieldStyle}><label style={lblStyle}>Body</label><textarea style={{ ...taStyle, minHeight: "80px" }} value={item.body} onChange={e => { const n=[...items]; n[i]={...n[i],body:e.target.value}; setItems(n); }} /></div>
+                                  </div>
+                                ))}
+                                <button onClick={() => setItems([...items, { heading: '', body: '' }])} className="btn-ghost" style={{ fontSize: "0.76rem", width: "100%" }}>+ Add Text Section</button>
+                              </div>
+                            );
+                          })}
+
+                          {/* GENERIC — only for truly custom pages with no dedicated content section */}
+                          {!hasDedicatedSection && (
                             <div style={{ border: "1px solid #e8e4e0", borderRadius: "10px", padding: "1rem", marginBottom: "0.75rem" }}>
                               <p style={sectionHeadStyle}>{activePage.label}</p>
                               <div style={fieldStyle}><label style={lblStyle}>Page Heading</label><input style={inputStyle} value={cf("heading")} onChange={e => onChange("heading", e.target.value)} /></div>
