@@ -2612,13 +2612,6 @@ export default function SiteEditor() {
                                         ))}
                                       </div>
                                     </div>
-                                    {(cfg.mode==='text' || !cfg.mode) && (<>
-                                      <div className="sf-group"><label className="sf-lbl">Heading</label><input className="sf-input" value={String(cfg.heading??'')} onChange={e=>setField('heading',e.target.value)} placeholder="Section heading…"/></div>
-                                      <TextStyleRow prefix="heading" cfg={cfg} setF={setField} />
-                                      <div className="sf-group"><label className="sf-lbl">Body</label><textarea className="sf-input" rows={4} value={String(cfg.body??'')} onChange={e=>setField('body',e.target.value)} style={{resize:'vertical'}}/></div>
-                                      <TextStyleRow prefix="body" cfg={cfg} setF={setField} />
-                                      <div className="sf-group"><label className="sf-lbl">Content Key <span style={{fontWeight:400,color:'#b0a99f'}}>(advanced)</span></label><input className="sf-input" value={String(cfg.contentKey??'')} onChange={e=>setField('contentKey',e.target.value)} placeholder="story / welcome / registry…"/></div>
-                                    </>)}
                                     {cfg.mode==='tidbits' && (<>
                                       <div className="sf-group">
                                         <label className="sf-lbl">Grid Columns</label>
