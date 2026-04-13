@@ -1724,13 +1724,17 @@ export default function SiteEditor() {
 
   async function handleSaveSettings() {
     setSavingSettings(true);
+    // Snapshot values before the async PUT — if fetchSettings() fires mid-flight
+    // from a D1 stale read it could reset settingsForm; we restore from this snapshot.
+    const snapshot = { ...settingsForm };
     try {
-      const result = await apiFetch("/settings", {
+      await apiFetch("/settings", {
         method: "PUT",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify(settingsForm),
-      }) as { settings: SiteSettings };
-      setSettings(result.settings);
+        body: JSON.stringify(snapshot),
+      });
+      // Restore from snapshot so any concurrent stale fetchSettings() can't overwrite
+      setSettingsForm(snapshot);
       setPreviewKey((k) => k + 1);
       toast("Settings saved");
     } catch (err) {
