@@ -2279,7 +2279,7 @@ export default function SiteEditor() {
                                     {!!cfg.showRsvpButton && (<>
                                       <div className="sf-group">
                                         <label className="sf-lbl">Button Text</label>
-                                        <input className="sf-input" value={cfg.rsvpButtonText ?? 'RSVP Now'} onChange={e => setField('rsvpButtonText', e.target.value)} />
+                                        <input className="sf-input" value={String(cfg.rsvpButtonText ?? 'RSVP Now')} onChange={e => setField('rsvpButtonText', e.target.value)} />
                                       </div>
                                       <div className="sf-group">
                                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -2497,7 +2497,7 @@ export default function SiteEditor() {
                                     return (<>
                                       <div className="sf-group">
                                         <label className="sf-lbl">Photo</label>
-                                        {photo.url && <img src={String(photo.url)} alt="" style={{width:'100%',height:'60px',objectFit:'cover',borderRadius:'5px',border:'1px solid #e0dbd4',display:'block',marginBottom:'4px'}}/>}
+                                        {!!photo.url && <img src={String(photo.url)} alt="" style={{width:'100%',height:'60px',objectFit:'cover',borderRadius:'5px',border:'1px solid #e0dbd4',display:'block',marginBottom:'4px'}}/>}
                                         <button className="btn-ghost" style={{width:'100%',fontSize:'0.74rem'}}
                                           onClick={()=>{
                                             if(photos.length===0) fetchPhotos();
@@ -4453,7 +4453,7 @@ export default function SiteEditor() {
                 return (<>
                   <div className="sf-group">
                     <label className="sf-lbl">Photo</label>
-                    {photo.url && <img src={String(photo.url)} alt="" style={{width:"100%",height:"64px",objectFit:"cover",borderRadius:"5px",border:"1px solid #e0dbd4",display:"block",marginBottom:"4px"}}/>}
+                    {!!photo.url && <img src={String(photo.url)} alt="" style={{width:"100%",height:"64px",objectFit:"cover",borderRadius:"5px",border:"1px solid #e0dbd4",display:"block",marginBottom:"4px"}}/>}
                     <button className="btn-ghost" style={{width:"100%",fontSize:"0.74rem"}}
                       onClick={()=>{
                         if(photos.length===0) fetchPhotos();

@@ -1421,7 +1421,7 @@ function renderBlock(
       const getImgExtraStyle = (idx: number): string => {
         if (layout === 'masonry') return ';break-inside:avoid;aspect-ratio:auto';
         if (layout === 'filmstrip') return ';height:220px;width:auto;max-width:none;flex-shrink:0;scroll-snap-align:start';
-        if (layout === 'featured-grid' && idx === 0 && urls.length > 1) return ';grid-row:span 2;height:100%';
+        if (layout === 'featured-grid' && idx === 0 && (urls?.length ?? 0) > 1) return ';grid-row:span 2;height:100%';
         if (layout === 'full-bleed') return ';width:100%;height:auto';
         return '';
       };

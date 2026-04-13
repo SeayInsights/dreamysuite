@@ -21,10 +21,10 @@ export async function action({ request, context, params }: { request: Request; c
   const siteId = params.id;
 
   const site = await db.prepare("SELECT id FROM site WHERE id = ? AND userId = ?")
-    .bind(siteId, session.user.id).first<{ id: string }>();
+    .bind(siteId, session.user.id).first() as { id: string } | null;
   if (!site) {
     const invite = await db.prepare("SELECT id FROM site_invite WHERE siteId = ? AND email = ?")
-      .bind(siteId, session.user.email.toLowerCase()).first<{ id: string }>();
+      .bind(siteId, session.user.email.toLowerCase()).first() as { id: string } | null;
     if (!invite) return jsonResponse({ error: "Access denied" }, 403);
   }
 

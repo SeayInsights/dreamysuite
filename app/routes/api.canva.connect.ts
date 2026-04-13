@@ -28,7 +28,7 @@ export async function loader({ request, context }: LoaderFunctionArgs) {
   const site = await env.DB
     .prepare("SELECT id FROM site WHERE id = ? AND userId = ?")
     .bind(siteId, session.user.id)
-    .first<{ id: string }>();
+    .first() as { id: string } | null;
   if (!site) return new Response("Site not found", { status: 404 });
 
   const { verifier, challenge } = await generatePKCE();
