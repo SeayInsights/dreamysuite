@@ -571,6 +571,7 @@ export default function SiteEditor() {
   const [contentLang, setContentLang]     = useState<"main" | "second">("main");
   const [contentLoading, setContentLoading] = useState(false);
   const [contentSaving, setContentSaving]   = useState(false);
+  const [translating, setTranslating]       = useState(false);
 
   // Photo picker (for photo-split inline editor)
   const [photoPickerOpen, setPhotoPickerOpen] = useState(false);
@@ -1034,6 +1035,44 @@ export default function SiteEditor() {
       toast(err instanceof Error ? err.message : "Failed to save content", true);
     } finally {
       setContentSaving(false);
+    }
+  }
+
+  async function handleTranslate() {
+    if (!activePage || !settingsForm.secondLanguage) return;
+    const fromLang = settingsForm.mainLanguage || "en";
+    const toLang = settingsForm.secondLanguage;
+    const pageSlug = activePage.slug;
+    const mainContent = contentByPage[pageSlug]?.[fromLang] ?? {};
+    // Collect all string fields from main language content
+    const fields: Record<string, string> = {};
+    for (const [k, v] of Object.entries(mainContent)) {
+      if (typeof v === "string" && v.trim()) fields[k] = v;
+    }
+    if (Object.keys(fields).length === 0) {
+      toast("No text content to translate on this page", true);
+      return;
+    }
+    setTranslating(true);
+    try {
+      const res = await apiFetch("/translate", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ fromLang, toLang, content: { page: fields } }),
+      }) as { translations: Record<string, Record<string, string>> };
+      const translated = res.translations?.page ?? {};
+      setContentByPage((prev) => ({
+        ...prev,
+        [pageSlug]: {
+          ...(prev[pageSlug] ?? {}),
+          [toLang]: { ...((prev[pageSlug] ?? {})[toLang] ?? {}), ...translated },
+        },
+      }));
+      toast(`Translated to ${toLang} — review then save`);
+    } catch (err) {
+      toast(err instanceof Error ? err.message : "Translation failed", true);
+    } finally {
+      setTranslating(false);
     }
   }
 
@@ -4756,6 +4795,31 @@ export default function SiteEditor() {
                           </div>
                         </div>
                         <div style={{ fontSize: "0.68rem", color: "#b0a99f", marginTop: "4px" }}>Upload images in Media first, then pick here.</div>
+                        {settingsForm.bgImage && (
+                          <div style={{ marginTop: "10px", borderTop: "1px solid #f5f2ee", paddingTop: "10px" }}>
+                            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "6px" }}>
+                              <span style={{ fontSize: "0.78rem", color: "#6b5e56", fontWeight: 500 }}>Layer</span>
+                              <div style={{ display: "flex", gap: "6px" }}>
+                                {(["behind", "overlay"] as const).map((opt) => (
+                                  <button key={opt} type="button"
+                                    onClick={() => { setSettingsForm((f) => ({ ...f, bgImageLayer: opt })); fireSettingsPreview({ bgImageLayer: opt }); }}
+                                    style={{ padding: "4px 10px", fontSize: "0.75rem", borderRadius: "6px", border: "1px solid", borderColor: settingsForm.bgImageLayer === opt ? "var(--accent)" : "#e0dbd4", background: settingsForm.bgImageLayer === opt ? "var(--accent-light)" : "#fff", color: settingsForm.bgImageLayer === opt ? "var(--accent)" : "#6b5e56", cursor: "pointer", fontWeight: settingsForm.bgImageLayer === opt ? 600 : 400 }}>
+                                    {opt === "behind" ? "Behind content" : "Over content"}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                            {settingsForm.bgImageLayer === "overlay" && (
+                              <div style={{ display: "flex", alignItems: "center", gap: "10px", marginTop: "6px" }}>
+                                <span style={{ fontSize: "0.75rem", color: "#6b5e56", flexShrink: 0 }}>Opacity</span>
+                                <input type="range" min={0.1} max={1} step={0.05} value={settingsForm.bgImageOpacity}
+                                  onChange={(e) => { const v = parseFloat(e.target.value); setSettingsForm((f) => ({ ...f, bgImageOpacity: v })); fireSettingsPreview({ bgImageOpacity: v }); }}
+                                  style={{ flex: 1, accentColor: "var(--accent)" }} />
+                                <span style={{ fontSize: "0.75rem", color: "#9b8e85", minWidth: "32px", textAlign: "right" }}>{Math.round(settingsForm.bgImageOpacity * 100)}%</span>
+                              </div>
+                            )}
+                          </div>
+                        )}
                       </div>
                     </>
                   )}
@@ -4897,6 +4961,26 @@ export default function SiteEditor() {
                           ))}
                         </div>
                       </div>
+                      <div style={{ borderTop: "1px solid #f5f2ee", marginTop: "0.5rem", paddingTop: "0.75rem" }}>
+                        <div style={{ fontSize: "0.8rem", fontWeight: 600, color: "#1c1917", marginBottom: "4px" }}>Content Max Width</div>
+                        <div style={{ fontSize: "0.7rem", color: "#9b8e85", marginBottom: "0.75rem" }}>Limit content width. Helps match editor preview to guest view.</div>
+                        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                          <input
+                            type="number"
+                            min={320}
+                            className="sf-input"
+                            style={{ flex: 1 }}
+                            value={settingsForm.siteMaxWidth}
+                            placeholder="Full width"
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              setSettingsForm((f) => ({ ...f, siteMaxWidth: val }));
+                              fireSettingsPreview({ siteMaxWidth: val });
+                            }}
+                          />
+                          <span style={{ fontSize: "0.78rem", color: "#9b8e85" }}>px</span>
+                        </div>
+                      </div>
                     </>
                   )}
 
@@ -5025,6 +5109,21 @@ export default function SiteEditor() {
                           {LANGUAGES.map(({ code, label }) => <option key={code} value={code}>{label}</option>)}
                         </select>
                       </div>
+                      {settingsForm.secondLanguage && activePage && (
+                        <div style={{ marginTop: "0.75rem" }}>
+                          <button
+                            type="button"
+                            disabled={translating}
+                            onClick={handleTranslate}
+                            style={{ width: "100%", padding: "9px 0", fontSize: "0.82rem", fontWeight: 600, borderRadius: "8px", border: "1px solid var(--accent)", background: translating ? "#f5f2ee" : "var(--accent)", color: translating ? "#9b8e85" : "#fff", cursor: translating ? "default" : "pointer", transition: "background 0.15s" }}
+                          >
+                            {translating ? "Translating…" : `Translate to ${LANGUAGES.find((l) => l.code === settingsForm.secondLanguage)?.label ?? settingsForm.secondLanguage}`}
+                          </button>
+                          <div style={{ fontSize: "0.68rem", color: "#9b8e85", marginTop: "4px", lineHeight: 1.5 }}>
+                            AI-translates all text on the current page. Review and save when done.
+                          </div>
+                        </div>
+                      )}
                     </>
                   )}
 

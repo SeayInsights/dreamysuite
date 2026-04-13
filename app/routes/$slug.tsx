@@ -215,7 +215,7 @@ function buildStyles(settings: SiteSettingRow | null): BuiltStyles {
     html { scroll-behavior: smooth; }
     body {
       background: var(--bg);
-      ${escapedBgImageUrl ? `background-image: url('${escapedBgImageUrl}'); background-size: cover; background-position: center; background-attachment: fixed;` : ""}
+      ${escapedBgImageUrl && settings?.bgImageLayer !== "overlay" ? `background-image: url('${escapedBgImageUrl}'); background-size: cover; background-position: center; background-attachment: fixed;` : ""}
       color: var(--site-text);
       font-family: var(--body-font);
       font-size: 1rem;
@@ -1737,6 +1737,19 @@ function buildMessageListenerScript(): string {
         sc.style.marginRight = mw ? 'auto' : '';
       }
     }
+    if ('bgImageLayer' in delta || 'bgImageOpacity' in delta) {
+      var bgOv = document.getElementById('bg-overlay');
+      if (bgOv) {
+        if ('bgImageLayer' in delta) {
+          var isOverlay = delta.bgImageLayer === 'overlay';
+          bgOv.style.display = isOverlay ? '' : 'none';
+          document.body.style.backgroundImage = isOverlay ? '' : bgOv.style.backgroundImage;
+        }
+        if ('bgImageOpacity' in delta && delta.bgImageOpacity != null) {
+          bgOv.style.opacity = String(delta.bgImageOpacity);
+        }
+      }
+    }
   }
 
   function applyBlockConfig(blockId, cfg) {
@@ -1983,6 +1996,9 @@ function buildHtml(
   const eventLocation = settings?.eventLocation ?? null;
   const greeting = settings?.greeting ?? null;
   const accent = settings?.accentColor ?? "#0d9488";
+
+  const bgImageRaw = settings?.bgImage ?? null;
+  const escapedBgImageUrl = bgImageRaw ? bgImageRaw.replace(/\\/g, "\\\\").replace(/'/g, "\\'") : null;
 
   const allBlocks = pages.flatMap((p) => p.blocks);
   const hasCountdown = allBlocks.some((b) => b.type === "countdown")
@@ -2430,6 +2446,7 @@ function toggleMusic() {
   <style>${siteCss}</style>
 </head>
 <body>
+  ${escapedBgImageUrl ? `<div id="bg-overlay" style="position:fixed;inset:0;z-index:0;pointer-events:none;background-image:url('${escapedBgImageUrl}');background-size:cover;background-position:center;background-attachment:fixed;opacity:${settings?.bgImageOpacity ?? 1};display:${settings?.bgImageLayer === 'overlay' ? '' : 'none'};"></div>` : ""}
   ${introHtml}
   ${introScript}
   ${greetingHtml}
