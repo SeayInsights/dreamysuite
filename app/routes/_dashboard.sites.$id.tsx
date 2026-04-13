@@ -681,6 +681,7 @@ export default function SiteEditor() {
   const [canvaModalOpen, setCanvaModalOpen]       = useState(false);
   const [importingDesignId, setImportingDesignId] = useState<string | null>(null);
   const [previewKey, setPreviewKey] = useState(0);
+  const [previewLang, setPreviewLang] = useState<string | null>(null);
 
   // Collaborator invites
   const [invites, setInvites]           = useState<{ id: string; email: string; invitedBy: string; createdAt: number }[]>([]);
@@ -801,7 +802,7 @@ export default function SiteEditor() {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   blocksRef.current = blocks;
 
-  const previewUrl = activePage ? `/${site.slug}?_page=${activePage.id}&_t=${previewKey}` : `/${site.slug}?_t=${previewKey}`;
+  const previewUrl = (activePage ? `/${site.slug}?_page=${activePage.id}&_t=${previewKey}` : `/${site.slug}?_t=${previewKey}`) + (previewLang ? `&_lang=${previewLang}` : "");
   const siteUrl = site.customDomain
     ? `https://${site.customDomain}`
     : `https://${site.slug}.dreamysuite.com`;
@@ -2753,7 +2754,7 @@ export default function SiteEditor() {
                           </button>
                         )}
                       </div>
-                      {secondLang && activePage && (
+                      {secondLang && activePage && contentLang === "second" && (
                         <button
                           type="button"
                           disabled={translating}
@@ -2969,6 +2970,12 @@ export default function SiteEditor() {
                     {activePage ? activePage.label : (pagesLoading ? "Loading…" : "No pages")}
                   </span>
                 </div>
+                {settingsForm.secondLanguage && (
+                  <div className="device-toggle" style={{ marginRight: "6px" }}>
+                    <button className={`device-btn${!previewLang ? " active" : ""}`} onClick={() => setPreviewLang(null)}>{settingsForm.mainLanguage?.toUpperCase() || "EN"}</button>
+                    <button className={`device-btn${previewLang === settingsForm.secondLanguage ? " active" : ""}`} onClick={() => setPreviewLang(settingsForm.secondLanguage)}>{settingsForm.secondLanguage.toUpperCase()}</button>
+                  </div>
+                )}
                 <div className="device-toggle">
                   <button
                     className={`device-btn${previewDevice === "mobile" ? " active" : ""}`}
