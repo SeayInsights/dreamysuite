@@ -2636,6 +2636,12 @@ export default function SiteEditor() {
                                           ))}
                                         </div>
                                       </div>
+                                      <div className="sf-group">
+                                        <label className="style-toggle">
+                                          <input type="checkbox" checked={cfg.showTitle !== false} onChange={e=>setField('showTitle',e.target.checked)} />
+                                          Show section title
+                                        </label>
+                                      </div>
                                     </>)}
                                     <div className="sf-group" style={{ background: '#faf9f8', borderRadius: 8, padding: '0.75rem', textAlign: 'center', marginTop: '0.5rem' }}>
                                       <p style={{ fontSize: '0.75rem', color: '#9b8e85', margin: 0, lineHeight: 1.5 }}>
