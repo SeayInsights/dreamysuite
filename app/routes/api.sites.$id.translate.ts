@@ -53,17 +53,24 @@ export async function action({ request, context, params }: { request: Request; c
   const langPair = `${fromLang}|${toLang}`;
   const translations: Record<string, Record<string, string>> = {};
 
+  const email = (context.cloudflare?.env?.MYMEMORY_EMAIL as string | undefined) ?? "";
+
   for (const entry of entries) {
     try {
-      const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(entry.text)}&langpair=${encodeURIComponent(langPair)}`;
-      const res = await fetch(url);
-      const data = await res.json() as { responseData?: { translatedText?: string } };
-      const translated = data.responseData?.translatedText;
+      const qs = new URLSearchParams({ q: entry.text, langpair: langPair });
+      if (email) qs.set("de", email);
+      const res = await fetch(`https://api.mymemory.translated.net/get?${qs}`);
+      const data = await res.json() as { responseData?: { translatedText?: string }; responseStatus?: number };
+      const translated = data.responseData?.translatedText ?? "";
+      // MyMemory returns its rate-limit warning as the translated text
+      if (translated.startsWith("MYMEMORY WARNING") || data.responseStatus === 429) {
+        return jsonResponse({ error: "Daily translation limit reached. Try again tomorrow, or add a MYMEMORY_EMAIL env variable for a higher quota." }, 429);
+      }
       if (translated) {
         if (!translations[entry.blockId]) translations[entry.blockId] = {};
         translations[entry.blockId][entry.field] = translated;
       }
-    } catch { /* skip */ }
+    } catch { /* skip individual field */ }
   }
 
   return jsonResponse({ translations });
