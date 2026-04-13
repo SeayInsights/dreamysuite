@@ -215,14 +215,15 @@ const BLOCK_TYPES = [
   { type: "video",         label: "Video",            color: "#ef4444" },
   { type: "countdown",     label: "Countdown",        color: "#f59e0b" },
   { type: "header",        label: "Header",           color: "#8b5cf6" },
-  { type: "schedule",      label: "Schedule",         color: "#d97706" },
-  { type: "faq",           label: "Q & A",            color: "#0ea5e9" },
+  { type: "multi-text",    label: "Text / List",      color: "#7c3aed" },
   { type: "rsvp",          label: "RSVP",             color: "var(--accent)" },
   { type: "spacer",        label: "Spacer",           color: "#d4cec8" },
   { type: "registry-card", label: "Registry",         color: "#e86c4a" },
   { type: "hotel-card",    label: "Hotel",            color: "#3b82f6" },
   { type: "venue-map",     label: "Venue Map",        color: "#10b981" },
   { type: "youtube",       label: "YouTube",          color: "#ef4444" },
+  { type: "schedule",      label: "Schedule",         color: "#d97706" },
+  { type: "faq",           label: "Q & A",            color: "#0ea5e9" },
   { type: "tidbits",       label: "Fun Facts",        color: "#a855f7" },
   { type: "travel-section",label: "Travel Card",      color: "#06b6d4" },
 ];
@@ -2385,10 +2386,16 @@ export default function SiteEditor() {
                                       </div>
                                     </div>
                                     <div className="sf-group">
-                                      <label className="sf-lbl">Horizontal Offset (px)</label>
+                                      <label className="sf-lbl">Position on Page</label>
+                                      <div style={{display:'flex',gap:'6px',marginTop:'4px',marginBottom:'6px'}}>
+                                        {([{label:'Left',val:-120},{label:'Center',val:0},{label:'Right',val:120}]).map(p=>(
+                                          <button key={p.label} className={`bsel-btn${(cfg.galleryOffsetX??0)===p.val?' active':''}`}
+                                            onClick={()=>setField('galleryOffsetX',p.val)}>{p.label}</button>
+                                        ))}
+                                      </div>
                                       <div style={{display:'flex',alignItems:'center',gap:'8px'}}>
+                                        <span style={{fontSize:'0.72rem',color:'#9b8e85'}}>Fine-tune (px)</span>
                                         <input type="number" className="sf-input" style={{width:'80px'}} value={String(cfg.galleryOffsetX??0)} onChange={e=>setField('galleryOffsetX',Number(e.target.value))} />
-                                        <span style={{fontSize:'0.72rem',color:'#9b8e85'}}>+ right, − left</span>
                                       </div>
                                     </div>
                                   </>)}
@@ -2483,21 +2490,27 @@ export default function SiteEditor() {
                                         <label className="sf-lbl">Photo Size (px)</label>
                                         <div style={{display:'flex',alignItems:'center',gap:'6px',flexWrap:'wrap'}}>
                                           <span style={{fontSize:'0.72rem',color:'#9b8e85'}}>W</span>
-                                          <input type="number" className="sf-input" style={{width:'56px',textAlign:'center'}} value={arFree?'':wPx} disabled={arFree} onChange={e=>setPhoto('widthPx',e.target.value||'')} />
+                                          <input type="number" className="sf-input" style={{width:'56px',textAlign:'center'}} value={wPx} onChange={e=>setPhoto('widthPx',e.target.value||'')} placeholder="Auto" />
                                           <span style={{fontSize:'0.72rem',color:'#9b8e85'}}>H</span>
-                                          <input type="number" className="sf-input" style={{width:'56px',textAlign:'center'}} value={arFree?'':hPx} disabled={arFree} onChange={e=>setPhoto('heightPx',e.target.value||'')} />
+                                          <input type="number" className="sf-input" style={{width:'56px',textAlign:'center'}} value={hPx} onChange={e=>setPhoto('heightPx',e.target.value||'')} placeholder="Auto" />
                                           <span style={{fontSize:'0.68rem',color:'#b0a99f'}}>px</span>
                                           <label style={{display:'flex',alignItems:'center',gap:'4px',fontSize:'0.75rem',color:'#6b5e56',cursor:'pointer'}}>
-                                            <input type="checkbox" checked={arFree} onChange={e=>{if(e.target.checked){setField('photo',{...photo,widthPx:'',heightPx:''});}else{setField('photo',{...photo,widthPx:'250',heightPx:'400'});}}} />
-                                            Free
+                                            <input type="checkbox" checked={arFree} onChange={e=>{setField('photo',{...photo,widthPx:e.target.checked?'':'250',heightPx:e.target.checked?'':'400'});}} />
+                                            Auto
                                           </label>
                                         </div>
                                       </div>
                                       <div className="sf-group">
-                                        <label className="sf-lbl">Photo X Offset (px)</label>
+                                        <label className="sf-lbl">Photo Position on Page</label>
+                                        <div style={{display:'flex',gap:'6px',marginTop:'4px',marginBottom:'6px'}}>
+                                          {([{label:'Left',val:-80},{label:'Center',val:0},{label:'Right',val:80}]).map(p=>(
+                                            <button key={p.label} className={`bsel-btn${(photo.offsetX??0)===p.val?' active':''}`}
+                                              onClick={()=>setPhoto('offsetX',p.val)}>{p.label}</button>
+                                          ))}
+                                        </div>
                                         <div style={{display:'flex',alignItems:'center',gap:'8px'}}>
+                                          <span style={{fontSize:'0.72rem',color:'#9b8e85'}}>Fine-tune (px)</span>
                                           <input type="number" className="sf-input" style={{width:'80px'}} value={String(photo.offsetX??0)} onChange={e=>setPhoto('offsetX',Number(e.target.value))} />
-                                          <span style={{fontSize:'0.72rem',color:'#9b8e85'}}>+ right, − left</span>
                                         </div>
                                       </div>
                                       <div className="sf-group">
@@ -2579,6 +2592,58 @@ export default function SiteEditor() {
                                     </div>
                                   </>)}
 
+                                  {block.type === 'multi-text' && (<>
+                                    <div className="sf-group">
+                                      <label className="sf-lbl">Section Title</label>
+                                      <input className="sf-input" value={String(cfg.title??'')} onChange={e=>setField('title',e.target.value)} placeholder="Section heading"/>
+                                    </div>
+                                    <div className="sf-group">
+                                      <label className="sf-lbl">Display Mode</label>
+                                      <div className="bsel-row" style={{marginTop:'4px',flexWrap:'wrap'}}>
+                                        {([
+                                          {id:'text', label:'Text'},
+                                          {id:'schedule', label:'Schedule'},
+                                          {id:'faq', label:'Q & A'},
+                                          {id:'tidbits', label:'Fun Facts'},
+                                          {id:'travel', label:'Travel'},
+                                        ]).map(m=>(
+                                          <button key={m.id} className={`bsel-btn${(cfg.mode??'text')===m.id?' active':''}`}
+                                            onClick={()=>setField('mode',m.id)}>{m.label}</button>
+                                        ))}
+                                      </div>
+                                    </div>
+                                    {(cfg.mode==='text' || !cfg.mode) && (<>
+                                      <div className="sf-group"><label className="sf-lbl">Heading</label><input className="sf-input" value={String(cfg.heading??'')} onChange={e=>setField('heading',e.target.value)} placeholder="Section heading…"/></div>
+                                      <TextStyleRow prefix="heading" cfg={cfg} setF={setField} />
+                                      <div className="sf-group"><label className="sf-lbl">Body</label><textarea className="sf-input" rows={4} value={String(cfg.body??'')} onChange={e=>setField('body',e.target.value)} style={{resize:'vertical'}}/></div>
+                                      <TextStyleRow prefix="body" cfg={cfg} setF={setField} />
+                                      <div className="sf-group"><label className="sf-lbl">Content Key <span style={{fontWeight:400,color:'#b0a99f'}}>(advanced)</span></label><input className="sf-input" value={String(cfg.contentKey??'')} onChange={e=>setField('contentKey',e.target.value)} placeholder="story / welcome / registry…"/></div>
+                                    </>)}
+                                    {cfg.mode==='tidbits' && (<>
+                                      <div className="sf-group">
+                                        <label className="sf-lbl">Grid Columns</label>
+                                        <div className="bsel-row" style={{marginTop:'4px'}}>
+                                          {(['auto','2','3'] as const).map(c=>(
+                                            <button key={c} className={`bsel-btn${(cfg.columns??'auto')===c?' active':''}`} onClick={()=>setField('columns',c)}>{c==='auto'?'Auto':c+' Col'}</button>
+                                          ))}
+                                        </div>
+                                      </div>
+                                      <div className="sf-group">
+                                        <label className="sf-lbl">Card Style</label>
+                                        <div className="bsel-row" style={{marginTop:'4px'}}>
+                                          {(['card','flat','bordered'] as const).map(s=>(
+                                            <button key={s} className={`bsel-btn${(cfg.cardStyle??'card')===s?' active':''}`} onClick={()=>setField('cardStyle',s)}>{s[0].toUpperCase()+s.slice(1)}</button>
+                                          ))}
+                                        </div>
+                                      </div>
+                                    </>)}
+                                    <div className="sf-group" style={{ background: '#faf9f8', borderRadius: 8, padding: '0.75rem', textAlign: 'center', marginTop: '0.5rem' }}>
+                                      <p style={{ fontSize: '0.75rem', color: '#9b8e85', margin: 0, lineHeight: 1.5 }}>
+                                        Content (items, questions, events, etc.) is edited in the <strong>Content</strong> tab above.
+                                      </p>
+                                    </div>
+                                  </>)}
+
                                   {/* APPEARANCE section */}
                                   <div className="bl-section-label">APPEARANCE</div>
 
@@ -2611,13 +2676,17 @@ export default function SiteEditor() {
 
                                   <div className="sf-group">
                                     <label className="sf-lbl">BORDERS</label>
-                                    <div style={{display:'flex',gap:'4px'}}>
+                                    <div style={{display:'flex',gap:'4px',alignItems:'center',flexWrap:'wrap'}}>
                                       {(['show','none'] as const).map(opt=>(
                                         <button key={opt} onClick={()=>setField('hideBorder', opt==='none')}
                                           style={{padding:'3px 10px',borderRadius:'20px',border:'1.5px solid',borderColor:borderMode===opt?'var(--accent)':'#e0dbd4',background:borderMode===opt?'var(--accent)':'#fff',color:borderMode===opt?'#fff':'#6b5e56',fontSize:'0.73rem',cursor:'pointer'}}>
                                           {opt==='show'?'Show':'None'}
                                         </button>
                                       ))}
+                                      {borderMode === 'show' && (<>
+                                        <ColorSwatch value={String(cfg.borderColor??'#e0dbd4')} onChange={v=>setField('borderColor',v)} />
+                                        {cfg.borderColor && <button type="button" onClick={()=>setField('borderColor',null)} style={{fontSize:'0.68rem',color:'var(--accent)',background:'none',border:'none',cursor:'pointer',padding:0}}>Reset</button>}
+                                      </>)}
                                     </div>
                                   </div>
 
@@ -2694,6 +2763,12 @@ export default function SiteEditor() {
                 const tidbits = Array.isArray(pageContent.tidbits) ? (pageContent.tidbits as Record<string,unknown>[]) : [];
                 const travelItems = Array.isArray(pageContent.travelItems) ? (pageContent.travelItems as Record<string,unknown>[]) : [];
 
+                const multiTextModes = new Set(
+                  blocks
+                    .filter(b => b.type === 'multi-text')
+                    .map(b => { try { return String((JSON.parse(b.config || '{}') as Record<string,unknown>).mode || 'text'); } catch { return 'text'; } })
+                );
+
                 const fieldStyle: React.CSSProperties = { display: "flex", flexDirection: "column", gap: "4px", marginBottom: "0.75rem" };
                 const lblStyle: React.CSSProperties = { fontSize: "0.72rem", color: "#6b5e56", fontWeight: 500 };
                 const inputStyle: React.CSSProperties = { border: "1px solid #e0dbd4", borderRadius: "7px", padding: "7px 10px", fontSize: "0.82rem", color: "#1c1917", background: "#fff", outline: "none", width: "100%", boxSizing: "border-box" };
@@ -2734,6 +2809,12 @@ export default function SiteEditor() {
                               <p style={sectionHeadStyle}>Welcome Section</p>
                               <div style={fieldStyle}><label style={lblStyle}>Welcome Title</label><input style={inputStyle} value={cf("welcome_title")} onChange={e => onChange("welcome_title", e.target.value)} placeholder="Welcome to our wedding!" /></div>
                               <div style={fieldStyle}><label style={lblStyle}>Welcome Body</label><textarea style={taStyle} value={cf("welcome_body")} onChange={e => onChange("welcome_body", e.target.value)} /></div>
+                              <div style={{borderTop:'1px solid #f0ede8',marginTop:'0.75rem',paddingTop:'0.75rem'}}>
+                                <p style={sectionHeadStyle}>Hero Section (used for translation)</p>
+                                <div style={fieldStyle}><label style={lblStyle}>Couple Names</label><input style={inputStyle} value={cf("couple")} onChange={e => onChange("couple", e.target.value)} placeholder="Alex &amp; Jordan" /></div>
+                                <div style={fieldStyle}><label style={lblStyle}>Date Line</label><input style={inputStyle} value={cf("date")} onChange={e => onChange("date", e.target.value)} placeholder="December 31, 2025" /></div>
+                                <div style={fieldStyle}><label style={lblStyle}>Location Line</label><input style={inputStyle} value={cf("location")} onChange={e => onChange("location", e.target.value)} placeholder="Grand Ballroom, New York" /></div>
+                              </div>
                             </div>
                           </>)}
 
@@ -2768,7 +2849,7 @@ export default function SiteEditor() {
                           )}
 
                           {/* SCHEDULE */}
-                          {(slug === "schedule" || pageBlockTypes.has("schedule")) && (
+                          {(slug === "schedule" || pageBlockTypes.has("schedule") || multiTextModes.has("schedule")) && (
                             <div style={{ border: "1px solid #e8e4e0", borderRadius: "10px", padding: "1rem", marginBottom: "0.75rem" }}>
                               <p style={sectionHeadStyle}>Schedule Events</p>
                               {schedEvents.map((ev, i) => (
@@ -2792,7 +2873,7 @@ export default function SiteEditor() {
                           )}
 
                           {/* FAQ */}
-                          {(slug === "faq" || pageBlockTypes.has("faq")) && (
+                          {(slug === "faq" || pageBlockTypes.has("faq") || multiTextModes.has("faq")) && (
                             <div style={{ border: "1px solid #e8e4e0", borderRadius: "10px", padding: "1rem", marginBottom: "0.75rem" }}>
                               <p style={sectionHeadStyle}>FAQ</p>
                               <div style={fieldStyle}><label style={lblStyle}>Intro Text</label><input style={inputStyle} value={cf("intro")} onChange={e => onChange("intro", e.target.value)} /></div>
@@ -2811,7 +2892,7 @@ export default function SiteEditor() {
                           )}
 
                           {/* TIDBITS (Fun Facts) */}
-                          {pageBlockTypes.has("tidbits") && (
+                          {(pageBlockTypes.has("tidbits") || multiTextModes.has("tidbits")) && (
                             <div style={{ border: "1px solid #e8e4e0", borderRadius: "10px", padding: "1rem", marginBottom: "0.75rem" }}>
                               <p style={sectionHeadStyle}>Fun Facts</p>
                               {tidbits.map((item, i) => (
@@ -2841,7 +2922,7 @@ export default function SiteEditor() {
                           )}
 
                           {/* TRAVEL */}
-                          {pageBlockTypes.has("travel-section") && (
+                          {(pageBlockTypes.has("travel-section") || multiTextModes.has("travel")) && (
                             <div style={{ border: "1px solid #e8e4e0", borderRadius: "10px", padding: "1rem", marginBottom: "0.75rem" }}>
                               <p style={sectionHeadStyle}>Travel Details</p>
                               {travelItems.map((item, i) => (
