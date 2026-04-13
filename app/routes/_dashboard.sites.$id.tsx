@@ -1725,12 +1725,12 @@ export default function SiteEditor() {
   async function handleSaveSettings() {
     setSavingSettings(true);
     try {
-      await apiFetch("/settings", {
+      const result = await apiFetch("/settings", {
         method: "PUT",
         headers: { "content-type": "application/json" },
         body: JSON.stringify(settingsForm),
-      });
-      await fetchSettings();
+      }) as { settings: SiteSettings };
+      setSettings(result.settings);
       setPreviewKey((k) => k + 1);
       toast("Settings saved");
     } catch (err) {
@@ -4804,7 +4804,7 @@ export default function SiteEditor() {
                           </div>
                           <div style={{ fontSize: "0.72rem", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: "#9b8e85", margin: "1.1rem 0 0.5rem" }}>Envelope Colors</div>
                           <div style={{ display: "flex", alignItems: "center", gap: "10px", padding: "6px 0", borderBottom: "1px solid #f5f2ee" }}>
-                            <ColorSwatch value={settingsForm.envelopeColor || "#f5ede0"} onChange={v => setSettingsForm((f) => ({ ...f, envelopeColor: v }))} />
+                            <ColorSwatch value={settingsForm.envelopeColor || "#f5ede0"} onChange={v => { setSettingsForm((f) => ({ ...f, envelopeColor: v })); fireSettingsPreview({ envelopeColor: v }); }} />
                             <span style={{ fontSize: "0.8rem", color: "#6b5e56", flex: 1 }}>Envelope paper</span>
                             <code style={{ fontSize: "0.72rem", color: "#a09690", fontFamily: "monospace" }}>{(settingsForm.envelopeColor || "#f5ede0").toUpperCase()}</code>
                           </div>
@@ -4965,7 +4965,7 @@ export default function SiteEditor() {
                       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "0.75rem" }}>
                         <span style={{ fontSize: "0.78rem", color: "#1c1917" }}>Show name in top-left</span>
                         <label style={{ display: "inline-flex", cursor: "pointer" }}>
-                          <input type="checkbox" checked={settingsForm.showNavBrand !== false} onChange={e => setSettingsForm(f => ({ ...f, showNavBrand: e.target.checked }))} style={{ display: "none" }} />
+                          <input type="checkbox" checked={settingsForm.showNavBrand !== false} onChange={e => { setSettingsForm(f => ({ ...f, showNavBrand: e.target.checked })); fireSettingsPreview({ showNavBrand: e.target.checked }); }} style={{ display: "none" }} />
                           <span style={{ display: "block", width: "30px", height: "17px", borderRadius: "9px", background: settingsForm.showNavBrand !== false ? "var(--accent)" : "#d1cdc7", position: "relative", transition: "background 0.2s", flexShrink: 0 }}>
                             <span style={{ position: "absolute", top: "2px", left: settingsForm.showNavBrand !== false ? "13px" : "2px", width: "13px", height: "13px", borderRadius: "50%", background: "#fff", transition: "left 0.2s", boxShadow: "0 1px 3px rgba(0,0,0,0.2)" }} />
                           </span>
