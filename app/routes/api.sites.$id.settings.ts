@@ -83,6 +83,9 @@ const DEFAULTS = {
   marginRight: null,
   marginBottom: null,
   marginLeft: null,
+  bgImageLayer: "behind",
+  bgImageOpacity: 1.0,
+  siteMaxWidth: null,
 };
 
 export async function loader({ request, context, params }: Route.LoaderArgs) {
@@ -134,6 +137,7 @@ export async function action({ request, context, params }: Route.ActionArgs) {
     "popupEnabled", "popupTitle", "popupTicker", "popupAfterAnimation", "popupBundle",
     "musicBtnBg", "musicBtnColor",
     "marginTop", "marginRight", "marginBottom", "marginLeft",
+    "bgImageLayer", "bgImageOpacity", "siteMaxWidth",
   ];
 
   const fields: string[] = [];
