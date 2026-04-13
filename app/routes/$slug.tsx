@@ -2181,7 +2181,8 @@ function buildHtml(
   settings: SiteSettingRow | null,
   pages: PageWithBlocks[],
   contentMap: ContentMap,
-  siteSlug: string
+  siteSlug: string,
+  activeLang?: string | null
 ): string {
   const mainLang = settings?.mainLanguage ?? "en";
   const lang = escHtml(mainLang);
@@ -2221,6 +2222,7 @@ function buildHtml(
     .join("");
   const secondNative = secondLang ? (LANG_NATIVE[secondLang] ?? secondLang.toUpperCase()) : "";
   const mainNative = LANG_NATIVE[mainLang] ?? mainLang.toUpperCase();
+  const isSecondActive = activeLang === secondLang;
   const navLangToggle = secondLang
     ? `<div class="lang-toggle">
         <button class="lang-btn" id="lang-toggle-btn"
@@ -2228,7 +2230,7 @@ function buildHtml(
           data-main-label="${escHtml(mainNative)}" data-second-label="${escHtml(secondNative)}"
           onclick="switchLang()"
           aria-label="Switch language"
-        >${escHtml(secondNative)}</button>
+        >${isSecondActive ? escHtml(mainNative) : escHtml(secondNative)}</button>
       </div>`
     : "";
   const navHtml = hasMultiplePages
@@ -2258,9 +2260,11 @@ function buildHtml(
   // Page sections with show/hide
   const pageSectionsHtml = visiblePages
     .map((page, i) => {
-      // Get content for this page in the main language (fall back to first available lang)
+      // Get content for this page — use activeLang if set, fall back to mainLang
       const pageContentByLang = contentMap.get(page.slug);
-      const pageContent = pageContentByLang?.get(mainLang)
+      const renderLang = activeLang ?? mainLang;
+      const pageContent = pageContentByLang?.get(renderLang)
+        ?? pageContentByLang?.get(mainLang)
         ?? (pageContentByLang ? [...pageContentByLang.values()][0] : undefined);
       const blocksHtml = page.blocks
         .map((block) => renderBlock(block, settings, pageContent, siteSlug))
@@ -2343,23 +2347,16 @@ function showPage(pageId) {
     : "";
   const langScript = secondLang
     ? `<script>
-var _currentLang = '${escHtml(mainLang)}';
-var _langContent = {};
-try { _langContent = JSON.parse(document.getElementById('lang-content-data')?.textContent || '{}'); } catch(e){}
 function switchLang() {
   var btn = document.getElementById('lang-toggle-btn');
   if (!btn) return;
   var main = btn.getAttribute('data-main');
   var second = btn.getAttribute('data-second');
-  var mainLabel = btn.getAttribute('data-main-label');
-  var secondLabel = btn.getAttribute('data-second-label');
-  _currentLang = (_currentLang === main) ? second : main;
-  btn.textContent = (_currentLang === main) ? secondLabel : mainLabel;
-  var content = _langContent[_currentLang] || _langContent[main] || {};
-  document.querySelectorAll('[data-lang-field]').forEach(function(el) {
-    var field = el.getAttribute('data-lang-field');
-    if (field && content[field] !== undefined) el.textContent = content[field];
-  });
+  var cur = '${escHtml(activeLang ?? mainLang)}';
+  var target = (cur === second) ? main : second;
+  var url = new URL(location.href);
+  if (target === main) { url.searchParams.delete('_lang'); } else { url.searchParams.set('_lang', target); }
+  location.href = url.toString();
 }
 </script>`
     : "";
@@ -2969,7 +2966,9 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
 
   // Return a raw HTML Response — the site has its own full document with
   // inlined CSS and does not participate in the app shell.
-  return new Response(buildHtml(site, settings ?? null, pages, contentMap, site.slug), {
+  const reqUrl = new URL(request.url);
+  const activeLang = reqUrl.searchParams.get("_lang") ?? null;
+  return new Response(buildHtml(site, settings ?? null, pages, contentMap, site.slug, activeLang), {
     status: 200,
     headers: {
       "content-type": "text/html; charset=utf-8",
