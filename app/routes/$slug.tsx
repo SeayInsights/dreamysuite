@@ -207,8 +207,8 @@ function buildStyles(settings: SiteSettingRow | null): BuiltStyles {
       --nav-link: ${escHtml(settings?.navLinkColor ?? "var(--muted)")};
       --nav-highlight: ${escHtml(settings?.navHighlightColor ?? "var(--accent)")};
       --nav-link-padding: ${escHtml(navLinkPadding)};
-      --music-btn-bg: ${escHtml(settings?.musicBtnBg ?? "var(--accent)")};
-      --music-btn-color: ${escHtml(settings?.musicBtnColor ?? "#ffffff")};
+      --music-btn-bg: ${escHtml(settings?.musicBtnBg || "var(--accent)")};
+      --music-btn-color: ${escHtml(settings?.musicBtnColor || "#ffffff")};
     }
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -1400,13 +1400,31 @@ function renderBlock(
         photoW ? `width:${photoW}` : "",
       ].filter(Boolean).join(";");
       const offsetXRaw = Number(cfg.galleryOffsetX ?? 0);
-      const gridStyle = offsetXRaw !== 0 ? `transform:translateX(${offsetXRaw}px)` : "";
+      const layout = String(cfg.layout ?? 'grid-3');
+      const wrapperStyleParts: string[] = [];
+      if (offsetXRaw !== 0) wrapperStyleParts.push(`transform:translateX(${offsetXRaw}px)`);
+      switch (layout) {
+        case 'grid-2': wrapperStyleParts.push('display:grid', 'grid-template-columns:repeat(2,1fr)', 'gap:0.75rem'); break;
+        case 'masonry': wrapperStyleParts.push('columns:2', 'column-gap:0.75rem'); break;
+        case 'filmstrip': wrapperStyleParts.push('display:flex', 'overflow-x:auto', 'gap:0.75rem', 'scroll-snap-type:x mandatory', '-webkit-overflow-scrolling:touch', 'padding-bottom:0.5rem'); break;
+        case 'full-bleed': wrapperStyleParts.push('display:grid', 'grid-template-columns:1fr', 'gap:0.5rem'); break;
+        case 'featured-grid': wrapperStyleParts.push('display:grid', 'grid-template-columns:2fr 1fr', 'gap:0.75rem'); break;
+        // grid-3: rely on .image-grid CSS default
+      }
+      const wrapperStyle = wrapperStyleParts.join(';');
+      const getImgExtraStyle = (idx: number): string => {
+        if (layout === 'masonry') return ';break-inside:avoid;aspect-ratio:auto';
+        if (layout === 'filmstrip') return ';height:220px;width:auto;max-width:none;flex-shrink:0;scroll-snap-align:start';
+        if (layout === 'featured-grid' && idx === 0 && urls.length > 1) return ';grid-row:span 2;height:100%';
+        if (layout === 'full-bleed') return ';width:100%;height:auto';
+        return '';
+      };
       return `
         <section class="block block-images"${bsAttr} aria-label="Photo gallery" data-block-id="${escHtml(block.id)}" data-block-type="${escHtml(block.type)}">
           ${
             urls && urls.length > 0
-              ? `<div class="image-grid"${gridStyle ? ` style="${gridStyle}"` : ""}>
-                   ${urls.map((u, i) => `<img src="${escHtml(u)}" alt="Wedding photo ${i + 1}" loading="lazy" class="gallery-img" style="${imgStyle}" />`).join("")}
+              ? `<div class="image-grid"${wrapperStyle ? ` style="${wrapperStyle}"` : ""}>
+                   ${urls.map((u, i) => `<img src="${escHtml(u)}" alt="Wedding photo ${i + 1}" loading="lazy" class="gallery-img" style="${imgStyle}${getImgExtraStyle(i)}" />`).join("")}
                  </div>`
               : placeholder(imageSlot ? `Photos for "${escHtml(imageSlot)}" will appear here.` : "Photos will appear here once uploaded.")
           }
@@ -1768,12 +1786,6 @@ function renderBlock(
 
       // Default: text mode
       const contentKey = cfg.contentKey as string | undefined;
-      const heading = contentKey
-        ? String(pageContent?.[`${contentKey}_heading`] ?? cfg.heading ?? sectionTitle)
-        : String(cfg.heading ?? sectionTitle ?? "");
-      const body = contentKey
-        ? String(pageContent?.[contentKey] ?? cfg.body ?? "")
-        : String(cfg.body ?? cfg.text ?? cfg.content ?? "");
       const hSize = cfg.headingSize as string | undefined;
       const hAlign = cfg.headingAlign as string | undefined;
       const hStyle = [
@@ -1792,12 +1804,28 @@ function renderBlock(
         cfg.bodyItalic ? "font-style:italic" : "",
         cfg.bodyUnderline ? "text-decoration:underline" : "",
       ].filter(Boolean).join(";");
+      // Support textItems array; fall back to single heading/body for backward compat
+      const textItemsArr = Array.isArray(cfg.textItems)
+        ? (cfg.textItems as Array<{heading?: string; body?: string}>)
+        : null;
+      const singleHeading = contentKey
+        ? String(pageContent?.[`${contentKey}_heading`] ?? cfg.heading ?? sectionTitle)
+        : String(cfg.heading ?? sectionTitle ?? "");
+      const singleBody = contentKey
+        ? String(pageContent?.[contentKey] ?? cfg.body ?? "")
+        : String(cfg.body ?? cfg.text ?? cfg.content ?? "");
+      const itemsToRender = textItemsArr ?? [{ heading: singleHeading, body: singleBody }];
+      const langHeadAttr = !textItemsArr && contentKey ? ` data-lang-field="${escHtml(contentKey)}_heading"` : "";
+      const langBodyAttr = !textItemsArr && contentKey ? ` data-lang-field="${escHtml(contentKey)}"` : "";
       return `
     <section class="block block-text"${bsAttr} data-block-id="${escHtml(block.id)}" data-block-type="${escHtml(block.type)}">
-      ${heading ? `<h2 class="section-heading"${hStyle ? ` style="${hStyle}"` : ""}${contentKey ? ` data-lang-field="${escHtml(contentKey)}_heading"` : ""}>${escHtml(heading)}</h2><div class="section-rule" aria-hidden="true"></div>` : ""}
-      <div class="text-body"${bStyle ? ` style="${bStyle}"` : ""}>
-        ${body ? `<p${contentKey ? ` data-lang-field="${escHtml(contentKey)}"` : ""}>${escHtml(body)}</p>` : placeholder("Text will appear here once added.")}
-      </div>
+      ${itemsToRender.map((item, idx) => {
+        const h = escHtml(String(item.heading ?? ""));
+        const b = escHtml(String(item.body ?? ""));
+        const itemDivStyle = [idx > 0 ? "margin-top:1.5rem" : "", bStyle].filter(Boolean).join(";");
+        return `${h ? `<h2 class="section-heading"${hStyle ? ` style="${hStyle}"` : ""}${langHeadAttr}>${h}</h2>${idx === 0 ? `<div class="section-rule" aria-hidden="true"></div>` : ""}` : ""}
+      <div class="text-body"${itemDivStyle ? ` style="${itemDivStyle}"` : ""}>${b ? `<p${langBodyAttr}>${b}</p>` : (idx === 0 ? placeholder("Text will appear here once added.") : "")}</div>`;
+      }).join("")}
     </section>`;
     }
 
