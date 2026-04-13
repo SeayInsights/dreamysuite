@@ -58,6 +58,7 @@ const DEFAULTS = {
   headingFontVi: null,
   bodyFontVi: null,
   navBg: "white",
+  showNavBrand: 1,
   navPosition: "fixed",
   navBrandColor: "#1C1917",
   navLinkColor: "#6B6560",
@@ -130,7 +131,7 @@ export async function action({ request, context, params }: Route.ActionArgs) {
     "songPages", "songResetPages",
     "headingColor", "bodyColor", "siteTextColor", "siteBorderColor",
     "buttonStyle", "buttonBorderWidth", "headingFontVi", "bodyFontVi",
-    "navBg", "navPosition", "navBrandColor", "navLinkColor", "navHighlightColor",
+    "navBg", "showNavBrand", "navPosition", "navBrandColor", "navLinkColor", "navHighlightColor",
     "navItemsConfig",
     "animation", "bgImage", "envelopeColor", "sealInitials", "cardColor", "cardImage", "navShape",
     "navLinkPadding", "navUnderline",
@@ -148,7 +149,7 @@ export async function action({ request, context, params }: Route.ActionArgs) {
       fields.push(`"${field}" = ?`);
       const val = body[field];
       // Coerce isLive to integer
-      values.push(field === "isLive" ? (val ? 1 : 0) : val);
+      values.push((field === "isLive" || field === "showNavBrand") ? (val ? 1 : 0) : val);
     }
   }
 
@@ -162,8 +163,8 @@ export async function action({ request, context, params }: Route.ActionArgs) {
     const merged = { ...DEFAULTS, ...Object.fromEntries(ALLOWED_FIELDS.filter(f => f in body).map(f => [f, f === "isLive" ? (body[f] ? 1 : 0) : body[f]])) };
     await context.cloudflare.env.DB
       .prepare(
-        `INSERT INTO site_setting (siteId, eventName, eventDate, eventLocation, greeting, musicUrl, mainLanguage, secondLanguage, guestPassword, isLive, headingFont, bodyFont, accentColor, bgColor, songPages, songResetPages, headingColor, bodyColor, siteTextColor, siteBorderColor, buttonStyle, buttonBorderWidth, headingFontVi, bodyFontVi, navBg, navPosition, navBrandColor, navLinkColor, navHighlightColor, navItemsConfig, animation, bgImage, envelopeColor, sealInitials, cardColor, cardImage, navShape, navLinkPadding, navUnderline, popupEnabled, popupTitle, popupTicker, popupAfterAnimation, popupBundle, musicBtnBg, musicBtnColor, marginTop, marginRight, marginBottom, marginLeft, updatedAt)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+        `INSERT INTO site_setting (siteId, eventName, eventDate, eventLocation, greeting, musicUrl, mainLanguage, secondLanguage, guestPassword, isLive, headingFont, bodyFont, accentColor, bgColor, songPages, songResetPages, headingColor, bodyColor, siteTextColor, siteBorderColor, buttonStyle, buttonBorderWidth, headingFontVi, bodyFontVi, navBg, showNavBrand, navPosition, navBrandColor, navLinkColor, navHighlightColor, navItemsConfig, animation, bgImage, envelopeColor, sealInitials, cardColor, cardImage, navShape, navLinkPadding, navUnderline, popupEnabled, popupTitle, popupTicker, popupAfterAnimation, popupBundle, musicBtnBg, musicBtnColor, marginTop, marginRight, marginBottom, marginLeft, updatedAt)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
       )
       .bind(
         siteId,
@@ -191,6 +192,7 @@ export async function action({ request, context, params }: Route.ActionArgs) {
         merged.headingFontVi,
         merged.bodyFontVi,
         merged.navBg,
+        merged.showNavBrand ?? 1,
         merged.navPosition,
         merged.navBrandColor,
         merged.navLinkColor,
