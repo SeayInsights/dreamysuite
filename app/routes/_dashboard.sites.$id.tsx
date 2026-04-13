@@ -116,7 +116,7 @@ interface SiteSettings {
   headingFontVi: string | null;
   bodyFontVi: string | null;
   navBg: string;
-  showNavBrand: boolean;
+  showNavBrand: number | null;
   navPosition: string;
   navBrandColor: string;
   navLinkColor: string;
@@ -947,7 +947,7 @@ export default function SiteEditor() {
         headingFontVi:      data.settings.headingFontVi      ?? "",
         bodyFontVi:         data.settings.bodyFontVi         ?? "",
         navBg:              data.settings.navBg              ?? "white",
-        showNavBrand:       data.settings.showNavBrand !== false,
+        showNavBrand:       data.settings.showNavBrand !== 0,
         navPosition:        data.settings.navPosition        ?? "fixed",
         navBrandColor:      data.settings.navBrandColor      ?? "#1c1917",
         navLinkColor:       data.settings.navLinkColor       ?? "#6b6560",
