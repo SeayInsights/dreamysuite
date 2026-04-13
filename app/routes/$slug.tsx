@@ -132,6 +132,11 @@ function escHtml(str: string): string {
     .replace(/'/g, "&#39;");
 }
 
+/** Convert newlines to <br> so user-typed paragraph breaks survive HTML rendering. */
+function nl2br(text: string): string {
+  return escHtml(text).replace(/\n/g, "<br>");
+}
+
 function safeUrl(raw: string): string {
   const trimmed = raw.trim().toLowerCase();
   if (trimmed.startsWith("javascript:") || trimmed.startsWith("data:") || trimmed.startsWith("vbscript:")) return "#";
@@ -1260,7 +1265,7 @@ function renderBlock(
         <section class="block block-text"${bsAttr} data-block-id="${escHtml(block.id)}" data-block-type="${escHtml(block.type)}">
           ${heading ? `<h2 class="section-heading"${hStyle ? ` style="${hStyle}"` : ""}${contentKey ? ` data-lang-field="${escHtml(contentKey)}_heading"` : ""}>${escHtml(heading)}</h2><div class="section-rule" aria-hidden="true"></div>` : ""}
           <div class="text-body"${bStyle ? ` style="${bStyle}"` : ""}>
-            ${body ? `<p${contentKey ? ` data-lang-field="${escHtml(contentKey)}"` : ""}>${escHtml(body)}</p>` : placeholder("Story text will appear here once added.")}
+            ${body ? `<p${contentKey ? ` data-lang-field="${escHtml(contentKey)}"` : ""}>${nl2br(body)}</p>` : placeholder("Story text will appear here once added.")}
           </div>
         </section>`;
     }
@@ -1611,7 +1616,7 @@ function renderBlock(
         ? travelItems.map(item => `
             <div style="margin-bottom:1.5rem;">
               ${item.heading ? `<h3 style="font-size:1.05rem;margin:0 0 0.4rem;">${escHtml(item.heading)}</h3>` : ""}
-              ${item.body ? `<p style="margin:0 0 0.4rem;line-height:1.7;">${escHtml(item.body)}</p>` : ""}
+              ${item.body ? `<p style="margin:0 0 0.4rem;line-height:1.7;">${nl2br(item.body)}</p>` : ""}
               ${item.linkUrl && item.linkLabel
                 ? `<a href="${escHtml(safeUrl(item.linkUrl))}" target="_blank" rel="noopener noreferrer" style="color:var(--accent)">${escHtml(item.linkLabel)}</a>`
                 : ""}
@@ -1822,7 +1827,7 @@ function renderBlock(
     <section class="block block-text"${bsAttr} data-block-id="${escHtml(block.id)}" data-block-type="${escHtml(block.type)}">
       ${itemsToRender.map((item, idx) => {
         const h = escHtml(String(item.heading ?? ""));
-        const b = escHtml(String(item.body ?? ""));
+        const b = nl2br(String(item.body ?? ""));
         const itemDivStyle = [idx > 0 ? "margin-top:1.5rem" : "", bStyle].filter(Boolean).join(";");
         return `${h ? `<h2 class="section-heading"${hStyle ? ` style="${hStyle}"` : ""}${langHeadAttr}>${h}</h2>${idx === 0 ? `<div class="section-rule" aria-hidden="true"></div>` : ""}` : ""}
       <div class="text-body"${itemDivStyle ? ` style="${itemDivStyle}"` : ""}>${b ? `<p${langBodyAttr}>${b}</p>` : (idx === 0 ? placeholder("Text will appear here once added.") : "")}</div>`;
