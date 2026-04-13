@@ -45,7 +45,7 @@ interface SiteSettingRow {
   siteTextColor: string | null;
   siteBorderColor: string | null;
   navBg: string | null;
-  showNavBrand?: boolean;
+  showNavBrand?: number | null;
   navPosition: string | null;       // "fixed" | "scroll-away" | null
   navShape: string | null;          // "bar" | "pill" | "floating" | null
   navBrandColor: string | null;
@@ -1938,6 +1938,23 @@ function buildMessageListenerScript(): string {
         }
       }
     }
+    if ('envelopeColor' in delta) {
+      var introOverlay = document.getElementById('intro-overlay');
+      if (introOverlay) {
+        if (delta.envelopeColor) {
+          introOverlay.style.setProperty('--env-color', String(delta.envelopeColor));
+        } else {
+          introOverlay.style.removeProperty('--env-color');
+        }
+      }
+    }
+    if ('showNavBrand' in delta) {
+      var showBrand = !!delta.showNavBrand;
+      var nb = document.querySelector('.site-nav-brand');
+      var nbo = document.querySelector('.site-nav-brand-outside');
+      if (nb) nb.style.display = showBrand ? '' : 'none';
+      if (nbo) nbo.style.display = showBrand ? '' : 'none';
+    }
   }
 
   function applyBlockConfig(blockId, cfg) {
@@ -2270,7 +2287,7 @@ function buildHtml(
         >${isSecondActive ? escHtml(mainNative) : escHtml(secondNative)}</button>
       </div>`
     : "";
-  const showNavBrand = settings?.showNavBrand !== false;
+  const showNavBrand = !!(settings?.showNavBrand ?? 1);
   const navHtml = hasMultiplePages
     ? isPillOrFloating
       ? `<div class="site-nav-row" role="navigation" aria-label="Site navigation">
