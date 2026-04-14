@@ -40,7 +40,7 @@ export async function action({ request, context }: Route.ActionArgs) {
       .prepare(
         "INSERT INTO site (id, userId, name, slug, eventType, previewColor, status, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
       )
-      .bind(id, session.user.id, name, slug, eventType, "#0d9488", "draft", now, now)
+      .bind(id, session.user.id, name, slug, eventType, "#B8921A", "draft", now, now)
       .run();
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
@@ -122,12 +122,12 @@ export default function NewSite() {
             value={name}
             onChange={(e) => setName(e.target.value)}
             style={inputStyle}
-            onFocus={(e) => (e.target.style.borderColor = "#0d9488")}
+            onFocus={(e) => (e.target.style.borderColor = "#B8921A")}
             onBlur={(e) => (e.target.style.borderColor = "#e8e4e0")}
           />
           {displaySlug && (
             <p style={{ fontSize: "0.75rem", color: "#9b8e85", marginTop: "0.375rem" }}>
-              URL: <span style={{ color: "#0d9488" }}>{displaySlug}.dreamysuite.com</span>
+              URL: <span style={{ color: "#B8921A" }}>{displaySlug}.dreamysuite.com</span>
             </p>
           )}
         </div>
@@ -142,8 +142,8 @@ export default function NewSite() {
                 type="button"
                 onClick={() => setEventType(type)}
                 style={{
-                  background: eventType === type ? "#f0fdfa" : "#fff",
-                  border: `1.5px solid ${eventType === type ? "#0d9488" : "#e8e4e0"}`,
+                  background: eventType === type ? "#FDF6E0" : "#fff",
+                  border: `1.5px solid ${eventType === type ? "#B8921A" : "#e8e4e0"}`,
                   borderRadius: "10px",
                   padding: "0.875rem 0.5rem",
                   display: "flex",
@@ -152,14 +152,14 @@ export default function NewSite() {
                   gap: "5px",
                   cursor: "pointer",
                   transition: "all 0.15s",
-                  boxShadow: eventType === type ? "0 0 0 3px rgba(13,148,136,0.08)" : "none",
+                  boxShadow: eventType === type ? "0 0 0 3px rgba(184,146,26,0.12)" : "none",
                 }}
               >
                 <span style={{ fontSize: "1.5rem", lineHeight: 1 }}>{icon}</span>
                 <span style={{
                   fontSize: "0.72rem",
                   fontWeight: 500,
-                  color: eventType === type ? "#0d9488" : "#1c1917",
+                  color: eventType === type ? "#B8921A" : "#1c1917",
                 }}>
                   {label}
                 </span>
@@ -186,7 +186,7 @@ export default function NewSite() {
                 setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""));
               }}
               style={{ ...inputStyle, flex: 1 }}
-              onFocus={(e) => (e.target.style.borderColor = "#0d9488")}
+              onFocus={(e) => (e.target.style.borderColor = "#B8921A")}
               onBlur={(e) => (e.target.style.borderColor = "#e8e4e0")}
             />
           </div>
@@ -212,7 +212,7 @@ export default function NewSite() {
             disabled={submitting || !name.trim()}
             style={{
               padding: "0.7rem 1.75rem",
-              background: submitting ? "#9b8e85" : "#0d9488",
+              background: submitting ? "#9b8e85" : "#B8921A",
               color: "white",
               border: "none",
               borderRadius: "8px",
