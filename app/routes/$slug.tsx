@@ -231,6 +231,22 @@ function buildStyles(settings: SiteSettingRow | null): BuiltStyles {
       ${isScrollAway ? "position: relative;" : ""}
     }
 
+    ${(() => {
+      const mTop    = Number(settings?.marginTop    ?? 0) || 0;
+      const mBottom = Number(settings?.marginBottom ?? 0) || 0;
+      const mLeft   = Number(settings?.marginLeft   ?? 0) || 0;
+      const mRight  = Number(settings?.marginRight  ?? 0) || 0;
+      if (!mTop && !mBottom && !mLeft && !mRight) return "";
+      // Fixed curtains in the site background color mask content as it scrolls
+      // past the margin boundary — content enters and exits within the margin zone.
+      // z-index 9990: above content (0) and nav (~100) but below overlays (9999).
+      const bgVal = escHtml(bg);
+      const lines: string[] = [];
+      if (mTop > 0) lines.push(`body::before { content:''; position:fixed; top:0; left:0; right:0; height:${mTop}px; background:${bgVal}; z-index:9990; pointer-events:none; }`);
+      if (mBottom > 0) lines.push(`body::after { content:''; position:fixed; bottom:0; left:0; right:0; height:${mBottom}px; background:${bgVal}; z-index:9990; pointer-events:none; }`);
+      return lines.join("\n    ");
+    })()}
+
     /* ── Intro overlay base ── */
     .intro-overlay { position:fixed; inset:0; z-index:9999; display:flex; align-items:center; justify-content:center; background:transparent; cursor:pointer; overflow:hidden; }
 
@@ -2658,25 +2674,42 @@ if (_introOpened) {
     }
     if (videoId) {
       const vid = escHtml(videoId);
+      // Use position:fixed off-screen instead of display:none — hidden iframes fail to
+      // initialize the YouTube IFrame API in some browsers, causing postMessage commands
+      // (playVideo / pauseVideo) to be silently dropped.
       musicPlayerHtml = `
   <div class="music-player" id="music-player">
-    <iframe id="yt-player" src="https://www.youtube.com/embed/${vid}?enablejsapi=1&autoplay=0&loop=1&playlist=${vid}" allow="autoplay" style="display:none" title="Background music"></iframe>
+    <iframe id="yt-player" src="https://www.youtube.com/embed/${vid}?enablejsapi=1&autoplay=0&loop=1&playlist=${vid}&origin=${encodeURIComponent("https://dreamysuite.com")}" allow="autoplay" style="position:fixed;left:-2px;top:-2px;width:2px;height:2px;pointer-events:none;opacity:0;" title="Background music"></iframe>
     <button class="music-btn" id="music-btn" aria-label="Play background music" onclick="toggleMusic()">&#9834;</button>
   </div>`;
       musicScript = `<script>
+var _ytReady = false;
+var _ytPendingPlay = false;
+function onYouTubeIframeAPIReady() { _ytReady = true; if (_ytPendingPlay) { _ytPendingPlay = false; _ytSendPlay(); } }
+function _ytSendPlay() {
+  var iframe = document.getElementById('yt-player');
+  if (!iframe) return;
+  iframe.contentWindow.postMessage('{"event":"command","func":"playVideo","args":""}', '*');
+}
 function toggleMusic() {
   var iframe = document.getElementById('yt-player');
   var btn = document.getElementById('music-btn');
-  if (!iframe) return;
+  if (!iframe || !btn) return;
   var playing = btn.classList.contains('playing');
   if (playing) {
     iframe.contentWindow.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*');
     btn.classList.remove('playing');
     btn.setAttribute('aria-label', 'Play background music');
   } else {
-    iframe.contentWindow.postMessage('{"event":"command","func":"playVideo","args":""}', '*');
     btn.classList.add('playing');
     btn.setAttribute('aria-label', 'Pause background music');
+    // postMessage is reliable only after iframe has loaded; use load event as safety net
+    if (iframe.contentDocument || _ytReady) {
+      _ytSendPlay();
+    } else {
+      _ytPendingPlay = true;
+      iframe.addEventListener('load', function() { if (_ytPendingPlay) { _ytPendingPlay = false; _ytSendPlay(); } }, { once: true });
+    }
   }
 }
 </script>`;

@@ -1043,8 +1043,10 @@ export default function SiteEditor() {
           })
         ));
         setTextBlockEdits({});
-        if (activePage) { await fetchBlocks(activePage.id); setPreviewKey(k => k + 1); }
+        if (activePage) await fetchBlocks(activePage.id);
       }
+      // Always reload the preview after any content save so the page reflects saved text
+      setPreviewKey(k => k + 1);
       toast("Content saved");
     } catch (err) {
       toast(err instanceof Error ? err.message : "Failed to save content", true);
