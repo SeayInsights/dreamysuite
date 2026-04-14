@@ -28,7 +28,7 @@ export default function AuthLayout() {
             style={{
               width: "32px",
               height: "32px",
-              background: "#0d9488",
+              background: "#B8921A",
               borderRadius: "8px",
               display: "flex",
               alignItems: "center",

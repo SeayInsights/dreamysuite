@@ -172,7 +172,7 @@ interface BuiltStyles {
 }
 
 function buildStyles(settings: SiteSettingRow | null): BuiltStyles {
-  const accent = settings?.accentColor ?? "#0d9488";
+  const accent = settings?.accentColor ?? "#B8921A";
   const headingFont = settings?.headingFont ?? "Georgia";
   const bodyFont = settings?.bodyFont ?? "Inter";
   const bg = settings?.bgColor ?? "#ffffff";
@@ -1194,7 +1194,7 @@ function renderBlock(
   siteSlug?: string
 ): string {
   const cfg = block.config;
-  const accent = settings?.accentColor ?? "#0d9488";
+  const accent = settings?.accentColor ?? "#B8921A";
   // Helper: get value from content tab data, falling back to block config, then fallback
   const cnt = (contentKey: string, cfgKey?: string, fallback = "") =>
     String(pageContent?.[contentKey] ?? (cfgKey ? cfg[cfgKey] : undefined) ?? fallback);
@@ -2260,7 +2260,7 @@ function buildHtml(
   const eventDate = settings?.eventDate ?? null;
   const eventLocation = settings?.eventLocation ?? null;
   const greeting = settings?.greeting ?? null;
-  const accent = settings?.accentColor ?? "#0d9488";
+  const accent = settings?.accentColor ?? "#B8921A";
 
   const bgImageRaw = settings?.bgImage ?? null;
   const escapedBgImageUrl = bgImageRaw ? bgImageRaw.replace(/\\/g, "\\\\").replace(/'/g, "\\'") : null;
@@ -2868,7 +2868,7 @@ function notFoundHtml(): string {
     .wrap{text-align:center;padding:2rem;}
     h1{font-size:2rem;margin:0 0 0.5rem;font-weight:normal;}
     p{color:#78716c;margin:0.5rem 0;}
-    a{color:#0d9488;text-decoration:none;}
+    a{color:#B8921A;text-decoration:none;}
     a:hover{text-decoration:underline;}
   </style>
 </head>
@@ -2953,7 +2953,7 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
     const url = new URL(request.url);
     const pw = url.searchParams.get("pw");
     if (pw !== settings.guestPassword) {
-      const accent = settings.accentColor ?? "#0d9488";
+      const accent = settings.accentColor ?? "#B8921A";
       const siteName = settings.eventName ?? site.name;
       const gateHtml = `<!DOCTYPE html>
 <html lang="en">

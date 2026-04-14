@@ -122,7 +122,7 @@ export default function Signup() {
             required
             placeholder="Jane Smith"
             style={inputStyle}
-            onFocus={(e) => (e.target.style.borderColor = "#0d9488")}
+            onFocus={(e) => (e.target.style.borderColor = "#B8921A")}
             onBlur={(e) => (e.target.style.borderColor = "#e8e4e0")}
           />
         </div>
@@ -139,7 +139,7 @@ export default function Signup() {
             required
             placeholder="you@example.com"
             style={inputStyle}
-            onFocus={(e) => (e.target.style.borderColor = "#0d9488")}
+            onFocus={(e) => (e.target.style.borderColor = "#B8921A")}
             onBlur={(e) => (e.target.style.borderColor = "#e8e4e0")}
           />
         </div>
@@ -157,7 +157,7 @@ export default function Signup() {
             minLength={8}
             placeholder="Min. 8 characters"
             style={inputStyle}
-            onFocus={(e) => (e.target.style.borderColor = "#0d9488")}
+            onFocus={(e) => (e.target.style.borderColor = "#B8921A")}
             onBlur={(e) => (e.target.style.borderColor = "#e8e4e0")}
           />
         </div>
@@ -182,7 +182,7 @@ export default function Signup() {
           style={{
             width: "100%",
             padding: "0.7rem",
-            background: "#0d9488",
+            background: "#B8921A",
             color: "white",
             border: "none",
             borderRadius: "8px",
@@ -193,10 +193,10 @@ export default function Signup() {
             marginTop: "0.25rem",
           }}
           onMouseOver={(e) =>
-            ((e.target as HTMLButtonElement).style.background = "#0f766e")
+            ((e.target as HTMLButtonElement).style.background = "#9A780E")
           }
           onMouseOut={(e) =>
-            ((e.target as HTMLButtonElement).style.background = "#0d9488")
+            ((e.target as HTMLButtonElement).style.background = "#B8921A")
           }
         >
           Create account
@@ -214,7 +214,7 @@ export default function Signup() {
         Already have an account?{" "}
         <Link
           to="/login"
-          style={{ color: "#0d9488", fontWeight: 500, textDecoration: "none" }}
+          style={{ color: "#B8921A", fontWeight: 500, textDecoration: "none" }}
         >
           Sign in
         </Link>
