@@ -111,7 +111,7 @@ export default function Login() {
               outline: "none",
               transition: "border-color 0.15s",
             }}
-            onFocus={(e) => (e.target.style.borderColor = "#0d9488")}
+            onFocus={(e) => (e.target.style.borderColor = "#B8921A")}
             onBlur={(e) => (e.target.style.borderColor = "#e8e4e0")}
           />
         </div>
@@ -143,7 +143,7 @@ export default function Login() {
               outline: "none",
               transition: "border-color 0.15s",
             }}
-            onFocus={(e) => (e.target.style.borderColor = "#0d9488")}
+            onFocus={(e) => (e.target.style.borderColor = "#B8921A")}
             onBlur={(e) => (e.target.style.borderColor = "#e8e4e0")}
           />
         </div>
@@ -168,7 +168,7 @@ export default function Login() {
           style={{
             width: "100%",
             padding: "0.7rem",
-            background: "#0d9488",
+            background: "#B8921A",
             color: "white",
             border: "none",
             borderRadius: "8px",
@@ -179,10 +179,10 @@ export default function Login() {
             marginTop: "0.25rem",
           }}
           onMouseOver={(e) =>
-            ((e.target as HTMLButtonElement).style.background = "#0f766e")
+            ((e.target as HTMLButtonElement).style.background = "#9A780E")
           }
           onMouseOut={(e) =>
-            ((e.target as HTMLButtonElement).style.background = "#0d9488")
+            ((e.target as HTMLButtonElement).style.background = "#B8921A")
           }
         >
           Sign in
@@ -200,7 +200,7 @@ export default function Login() {
         Don't have an account?{" "}
         <Link
           to="/signup"
-          style={{ color: "#0d9488", fontWeight: 500, textDecoration: "none" }}
+          style={{ color: "#B8921A", fontWeight: 500, textDecoration: "none" }}
         >
           Sign up free
         </Link>

@@ -153,7 +153,7 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
     style:          (s?.navPosition as string | undefined) ?? "fixed",
     brandColor:     (s?.navBrandColor     as string | undefined) ?? "#1C1917",
     linkColor:      (s?.navLinkColor      as string | undefined) ?? "#6B6560",
-    highlightColor: (s?.navHighlightColor as string | undefined) ?? "#0d9488",
+    highlightColor: (s?.navHighlightColor as string | undefined) ?? "#B8921A",
     items: navItems,
   };
 
