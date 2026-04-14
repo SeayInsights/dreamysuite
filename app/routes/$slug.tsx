@@ -2328,12 +2328,14 @@ function buildHtml(
         </nav>`
     : "";
 
-  // Page sections with show/hide
+  // Page sections with show/hide — track when activeLang content is absent so we can show a fallback banner
+  let _anyLangFallback = false;
   const pageSectionsHtml = visiblePages
     .map((page, i) => {
       // Get content for this page — use activeLang if set, fall back to mainLang
       const pageContentByLang = contentMap.get(page.slug);
       const renderLang = activeLang ?? mainLang;
+      if (activeLang && !pageContentByLang?.get(activeLang)) _anyLangFallback = true;
       const pageContent = pageContentByLang?.get(renderLang)
         ?? pageContentByLang?.get(mainLang)
         ?? (pageContentByLang ? [...pageContentByLang.values()][0] : undefined);
@@ -2364,6 +2366,11 @@ function buildHtml(
   // No-pages fallback — site exists but has no pages yet
   const fallbackHtml = visiblePages.length === 0
     ? `<div class="site-wrapper"><p style="text-align:center;padding:4rem 1rem;color:var(--muted);font-style:italic;">This site has no published content yet.</p></div>`
+    : "";
+
+  // Language fallback banner — shown when the requested language has no content yet
+  const langFallbackBanner = (activeLang && _anyLangFallback)
+    ? `<div style="background:#fffbeb;border-bottom:1px solid #fcd34d;padding:8px 16px;font-size:0.82rem;color:#92400e;text-align:center;">${LANG_NATIVE[activeLang] ?? activeLang.toUpperCase()} content not yet available — showing original language</div>`
     : "";
 
   const navScript = hasMultiplePages
@@ -2495,7 +2502,7 @@ function _addReplayBtn() {
       if (!el) return;
       gsap.killTweensOf('*');
       el.style.display = '';
-      gsap.set(el, { opacity:1, clearProps:'background' });
+      gsap.set(el, { opacity:1, scale:1, clearProps:'background' });
       ${animation === "envelope" ? `
       gsap.set('.envfs-card',       { xPercent:-50, yPercent:-50, y:'100vh', opacity:0, scale:1, filter:'blur(12px)' });
       gsap.set('.envfs-flap',       { rotateX:0 });
@@ -2569,9 +2576,9 @@ function openIntro() {
     .to('.envfs-light-sweep', { opacity:1, backgroundPosition:'-20% -20%', duration:2.4, ease:'power2.inOut' }, 1.62)
     .to('.envfs-light-sweep', { opacity:0, duration:0.9, ease:'power1.in' }, 3.65)
     .to('.envfs-glow',        { opacity:1, duration:1.8, ease:'power1.in' }, 2.42)
-    /* Card rises — motion and focus are separate: focus snaps faster like autofocus */
-    .to('.envfs-card',        { y:0, opacity:1, duration:2.0, ease:'power3.out' }, 3.82)
-    .to('.envfs-card',        { filter:'blur(0px)', duration:1.55, ease:'expo.out' }, 3.82)
+    /* Card drifts up on warm air — floats like carried on a breeze, focus resolves unhurried */
+    .to('.envfs-card',        { y:0, opacity:1, duration:2.4, ease:'expo.out' }, 3.82)
+    .to('.envfs-card',        { filter:'blur(0px)', duration:1.8, ease:'expo.out' }, 3.82)
     .to('.envfs-card',        { scale:1.02, duration:0.6, ease:'sine.inOut' }, 5.82)
     .to('.envfs-card',        { scale:1.0,  duration:0.6, ease:'sine.inOut' }, 6.42)
     .to({},                   { duration:1.5 })
@@ -2587,26 +2594,26 @@ function openIntro() {
     } else { _afterAnimDone(el); }
   } });
   tl
-    .to('.door-cue',          { opacity:0, duration:0.2 }, 0)
-    /* Smoke surges — explosive power4, individual cloud character */
-    .to('.door-smoke-cloud',  { scaleY:1.65, opacity:0.9, duration:0.32, ease:'power4.out', stagger:0.055 }, 0)
-    .to('.door-glow',         { width:'110px', filter:'blur(20px)', opacity:1.0, duration:0.55, ease:'power3.in' }, 0)
-    /* AO intensifies at crack as hinges load — darkness deepens before doors move */
-    .to('.door-ao',           { opacity:1.0, width:'100px', duration:0.2, ease:'power3.in' }, 0.08)
-    /* Doors break free and swing */
-    .to('.door-l',            { rotateY:-122, duration:1.45, ease:'power4.inOut' }, 0.28)
-    .to('.door-r',            { rotateY:122,  duration:1.45, ease:'power4.inOut' }, 0.28)
-    /* Interior light sweeps across door face from crack side as it opens */
-    .to('.door-surface-light',{ opacity:1, duration:0.5, ease:'power2.in' }, 0.34)
-    /* AO releases as door swings away from the crack */
-    .to('.door-ao',           { opacity:0, duration:0.52, ease:'power2.out' }, 0.44)
-    .to('.door-surface-light',{ opacity:0, duration:0.72, ease:'power1.in' }, 0.88)
-    .to('.door-light-flood',  { scaleX:6, scaleY:4, opacity:1, duration:0.28, ease:'power3.out' }, 0.55)
-    .to('.door-light-flood',  { opacity:0, duration:0.88, ease:'power1.in' }, 0.83)
-    .to('.door-smoke-cloud',  { y:'-30%', scaleX:2, opacity:0.35, duration:0.85, ease:'power1.out' }, 0.72)
-    .to('.door-glow',         { width:'360px', filter:'blur(44px)', opacity:0.55, duration:0.5, ease:'power1.out' }, 0.72)
-    .to('.door-glow',         { opacity:0, duration:0.55, ease:'power2.in' }, '-=0.15')
-    ${popupBundleActive ? `.to(['.door-l','.door-r','.door-centre-text'], { opacity:0, duration:0.4 }, '-=0.35')` : `.to(el, { opacity:0, duration:0.52, ease:'power2.in' }, '-=0.38')`};
+    .to('.door-cue',          { opacity:0, duration:0.3 }, 0)
+    /* Smoke rolls in slowly — atmospheric warmth, not explosion */
+    .to('.door-smoke-cloud',  { scaleY:1.55, opacity:0.85, duration:0.58, ease:'power2.out', stagger:0.075 }, 0.05)
+    .to('.door-glow',         { width:'100px', filter:'blur(18px)', opacity:1.0, duration:0.75, ease:'power2.in' }, 0.05)
+    /* AO deepens as hinges load — anticipation before the doors find courage to open */
+    .to('.door-ao',           { opacity:1.0, width:'90px', duration:0.35, ease:'power2.in' }, 0.12)
+    /* Doors open with weight — deliberate, unhurried, stepping into a lifelong adventure */
+    .to('.door-l',            { rotateY:-122, duration:1.95, ease:'power2.inOut' }, 0.38)
+    .to('.door-r',            { rotateY:122,  duration:1.95, ease:'power2.inOut' }, 0.38)
+    /* Warm light catches the door face as it swings open */
+    .to('.door-surface-light',{ opacity:1, duration:0.55, ease:'power2.in' }, 0.46)
+    /* AO releases gently as the doors swing clear */
+    .to('.door-ao',           { opacity:0, duration:0.62, ease:'power2.out' }, 0.58)
+    .to('.door-surface-light',{ opacity:0, duration:0.82, ease:'power1.in' }, 1.05)
+    .to('.door-light-flood',  { scaleX:6, scaleY:4, opacity:1, duration:0.32, ease:'power3.out' }, 0.68)
+    .to('.door-light-flood',  { opacity:0, duration:0.95, ease:'power1.in' }, 0.98)
+    .to('.door-smoke-cloud',  { y:'-30%', scaleX:2, opacity:0.3, duration:1.0, ease:'power1.out' }, 0.88)
+    .to('.door-glow',         { width:'380px', filter:'blur(48px)', opacity:0.5, duration:0.6, ease:'power1.out' }, 0.88)
+    .to('.door-glow',         { opacity:0, duration:0.6, ease:'power2.in' }, '-=0.15')
+    ${popupBundleActive ? `.to(['.door-l','.door-r','.door-centre-text'], { opacity:0, duration:0.45 }, '-=0.38')` : `.to(el, { opacity:0, duration:0.58, ease:'power2.in' }, '-=0.42')`};
   ` : animation === "storybook" ? `
   var _bundleCard = document.getElementById('intro-bundle-card');
   gsap.set(['.book-page-1','.book-page-2','.book-page-3'], { rotateY:0, transformOrigin:'right center' });
@@ -2618,17 +2625,21 @@ function openIntro() {
     } else { _afterAnimDone(el); }
   } });
   tl
-    .to('.book-cue',    { opacity:0, duration:0.25 }, 0)
-    .to('.book-cover',  { rotateY:-60,  duration:0.8,  ease:'power2.inOut', transformOrigin:'right center' }, 0.1)
-    .to('.book-page-1', { rotateY:-160, duration:0.6,  ease:'power3.inOut', transformOrigin:'right center' }, 0.85)
-    .to('.book-page-2', { rotateY:-160, duration:0.58, ease:'power3.inOut', transformOrigin:'right center' }, 1.4)
-    .to('.book-page-3', { rotateY:-160, duration:0.55, ease:'power3.inOut', transformOrigin:'right center' }, 1.88)
-    .to('.book-cover',  { rotateY:-162, duration:1.1,  ease:'power4.inOut', transformOrigin:'right center' }, 1.62)
-    .to('.book-final-page', { opacity:1, duration:0.85, ease:'power1.inOut' }, 2.42)
-    .to('.book-page-bg', { filter:'brightness(1.12)', duration:0.65, ease:'power1.inOut' }, 2.52)
+    .to('.book-cue',    { opacity:0, duration:0.35 }, 0)
+    /* Cover opens — slow, like a cherished memory stirring to life */
+    .to('.book-cover',  { rotateY:-60,  duration:1.1,  ease:'power1.inOut', transformOrigin:'right center' }, 0.15)
+    /* Pages turn gently one by one — each a quiet breath of nostalgia */
+    .to('.book-page-1', { rotateY:-160, duration:0.85, ease:'power2.inOut', transformOrigin:'right center' }, 1.0)
+    .to('.book-page-2', { rotateY:-160, duration:0.82, ease:'power2.inOut', transformOrigin:'right center' }, 1.78)
+    .to('.book-page-3', { rotateY:-160, duration:0.8,  ease:'power2.inOut', transformOrigin:'right center' }, 2.5)
+    /* Cover settles fully open — unhurried final sweep */
+    .to('.book-cover',  { rotateY:-162, duration:1.4,  ease:'power2.inOut', transformOrigin:'right center' }, 2.1)
+    /* The world inside dissolves in slowly — watercolour warmth, like a Disney fade */
+    .to('.book-final-page', { opacity:1, duration:1.1,  ease:'power1.inOut' }, 3.15)
+    .to('.book-page-bg', { filter:'brightness(1.12)', duration:0.85, ease:'power1.inOut' }, 3.25)
     ${popupBundleActive
-      ? `.to(['.book-cover','.book-spine','.book-page-bg','.book-page-1','.book-page-2','.book-page-3'], { opacity:0, duration:0.45 }, '-=0.28')`
-      : `.to(el, { opacity:0, duration:0.72, ease:'power2.in' }, '-=0.45')`};
+      ? `.to(['.book-cover','.book-spine','.book-page-bg','.book-page-1','.book-page-2','.book-page-3'], { opacity:0, duration:0.5 }, '-=0.3')`
+      : `.to(el, { opacity:0, duration:0.85, ease:'power2.in' }, '-=0.5')`};
   ` : `
   gsap.to(el, { opacity:0, duration:0.4, onComplete:function(){ _afterAnimDone(el); } });
   `}
@@ -2636,12 +2647,29 @@ function openIntro() {
 ${animation === "envelope" ? `
 if (!_introOpened) {
   gsap.set('.envfs-card',   { xPercent:-50, yPercent:-50, y:'100vh', opacity:0, filter:'blur(12px)' });
-  gsap.set('.intro-env-fs', { scale:0.93, y:20, opacity:0 });
+  gsap.set('.intro-env-fs', { scale:0.96, y:40, opacity:0 });
   gsap.set('#intro-lbox-t', { height:0 });
   gsap.set('#intro-lbox-b', { height:0 });
+  /* Float in on a breeze — expo.out gives the cinematic slow-deceleration drift */
   gsap.timeline()
-    .to('.intro-env-fs', { scale:1, y:0, opacity:1, duration:1.85, ease:'power2.out' })
-    .to(['#intro-lbox-t','#intro-lbox-b'], { height:48, duration:1.0, ease:'power2.out' }, 0.55);
+    .to('.intro-env-fs', { scale:1, y:0, opacity:1, duration:2.4, ease:'expo.out' })
+    .to(['#intro-lbox-t','#intro-lbox-b'], { height:48, duration:1.1, ease:'expo.out' }, 0.8);
+}` : animation === "doors" ? `
+if (!_introOpened) {
+  var _doorsEl = document.getElementById('intro-overlay');
+  if (_doorsEl) {
+    gsap.set(_doorsEl, { opacity:0, scale:1.03 });
+    /* Atmosphere materialises slowly — fog drifts into frame, warmth builds */
+    gsap.to(_doorsEl, { opacity:1, scale:1, duration:2.2, ease:'expo.out' });
+  }
+}` : animation === "storybook" ? `
+if (!_introOpened) {
+  var _bookEl = document.getElementById('intro-overlay');
+  if (_bookEl) {
+    gsap.set(_bookEl, { opacity:0, scale:1.04 });
+    /* Book surfaces slowly — like a cherished memory drifting into focus */
+    gsap.to(_bookEl, { opacity:1, scale:1, duration:2.8, ease:'expo.out' });
+  }
 }` : ""}
 if (_introOpened) {
   var _skipEl = document.getElementById('intro-overlay');
@@ -2734,7 +2762,7 @@ function toggleMusic() {
   ${greetingHtml}
   ${navHtml}
   <div id="site-content"${contentPadStyle}>
-  ${fallbackHtml}
+  ${langFallbackBanner}${fallbackHtml}
   ${pageSectionsHtml}
   </div>
   ${musicPlayerHtml}

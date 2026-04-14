@@ -1019,10 +1019,11 @@ export default function SiteEditor() {
     setContentSaving(true);
     const slug = activePage.slug;
     const mainLang = settingsForm.mainLanguage || "en";
-    const secondLang = settingsForm.secondLanguage;
+    const secondLang = settingsForm.secondLanguage?.trim() || null;
     const toSave: Array<{ lang: string; content: Record<string, unknown> }> = [
       { lang: mainLang, content: contentByPage[slug]?.[mainLang] ?? {} },
     ];
+    // Always persist second-lang row (even empty {}) so the renderer has a DB entry to read.
     if (secondLang) toSave.push({ lang: secondLang, content: contentByPage[slug]?.[secondLang] ?? {} });
     try {
       await Promise.all(toSave.map(({ lang, content }) =>
@@ -1156,8 +1157,13 @@ export default function SiteEditor() {
 
   useEffect(() => {
     if (section === "website" && activeTab === "content") {
-      if (!settings) fetchSettings();
-      fetchContent();
+      // Settings must resolve before content renders — secondLanguage pill depends on it.
+      // When settings are already loaded, fetch content immediately.
+      if (!settings) {
+        fetchSettings().then(() => fetchContent());
+      } else {
+        fetchContent();
+      }
     }
   }, [section, activeTab, activePage?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -1737,7 +1743,9 @@ export default function SiteEditor() {
       });
       // Restore from snapshot so any concurrent stale fetchSettings() can't overwrite
       setSettingsForm(snapshot);
-      setPreviewKey((k) => k + 1);
+      // Fire postMessage so iframe picks up saved values immediately — avoids stale
+      // D1 read that would occur if we reloaded the iframe via setPreviewKey.
+      fireSettingsPreview(snapshot);
       toast("Settings saved");
     } catch (err) {
       toast(err instanceof Error ? err.message : "Failed to save settings", true);
