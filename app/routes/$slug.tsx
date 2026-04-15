@@ -231,19 +231,27 @@ function buildStyles(settings: SiteSettingRow | null): BuiltStyles {
       ${isScrollAway ? "position: relative;" : ""}
     }
 
+    .margin-curtain-t, .margin-curtain-b { position:fixed; left:0; right:0; z-index:9990; pointer-events:none; height:0; overflow:hidden; }
+    .margin-curtain-t { top:0; }
+    .margin-curtain-b { bottom:0; }
+    .margin-curtain-l, .margin-curtain-r { position:fixed; top:0; bottom:0; z-index:9990; pointer-events:none; width:0; overflow:hidden; }
+    .margin-curtain-l { left:0; }
+    .margin-curtain-r { right:0; }
+
     ${(() => {
       const mTop    = Number(settings?.marginTop    ?? 0) || 0;
       const mBottom = Number(settings?.marginBottom ?? 0) || 0;
       const mLeft   = Number(settings?.marginLeft   ?? 0) || 0;
       const mRight  = Number(settings?.marginRight  ?? 0) || 0;
       if (!mTop && !mBottom && !mLeft && !mRight) return "";
-      // Fixed curtains in the site background color mask content as it scrolls
-      // past the margin boundary — content enters and exits within the margin zone.
+      // All four curtains use injected divs so postMessage can update them live.
       // z-index 9990: above content (0) and nav (~100) but below overlays (9999).
       const bgVal = escHtml(bg);
       const lines: string[] = [];
-      if (mTop > 0) lines.push(`body::before { content:''; position:fixed; top:0; left:0; right:0; height:${mTop}px; background:${bgVal}; z-index:9990; pointer-events:none; }`);
-      if (mBottom > 0) lines.push(`body::after { content:''; position:fixed; bottom:0; left:0; right:0; height:${mBottom}px; background:${bgVal}; z-index:9990; pointer-events:none; }`);
+      if (mTop > 0)    lines.push(`.margin-curtain-t { height:${mTop}px; background:${bgVal}; }`);
+      if (mBottom > 0) lines.push(`.margin-curtain-b { height:${mBottom}px; background:${bgVal}; }`);
+      if (mLeft > 0)   lines.push(`.margin-curtain-l { width:${mLeft}px; background:${bgVal}; }`);
+      if (mRight > 0)  lines.push(`.margin-curtain-r { width:${mRight}px; background:${bgVal}; }`);
       return lines.join("\n    ");
     })()}
 
@@ -1930,6 +1938,15 @@ function buildMessageListenerScript(): string {
         var ml = delta.marginLeft != null ? Number(delta.marginLeft) : 0;
         siteContent.style.padding = mt + 'px ' + mr + 'px ' + mb + 'px ' + ml + 'px';
         siteContent.style.overflowX = (mt || mr || mb || ml) ? 'hidden' : '';
+        var siteBg = getComputedStyle(document.documentElement).getPropertyValue('--bg').trim() || '#fff';
+        var cT = document.querySelector('.margin-curtain-t');
+        var cB = document.querySelector('.margin-curtain-b');
+        var cL = document.querySelector('.margin-curtain-l');
+        var cR = document.querySelector('.margin-curtain-r');
+        if (cT) { cT.style.height = mt + 'px'; if (mt) cT.style.background = siteBg; }
+        if (cB) { cB.style.height = mb + 'px'; if (mb) cB.style.background = siteBg; }
+        if (cL) { cL.style.width = ml + 'px'; if (ml) cL.style.background = siteBg; }
+        if (cR) { cR.style.width = mr + 'px'; if (mr) cR.style.background = siteBg; }
       }
     }
     if ('siteMaxWidth' in delta) {
@@ -2398,8 +2415,14 @@ function showPage(pageId) {
   const popupAfterAnimation = settings?.popupAfterAnimation ?? 0;
   const showPopup = greeting && popupEnabled !== 0;
   const tickerText = popupTicker ? escHtml(eventTitle + (eventDate ? "  ·  " + eventDate : "")) : null;
-  const greetingHtml = showPopup
-    ? `<div class="greeting-overlay${popupAfterAnimation && settings?.animation ? " hidden" : ""}" id="greeting-overlay" role="dialog" aria-modal="true" aria-label="Welcome message"
+  // Suppress the separate greeting-overlay when the popup is bundled inside the animation —
+  // the bundle card IS the popup. Also always start hidden when any animation is active so
+  // the overlay doesn't bleed through while the intro fades in (z-index 999 < 9999 but visible
+  // during the 0→1 opacity ramp).
+  const bundledWithAnim = !!(settings?.popupBundle) && !!settings?.animation
+    && settings?.animation !== "none" && settings?.animation !== "envelope";
+  const greetingHtml = showPopup && !bundledWithAnim
+    ? `<div class="greeting-overlay${settings?.animation ? " hidden" : ""}" id="greeting-overlay" role="dialog" aria-modal="true" aria-label="Welcome message"
         onclick="document.getElementById('greeting-overlay').classList.add('hidden');">
         <div class="greeting-modal" onclick="event.stopPropagation();">
           ${popupTitle ? `<h2 class="greeting-title">${escHtml(popupTitle)}</h2>` : ""}
@@ -2481,7 +2504,9 @@ function switchLang() {
     ? `<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>\n  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/CustomEase.min.js"></script>`
     : "";
 
-  const triggerPopupAfterAnim = showPopup && popupAfterAnimation;
+  // Show greeting after animation whenever animation is active and popup isn't bundled.
+  // popupAfterAnimation flag is moot when animation is running — always show after, never during.
+  const triggerPopupAfterAnim = showPopup && !!animation && !popupBundleActive;
   const introScript = introHtml
     ? `<script>
 var _animKey = 'dsuite_intro_${escHtml(siteSlug)}_${escHtml(animation ?? "")}';
@@ -2757,6 +2782,10 @@ function toggleMusic() {
 </head>
 <body>
   ${escapedBgImageUrl ? `<div id="bg-overlay" style="position:fixed;inset:0;z-index:0;pointer-events:none;background-image:url('${escapedBgImageUrl}');background-size:cover;background-position:center;background-attachment:fixed;opacity:${settings?.bgImageOpacity ?? 1};display:${settings?.bgImageLayer === 'overlay' ? '' : 'none'};"></div>` : ""}
+  <div class="margin-curtain-t"></div>
+  <div class="margin-curtain-b"></div>
+  <div class="margin-curtain-l"></div>
+  <div class="margin-curtain-r"></div>
   ${introHtml}
   ${introScript}
   ${greetingHtml}
@@ -3091,7 +3120,7 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
     status: 200,
     headers: {
       "content-type": "text/html; charset=utf-8",
-      "cache-control": "public, max-age=60, stale-while-revalidate=300",
+      "cache-control": "public, max-age=10, stale-while-revalidate=30",
     },
   });
 }
