@@ -1743,9 +1743,18 @@ export default function SiteEditor() {
       });
       // Restore from snapshot so any concurrent stale fetchSettings() can't overwrite
       setSettingsForm(snapshot);
-      // Fire postMessage so iframe picks up saved values immediately — avoids stale
-      // D1 read that would occur if we reloaded the iframe via setPreviewKey.
-      fireSettingsPreview(snapshot);
+      // Sync settings.animation so subsequent saves compare against the saved value,
+      // not the stale initial fetch — otherwise every save triggers animationChanged=true.
+      const prevAnimation = settings?.animation || null;
+      setSettings(prev => prev ? { ...prev, animation: snapshot.animation || null } : prev);
+      // Animation change requires full iframe reload — DOM structure differs per type.
+      // For all other settings, postMessage is enough (no stale D1 read).
+      const animationChanged = (snapshot.animation || null) !== prevAnimation;
+      if (animationChanged) {
+        setPreviewKey(k => k + 1);
+      } else {
+        fireSettingsPreview(snapshot);
+      }
       toast("Settings saved");
     } catch (err) {
       toast(err instanceof Error ? err.message : "Failed to save settings", true);
