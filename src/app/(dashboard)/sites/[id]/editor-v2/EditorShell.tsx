@@ -7,6 +7,8 @@ import { SlideTray } from "./SlideTray";
 import { TopBar } from "./TopBar";
 import { BreakpointFrame } from "./BreakpointFrame";
 import { SelectionLayer } from "./SelectionLayer";
+import { Inspector } from "./Inspector";
+import { Breadcrumb } from "./Breadcrumb";
 import { useSelection } from "./hooks/useSelection";
 
 export interface EditorV2Site {
@@ -61,7 +63,10 @@ export function EditorShell({ site, user, children }: Props) {
 
 				<main className="relative flex-1">
 					{children ?? <StubCanvas site={site} user={user} />}
+					<Breadcrumb />
 				</main>
+
+				<Inspector />
 			</div>
 		</div>
 	);
