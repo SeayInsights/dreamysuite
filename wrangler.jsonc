@@ -2,13 +2,9 @@
  * For more details on how to configure Wrangler, refer to:
  * https://developers.cloudflare.com/workers/wrangler/configuration/
  */
-/**
- * For more details on how to configure Wrangler, refer to:
- * https://developers.cloudflare.com/workers/wrangler/configuration/
- */
 {
 	"$schema": "node_modules/wrangler/config-schema.json",
-	"name": "dreamysuite-next",
+	"name": "dreamysuite",
 	"main": ".open-next/worker.js",
 	"compatibility_date": "2026-04-16",
 	"compatibility_flags": [
@@ -29,13 +25,20 @@
 			// Self-reference service binding, the service name must match the worker name
 			// see https://opennext.js.org/cloudflare/caching
 			"binding": "WORKER_SELF_REFERENCE",
-			"service": "dreamysuite-next"
+			"service": "dreamysuite"
 		}
 	],
 	"observability": {
 		"enabled": true
 	},
+	"workers_dev": false,
 	"upload_source_maps": true,
+	"routes": [
+		{
+			"pattern": "dreamysuite.com",
+			"custom_domain": true
+		}
+	],
 	"vars": {
 		"APP_URL": "https://dreamysuite.com"
 	},
