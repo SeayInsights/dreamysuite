@@ -1,40 +1,47 @@
-import { create } from 'zustand'
-import { temporal } from 'zundo'
+import { create } from "zustand";
+import { temporal } from "zundo";
+import {
+	createDocumentSlice,
+	type DocumentSlice,
+	type Block,
+} from "./slices/document";
+import {
+	createEditorShellSlice,
+	type EditorShellSlice,
+	type Breakpoint,
+	type EditorMode,
+	type Section,
+} from "./slices/editorShell";
+import {
+	createTransientSlice,
+	type TransientSlice,
+	type DragState,
+} from "./slices/transient";
 
-interface Block {
-  id: string
-  type: string
-  [key: string]: unknown
-}
+export type { Block, Breakpoint, EditorMode, Section, DragState };
 
-interface EditorState {
-  blocks: Block[]
-  selectedBlockId: string | null
-  isDirty: boolean
-  setBlocks: (blocks: Block[]) => void
-  selectBlock: (id: string | null) => void
-  updateBlock: (id: string, updates: Partial<Block>) => void
-  reorderBlocks: (fromIndex: number, toIndex: number) => void
-}
+export type EditorState = DocumentSlice & EditorShellSlice & TransientSlice;
 
+/**
+ * Unified editor store composed of three slices:
+ *   - document: blocks + dirty flag (tracked by Zundo for undo/redo)
+ *   - editorShell: UI state — selection, breakpoint, mode, panels (NOT tracked)
+ *   - transient: drag/hover ephemera (NOT tracked)
+ *
+ * Zundo's partialize+equality restrict history to the `blocks` reference.
+ * UI state changes (opening a tray, switching breakpoint) never create a history
+ * entry, so undo/redo only rolls back document edits — not panel visibility.
+ */
 export const useEditorStore = create<EditorState>()(
-  temporal((set) => ({
-    blocks: [],
-    selectedBlockId: null,
-    isDirty: false,
-    setBlocks: (blocks) => set({ blocks }),
-    selectBlock: (id) => set({ selectedBlockId: id }),
-    updateBlock: (id, updates) =>
-      set((state) => ({
-        blocks: state.blocks.map((b) => (b.id === id ? { ...b, ...updates } : b)),
-        isDirty: true,
-      })),
-    reorderBlocks: (from, to) =>
-      set((state) => {
-        const blocks = [...state.blocks]
-        const [moved] = blocks.splice(from, 1)
-        blocks.splice(to, 0, moved)
-        return { blocks, isDirty: true }
-      }),
-  }))
-)
+	temporal(
+		(...a) => ({
+			...createDocumentSlice(...a),
+			...createEditorShellSlice(...a),
+			...createTransientSlice(...a),
+		}),
+		{
+			partialize: (state) => ({ blocks: state.blocks }),
+			equality: (past, current) => past.blocks === current.blocks,
+		},
+	),
+);
