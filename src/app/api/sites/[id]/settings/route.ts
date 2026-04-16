@@ -9,8 +9,8 @@ import {
 } from "@/lib/api/site-auth";
 import {
   DEFAULTS,
-  ALLOWED_FIELDS,
   SettingsPatchSchema,
+  upsertSiteSettings,
 } from "@/lib/schemas/settings";
 
 export async function GET(
@@ -61,44 +61,7 @@ export async function PUT(
   const body = validated.data;
   const now = Date.now();
 
-  const existing = await env.DB
-    .prepare("SELECT siteId FROM site_setting WHERE siteId = ?")
-    .bind(siteId)
-    .first<{ siteId: string }>();
-
-  if (!existing) {
-    const merged = { ...DEFAULTS, ...body };
-    const columns = ["siteId", ...ALLOWED_FIELDS, "updatedAt"];
-    const quotedCols = columns.map((c) => `"${c}"`).join(", ");
-    const placeholders = columns.map(() => "?").join(", ");
-    const bindValues: unknown[] = [
-      siteId,
-      ...ALLOWED_FIELDS.map((f) => merged[f]),
-      now,
-    ];
-    await env.DB
-      .prepare(`INSERT INTO site_setting (${quotedCols}) VALUES (${placeholders})`)
-      .bind(...bindValues)
-      .run();
-  } else {
-    const fields: string[] = [];
-    const values: unknown[] = [];
-    for (const field of ALLOWED_FIELDS) {
-      if (field in body) {
-        fields.push(`"${field}" = ?`);
-        values.push(body[field]);
-      }
-    }
-    if (fields.length > 0) {
-      fields.push(`"updatedAt" = ?`);
-      values.push(now);
-      values.push(siteId);
-      await env.DB
-        .prepare(`UPDATE site_setting SET ${fields.join(", ")} WHERE siteId = ?`)
-        .bind(...values)
-        .run();
-    }
-  }
+  await upsertSiteSettings(env.DB, siteId, body, now);
 
   if ("isLive" in body) {
     const newStatus = body.isLive ? "published" : "draft";
