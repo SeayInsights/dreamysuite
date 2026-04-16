@@ -116,7 +116,7 @@ export async function GET(
     blocksByPage.get(block.pageId)!.push({ ...block, config });
   }
 
-  const pagesWithBlocks = pages.map((page) => ({
+  const pagesWithBlocks = pages.map((page: PageRow) => ({
     ...page,
     blocks: blocksByPage.get(page.id) ?? [],
   }));
@@ -127,7 +127,7 @@ export async function GET(
     .bind(site.id)
     .all<ContentRow>();
 
-  const content = contentResult.results.map((row) => {
+  const content = contentResult.results.map((row: ContentRow) => {
     let parsed: unknown = {};
     try { parsed = JSON.parse(row.content); } catch { /* keep empty */ }
     return { ...row, content: parsed };
