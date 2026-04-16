@@ -1,10 +1,13 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { useRef, type ReactNode } from "react";
 
 import { IconRail } from "./IconRail";
 import { SlideTray } from "./SlideTray";
 import { TopBar } from "./TopBar";
+import { BreakpointFrame } from "./BreakpointFrame";
+import { SelectionLayer } from "./SelectionLayer";
+import { useSelection } from "./hooks/useSelection";
 
 export interface EditorV2Site {
 	id: string;
@@ -34,8 +37,8 @@ interface Props {
  *
  * Layout slots (filled incrementally by Phase 2 tasks):
  *   - TopBar           (Task 8)
- *   - IconRail         (Task 7, here)
- *   - SlideTray        (Task 7, here)
+ *   - IconRail         (Task 7)
+ *   - SlideTray        (Task 7)
  *   - BreakpointFrame  (Task 10)
  *   - SelectionLayer   (Task 10)
  *   - Inspector        (Task 11)
@@ -56,25 +59,74 @@ export function EditorShell({ site, user, children }: Props) {
 				<IconRail />
 				<SlideTray />
 
-				<main className="relative flex-1 overflow-auto">
-					{children ?? (
-						<div className="flex h-full items-center justify-center">
-							<div className="text-center">
-								<div className="text-xs uppercase tracking-widest text-muted-foreground">
-									Canvas
-								</div>
-								<div className="mt-2 text-xl font-semibold">{site.name}</div>
-								<div className="mt-1 text-sm text-muted-foreground">
-									Breakpoint frame + direct-manipulation canvas arrive in Phase 3.
-								</div>
-								<div className="mt-4 text-[11px] text-muted-foreground/80">
-									Signed in as {user.email}
-								</div>
-							</div>
-						</div>
-					)}
+				<main className="relative flex-1">
+					{children ?? <StubCanvas site={site} user={user} />}
 				</main>
 			</div>
+		</div>
+	);
+}
+
+function StubCanvas({ site, user }: { site: EditorV2Site; user: EditorV2User }) {
+	const frameRef = useRef<HTMLDivElement>(null);
+	const { select, hover, clear } = useSelection();
+
+	return (
+		<div className="relative h-full w-full">
+			<BreakpointFrame>
+				<div
+					ref={frameRef}
+					className="relative h-full w-full"
+					onClick={(e) => {
+						const target = e.target as HTMLElement;
+						const id = target.closest<HTMLElement>("[data-block-id]")?.dataset
+							.blockId;
+						if (id) select(id);
+						else clear();
+					}}
+					onMouseMove={(e) => {
+						const target = e.target as HTMLElement;
+						const id = target.closest<HTMLElement>("[data-block-id]")?.dataset
+							.blockId;
+						hover(id ?? null);
+					}}
+					onMouseLeave={() => hover(null)}
+				>
+					<div className="flex flex-col items-center gap-8 p-12">
+						<div className="text-center">
+							<div className="text-xs uppercase tracking-widest text-muted-foreground">
+								Canvas preview
+							</div>
+							<div className="mt-2 text-xl font-semibold">{site.name}</div>
+							<div className="mt-1 text-sm text-muted-foreground">
+								Shared site renderer mounts here in Phase 3.
+							</div>
+							<div className="mt-3 text-[11px] text-muted-foreground/80">
+								Signed in as {user.email}
+							</div>
+						</div>
+
+						<StubBlock id="stub-hero" type="Hero" />
+						<StubBlock id="stub-rsvp" type="RSVP" />
+						<StubBlock id="stub-gallery" type="Gallery" />
+					</div>
+
+					<SelectionLayer frameRef={frameRef} />
+				</div>
+			</BreakpointFrame>
+		</div>
+	);
+}
+
+function StubBlock({ id, type }: { id: string; type: string }) {
+	return (
+		<div
+			data-block-id={id}
+			data-block-type={type}
+			data-block-label={type}
+			className="w-full max-w-lg cursor-pointer rounded-md border border-dashed border-border bg-muted/30 p-6 text-center text-sm text-muted-foreground"
+		>
+			{type} block (stub)
 		</div>
 	);
 }
