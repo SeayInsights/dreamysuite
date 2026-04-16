@@ -2,6 +2,9 @@
 
 import type { ReactNode } from "react";
 
+import { IconRail } from "./IconRail";
+import { SlideTray } from "./SlideTray";
+
 export interface EditorV2Site {
 	id: string;
 	name: string;
@@ -26,40 +29,48 @@ interface Props {
 }
 
 /**
- * V2 editor shell — scaffold only.
+ * V2 editor shell.
  *
- * This is the root chrome container for the overhauled editor. Shell sub-
- * components (icon rail, top bar, inspector, breadcrumb) land in Phase 2.
- * Canvas + direct-manipulation land in Phase 3.
+ * Layout slots (filled incrementally by Phase 2 tasks):
+ *   - TopBar           (Task 8)
+ *   - IconRail         (Task 7, here)
+ *   - SlideTray        (Task 7, here)
+ *   - BreakpointFrame  (Task 10)
+ *   - SelectionLayer   (Task 10)
+ *   - Inspector        (Task 11)
+ *   - Breadcrumb       (Task 11)
  *
- * Visible indicators while scaffolded:
- *   - "EDITOR V2" watermark top-right
- *   - Site name + status line in the center
- *
- * Gated by NEXT_PUBLIC_EDITOR_V2 feature flag — see src/lib/flags.ts.
+ * Gated by NEXT_PUBLIC_EDITOR_V2 at src/lib/flags.ts.
  */
 export function EditorShell({ site, user, children }: Props) {
 	return (
-		<div className="fixed inset-0 flex flex-col bg-neutral-50 text-neutral-900 antialiased">
-			<div className="pointer-events-none absolute right-3 top-3 rounded-md bg-neutral-900/90 px-2 py-1 text-[10px] font-semibold uppercase tracking-widest text-white shadow-sm">
+		<div className="fixed inset-0 flex flex-col bg-background text-foreground antialiased">
+			<div className="pointer-events-none absolute right-3 top-3 z-30 rounded-md bg-neutral-900/90 px-2 py-1 text-[10px] font-semibold uppercase tracking-widest text-white shadow-sm">
 				Editor V2
 			</div>
 
-			<div className="flex flex-1 items-center justify-center">
-				{children ?? (
-					<div className="text-center">
-						<div className="text-xs uppercase tracking-widest text-neutral-400">
-							Scaffold
+			<div className="relative flex flex-1 overflow-hidden">
+				<IconRail />
+				<SlideTray />
+
+				<main className="relative flex-1 overflow-auto">
+					{children ?? (
+						<div className="flex h-full items-center justify-center">
+							<div className="text-center">
+								<div className="text-xs uppercase tracking-widest text-muted-foreground">
+									Canvas
+								</div>
+								<div className="mt-2 text-xl font-semibold">{site.name}</div>
+								<div className="mt-1 text-sm text-muted-foreground">
+									Breakpoint frame + direct-manipulation canvas arrive in Phase 3.
+								</div>
+								<div className="mt-4 text-[11px] text-muted-foreground/80">
+									Signed in as {user.email}
+								</div>
+							</div>
 						</div>
-						<div className="mt-2 text-xl font-semibold">{site.name}</div>
-						<div className="mt-1 text-sm text-neutral-500">
-							Shell, canvas, and inspector arrive in later phases.
-						</div>
-						<div className="mt-4 text-[11px] text-neutral-400">
-							Signed in as {user.email}
-						</div>
-					</div>
-				)}
+					)}
+				</main>
 			</div>
 		</div>
 	);
