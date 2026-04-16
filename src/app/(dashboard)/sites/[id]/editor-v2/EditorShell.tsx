@@ -10,6 +10,7 @@ import { SelectionLayer } from "./SelectionLayer";
 import { Inspector } from "./Inspector";
 import { Breadcrumb } from "./Breadcrumb";
 import { useSelection } from "./hooks/useSelection";
+import { useShortcuts } from "./hooks/useShortcuts";
 
 export interface EditorV2Site {
 	id: string;
@@ -49,6 +50,7 @@ interface Props {
  * Gated by NEXT_PUBLIC_EDITOR_V2 at src/lib/flags.ts.
  */
 export function EditorShell({ site, user, children }: Props) {
+	useShortcuts();
 	return (
 		<div className="fixed inset-0 flex flex-col bg-background text-foreground antialiased">
 			<div className="pointer-events-none absolute right-3 top-3 z-30 rounded-md bg-neutral-900/90 px-2 py-1 text-[10px] font-semibold uppercase tracking-widest text-white shadow-sm">
