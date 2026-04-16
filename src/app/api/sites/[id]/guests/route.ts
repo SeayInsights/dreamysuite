@@ -1,30 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
-import { createAuth, type Env } from "@/app/lib/auth.server";
-
-async function requireSiteOwnership(
-  req: NextRequest,
-  env: Env,
-  siteId: string
-) {
-  const auth = createAuth(env);
-  const session = await auth.api.getSession({ headers: req.headers });
-  if (!session) {
-    return { error: { code: "UNAUTHORIZED", message: "Not authenticated" }, status: 401 as const };
-  }
-  const _db = env.DB;
-  const site = await _db
-    .prepare("SELECT id FROM site WHERE id = ? AND userId = ?")
-    .bind(siteId, session.user.id)
-    .first<{ id: string }>();
-  if (site) return { userId: session.user.id };
-  const invite = await _db
-    .prepare("SELECT id FROM site_invite WHERE siteId = ? AND email = ?")
-    .bind(siteId, session.user.email.toLowerCase())
-    .first<{ id: string }>();
-  if (invite) return { userId: session.user.id };
-  return { error: { code: "FORBIDDEN", message: "Site not found or access denied" }, status: 403 as const };
-}
+import type { Env } from "@/app/lib/auth.server";
+import { requireSiteOwnership, apiOwnershipError } from "@/lib/api/site-auth";
 
 export async function GET(
   req: NextRequest,
@@ -35,7 +12,7 @@ export async function GET(
   const { id: siteId } = await params;
 
   const check = await requireSiteOwnership(req, env, siteId);
-  if ("error" in check) return NextResponse.json(check, { status: check.status });
+  if ("error" in check) return apiOwnershipError(check);
 
   const url = new URL(req.url);
   const statusFilter = url.searchParams.get("status");
@@ -70,7 +47,7 @@ export async function POST(
   const { id: siteId } = await params;
 
   const check = await requireSiteOwnership(req, env, siteId);
-  if ("error" in check) return NextResponse.json(check, { status: check.status });
+  if ("error" in check) return apiOwnershipError(check);
 
   let body: { firstName?: string; lastName?: string; party?: string; notes?: string };
   try {
