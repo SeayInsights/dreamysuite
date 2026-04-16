@@ -45,11 +45,11 @@ export default async function DashboardIndex() {
       .all<Site>(),
   ]);
 
-  const seenIds = new Set(owned.results.map((s) => s.id));
+  const seenIds = new Set(owned.results.map((s: Site) => s.id));
   const sites = [
     ...owned.results,
-    ...invited.results.filter((s) => !seenIds.has(s.id)),
-  ].sort((a, b) => b.updatedAt - a.updatedAt);
+    ...invited.results.filter((s: Site) => !seenIds.has(s.id)),
+  ].sort((a: Site, b: Site) => b.updatedAt - a.updatedAt);
 
   return (
     <div className="sites-page ds-animate">
