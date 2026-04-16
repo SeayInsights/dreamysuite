@@ -1,26 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
-import { createAuth, type Env } from "@/app/lib/auth.server";
-
-async function requireSiteOwnership(
-  req: NextRequest,
-  env: Env,
-  siteId: string
-) {
-  const auth = createAuth(env);
-  const session = await auth.api.getSession({ headers: req.headers });
-  if (!session) {
-    return { error: { code: "UNAUTHORIZED", message: "Not authenticated" }, status: 401 as const };
-  }
-  const site = await env.DB
-    .prepare("SELECT id, name FROM site WHERE id = ? AND userId = ?")
-    .bind(siteId, session.user.id)
-    .first<{ id: string; name: string }>();
-  if (!site) {
-    return { error: { code: "FORBIDDEN", message: "Site not found or access denied" }, status: 403 as const };
-  }
-  return { userId: session.user.id, userName: session.user.name ?? session.user.email, siteName: site.name };
-}
+import type { Env } from "@/app/lib/auth.server";
+import { requireSiteOwner, apiOwnershipError } from "@/lib/api/site-auth";
 
 // GET /api/sites/:id/invites — list all invites for this site
 export async function GET(
@@ -31,8 +12,8 @@ export async function GET(
   const env = rawEnv as unknown as Env;
   const { id: siteId } = await params;
 
-  const check = await requireSiteOwnership(req, env, siteId);
-  if ("error" in check) return NextResponse.json(check, { status: check.status });
+  const check = await requireSiteOwner(req, env, siteId);
+  if ("error" in check) return apiOwnershipError(check);
 
   const result = await env.DB
     .prepare("SELECT id, email, invitedBy, createdAt FROM site_invite WHERE siteId = ? ORDER BY createdAt DESC")
@@ -51,8 +32,8 @@ export async function POST(
   const env = rawEnv as unknown as Env;
   const { id: siteId } = await params;
 
-  const check = await requireSiteOwnership(req, env, siteId);
-  if ("error" in check) return NextResponse.json(check, { status: check.status });
+  const check = await requireSiteOwner(req, env, siteId);
+  if ("error" in check) return apiOwnershipError(check);
 
   const body = await req.json() as { email?: string };
   const email = body.email?.trim().toLowerCase();
@@ -128,8 +109,8 @@ export async function DELETE(
   const env = rawEnv as unknown as Env;
   const { id: siteId } = await params;
 
-  const check = await requireSiteOwnership(req, env, siteId);
-  if ("error" in check) return NextResponse.json(check, { status: check.status });
+  const check = await requireSiteOwner(req, env, siteId);
+  if ("error" in check) return apiOwnershipError(check);
 
   const body = await req.json() as { inviteId?: string };
   if (!body.inviteId) return NextResponse.json({ error: { code: "BAD_REQUEST", message: "inviteId required" } }, { status: 400 });
