@@ -42,7 +42,7 @@ export async function GET(
     .bind(siteId)
     .all<{ pageSlug: string; lang: string; content: string }>();
 
-  const rows = result.results.map((row) => {
+  const rows = result.results.map((row: { pageSlug: string; lang: string; content: string }) => {
     let parsed: unknown = {};
     try { parsed = JSON.parse(row.content); } catch { /* keep empty */ }
     return { pageSlug: row.pageSlug, lang: row.lang, content: parsed };
