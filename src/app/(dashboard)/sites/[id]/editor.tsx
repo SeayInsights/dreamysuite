@@ -666,7 +666,7 @@ export function SiteEditor({ site: initialSite, user }: { site: any; user: any }
   async function fetchInvites() {
     const res = await fetch(`/api/sites/${site.id}/invites`);
     if (res.ok) {
-      const data = await res.json<{ invites: typeof invites }>();
+      const data = (await res.json()) as { invites: typeof invites };
       setInvites(data.invites);
     }
   }
@@ -694,7 +694,7 @@ export function SiteEditor({ site: initialSite, user }: { site: any; user: any }
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ email: inviteEmail.trim() }),
       });
-      const data = await res.json<{ invite?: { id: string; email: string; invitedBy: string; createdAt: number }; error?: { message: string } }>();
+      const data = (await res.json()) as { invite?: { id: string; email: string; invitedBy: string; createdAt: number }; error?: { message: string } };
       if (!res.ok) {
         toast(data.error?.message ?? "Failed to send invite", true);
       } else {
