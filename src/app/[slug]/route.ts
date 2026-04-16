@@ -72,7 +72,7 @@ export async function GET(
     blocksByPage.get(block.pageId)!.push({ ...block, config });
   }
 
-  const pages: PageWithBlocks[] = pagesResult.results.map((page) => ({
+  const pages: PageWithBlocks[] = pagesResult.results.map((page: PageRow) => ({
     ...page,
     blocks: blocksByPage.get(page.id) ?? [],
   }));

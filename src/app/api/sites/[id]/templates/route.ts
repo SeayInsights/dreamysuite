@@ -100,14 +100,14 @@ export async function POST(
   const pages = pagesResult.results;
 
   const pagesWithBlocks = await Promise.all(
-    pages.map(async (page) => {
+    pages.map(async (page: PageRow) => {
       const blocksResult = await env.DB
         .prepare("SELECT * FROM block WHERE pageId = ? ORDER BY sortOrder ASC")
         .bind(page.id)
         .all<BlockRow>();
       return {
         ...page,
-        blocks: blocksResult.results.map((b) => ({
+        blocks: blocksResult.results.map((b: BlockRow) => ({
           ...b,
           config: (() => { try { return JSON.parse(b.config); } catch { return {}; } })(),
         })),
