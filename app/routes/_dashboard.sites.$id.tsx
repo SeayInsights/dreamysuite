@@ -1,11 +1,15 @@
 import { redirect, useLoaderData, useSearchParams } from "react-router";
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { createPortal } from "react-dom";
+import { useStore } from "zustand";
 import { createAuth } from "~/lib/auth.server";
 import type { Route } from "./+types/_dashboard.sites.$id";
 import "~/lib/context";
 import editorStyles from "~/styles/site-editor.css?url";
 import Sortable from "sortablejs";
+import { useDebouncedCallback } from "use-debounce";
+import { useEditorStore } from "~/stores/editorStore";
+import { BLOCK_COMPONENTS } from "~/components/blocks";
 
 export function links() {
   return [{ rel: "stylesheet", href: editorStyles }];
@@ -543,8 +547,9 @@ export default function SiteEditor() {
   const [pages, setPages]                 = useState<Page[]>([]);
   const [activePage, setActivePage]       = useState<Page | null>(null);
   const [blocks, setBlocks]               = useState<Block[]>([]);
-  const [blockHistory, setBlockHistory]   = useState<Block[][]>([]);
-  const [blockFuture, setBlockFuture]     = useState<Block[][]>([]);
+  const isUndoableMutation = useRef(false);
+  const canUndo = useStore(useEditorStore.temporal, (s) => s.pastStates.length > 0);
+  const canRedo = useStore(useEditorStore.temporal, (s) => s.futureStates.length > 0);
   const [pagesLoading, setPagesLoading]   = useState(false);
   const [blocksLoading, setBlocksLoading] = useState(false);
   const [pageDropOpen, setPageDropOpen]   = useState(false);
@@ -827,6 +832,20 @@ export default function SiteEditor() {
     return res.json();
   }
 
+  // ── Debounced block save ────────────────────────────────────────────────────
+
+  const saveBlock = useDebouncedCallback(async (blockId: string, config: Record<string, unknown>) => {
+    try {
+      await apiFetch(`/blocks/${blockId}`, {
+        method: "PUT",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ config: JSON.stringify(config) }),
+      });
+    } catch {
+      // Silent — debounced auto-save failures are non-critical
+    }
+  }, 800);
+
   // ── Fetch functions ─────────────────────────────────────────────────────────
 
   const fetchPages = useCallback(async () => {
@@ -849,6 +868,17 @@ export default function SiteEditor() {
     try {
       const data = await apiFetch(`/pages/${pageId}`) as { page: Page; blocks: Block[] };
       setBlocks(data.blocks);
+      if (isUndoableMutation.current) {
+        // Post-mutation fetch: record new state (temporal tracks the transition)
+        useEditorStore.getState().setBlocks(data.blocks as any[]);
+        isUndoableMutation.current = false;
+      } else {
+        // Initial load or page switch: sync silently (no undo entry)
+        const { pause, resume } = useEditorStore.temporal.getState();
+        pause();
+        useEditorStore.getState().setBlocks(data.blocks as any[]);
+        resume();
+      }
     } catch (err) {
       toast(err instanceof Error ? err.message : "Failed to load blocks", true);
     } finally {
@@ -1222,6 +1252,9 @@ export default function SiteEditor() {
             const reordered = [...prev];
             const [moved] = reordered.splice(oldIndex, 1);
             reordered.splice(newIndex, 0, moved);
+            // Record post-reorder state for undo/redo
+            useEditorStore.getState().setBlocks(reordered as any[]);
+            isUndoableMutation.current = false;
             Promise.all(
               reordered.map((b, i) =>
                 fetch(`/api/sites/${siteId}/blocks/${b.id}`, {
@@ -1244,27 +1277,24 @@ export default function SiteEditor() {
     };
   }, [section, activeTab, blocks.length]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── Undo / Redo ─────────────────────────────────────────────────────────────
+  // ── Undo / Redo (Zustand temporal) ──────────────────────────────────────────
 
   function pushHistory(prev: Block[]) {
-    setBlockHistory((h) => [...h.slice(-19), prev]);
-    setBlockFuture([]);
+    // Record pre-mutation state in the store; temporal tracks the transition
+    useEditorStore.getState().setBlocks(prev as any[]);
+    isUndoableMutation.current = true;
   }
 
   function handleUndo() {
-    if (blockHistory.length === 0) return;
-    const restored = blockHistory[blockHistory.length - 1];
-    setBlockFuture((f) => [blocks, ...f.slice(0, 19)]);
-    setBlocks(restored);
-    setBlockHistory((h) => h.slice(0, -1));
+    if (!canUndo) return;
+    useEditorStore.temporal.getState().undo();
+    setBlocks(useEditorStore.getState().blocks as unknown as Block[]);
   }
 
   function handleRedo() {
-    if (blockFuture.length === 0) return;
-    const restored = blockFuture[0];
-    setBlockHistory((h) => [...h.slice(-19), blocks]);
-    setBlocks(restored);
-    setBlockFuture((f) => f.slice(1));
+    if (!canRedo) return;
+    useEditorStore.temporal.getState().redo();
+    setBlocks(useEditorStore.getState().blocks as unknown as Block[]);
   }
 
   // ── Mutations ───────────────────────────────────────────────────────────────
@@ -1370,6 +1400,7 @@ export default function SiteEditor() {
 
   async function handleSaveBlockConfig() {
     if (!editingBlock) return;
+    saveBlock.cancel(); // Cancel any pending debounced save
     try {
       pushHistory(blocks);
 
@@ -1439,6 +1470,10 @@ export default function SiteEditor() {
         { type: 'block_config_update', blockId: expandedBlockId, config: updated },
         window.location.origin
       );
+    }
+    // Auto-save block config (debounced — 800ms)
+    if (editingBlock) {
+      saveBlock(editingBlock.id, updated);
     }
   }
 
@@ -2011,10 +2046,10 @@ export default function SiteEditor() {
               Preview
             </button>
             <div className="section-topbar-divider" />
-            <button className="btn-ghost" onClick={handleUndo} disabled={blockHistory.length === 0} title="Undo" aria-label="Undo" style={{ padding: "6px 10px", gap: "5px" }}>
+            <button className="btn-ghost" onClick={handleUndo} disabled={!canUndo} title="Undo" aria-label="Undo" style={{ padding: "6px 10px", gap: "5px" }}>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg>
             </button>
-            <button className="btn-ghost" onClick={handleRedo} disabled={blockFuture.length === 0} title="Redo" aria-label="Redo" style={{ padding: "6px 10px", gap: "5px" }}>
+            <button className="btn-ghost" onClick={handleRedo} disabled={!canRedo} title="Redo" aria-label="Redo" style={{ padding: "6px 10px", gap: "5px" }}>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M15 14l5-5-5-5"/><path d="M20 9H9.5a5.5 5.5 0 0 0 0 11H13"/></svg>
             </button>
             <div className="section-topbar-divider" />
