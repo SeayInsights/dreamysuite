@@ -2,7 +2,9 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { createAuth, type Env } from "@/app/lib/auth.server";
+import { flags } from "@/lib/flags";
 import { SiteEditor } from "./editor";
+import { SiteEditorV2 } from "./editor-v2";
 
 interface Site {
   id: string;
@@ -56,5 +58,8 @@ export default async function SiteEditorPage({ params }: { params: Promise<{ id:
     redirect("/");
   }
 
+  if (flags.editorV2) {
+    return <SiteEditorV2 site={result} user={session.user} />;
+  }
   return <SiteEditor site={result} user={session.user} />;
 }
