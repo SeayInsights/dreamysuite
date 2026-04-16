@@ -1039,7 +1039,7 @@ export function SiteEditor({ site: initialSite, user }: { site: any; user: any }
           apiFetch(`/blocks/${blockId}`, {
             method: "PUT",
             headers: { "content-type": "application/json" },
-            body: JSON.stringify({ config: JSON.stringify({ ...(() => { try { return JSON.parse(blocks.find(b => b.id === blockId)?.config || '{}'); } catch { return {}; } })(), textItems: items }) }),
+            body: JSON.stringify({ config: JSON.stringify({ ...(() => { const block = blocks.find(b => b.id === blockId); return block ? safeBlockConfig(block) : {}; })(), textItems: items }) }),
           })
         ));
         setTextBlockEdits({});
@@ -2783,7 +2783,7 @@ export function SiteEditor({ site: initialSite, user }: { site: any; user: any }
                 const multiTextModes = new Set(
                   blocks
                     .filter(b => b.type === 'multi-text')
-                    .map(b => { try { return String((JSON.parse(b.config || '{}') as Record<string,unknown>).mode || 'text'); } catch { return 'text'; } })
+                    .map(b => String(safeBlockConfig(b).mode ?? 'text'))
                 );
 
                 // True when at least one dedicated content section is visible — suppresses the GENERIC fallback
@@ -2794,7 +2794,7 @@ export function SiteEditor({ site: initialSite, user }: { site: any; user: any }
                   slug === "faq" || pageBlockTypes.has("faq") || multiTextModes.has("faq") ||
                   pageBlockTypes.has("tidbits") || multiTextModes.has("tidbits") ||
                   pageBlockTypes.has("travel-section") || multiTextModes.has("travel") ||
-                  blocks.some(b => b.type === 'multi-text' && (() => { try { const m = (JSON.parse(b.config||'{}') as Record<string,unknown>).mode; return !m || m === 'text'; } catch { return true; } })());
+                  blocks.some(b => { if (b.type !== 'multi-text') return false; const m = safeBlockConfig(b).mode; return !m || m === 'text'; });
 
                 const fieldStyle: React.CSSProperties = { display: "flex", flexDirection: "column", gap: "4px", marginBottom: "0.75rem" };
                 const lblStyle: React.CSSProperties = { fontSize: "0.72rem", color: "#6b5e56", fontWeight: 500 };
@@ -3002,7 +3002,7 @@ export function SiteEditor({ site: initialSite, user }: { site: any; user: any }
                           )}
 
                           {/* TEXT BLOCKS — multi-text in text mode */}
-                          {blocks.filter(b => b.type === 'multi-text' && (() => { try { const m = (JSON.parse(b.config||'{}') as Record<string,unknown>).mode; return !m || m === 'text'; } catch { return true; } })()).map(b => {
+                          {blocks.filter(b => { if (b.type !== 'multi-text') return false; const m = safeBlockConfig(b).mode; return !m || m === 'text'; }).map(b => {
                             const bCfg = safeBlockConfig(b);
                             const blockLabel = (bCfg.blockLabel as string | undefined) || 'Text / List';
                             const items: Array<{heading: string; body: string}> = textBlockEdits[b.id] ?? (Array.isArray(bCfg.textItems) ? (bCfg.textItems as Array<{heading:string;body:string}>) : [{ heading: String(bCfg.heading ?? ''), body: String(bCfg.body ?? '') }]);
