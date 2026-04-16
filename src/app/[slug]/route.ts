@@ -7,6 +7,7 @@
 import { NextRequest } from "next/server";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { createAuth, type Env } from "@/app/lib/auth.server";
+import { safeBlockConfig } from "@/lib/schemas/blocks";
 
 export async function GET(
   req: NextRequest,
@@ -67,8 +68,7 @@ export async function GET(
   const blocksByPage = new Map<string, ParsedBlock[]>();
   for (const block of blocksResult.results) {
     if (!blocksByPage.has(block.pageId)) blocksByPage.set(block.pageId, []);
-    let config: Record<string, unknown> = {};
-    try { config = JSON.parse(block.config) as Record<string, unknown>; } catch { /* skip */ }
+    const config = safeBlockConfig(block);
     blocksByPage.get(block.pageId)!.push({ ...block, config });
   }
 

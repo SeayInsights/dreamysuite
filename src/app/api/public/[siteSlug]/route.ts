@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import type { Env } from "@/app/lib/auth.server";
+import { safeBlockConfig } from "@/lib/schemas/blocks";
 
 function jsonResponse(data: unknown, status = 200, cache = false) {
   return new Response(JSON.stringify(data), {
@@ -111,8 +112,7 @@ export async function GET(
   const blocksByPage = new Map<string, object[]>();
   for (const block of blocksResult.results) {
     if (!blocksByPage.has(block.pageId)) blocksByPage.set(block.pageId, []);
-    let config: unknown = {};
-    try { config = JSON.parse(block.config); } catch { /* keep empty */ }
+    const config = safeBlockConfig(block);
     blocksByPage.get(block.pageId)!.push({ ...block, config });
   }
 

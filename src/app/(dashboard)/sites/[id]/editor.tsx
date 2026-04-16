@@ -9,6 +9,7 @@ import Sortable from "sortablejs";
 import { useDebouncedCallback } from "use-debounce";
 import { useEditorStore } from "@/app/stores/editorStore";
 import { BLOCK_COMPONENTS } from "@/app/components/blocks";
+import { safeBlockConfig } from "@/lib/schemas/blocks";
 import "@/styles/site-editor.css";
 
 // ── Domain types ──────────────────────────────────────────────────────────────
@@ -1348,11 +1349,7 @@ export function SiteEditor({ site: initialSite, user }: { site: any; user: any }
 
   function handleEditBlock(block: Block) {
     setEditingBlock(block);
-    try {
-      setBlockConfigFields(JSON.parse(block.config || "{}") as Record<string, unknown>);
-    } catch {
-      setBlockConfigFields({});
-    }
+    setBlockConfigFields(safeBlockConfig(block));
     setBlockEditOpen(true);
   }
 
@@ -1361,11 +1358,7 @@ export function SiteEditor({ site: initialSite, user }: { site: any; user: any }
       setExpandedBlockId(null);
     } else {
       setEditingBlock(block);
-      try {
-        setBlockConfigFields(JSON.parse(block.config || "{}") as Record<string, unknown>);
-      } catch {
-        setBlockConfigFields({});
-      }
+      setBlockConfigFields(safeBlockConfig(block));
       setExpandedBlockId(block.id);
     }
   }
@@ -2165,7 +2158,7 @@ export function SiteEditor({ site: initialSite, user }: { site: any; user: any }
                       <div ref={blockListRef} style={{ marginBottom: "0.5rem" }}>
                         {blocks.map((block) => {
                           const isExpanded = expandedBlockId === block.id;
-                          const cfg = isExpanded ? blockConfigFields : (() => { try { return JSON.parse(block.config || "{}") as Record<string,unknown>; } catch { return {} as Record<string,unknown>; } })();
+                          const cfg = isExpanded ? blockConfigFields : safeBlockConfig(block);
 
                           const bgMode     = cfg.background ? 'color' : 'none';
                           const bgColor    = ((cfg.background as Record<string,unknown>)?.value as string | undefined) ?? '#ffffff';
@@ -3010,7 +3003,7 @@ export function SiteEditor({ site: initialSite, user }: { site: any; user: any }
 
                           {/* TEXT BLOCKS — multi-text in text mode */}
                           {blocks.filter(b => b.type === 'multi-text' && (() => { try { const m = (JSON.parse(b.config||'{}') as Record<string,unknown>).mode; return !m || m === 'text'; } catch { return true; } })()).map(b => {
-                            const bCfg = (() => { try { return JSON.parse(b.config||'{}') as Record<string,unknown>; } catch { return {} as Record<string,unknown>; } })();
+                            const bCfg = safeBlockConfig(b);
                             const blockLabel = (bCfg.blockLabel as string | undefined) || 'Text / List';
                             const items: Array<{heading: string; body: string}> = textBlockEdits[b.id] ?? (Array.isArray(bCfg.textItems) ? (bCfg.textItems as Array<{heading:string;body:string}>) : [{ heading: String(bCfg.heading ?? ''), body: String(bCfg.body ?? '') }]);
                             const setItems = (next: Array<{heading: string; body: string}>) => setTextBlockEdits(prev => ({ ...prev, [b.id]: next }));

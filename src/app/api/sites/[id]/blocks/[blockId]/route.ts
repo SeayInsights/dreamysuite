@@ -1,30 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
-import { createAuth, type Env } from "@/app/lib/auth.server";
-
-async function requireSiteOwnership(
-  req: NextRequest,
-  env: Env,
-  siteId: string
-) {
-  const auth = createAuth(env);
-  const session = await auth.api.getSession({ headers: req.headers });
-  if (!session) {
-    return { error: { code: "UNAUTHORIZED", message: "Not authenticated" }, status: 401 as const };
-  }
-  const _db = env.DB;
-  const site = await _db
-    .prepare("SELECT id FROM site WHERE id = ? AND userId = ?")
-    .bind(siteId, session.user.id)
-    .first<{ id: string }>();
-  if (site) return { userId: session.user.id };
-  const invite = await _db
-    .prepare("SELECT id FROM site_invite WHERE siteId = ? AND email = ?")
-    .bind(siteId, session.user.email.toLowerCase())
-    .first<{ id: string }>();
-  if (invite) return { userId: session.user.id };
-  return { error: { code: "FORBIDDEN", message: "Site not found or access denied" }, status: 403 as const };
-}
+import type { Env } from "@/app/lib/auth.server";
+import {
+  requireSiteOwnership,
+  apiOwnershipError,
+  apiError,
+  parseJsonBody,
+} from "@/lib/api/site-auth";
+import { parseBlockConfig } from "@/lib/schemas/blocks";
 
 export async function DELETE(
   req: NextRequest,
@@ -35,15 +18,15 @@ export async function DELETE(
   const { id: siteId, blockId } = await params;
 
   const check = await requireSiteOwnership(req, env, siteId);
-  if ("error" in check) return NextResponse.json(check, { status: check.status });
+  if ("error" in check) return apiOwnershipError(check);
 
   const block = await env.DB
-    .prepare("SELECT * FROM block WHERE id = ? AND siteId = ?")
+    .prepare("SELECT id FROM block WHERE id = ? AND siteId = ?")
     .bind(blockId, siteId)
-    .first();
+    .first<{ id: string }>();
 
   if (!block) {
-    return NextResponse.json({ error: { code: "NOT_FOUND", message: "Block not found" } }, { status: 404 });
+    return apiError("NOT_FOUND", "Block not found", 404);
   }
 
   await env.DB
@@ -63,36 +46,53 @@ export async function PUT(
   const { id: siteId, blockId } = await params;
 
   const check = await requireSiteOwnership(req, env, siteId);
-  if ("error" in check) return NextResponse.json(check, { status: check.status });
+  if ("error" in check) return apiOwnershipError(check);
 
   const block = await env.DB
-    .prepare("SELECT * FROM block WHERE id = ? AND siteId = ?")
+    .prepare("SELECT id, type FROM block WHERE id = ? AND siteId = ?")
     .bind(blockId, siteId)
-    .first();
+    .first<{ id: string; type: string }>();
 
   if (!block) {
-    return NextResponse.json({ error: { code: "NOT_FOUND", message: "Block not found" } }, { status: 404 });
+    return apiError("NOT_FOUND", "Block not found", 404);
   }
 
-  let body: { config?: unknown; sortOrder?: number; isVisible?: boolean };
-  try {
-    body = await req.json();
-  } catch {
-    return NextResponse.json({ error: { code: "BAD_REQUEST", message: "Invalid JSON body" } }, { status: 400 });
-  }
+  const parsed = await parseJsonBody<{
+    config?: unknown;
+    sortOrder?: number;
+    isVisible?: boolean;
+  }>(req);
+  if ("error" in parsed) return parsed.error;
+  const body = parsed.body;
 
   const fields: string[] = [];
   const values: unknown[] = [];
 
-  if (body.config !== undefined) { fields.push("config = ?"); values.push(body.config); }
-  if (body.sortOrder !== undefined) { fields.push("sortOrder = ?"); values.push(body.sortOrder); }
-  if (body.isVisible !== undefined) { fields.push("isVisible = ?"); values.push(body.isVisible ? 1 : 0); }
-
-  if (fields.length === 0) {
-    return NextResponse.json({ error: { code: "BAD_REQUEST", message: "No fields to update" } }, { status: 400 });
+  if (body.config !== undefined) {
+    const configParse = parseBlockConfig(block.type, body.config);
+    if (!configParse.ok) {
+      console.warn(
+        `[blocks:PUT blockId=${blockId} type=${block.type}] invalid config: ${configParse.error}`,
+      );
+    }
+    const configValue = configParse.ok ? configParse.config : configParse.fallback;
+    fields.push(`"config" = ?`);
+    values.push(JSON.stringify(configValue));
+  }
+  if (body.sortOrder !== undefined) {
+    fields.push(`"sortOrder" = ?`);
+    values.push(body.sortOrder);
+  }
+  if (body.isVisible !== undefined) {
+    fields.push(`"isVisible" = ?`);
+    values.push(body.isVisible ? 1 : 0);
   }
 
-  fields.push("updatedAt = ?");
+  if (fields.length === 0) {
+    return apiError("BAD_REQUEST", "No fields to update", 400);
+  }
+
+  fields.push(`"updatedAt" = ?`);
   values.push(Date.now());
   values.push(blockId);
 
