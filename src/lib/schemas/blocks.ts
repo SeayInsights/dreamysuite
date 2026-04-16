@@ -188,3 +188,25 @@ export function parseBlockConfig(
         : {},
   };
 }
+
+/**
+ * Convenience wrapper for read paths: parse, log a diagnostic on mismatch,
+ * and return the config (or fallback) as a plain record. Replaces the
+ * `try { JSON.parse(raw) } catch { {} }` pattern strewn across editor/render
+ * code — silent failures become observable while keeping UX soft.
+ */
+export function safeBlockConfig(block: {
+  id?: string;
+  type: string;
+  config: unknown;
+}): Record<string, unknown> {
+  const result = parseBlockConfig(block.type, block.config);
+  if (!result.ok) {
+    const label = block.id ? `block:${block.id}` : `block:${block.type}`;
+    console.warn(`[${label}] invalid config: ${result.error}`);
+  }
+  const out = result.ok ? result.config : result.fallback;
+  return typeof out === "object" && out !== null
+    ? (out as Record<string, unknown>)
+    : {};
+}

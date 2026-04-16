@@ -1,30 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
-import { createAuth, type Env } from "@/app/lib/auth.server";
-
-async function requireSiteOwnership(
-  req: NextRequest,
-  env: Env,
-  siteId: string
-) {
-  const auth = createAuth(env);
-  const session = await auth.api.getSession({ headers: req.headers });
-  if (!session) {
-    return { error: { code: "UNAUTHORIZED", message: "Not authenticated" }, status: 401 as const };
-  }
-  const _db = env.DB;
-  const site = await _db
-    .prepare("SELECT id FROM site WHERE id = ? AND userId = ?")
-    .bind(siteId, session.user.id)
-    .first<{ id: string }>();
-  if (site) return { userId: session.user.id };
-  const invite = await _db
-    .prepare("SELECT id FROM site_invite WHERE siteId = ? AND email = ?")
-    .bind(siteId, session.user.email.toLowerCase())
-    .first<{ id: string }>();
-  if (invite) return { userId: session.user.id };
-  return { error: { code: "FORBIDDEN", message: "Site not found or access denied" }, status: 403 as const };
-}
+import type { Env } from "@/app/lib/auth.server";
+import {
+  requireSiteOwnership,
+  apiOwnershipError,
+  apiError,
+  parseJsonBody,
+} from "@/lib/api/site-auth";
+import { parseBlockConfig } from "@/lib/schemas/blocks";
 
 export async function POST(
   req: NextRequest,
@@ -35,33 +18,42 @@ export async function POST(
   const { id: siteId } = await params;
 
   const check = await requireSiteOwnership(req, env, siteId);
-  if ("error" in check) return NextResponse.json(check, { status: check.status });
+  if ("error" in check) return apiOwnershipError(check);
 
-  let body: { pageId?: string; type?: string; config?: unknown; sortOrder?: number };
-  try {
-    body = await req.json();
-  } catch {
-    return NextResponse.json({ error: { code: "BAD_REQUEST", message: "Invalid JSON body" } }, { status: 400 });
-  }
+  const parsed = await parseJsonBody<{
+    pageId?: string;
+    type?: string;
+    config?: unknown;
+    sortOrder?: number;
+  }>(req);
+  if ("error" in parsed) return parsed.error;
 
-  const { pageId, type, config, sortOrder } = body;
+  const { pageId, type, config, sortOrder } = parsed.body;
   if (!pageId || !type) {
-    return NextResponse.json({ error: { code: "BAD_REQUEST", message: "pageId and type are required" } }, { status: 400 });
+    return apiError("BAD_REQUEST", "pageId and type are required", 400);
   }
 
-  // Verify the page belongs to this site
   const page = await env.DB
     .prepare("SELECT id FROM page WHERE id = ? AND siteId = ?")
     .bind(pageId, siteId)
     .first<{ id: string }>();
 
   if (!page) {
-    return NextResponse.json({ error: { code: "NOT_FOUND", message: "Page not found in this site" } }, { status: 404 });
+    return apiError("NOT_FOUND", "Page not found in this site", 404);
   }
 
   const id = crypto.randomUUID();
   const now = Date.now();
-  const configStr = config !== undefined ? JSON.stringify(config) : "{}";
+
+  const configParse = parseBlockConfig(type, config);
+  if (!configParse.ok) {
+    console.warn(
+      `[blocks:POST siteId=${siteId} pageId=${pageId} type=${type}] invalid config: ${configParse.error}`,
+    );
+  }
+  const configStr = JSON.stringify(
+    configParse.ok ? configParse.config : configParse.fallback,
+  );
 
   let resolvedOrder = sortOrder;
   if (resolvedOrder === undefined) {
