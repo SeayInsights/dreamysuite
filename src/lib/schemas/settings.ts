@@ -83,3 +83,60 @@ export const SettingsPatchSchema = SettingsSchema.partial();
 
 export type Settings = z.infer<typeof SettingsSchema>;
 export type SettingsPatch = z.infer<typeof SettingsPatchSchema>;
+
+/**
+ * Upsert site_setting row for `siteId` from a settings patch.
+ * - If no row exists, merges patch over DEFAULTS and INSERTs all ALLOWED_FIELDS.
+ * - If row exists, UPDATEs only the fields present in patch.
+ *
+ * Single source of truth for settings writes — used by PUT /settings and
+ * POST /templates/[id] restore. Schema-driven column list prevents field
+ * drift when new settings are added.
+ */
+export async function upsertSiteSettings(
+  db: D1Database,
+  siteId: string,
+  patch: SettingsPatch,
+  now: number = Date.now(),
+): Promise<void> {
+  const existing = await db
+    .prepare("SELECT siteId FROM site_setting WHERE siteId = ?")
+    .bind(siteId)
+    .first<{ siteId: string }>();
+
+  if (!existing) {
+    const merged = { ...DEFAULTS, ...patch };
+    const columns = ["siteId", ...ALLOWED_FIELDS, "updatedAt"];
+    const quotedCols = columns.map((c) => `"${c}"`).join(", ");
+    const placeholders = columns.map(() => "?").join(", ");
+    const bindValues: unknown[] = [
+      siteId,
+      ...ALLOWED_FIELDS.map((f) => merged[f]),
+      now,
+    ];
+    await db
+      .prepare(
+        `INSERT INTO site_setting (${quotedCols}) VALUES (${placeholders})`,
+      )
+      .bind(...bindValues)
+      .run();
+    return;
+  }
+
+  const fields: string[] = [];
+  const values: unknown[] = [];
+  for (const field of ALLOWED_FIELDS) {
+    if (field in patch) {
+      fields.push(`"${field}" = ?`);
+      values.push(patch[field]);
+    }
+  }
+  if (fields.length === 0) return;
+  fields.push(`"updatedAt" = ?`);
+  values.push(now);
+  values.push(siteId);
+  await db
+    .prepare(`UPDATE site_setting SET ${fields.join(", ")} WHERE siteId = ?`)
+    .bind(...values)
+    .run();
+}
