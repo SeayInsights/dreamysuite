@@ -236,6 +236,15 @@ export async function PUT(
       .run();
   }
 
+  // Sync site.status when isLive changes
+  if ("isLive" in body) {
+    const newStatus = body.isLive ? "published" : "draft";
+    await env.DB
+      .prepare("UPDATE site SET status = ?, updatedAt = ? WHERE id = ?")
+      .bind(newStatus, now, siteId)
+      .run();
+  }
+
   const updated = await env.DB
     .prepare("SELECT * FROM site_setting WHERE siteId = ?")
     .bind(siteId)
