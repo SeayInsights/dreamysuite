@@ -50,3 +50,15 @@ next-env.d.ts
 
 
 !.dev.vars.example
+
+# Generated types
+cloudflare-env.d.ts
+
+# Claude Code browser sessions
+.claude/web-ctl/
+
+# Legacy build artifacts
+/dist
+/.react-router
+/preview
+/meta
