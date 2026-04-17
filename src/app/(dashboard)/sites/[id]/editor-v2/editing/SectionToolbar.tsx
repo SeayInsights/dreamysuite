@@ -522,6 +522,7 @@ export function SectionToolbar({
   const isTextEditing = useEditorStore((s) => s.isTextEditing);
   const blocks = useEditorStore((s) => s.blocks);
   const updateBlock = useEditorStore((s) => s.updateBlock);
+  const selectBlock = useEditorStore((s) => s.selectBlock);
 
   const toolbarRef = useRef<HTMLDivElement>(null);
   const [position, setPosition] = useState<Position | null>(null);
@@ -742,6 +743,12 @@ export function SectionToolbar({
       )}
       style={{ top: renderPos.top, left: renderPos.left }}
       onMouseDown={(e) => e.stopPropagation()}
+      onClick={(e) => {
+        // Clicking the toolbar background (not a button/input) dismisses selection
+        if (!(e.target as HTMLElement).closest("button, input, select")) {
+          selectBlock(null);
+        }
+      }}
     >
       {/* Background button */}
       <Button

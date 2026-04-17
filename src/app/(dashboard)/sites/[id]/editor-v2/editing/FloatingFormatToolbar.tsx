@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useEffect, type JSX } from "react";
+import { useRef, useEffect, useState, type JSX } from "react";
 import { animate } from "motion/mini";
 import { cn } from "@/lib/utils";
 import { duration, EASING } from "@/lib/motion";
@@ -105,6 +105,10 @@ export function FloatingFormatToolbar({
   const colorRef = useRef<HTMLInputElement>(null);
   const toolbarRef = useRef<HTMLDivElement>(null);
   const pickerOpenRef = useRef(false);
+  const fontBtnRef = useRef<HTMLButtonElement>(null);
+  const fontMenuRef = useRef<HTMLDivElement>(null);
+  const [fontMenuOpen, setFontMenuOpen] = useState(false);
+  const [activeFont, setActiveFont] = useState<string | null>(null);
 
   useEffect(() => {
     const el = toolbarRef.current;
@@ -116,6 +120,24 @@ export function FloatingFormatToolbar({
       { duration: duration("toolbarPop") / 1000, ease: EASING.enter },
     ).finished.then(() => { if (toolbarRef.current) toolbarRef.current.style.opacity = "1"; });
   }, []);
+
+  // Close font menu on outside click
+  useEffect(() => {
+    if (!fontMenuOpen) return;
+    function onDown(e: MouseEvent) {
+      const t = e.target as Node;
+      if (!fontMenuRef.current?.contains(t) && !fontBtnRef.current?.contains(t)) {
+        setFontMenuOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", onDown);
+    return () => document.removeEventListener("mousedown", onDown);
+  }, [fontMenuOpen]);
+
+  // Font dropdown position (fixed, below the button)
+  const fontBtnRect = fontBtnRef.current?.getBoundingClientRect();
+  const fontMenuTop = fontBtnRect ? fontBtnRect.bottom + 4 : 0;
+  const fontMenuLeft = fontBtnRect ? fontBtnRect.left : 0;
 
   return (
     <div
@@ -131,32 +153,64 @@ export function FloatingFormatToolbar({
       // Prevent any mouse interaction from stealing focus from the editable
       onMouseDown={(e) => e.preventDefault()}
     >
-      {/* Font family */}
-      <select
-        title="Font family"
+      {/* Font family — custom dropdown for per-item hover styling */}
+      <button
+        ref={fontBtnRef}
+        type="button"
         aria-label="Font family"
-        className={cn(
-          "h-7 rounded border-0 bg-transparent px-1 text-xs",
-          "focus:outline-none focus:ring-1 focus:ring-ring",
-          "cursor-pointer hover:bg-accent",
-        )}
-        defaultValue=""
+        aria-expanded={fontMenuOpen}
         onMouseDown={(e) => e.stopPropagation()}
-        onChange={(e) => {
-          if (e.target.value) {
-            onFormat({ type: "fontName", value: e.target.value });
-          }
-        }}
+        onClick={() => setFontMenuOpen((v) => !v)}
+        className={cn(
+          "flex h-7 items-center gap-1 rounded px-1.5 text-xs",
+          "hover:bg-accent hover:text-accent-foreground",
+          "focus:outline-none focus:ring-1 focus:ring-ring",
+          fontMenuOpen && "bg-accent text-accent-foreground",
+        )}
       >
-        <option value="" disabled>
-          Font
-        </option>
-        {FONT_FAMILIES.map((f) => (
-          <option key={f.value} value={f.value}>
-            {f.label}
-          </option>
-        ))}
-      </select>
+        <span className="max-w-[64px] truncate">
+          {activeFont
+            ? (FONT_FAMILIES.find((f) => f.value === activeFont)?.label ?? "Font")
+            : "Font"}
+        </span>
+        <svg width="8" height="8" viewBox="0 0 8 8" fill="currentColor" aria-hidden>
+          <path d="M1 2.5l3 3 3-3" stroke="currentColor" strokeWidth="1.2" fill="none" strokeLinecap="round"/>
+        </svg>
+      </button>
+
+      {fontMenuOpen && (
+        <div
+          ref={fontMenuRef}
+          data-format-toolbar
+          className={cn(
+            "fixed z-[60] min-w-[160px] rounded-lg border border-border",
+            "bg-popover py-1 shadow-lg",
+          )}
+          style={{ top: fontMenuTop, left: fontMenuLeft }}
+          onMouseDown={(e) => e.stopPropagation()}
+        >
+          {FONT_FAMILIES.map((f) => (
+            <button
+              key={f.value}
+              type="button"
+              onMouseDown={(e) => e.stopPropagation()}
+              onClick={() => {
+                setActiveFont(f.value);
+                setFontMenuOpen(false);
+                onFormat({ type: "fontName", value: f.value });
+              }}
+              className={cn(
+                "flex w-full items-center px-3 py-1.5 text-left text-xs",
+                "hover:bg-accent hover:text-accent-foreground",
+                activeFont === f.value && "text-primary font-medium",
+              )}
+            >
+              {f.label}
+            </button>
+          ))}
+        </div>
+      )}
+
 
       <Divider />
 
