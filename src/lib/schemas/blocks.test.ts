@@ -25,6 +25,14 @@ const MINIMAL: Record<BlockType, Record<string, unknown>> = {
   "hotel-card": { name: "Hotel" },
   "venue-map": { name: "Venue" },
   "photo-split": { heading: "Us" },
+  // Consolidated (Task 18)
+  "media-video": { provider: "youtube", url: "https://youtu.be/xyz" },
+  gallery: { layout: "grid", urls: ["https://example.com/1.jpg"] },
+  "info-card": { variant: "registry", name: "Registry" },
+  // New (Task 19)
+  "rsvp-form": { heading: "RSVP", siteId: "site_001" },
+  "story-timeline": { heading: "Our Story", events: [] },
+  "guest-book": { heading: "Guest Book" },
 };
 
 /**
@@ -45,6 +53,14 @@ const INVALID: Record<BlockType, Record<string, unknown>> = {
   "hotel-card": { address: 5 },
   "venue-map": { embedUrl: {} },
   "photo-split": { layout: "upside-down" },
+  // Consolidated
+  "media-video": { provider: "vimeo" },
+  gallery: { layout: "masonry" },
+  "info-card": { variant: "venue" },
+  // New
+  "rsvp-form": { heading: 42 },
+  "story-timeline": { events: "not-an-array" },
+  "guest-book": { heading: false },
 };
 
 describe("parseBlockConfig — per-type coverage", () => {
