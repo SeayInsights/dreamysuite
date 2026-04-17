@@ -13,6 +13,7 @@ export type Section =
 	| "media"
 	| "music"
 	| "language"
+	| "effects"
 	| "settings";
 
 // ---------------------------------------------------------------------------
