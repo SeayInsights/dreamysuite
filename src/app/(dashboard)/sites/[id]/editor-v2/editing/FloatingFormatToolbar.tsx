@@ -94,6 +94,7 @@ export function FloatingFormatToolbar({
 }: FloatingFormatToolbarProps): JSX.Element {
   const colorRef = useRef<HTMLInputElement>(null);
   const toolbarRef = useRef<HTMLDivElement>(null);
+  const pickerOpenRef = useRef(false);
 
   useEffect(() => {
     const el = toolbarRef.current;
@@ -193,7 +194,15 @@ export function FloatingFormatToolbar({
       <div className="relative">
         <ToolbarButton
           label="Text color"
-          onClick={() => colorRef.current?.click()}
+          onClick={() => {
+            if (pickerOpenRef.current) {
+              pickerOpenRef.current = false;
+              colorRef.current?.blur();
+            } else {
+              pickerOpenRef.current = true;
+              colorRef.current?.click();
+            }
+          }}
         >
           {/* A-with-color-bar icon */}
           <span className="flex flex-col items-center leading-none">
@@ -201,13 +210,17 @@ export function FloatingFormatToolbar({
             <span className="mt-0.5 h-1 w-4 rounded-sm bg-current" />
           </span>
         </ToolbarButton>
+        {/* pointer-events-none so user clicks fall through to the button above;
+            the picker is opened programmatically via colorRef.current?.click() */}
         <input
           ref={colorRef}
           type="color"
           aria-label="Pick text color"
-          className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
-          onMouseDown={(e) => e.preventDefault()}
-          onChange={(e) => onFormat({ type: "foreColor", value: e.target.value })}
+          className="absolute inset-0 h-full w-full opacity-0 pointer-events-none"
+          onChange={(e) => {
+            pickerOpenRef.current = false;
+            onFormat({ type: "foreColor", value: e.target.value });
+          }}
         />
       </div>
 
