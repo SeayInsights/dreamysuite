@@ -34,8 +34,7 @@ describe("apiOwnershipError", () => {
     expect(body).toEqual({
       error: { code: "UNAUTHORIZED", message: "Not authenticated" },
     });
-    // No `status` key leaking into body — HTTP status is authoritative
-    expect("status" in body).toBe(false);
+    expect("status" in (body as Record<string, unknown>)).toBe(false);
   });
 
   it("403 FORBIDDEN shape", async () => {
@@ -44,7 +43,7 @@ describe("apiOwnershipError", () => {
       status: 403,
     });
     expect(res.status).toBe(403);
-    const body = await res.json();
+    const body = (await res.json()) as { error: { code: string } };
     expect(body.error.code).toBe("FORBIDDEN");
   });
 });
@@ -71,7 +70,7 @@ describe("parseJsonBody", () => {
     expect("error" in out).toBe(true);
     if ("error" in out) {
       expect(out.error.status).toBe(400);
-      const body = await out.error.json();
+      const body = (await out.error.json()) as { error: { code: string } };
       expect(body.error.code).toBe("BAD_REQUEST");
     }
   });
