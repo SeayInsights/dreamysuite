@@ -20,6 +20,7 @@ const HOVER_ZONE = 24;
 
 export function InsertButton({ containerRef }: Props) {
   const blocks = useEditorStore((s) => s.blocks);
+  const selectedBlockId = useEditorStore((s) => s.selectedBlockId);
   const [slot, setSlot] = useState<InsertSlot | null>(null);
   const [paletteOpen, setPaletteOpen] = useState(false);
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -99,6 +100,7 @@ export function InsertButton({ containerRef }: Props) {
     if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
   }, []);
 
+  if (selectedBlockId) return null;
   if (!slot) return null;
 
   return (
