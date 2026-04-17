@@ -3066,6 +3066,7 @@ function toggleMusic(){var a=document.getElementById('audio-player'),b=document.
   .lang-select{appearance:none;border:1px solid var(--border,#e7e5e4);border-radius:6px;padding:0.375rem 1.75rem 0.375rem 0.625rem;font-family:inherit;font-size:0.8125rem;background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23666' d='M3 4.5L6 7.5L9 4.5'/%3E%3C/svg%3E") no-repeat right 0.5rem center;cursor:pointer;outline:none;color:var(--text,#292524)}</style>
 </head>
 <body>
+  ${settings?.effectBg ? `<div id="effect-bg" style="position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;" aria-hidden="true"></div>` : ""}
   ${escapedBgImageUrl ? `<div id="bg-overlay" style="position:fixed;inset:0;z-index:0;pointer-events:none;background-image:url('${escapedBgImageUrl}');background-size:cover;background-position:center;background-attachment:fixed;opacity:${settings?.bgImageOpacity ?? 1};display:${settings?.bgImageLayer === 'overlay' ? '' : 'none'};"></div>` : ""}
   <div class="margin-curtain-t"></div>
   <div class="margin-curtain-b"></div>
@@ -3138,6 +3139,16 @@ function submitRsvp(event, slug, formId, msgId) {
   });
 }
   </script>
+  ${settings?.effectBg ? `<script>
+(function(){
+  if(window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  var c=navigator.hardwareConcurrency||4,m=navigator.deviceMemory||4;
+  if(c<=2||m<=2) return;
+  var el=document.getElementById('effect-bg');
+  if(!el) return;
+  el.dataset.effect='${escHtml(settings.effectBg)}';
+})();
+</script>` : ""}
 </body>
 </html>`;
 }
