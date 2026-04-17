@@ -283,7 +283,10 @@ export function BottomSheetToolbar({
       el,
       { y: ["100%", "0%"] },
       { duration: duration("inspectorSlide") / 1000, ease: EASING.enter },
-    ).finished.then(() => setEntered(true));
+    ).finished.then(() => {
+      if (sheetRef.current) sheetRef.current.style.transform = "translateY(0px)";
+      setEntered(true);
+    });
   }, []);
 
   // Swipe-down dismiss via pointer events on the drag pill

@@ -36,14 +36,19 @@ export function SlideTray() {
 				el,
 				{ x: [`-${TRAY_WIDTH}px`, "0px"] },
 				{ duration: duration("traySlide") / 1000, ease: EASING.enter },
-			);
+			).finished.then(() => {
+				if (ref.current) ref.current.style.transform = "translateX(0px)";
+			});
 		} else if (hasOpenedOnce.current) {
 			animate(
 				el,
-				{ x: `-${TRAY_WIDTH}px` },
+				{ x: ["0px", `-${TRAY_WIDTH}px`] },
 				{ duration: duration("traySlide") / 1000, ease: EASING.exit },
 			).finished.then(() => {
-				if (ref.current) ref.current.style.pointerEvents = "none";
+				if (ref.current) {
+					ref.current.style.transform = `translateX(-${TRAY_WIDTH}px)`;
+					ref.current.style.pointerEvents = "none";
+				}
 			});
 		} else {
 			el.style.transform = `translateX(-${TRAY_WIDTH}px)`;
