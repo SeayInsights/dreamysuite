@@ -36,10 +36,19 @@ const TABS: { id: TabId; label: string }[] = [
 export function Inspector() {
 	const ref = useRef<HTMLDivElement>(null);
 	const wasOpen = useRef(false);
+
+	useEffect(() => {
+		if (ref.current) ref.current.style.transform = `translateX(${PANEL_WIDTH}px)`;
+	}, []);
 	const inspectorOpen = useEditorStore((s) => s.inspectorOpen);
 	const setInspectorOpen = useEditorStore((s) => s.setInspectorOpen);
 	const selectedBlockId = useEditorStore((s) => s.selectedBlockId);
+	const mode = useEditorStore((s) => s.mode);
 	const [tab, setTab] = useState<TabId>("layout");
+
+	const visibleTabs = mode === "simple"
+		? TABS.filter((t) => t.id === "layout" || t.id === "content")
+		: TABS;
 
 	useEffect(() => {
 		const el = ref.current;
@@ -58,7 +67,9 @@ export function Inspector() {
 					duration: duration("inspectorSlide") / 1000,
 					ease: EASING.enter,
 				},
-			);
+			).finished.then(() => {
+				if (ref.current) ref.current.style.transform = "translateX(0px)";
+			});
 			wasOpen.current = true;
 			return;
 		}
@@ -71,7 +82,10 @@ export function Inspector() {
 					ease: EASING.exit,
 				},
 			).finished.then(() => {
-				if (ref.current) ref.current.style.pointerEvents = "none";
+				if (ref.current) {
+					ref.current.style.transform = `translateX(${PANEL_WIDTH}px)`;
+					ref.current.style.pointerEvents = "none";
+				}
 			});
 			wasOpen.current = false;
 		}
@@ -84,7 +98,7 @@ export function Inspector() {
 			aria-label="Inspector"
 			aria-hidden={!inspectorOpen}
 			className="pointer-events-none absolute bottom-0 right-0 top-0 z-10 w-80 border-l border-border bg-white shadow-lg"
-			style={{ transform: `translateX(${PANEL_WIDTH}px)` }}
+			style={{}}
 		>
 			<div className="flex h-10 items-center justify-between border-b border-border px-3">
 				<div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
@@ -105,7 +119,7 @@ export function Inspector() {
 				aria-label="Inspector tabs"
 				className="flex items-center gap-0.5 border-b border-border px-2 py-1.5"
 			>
-				{TABS.map((t) => {
+				{visibleTabs.map((t) => {
 					const active = tab === t.id;
 					return (
 						<button

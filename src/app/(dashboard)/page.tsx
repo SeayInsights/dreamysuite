@@ -64,12 +64,6 @@ export default async function DashboardIndex() {
           </p>
         </div>
 
-        <Link href="/sites/new" className="ds-btn-primary">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M12 5v14M5 12h14" />
-          </svg>
-          New Site
-        </Link>
       </div>
 
       {sites.length === 0 ? (
@@ -79,6 +73,7 @@ export default async function DashboardIndex() {
           {sites.map((site) => (
             <SiteCard key={site.id} site={site} />
           ))}
+          <NewSiteCard />
         </div>
       )}
     </div>
@@ -106,6 +101,34 @@ function EmptyState() {
         Create a site
       </Link>
     </div>
+  );
+}
+
+function NewSiteCard() {
+  return (
+    <Link href="/sites/new" className="site-card-outer" style={{ opacity: 0.7 }}>
+      <div className="site-card-inner" style={{ height: "100%" }}>
+        <div
+          className="site-card-preview"
+          style={{
+            background: "transparent",
+            border: "2px dashed var(--ds-border, #e8e4e0)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--ds-text-subtle, #9b8e85)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M12 5v14M5 12h14" />
+          </svg>
+        </div>
+        <div className="site-card-body">
+          <div className="site-card-row">
+            <p className="site-card-name" style={{ color: "var(--ds-text-subtle, #9b8e85)" }}>New Site</p>
+          </div>
+        </div>
+      </div>
+    </Link>
   );
 }
 

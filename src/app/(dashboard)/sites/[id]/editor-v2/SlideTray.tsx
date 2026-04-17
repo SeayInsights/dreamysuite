@@ -28,6 +28,11 @@ export function SlideTray() {
 	const setOpenTray = useEditorStore((s) => s.setOpenTray);
 	const railCollapsed = useEditorStore((s) => s.railCollapsed);
 
+	// Initialize off-screen without an inline style that WAAPI would fight.
+	useEffect(() => {
+		if (ref.current) ref.current.style.transform = `translateX(-${TRAY_WIDTH}px)`;
+	}, []);
+
 	useEffect(() => {
 		const el = ref.current;
 		if (!el) return;
@@ -40,7 +45,9 @@ export function SlideTray() {
 					duration: duration("traySlide") / 1000,
 					ease: EASING.enter,
 				},
-			);
+			).finished.then(() => {
+				if (ref.current) ref.current.style.transform = "translateX(0px)";
+			});
 			wasOpen.current = true;
 			return;
 		}
@@ -53,7 +60,10 @@ export function SlideTray() {
 					ease: EASING.exit,
 				},
 			).finished.then(() => {
-				if (ref.current) ref.current.style.pointerEvents = "none";
+				if (ref.current) {
+					ref.current.style.transform = `translateX(-${TRAY_WIDTH}px)`;
+					ref.current.style.pointerEvents = "none";
+				}
 			});
 			wasOpen.current = false;
 		}
@@ -85,7 +95,6 @@ export function SlideTray() {
 			className="pointer-events-none absolute top-0 bottom-0 z-10 w-72 border-r border-border bg-white shadow-lg transition-[left] duration-200"
 			style={{
 				left: railCollapsed ? 0 : 48,
-				transform: `translateX(-${TRAY_WIDTH}px)`,
 			}}
 		>
 			{openTray === "pages" && <PagesTray />}
