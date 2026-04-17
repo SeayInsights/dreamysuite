@@ -118,6 +118,19 @@ function applyAngle(gradValue: string, angle: string): string {
   return gradValue.replace(/^linear-gradient\([^,]+,/, `linear-gradient(${angle},`);
 }
 
+type ColorMode = "hex" | "rgb";
+
+function hexToRgbParts(h: string): [number, number, number] {
+  const m = /^#?([0-9a-f]{6})$/i.exec(h);
+  if (!m) return [255, 255, 255];
+  return [parseInt(m[1].slice(0, 2), 16), parseInt(m[1].slice(2, 4), 16), parseInt(m[1].slice(4, 6), 16)];
+}
+
+function rgbPartsToHex(r: number, g: number, b: number): string {
+  const c = (v: number) => Math.max(0, Math.min(255, Math.round(v))).toString(16).padStart(2, "0");
+  return `#${c(r)}${c(g)}${c(b)}`;
+}
+
 function BackgroundPopover({ currentValue, onSelect }: BgPopoverProps) {
   const isGradient = currentValue.startsWith("linear-gradient") || currentValue.startsWith("radial-gradient");
   const isTransparent = currentValue === "transparent" || currentValue === "";
@@ -125,6 +138,7 @@ function BackgroundPopover({ currentValue, onSelect }: BgPopoverProps) {
   const [hex, setHex] = useState(isGradient || isTransparent ? "#ffffff" : currentValue);
   const [opacity, setOpacity] = useState(100);
   const [gradDir, setGradDir] = useState("135deg");
+  const [colorMode, setColorMode] = useState<ColorMode>("hex");
 
   function applyHexOpacity(h: string, op: number) {
     if (op >= 100) { onSelect(h); return; }
@@ -176,17 +190,45 @@ function BackgroundPopover({ currentValue, onSelect }: BgPopoverProps) {
               />
             ))}
           </div>
-          <div className="flex items-center gap-2">
-            <label className="text-xs text-muted-foreground shrink-0">Hex</label>
-            <input
-              type="text"
-              value={hex}
-              maxLength={7}
-              className="h-7 w-full rounded border border-input bg-background px-2 text-xs focus:outline-none focus:ring-1 focus:ring-ring"
-              onChange={(e) => setHex(e.target.value)}
-              onBlur={() => { if (/^#[0-9a-fA-F]{6}$/.test(hex.trim())) applyHexOpacity(hex.trim(), opacity); }}
-              onKeyDown={(e) => { if (e.key === "Enter" && /^#[0-9a-fA-F]{6}$/.test(hex.trim())) applyHexOpacity(hex.trim(), opacity); e.stopPropagation(); }}
-            />
+          <div className="flex items-center gap-1.5">
+            <div className="flex h-7 shrink-0 overflow-hidden rounded border border-input text-[10px] font-medium">
+              <button type="button" onClick={() => setColorMode("hex")} className={`px-1.5 transition-colors ${colorMode === "hex" ? "bg-accent text-accent-foreground" : "bg-background text-muted-foreground hover:bg-accent/50"}`}>HEX</button>
+              <button type="button" onClick={() => setColorMode("rgb")} className={`px-1.5 transition-colors ${colorMode === "rgb" ? "bg-accent text-accent-foreground" : "bg-background text-muted-foreground hover:bg-accent/50"}`}>RGB</button>
+            </div>
+            {colorMode === "hex" ? (
+              <input
+                type="text"
+                value={hex}
+                maxLength={7}
+                className="h-7 w-full rounded border border-input bg-background px-2 text-xs focus:outline-none focus:ring-1 focus:ring-ring"
+                onChange={(e) => setHex(e.target.value)}
+                onBlur={() => { if (/^#[0-9a-fA-F]{6}$/.test(hex.trim())) applyHexOpacity(hex.trim(), opacity); }}
+                onKeyDown={(e) => { if (e.key === "Enter" && /^#[0-9a-fA-F]{6}$/.test(hex.trim())) applyHexOpacity(hex.trim(), opacity); e.stopPropagation(); }}
+              />
+            ) : (
+              <div className="flex gap-1">
+                {(["r", "g", "b"] as const).map((ch, i) => {
+                  const parts = hexToRgbParts(hex);
+                  return (
+                    <input
+                      key={ch}
+                      type="number"
+                      min={0}
+                      max={255}
+                      value={parts[i]}
+                      onChange={(e) => {
+                        const p = hexToRgbParts(hex);
+                        p[i] = Math.max(0, Math.min(255, parseInt(e.target.value) || 0));
+                        const next = rgbPartsToHex(p[0], p[1], p[2]);
+                        setHex(next);
+                        applyHexOpacity(next, opacity);
+                      }}
+                      className="h-7 w-12 rounded border border-input bg-background px-1 text-center text-xs tabular-nums focus:outline-none focus:ring-1 focus:ring-ring"
+                    />
+                  );
+                })}
+              </div>
+            )}
           </div>
           <div className="space-y-1">
             <div className="flex items-center justify-between text-xs text-muted-foreground">

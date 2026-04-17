@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { useEditorStore } from "@/app/stores/editorStore";
 import { useStyledValue } from "../hooks/useStyledValue";
 
@@ -52,15 +53,33 @@ function NumberInput({
 	max?: number;
 	unit?: string;
 }) {
+	const [draft, setDraft] = useState(String(value));
+
+	useEffect(() => {
+		setDraft(String(value));
+	}, [value]);
+
+	function commit() {
+		const n = Math.max(min, Math.min(max, parseInt(draft) || 0));
+		onChange(n);
+		setDraft(String(n));
+	}
+
 	return (
 		<div className="flex items-center gap-2">
 			<label className="w-10 shrink-0 text-[10px] uppercase text-muted-foreground">{label}</label>
 			<input
-				type="number"
-				min={min}
-				max={max}
-				value={value}
-				onChange={(e) => onChange(Math.max(min, Math.min(max, Number(e.target.value) || 0)))}
+				type="text"
+				inputMode="numeric"
+				value={draft}
+				onChange={(e) => {
+					const raw = e.target.value.replace(/[^0-9]/g, "");
+					setDraft(raw);
+					const n = parseInt(raw);
+					if (!isNaN(n)) onChange(Math.max(min, Math.min(max, n)));
+				}}
+				onBlur={commit}
+				onKeyDown={(e) => { if (e.key === "Enter") commit(); }}
 				className="h-7 w-full rounded border border-input bg-background px-2 text-xs tabular-nums focus:outline-none focus:ring-1 focus:ring-ring"
 			/>
 			<span className="shrink-0 text-[10px] text-muted-foreground">{unit}</span>
