@@ -92,7 +92,7 @@ export function SlideTray() {
 			ref={ref}
 			role="dialog"
 			aria-hidden={!openTray}
-			className="pointer-events-none absolute top-0 bottom-0 z-[150] w-72 border-r border-border bg-white shadow-lg transition-[left] duration-200"
+			className="pointer-events-none absolute top-0 bottom-0 z-[150] w-72 border-r border-border bg-slate-50 shadow-lg transition-[left] duration-200"
 			style={{
 				left: railCollapsed ? 0 : 48,
 			}}
