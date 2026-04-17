@@ -9,6 +9,7 @@ export type Section =
 	| "elements"
 	| "layers"
 	| "theme"
+	| "navigation"
 	| "media"
 	| "music"
 	| "language"
@@ -87,6 +88,7 @@ export interface EditorPage {
 	slug: string;
 	label: string;
 	sortOrder: number;
+	isVisible: number;
 }
 
 export interface EditorShellSlice {
