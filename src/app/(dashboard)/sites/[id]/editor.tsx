@@ -11,6 +11,7 @@ import { useEditorStore } from "@/app/stores/editorStore";
 import { BLOCK_COMPONENTS } from "@/app/components/blocks";
 import { safeBlockConfig } from "@/lib/schemas/blocks";
 import "@/styles/site-editor.css";
+import "@/styles/site-blocks.css";
 
 // ── Domain types ──────────────────────────────────────────────────────────────
 

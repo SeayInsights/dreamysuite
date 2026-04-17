@@ -29,24 +29,22 @@ export function BreakpointFrame({ children }: Props) {
 	useEffect(() => {
 		const el = ref.current;
 		if (!el) return;
-		const target = WIDTHS[breakpoint];
-		animate(
-			el,
-			{ width: `${target}px` },
-			{
-				duration: duration("traySlide") / 1000,
-				ease: EASING.standard,
-			},
-		);
+		if (breakpoint === "desktop") {
+			animate(el, { width: "100%" }, { duration: duration("traySlide") / 1000, ease: EASING.standard });
+		} else {
+			animate(el, { width: `${WIDTHS[breakpoint]}px` }, { duration: duration("traySlide") / 1000, ease: EASING.standard });
+		}
 	}, [breakpoint]);
 
+	const isDesktop = breakpoint === "desktop";
+
 	return (
-		<div className="flex h-full w-full justify-center overflow-auto bg-muted/40 p-6">
+		<div className={`flex h-full w-full overflow-auto ${isDesktop ? "bg-background" : "justify-center bg-muted/40 p-6"}`}>
 			<div
 				ref={ref}
 				data-breakpoint={breakpoint}
-				className="relative min-h-full max-w-full rounded-lg border border-border bg-background shadow-sm"
-				style={{ width: WIDTHS[breakpoint] }}
+				className={`relative min-h-full max-w-full bg-background ${isDesktop ? "w-full" : "rounded-lg border border-border shadow-sm"}`}
+				style={isDesktop ? undefined : { width: WIDTHS[breakpoint] }}
 			>
 				{children}
 			</div>

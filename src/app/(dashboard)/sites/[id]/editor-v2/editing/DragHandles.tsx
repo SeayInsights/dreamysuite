@@ -243,7 +243,7 @@ export function DragHandles({ containerRef }: Props) {
 	// ── Render ────────────────────────────────────────────────────────────
 
 	return (
-		<div className="pointer-events-none absolute inset-0 z-20" aria-hidden>
+		<div className="pointer-events-none absolute inset-0 z-[45]" aria-hidden>
 			{/* Move handle (re-enables pointer events on itself) */}
 			<div className="pointer-events-auto">
 				<MoveHandle
