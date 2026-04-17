@@ -180,6 +180,14 @@ interface SiteSettingRow {
   bgImageOpacity: number | null;
   siteMaxWidth: number | null;
   passwordPages: string | null;
+  effectPreset: string | null;
+  effectBg: string | null;
+  effectNav: string | null;
+  effectText: string | null;
+  effectCard: string | null;
+  effectTransition: string | null;
+  effectCursor: string | null;
+  effectDecoration: string | null;
 }
 
 interface PageRow {
