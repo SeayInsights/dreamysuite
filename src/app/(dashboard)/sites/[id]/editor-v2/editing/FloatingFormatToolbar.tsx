@@ -103,7 +103,7 @@ export function FloatingFormatToolbar({
       el,
       { opacity: [0, 1], scale: [0.95, 1] },
       { duration: duration("toolbarPop") / 1000, ease: EASING.enter },
-    );
+    ).finished.then(() => { if (toolbarRef.current) toolbarRef.current.style.opacity = "1"; });
   }, []);
 
   return (

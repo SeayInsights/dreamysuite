@@ -116,7 +116,8 @@ function Outline({ rect, label, variant }: OutlineProps) {
 		const el = ref.current;
 		if (!el) return;
 		el.style.opacity = "0";
-		animate(el, { opacity: [0, 1] }, { duration: duration("selectionFade") / 1000, ease: EASING.standard });
+		animate(el, { opacity: [0, 1] }, { duration: duration("selectionFade") / 1000, ease: EASING.standard })
+			.finished.then(() => { if (ref.current) ref.current.style.opacity = "1"; });
 	}, []);
 
 	return (

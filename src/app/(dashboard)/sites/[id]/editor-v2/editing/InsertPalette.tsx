@@ -46,7 +46,7 @@ export function InsertPalette({ insertIndex, onClose, anchorRef }: Props) {
       el,
       { opacity: [0, 1], scale: [0.97, 1] },
       { duration: duration("toolbarPop") / 1000, ease: EASING.enter },
-    );
+    ).finished.then(() => { if (paletteRef.current) paletteRef.current.style.opacity = "1"; });
   }, []);
 
   // Position below anchor
