@@ -2,6 +2,7 @@
 
 import { type ReactNode, type RefObject } from "react";
 
+import { useEditorStore } from "@/app/stores/editorStore";
 import { useSelection } from "./hooks/useSelection";
 import { SelectionLayer } from "./SelectionLayer";
 import { InsertButton } from "./editing/InsertButton";
@@ -20,11 +21,13 @@ export function EditorOverlay({ children, containerRef }: Props) {
 			ref={containerRef}
 			className="relative h-full w-full overflow-y-auto"
 			onClick={(e) => {
+				// Use getState() for always-fresh selection — avoids stale closure
+				const currentId = useEditorStore.getState().selectedBlockId;
 				const id = (e.target as HTMLElement)
 					.closest<HTMLElement>("[data-block-id]")
 					?.dataset.blockId;
 				if (id) {
-					if (id === selectedBlockId) clear();
+					if (id === currentId) clear();
 					else select(id);
 				} else {
 					clear();
