@@ -81,10 +81,10 @@ export function SlideTray() {
 			ref={ref}
 			role="dialog"
 			aria-hidden={!openTray}
-			// z-[9999] + isolate: sits above canvas, inspector, and all overlays.
-			// transform/pointerEvents managed via useEffect to avoid Tailwind JIT
-			// purge issues with dynamically toggled transform classes.
-			className="absolute top-0 bottom-0 z-[9999] w-72 border-r border-border bg-slate-50 shadow-xl isolate"
+			// position:fixed — bypasses the parent overflow:hidden clip and all
+			// intermediate stacking contexts. top-12 clears the 48px TopBar.
+			// transform/pointerEvents managed via useEffect.
+			className="fixed top-12 bottom-0 z-[15] w-72 border-r border-border bg-white shadow-xl"
 			style={{ left: railCollapsed ? 0 : 48 }}
 		>
 			{openTray === "pages" && <PagesTray />}
