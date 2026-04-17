@@ -92,20 +92,33 @@ export function parseCfg(raw: unknown): Record<string, unknown> {
  */
 export function blockSectionStyle(cfg: Record<string, unknown>): CSSProperties {
   const style: CSSProperties = {};
+
   if (typeof cfg.backgroundColor === "string" && cfg.backgroundColor) {
     style.background = cfg.backgroundColor;
   }
+
   if (typeof cfg.blockHeight === "number" && cfg.blockHeight > 0) {
-    style.minHeight = `${cfg.blockHeight}px`;
+    // Use explicit height so the block occupies exactly this space.
+    // Zero out the CSS-class vertical padding (.block { padding: 3.5rem ... })
+    // so the height value is immediately visible. User-set padding overrides below.
+    style.height = `${cfg.blockHeight}px`;
+    style.paddingTop = "0";
+    style.paddingBottom = "0";
+    style.overflowY = "hidden";
   }
+
   const pad = cfg.padding;
   if (pad && typeof pad === "object" && !Array.isArray(pad)) {
     const p = pad as Record<string, unknown>;
+    // Baseline ALL sides to 0 so CSS-class padding doesn't mix with user values.
+    // Individual sides below override only those the user explicitly set.
+    style.padding = "0";
     if (typeof p.top === "number") style.paddingTop = `${p.top}px`;
     if (typeof p.right === "number") style.paddingRight = `${p.right}px`;
     if (typeof p.bottom === "number") style.paddingBottom = `${p.bottom}px`;
     if (typeof p.left === "number") style.paddingLeft = `${p.left}px`;
   }
+
   return style;
 }
 
