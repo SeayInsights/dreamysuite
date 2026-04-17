@@ -2345,6 +2345,40 @@ function buildIntroHtml(
 
 // ── Full-document HTML builder ────────────────────────────────────────────────
 
+// Allowlist prevents arbitrary path injection into import() URLs
+const VALID_PRESET_IDS = new Set([
+  "fade-slide-up", "split-text", "mask-wipe", "parallax-monogram",
+  "ken-burns", "scroll-pinned-story", "sticky-date", "blur-in",
+  "envelope-unfold", "letter-cascade",
+]);
+
+function buildBlockAnimationScript(usedPresets: Set<string>): string {
+  const ids = [...usedPresets].filter((id) => VALID_PRESET_IDS.has(id));
+  if (!ids.length) return "";
+
+  // JSON-encoded array is safe to embed — preset IDs are allowlisted above
+  const idsJson = JSON.stringify(ids);
+
+  // <script type="module"> enables top-level await and native dynamic import().
+  // GSAP CDN is already loaded synchronously in <head>, so `gsap` global is
+  // available before this deferred module executes.
+  return `<script type="module">
+const ids = ${idsJson};
+const mods = await Promise.all(ids.map(id => import('/animations/presets/' + id + '.js')));
+const fns = Object.fromEntries(ids.map((id, i) => [id, mods[i].default]));
+const els = document.querySelectorAll('[data-animation]');
+if (!els.length) return;
+const io = new IntersectionObserver((entries) => {
+  for (const e of entries) {
+    if (!e.isIntersecting) continue;
+    const fn = fns[e.target.getAttribute('data-animation')];
+    if (fn) { fn(e.target); io.unobserve(e.target); }
+  }
+}, { threshold: 0.15, rootMargin: '0px 0px -40px 0px' });
+for (const el of els) io.observe(el);
+</script>`;
+}
+
 function buildHtml(
   site: SiteRow,
   settings: SiteSettingRow | null,
@@ -2367,6 +2401,15 @@ function buildHtml(
   const allBlocks = pages.flatMap((p) => p.blocks);
   const hasCountdown = allBlocks.some((b) => b.type === "countdown")
     || (!!settings?.eventDate && allBlocks.some((b) => b.type === "video" && !!(b.config as Record<string, unknown>).showCountdown));
+
+  const usedBlockPresets = new Set(
+    allBlocks
+      .map((b) => (b.config as Record<string, unknown>).animation)
+      .filter((a): a is string => typeof a === "string" && a.length > 0)
+  );
+  const blockPresetNeedsScrollTrigger = ["parallax-monogram", "scroll-pinned-story", "sticky-date"]
+    .some((id) => usedBlockPresets.has(id));
+  const blockAnimScript = buildBlockAnimationScript(usedBlockPresets);
 
   // Build nav bar (only if there are multiple pages, all visible)
   const visiblePages = pages.filter((p) => p.isVisible !== 0);
@@ -2439,7 +2482,12 @@ function buildHtml(
         ?? pageContentByLang?.get(mainLang)
         ?? (pageContentByLang ? [...pageContentByLang.values()][0] : undefined);
       const blocksHtml = page.blocks
-        .map((block) => renderBlock(block, settings, pageContent, siteSlug))
+        .map((block) => {
+          const html = renderBlock(block, settings, pageContent, siteSlug);
+          const animPreset = (block.config as Record<string, unknown>).animation;
+          if (typeof animPreset !== "string" || !animPreset) return html;
+          return html.replace(/(<section\b[^>]*)(>)/, `$1 data-animation="${escHtml(animPreset)}"$2`);
+        })
         .join("\n");
       const sectionClass = hasMultiplePages
         ? `page-section${i === 0 ? " active" : ""}`
@@ -2582,8 +2630,8 @@ function switchLang() {
     settings?.popupTitle ?? null,
     greeting
   );
-  const gsapCdn = introHtml
-    ? `<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>\n  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/CustomEase.min.js"></script>`
+  const gsapCdn = (introHtml || usedBlockPresets.size > 0)
+    ? `<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>\n  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/CustomEase.min.js"></script>${blockPresetNeedsScrollTrigger ? "\n  <script src=\"https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js\"></script>" : ""}`
     : "";
 
   // Show greeting after animation whenever animation is active and popup isn't bundled.
@@ -2884,6 +2932,7 @@ function toggleMusic() {
   ${buildMessageListenerScript()}
   ${musicScript}
   ${langScript}
+  ${blockAnimScript}
   <script>
 function submitRsvp(event, slug, formId, msgId) {
   event.preventDefault();
