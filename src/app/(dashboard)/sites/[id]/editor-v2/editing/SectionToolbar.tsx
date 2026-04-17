@@ -3,6 +3,7 @@
 import React, {
   useCallback,
   useEffect,
+  useMemo,
   useRef,
   useState,
   type ReactNode,
@@ -15,6 +16,7 @@ import { useEditorStore } from "@/app/stores/editorStore";
 import { parseCfg } from "@/lib/editableField";
 import { AnimationPresetPicker } from "../inspector/AnimationPresetPicker";
 import { getPreset } from "@/app/animations/registry";
+import { themeSwatches, themeGradients } from "../lib/themeSwatches";
 import "@/app/animations/presets/index";
 
 // ---------------------------------------------------------------------------
@@ -34,25 +36,8 @@ interface PaddingValue {
 }
 
 // ---------------------------------------------------------------------------
-// Constants — 8-swatch background palette
+// (Swatches are now theme-derived — see themeSwatches utility)
 // ---------------------------------------------------------------------------
-
-const BG_SOLID_SWATCHES = [
-  "#ffffff", "#faf8f6", "#f1f5f9", "#f0fdf4",
-  "#fdf4ff", "#fff7ed", "#fef2f2", "#fffbeb",
-  "#6b7280", "#1e3a5f", "#312e81", "#000000",
-] as const;
-
-const BG_GRADIENTS: { label: string; value: string; dark?: boolean }[] = [
-  { label: "Warm Ivory",  value: "linear-gradient(135deg,#fff8f0 0%,#e8c98a 100%)" },
-  { label: "Blush Rose",  value: "linear-gradient(135deg,#fff0f6 0%,#f9a8d4 100%)" },
-  { label: "Ocean Sky",   value: "linear-gradient(135deg,#e0f2fe 0%,#3b82f6 100%)" },
-  { label: "Sage Garden", value: "linear-gradient(135deg,#f0fdf4 0%,#4ade80 100%)" },
-  { label: "Champagne",   value: "linear-gradient(135deg,#fffbeb 0%,#b45309 100%)" },
-  { label: "Lavender",    value: "linear-gradient(135deg,#f5f3ff 0%,#8b5cf6 100%)" },
-  { label: "Twilight",    value: "linear-gradient(135deg,#312e81 0%,#7c3aed 100%)", dark: true },
-  { label: "Midnight",    value: "linear-gradient(135deg,#0f172a 0%,#1e40af 100%)", dark: true },
-];
 
 // ---------------------------------------------------------------------------
 // Popover primitive (shared, portal-less, position:fixed)
@@ -108,6 +93,8 @@ type BgTab = "solid" | "gradient" | "transparent";
 interface BgPopoverProps {
   currentValue: string;
   onSelect: (value: string) => void;
+  swatches: string[];
+  gradients: { label: string; value: string; dark?: boolean }[];
 }
 
 const GRAD_DIRECTIONS: { label: string; angle: string; icon: string }[] = [
@@ -134,7 +121,7 @@ function rgbPartsToHex(r: number, g: number, b: number): string {
   return `#${c(r)}${c(g)}${c(b)}`;
 }
 
-function BackgroundPopover({ currentValue, onSelect }: BgPopoverProps) {
+function BackgroundPopover({ currentValue, onSelect, swatches, gradients }: BgPopoverProps) {
   const isGradient = currentValue.startsWith("linear-gradient") || currentValue.startsWith("radial-gradient");
   const isTransparent = currentValue === "transparent" || currentValue === "";
   const [tab, setTab] = useState<BgTab>(isGradient ? "gradient" : isTransparent ? "transparent" : "solid");
@@ -179,7 +166,7 @@ function BackgroundPopover({ currentValue, onSelect }: BgPopoverProps) {
       {tab === "solid" && (
         <>
           <div className="grid grid-cols-4 gap-1.5">
-            {BG_SOLID_SWATCHES.map((color) => (
+            {swatches.map((color) => (
               <button
                 key={color}
                 type="button"
@@ -278,7 +265,7 @@ function BackgroundPopover({ currentValue, onSelect }: BgPopoverProps) {
           </div>
           {/* Gradient presets */}
           <div className="space-y-1.5">
-            {BG_GRADIENTS.map((g) => {
+            {gradients.map((g) => {
               const value = applyAngle(g.value, gradDir);
               return (
                 <button
@@ -711,6 +698,9 @@ export function SectionToolbar({
   const updateBlock = useEditorStore((s) => s.updateBlock);
   const selectBlock = useEditorStore((s) => s.selectBlock);
   const mode = useEditorStore((s) => s.mode);
+  const themeColors = useEditorStore((s) => s.themeTokens.colors);
+  const bgSwatches = useMemo(() => themeSwatches(themeColors), [themeColors]);
+  const bgGradients = useMemo(() => themeGradients(themeColors), [themeColors]);
 
   const toolbarRef = useRef<HTMLDivElement>(null);
   const [position, setPosition] = useState<Position | null>(null);
@@ -1009,6 +999,8 @@ export function SectionToolbar({
       >
         <BackgroundPopover
           currentValue={currentBg}
+          swatches={bgSwatches}
+          gradients={bgGradients}
           onSelect={(value) => {
             updateBlock(renderBlockId!, {
               config: { ...config, backgroundColor: value },
