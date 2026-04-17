@@ -1,22 +1,30 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useRef } from "react";
 
 import { useEditorStore } from "@/app/stores/editorStore";
+import { trackEditorSelect } from "@/lib/telemetry/editor";
 
-/**
- * Selection helpers bound to editorShell.selectedBlockId + transient.hoveredBlockId.
- *
- * Kept intentionally thin — the canvas mount (Task 13) composes this with pointer
- * handlers, and the inspector (Task 11) reads selection state the same way.
- */
 export function useSelection() {
 	const selectedBlockId = useEditorStore((s) => s.selectedBlockId);
 	const hoveredBlockId = useEditorStore((s) => s.hoveredBlockId);
 	const selectBlock = useEditorStore((s) => s.selectBlock);
 	const setHoveredBlockId = useEditorStore((s) => s.setHoveredBlockId);
+	const siteId = useEditorStore((s) => s.siteId);
+	const selectStart = useRef(0);
 
-	const select = useCallback((id: string | null) => selectBlock(id), [selectBlock]);
+	const select = useCallback(
+		(id: string | null) => {
+			selectStart.current = performance.now();
+			selectBlock(id);
+			if (id && siteId) {
+				const latencyMs = performance.now() - selectStart.current;
+				trackEditorSelect(siteId, id, latencyMs);
+			}
+		},
+		[selectBlock, siteId],
+	);
+
 	const hover = useCallback(
 		(id: string | null) => setHoveredBlockId(id),
 		[setHoveredBlockId],
