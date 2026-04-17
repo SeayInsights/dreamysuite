@@ -25,3 +25,8 @@ export {
   getEffectComponent,
   isEffectAvailable,
 } from "./loader";
+
+export {
+  shouldEnableEffects,
+  useEffectsEnabled,
+} from "./performance";
