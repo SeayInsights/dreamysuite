@@ -112,6 +112,7 @@ export function FloatingFormatToolbar({
       ref={toolbarRef}
       role="toolbar"
       aria-label="Text format toolbar"
+      data-format-toolbar
       className={cn(
         "fixed z-50 flex items-center gap-0.5 rounded-lg border border-border",
         "bg-popover px-2 py-1.5 shadow-lg",
