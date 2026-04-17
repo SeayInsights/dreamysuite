@@ -1,7 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { animate } from "motion/mini";
 import { useEditorStore } from "@/app/stores/editorStore";
+import { duration, EASING } from "@/lib/motion";
 import { getVisibleBlocks, BLOCK_REGISTRY } from "../blocks/registry";
 
 interface Props {
@@ -34,6 +36,17 @@ export function InsertPalette({ insertIndex, onClose, anchorRef }: Props) {
 
   // Focus input on mount
   useEffect(() => { inputRef.current?.focus(); }, []);
+
+  // Pop-in animation on mount
+  useEffect(() => {
+    const el = paletteRef.current;
+    if (!el) return;
+    animate(
+      el,
+      { opacity: [0, 1], scale: [0.97, 1] },
+      { duration: duration("toolbarPop") / 1000, ease: EASING.enter },
+    );
+  }, []);
 
   // Position below anchor
   const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
@@ -98,6 +111,7 @@ export function InsertPalette({ insertIndex, onClose, anchorRef }: Props) {
         boxShadow: "0 8px 24px rgba(0,0,0,0.12)",
         zIndex: 200,
         overflow: "hidden",
+        opacity: 0,
       }}
     >
       <div style={{ padding: "8px" }}>
