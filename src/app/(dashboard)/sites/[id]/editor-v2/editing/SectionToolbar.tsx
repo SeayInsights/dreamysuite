@@ -8,6 +8,7 @@ import React, {
   type ReactNode,
 } from "react";
 import { createPortal } from "react-dom";
+import { animate } from "motion/mini";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useEditorStore } from "@/app/stores/editorStore";
@@ -532,16 +533,27 @@ export function SectionToolbar({
   const ANIM_MS = 150;
 
   // Animation phase state machine — keeps toolbar mounted during exit animation
-  type ToolbarPhase = "hidden" | "entering" | "shown" | "exiting";
+  type ToolbarPhase = "hidden" | "shown" | "exiting";
   const phaseRef = useRef<ToolbarPhase>("hidden");
   const [toolbarPhase, setToolbarPhaseState] = useState<ToolbarPhase>("hidden");
   const [renderPos, setRenderPos] = useState<Position | null>(null);
   const [renderBlockId, setRenderBlockId] = useState<string | null>(null);
+  // Ref mirror of renderBlockId — avoids stale closure in effects
+  const renderBlockIdRef = useRef<string | null>(null);
   const animTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Holds a pending enter when a block-switch exit is in flight
+  const pendingShowRef = useRef<{ pos: Position; blockId: string } | null>(null);
 
   function setToolbarPhase(p: ToolbarPhase) {
     phaseRef.current = p;
     setToolbarPhaseState(p);
+  }
+
+  function showBlock(pos: Position, blockId: string) {
+    renderBlockIdRef.current = blockId;
+    setRenderPos(pos);
+    setRenderBlockId(blockId);
+    setToolbarPhase("shown");
   }
 
   // Measure and position the toolbar relative to the selected block
@@ -598,44 +610,76 @@ export function SectionToolbar({
     };
   }, [containerRef, measurePosition]);
 
-  // Single effect handles enter/exit animation AND live position updates.
-  // Position is included as a dependency because measurePosition fires as a
-  // separate state update — reading position via closure would be stale.
-  // phaseRef guards against re-triggering the enter animation on scroll
-  // repositioning (position-only changes while already shown).
+  // Enter animation — motion/mini animate() runs off React's render cycle,
+  // so it doesn't suffer from React 18 batching issues. Fires whenever
+  // renderBlockId changes (initial show or block switch after exit).
+  useEffect(() => {
+    if (toolbarPhase !== "shown") return;
+    const el = toolbarRef.current;
+    if (!el) return;
+    el.style.opacity = "0";
+    animate(
+      el,
+      { opacity: [0, 1], transform: ["translateY(8px)", "translateY(0px)"] },
+      { duration: ANIM_MS / 1000, ease: [0.16, 1, 0.3, 1] },
+    );
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [renderBlockId]);
+
+  // Exit animation
+  useEffect(() => {
+    if (toolbarPhase !== "exiting") return;
+    const el = toolbarRef.current;
+    if (!el) return;
+    animate(
+      el,
+      { opacity: [1, 0], transform: ["translateY(0px)", "translateY(-8px)"] },
+      { duration: ANIM_MS / 1000, ease: "easeIn" },
+    );
+  }, [toolbarPhase]);
+
+  // Main show/hide logic — position updates, block switching, exit to hidden.
   useEffect(() => {
     const shouldShow = !!(selectedBlockId && position && !isTextEditing);
-    if (animTimerRef.current) { clearTimeout(animTimerRef.current); animTimerRef.current = null; }
 
     if (shouldShow) {
-      setRenderPos(position);
-      setRenderBlockId(selectedBlockId);
-      if (phaseRef.current !== "shown" && phaseRef.current !== "entering") {
-        // Fresh mount — slide+fade in.
-        phaseRef.current = "entering";
-        setToolbarPhaseState("entering");
-        // One rAF guarantees the entering (opacity:0 / translateY(8px)) frame is
-        // painted before we flip to shown — giving CSS transition a start value.
-        const rafId = requestAnimationFrame(() => {
-          phaseRef.current = "shown";
-          setToolbarPhaseState("shown");
-        });
-        return () => cancelAnimationFrame(rafId);
+      const switchingBlock =
+        phaseRef.current === "shown" &&
+        selectedBlockId !== renderBlockIdRef.current;
+
+      if (animTimerRef.current) { clearTimeout(animTimerRef.current); animTimerRef.current = null; }
+
+      if (switchingBlock) {
+        // Exit current block, then enter new block after the exit plays.
+        pendingShowRef.current = { pos: position, blockId: selectedBlockId };
+        setToolbarPhase("exiting");
+        animTimerRef.current = setTimeout(() => {
+          const pending = pendingShowRef.current;
+          pendingShowRef.current = null;
+          if (pending) showBlock(pending.pos, pending.blockId);
+        }, ANIM_MS);
+      } else if (phaseRef.current !== "shown") {
+        // Fresh show (was hidden or mid-exit).
+        showBlock(position, selectedBlockId);
+      } else {
+        // Same block — just reposition.
+        setRenderPos(position);
       }
     } else if (phaseRef.current !== "hidden" && phaseRef.current !== "exiting") {
-      // Selection cleared — slide up and fade out, then unmount.
-      phaseRef.current = "exiting";
-      setToolbarPhaseState("exiting");
+      if (animTimerRef.current) { clearTimeout(animTimerRef.current); animTimerRef.current = null; }
+      pendingShowRef.current = null;
+      setToolbarPhase("exiting");
       animTimerRef.current = setTimeout(() => {
         phaseRef.current = "hidden";
         setToolbarPhaseState("hidden");
+        renderBlockIdRef.current = null;
         setRenderPos(null);
         setRenderBlockId(null);
       }, ANIM_MS);
     }
   }, [selectedBlockId, isTextEditing, position]);
 
-  // Cleanup timer on unmount.
+  // Cleanup timers on unmount.
   useEffect(() => () => {
     if (animTimerRef.current) clearTimeout(animTimerRef.current);
   }, []);
@@ -696,21 +740,7 @@ export function SectionToolbar({
         "absolute z-50 flex items-center gap-0.5 rounded-lg border border-border",
         "bg-popover px-2 py-1 shadow-lg",
       )}
-      style={{
-          top: renderPos.top,
-          left: renderPos.left,
-          opacity: toolbarPhase === "shown" ? 1 : 0,
-          transform:
-            toolbarPhase === "entering"
-              ? "translateY(8px)"
-              : toolbarPhase === "exiting"
-                ? "translateY(-8px)"
-                : "translateY(0)",
-          transition:
-            toolbarPhase === "entering"
-              ? "none"
-              : `opacity ${ANIM_MS}ms ease-out, transform ${ANIM_MS}ms ease-out`,
-        }}
+      style={{ top: renderPos.top, left: renderPos.left }}
       onMouseDown={(e) => e.stopPropagation()}
       onClick={(e) => e.stopPropagation()}
     >
