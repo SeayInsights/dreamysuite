@@ -2,6 +2,7 @@
 
 import { useEditorStore } from "@/app/stores/editorStore";
 import { useStyledValue } from "../hooks/useStyledValue";
+import { ColorInput } from "./ColorInput";
 import { CustomCssPanel } from "./CustomCssPanel";
 
 function InheritBadge({ isInheriting, onClear }: { isInheriting: boolean; onClear: () => void }) {
@@ -70,32 +71,11 @@ function BackgroundColorControl({ blockId }: { blockId: string }) {
 				</p>
 				<InheritBadge isInheriting={isInheriting} onClear={clearBgColor} />
 			</div>
-			<div className="flex items-center gap-2">
-				<div className="relative">
-					<input
-						type="color"
-						value={bgColor || "#ffffff"}
-						onChange={(e) => setBgColor(e.target.value)}
-						className="h-7 w-7 cursor-pointer rounded border border-input bg-transparent p-0.5"
-					/>
-				</div>
-				<input
-					type="text"
-					value={bgColor}
-					onChange={(e) => setBgColor(e.target.value)}
-					placeholder={isInheriting ? "inheriting" : "transparent"}
-					className={`h-7 w-full rounded border border-input bg-background px-2 text-xs focus:outline-none focus:ring-1 focus:ring-ring ${isInheriting ? "italic text-muted-foreground" : ""}`}
-				/>
-				{bgColor && (
-					<button
-						type="button"
-						onClick={() => setBgColor("")}
-						className="shrink-0 text-[10px] text-muted-foreground underline hover:text-foreground"
-					>
-						remove
-					</button>
-				)}
-			</div>
+			<ColorInput
+				value={bgColor}
+				onChange={setBgColor}
+				isInheriting={isInheriting}
+			/>
 		</div>
 	);
 }
