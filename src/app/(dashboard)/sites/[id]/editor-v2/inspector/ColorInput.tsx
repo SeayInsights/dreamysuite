@@ -1,26 +1,11 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
+import { useEditorStore } from "@/app/stores/editorStore";
+import { themeSwatches, themeGradients } from "../lib/themeSwatches";
 
 type ColorMode = "hex" | "rgb";
 type BgTab = "solid" | "gradient" | "transparent";
-
-const SWATCHES = [
-	"#ffffff", "#faf8f6", "#f1f5f9", "#f0fdf4",
-	"#fdf4ff", "#fff7ed", "#fef2f2", "#fffbeb",
-	"#6b7280", "#1e3a5f", "#312e81", "#000000",
-];
-
-const GRADIENTS: { label: string; value: string; dark?: boolean }[] = [
-	{ label: "Warm Ivory", value: "linear-gradient(135deg,#fff8f0 0%,#e8c98a 100%)" },
-	{ label: "Blush Rose", value: "linear-gradient(135deg,#fff0f6 0%,#f9a8d4 100%)" },
-	{ label: "Ocean Sky", value: "linear-gradient(135deg,#e0f2fe 0%,#3b82f6 100%)" },
-	{ label: "Sage Garden", value: "linear-gradient(135deg,#f0fdf4 0%,#4ade80 100%)" },
-	{ label: "Champagne", value: "linear-gradient(135deg,#fffbeb 0%,#b45309 100%)" },
-	{ label: "Lavender", value: "linear-gradient(135deg,#f5f3ff 0%,#8b5cf6 100%)" },
-	{ label: "Twilight", value: "linear-gradient(135deg,#312e81 0%,#7c3aed 100%)", dark: true },
-	{ label: "Midnight", value: "linear-gradient(135deg,#0f172a 0%,#1e40af 100%)", dark: true },
-];
 
 const DIRECTIONS: { label: string; angle: string; icon: string }[] = [
 	{ label: "Left → Right", angle: "90deg", icon: "→" },
@@ -61,6 +46,10 @@ interface ColorInputProps {
 }
 
 export function ColorInput({ value, onChange, isInheriting }: ColorInputProps) {
+	const themeColors = useEditorStore((s) => s.themeTokens.colors);
+	const swatches = useMemo(() => themeSwatches(themeColors), [themeColors]);
+	const gradients = useMemo(() => themeGradients(themeColors), [themeColors]);
+
 	const isGradient = value.startsWith("linear-gradient") || value.startsWith("radial-gradient");
 	const isTransparent = value === "transparent" || value === "";
 	const [tab, setTab] = useState<BgTab>(isGradient ? "gradient" : isTransparent ? "solid" : "solid");
@@ -105,7 +94,7 @@ export function ColorInput({ value, onChange, isInheriting }: ColorInputProps) {
 			{tab === "solid" && (
 				<>
 					<div className="grid grid-cols-4 gap-1.5">
-						{SWATCHES.map((color) => (
+						{swatches.map((color) => (
 							<button
 								key={color}
 								type="button"
@@ -221,7 +210,7 @@ export function ColorInput({ value, onChange, isInheriting }: ColorInputProps) {
 						</div>
 					</div>
 					<div className="space-y-1.5">
-						{GRADIENTS.map((g) => {
+						{gradients.map((g) => {
 							const grad = applyAngle(g.value, gradDir);
 							return (
 								<button
