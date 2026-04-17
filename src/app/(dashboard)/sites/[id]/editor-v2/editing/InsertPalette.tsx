@@ -41,6 +41,7 @@ export function InsertPalette({ insertIndex, onClose, anchorRef }: Props) {
   useEffect(() => {
     const el = paletteRef.current;
     if (!el) return;
+    el.style.opacity = "0";
     animate(
       el,
       { opacity: [0, 1], scale: [0.97, 1] },
@@ -111,7 +112,6 @@ export function InsertPalette({ insertIndex, onClose, anchorRef }: Props) {
         boxShadow: "0 8px 24px rgba(0,0,0,0.12)",
         zIndex: 200,
         overflow: "hidden",
-        opacity: 0,
       }}
     >
       <div style={{ padding: "8px" }}>
