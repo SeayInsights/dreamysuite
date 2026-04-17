@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useEffect, useState, type JSX } from "react";
+import { createPortal } from "react-dom";
 import { animate } from "motion/mini";
 import { cn } from "@/lib/utils";
 import { duration, EASING } from "@/lib/motion";
@@ -108,6 +109,7 @@ export function FloatingFormatToolbar({
   const fontBtnRef = useRef<HTMLButtonElement>(null);
   const fontMenuRef = useRef<HTMLDivElement>(null);
   const [fontMenuOpen, setFontMenuOpen] = useState(false);
+  const [fontMenuPos, setFontMenuPos] = useState({ top: 0, left: 0 });
   const [activeFont, setActiveFont] = useState<string | null>(null);
 
   useEffect(() => {
@@ -134,11 +136,6 @@ export function FloatingFormatToolbar({
     return () => document.removeEventListener("mousedown", onDown);
   }, [fontMenuOpen]);
 
-  // Font dropdown position (fixed, below the button)
-  const fontBtnRect = fontBtnRef.current?.getBoundingClientRect();
-  const fontMenuTop = fontBtnRect ? fontBtnRect.bottom + 4 : 0;
-  const fontMenuLeft = fontBtnRect ? fontBtnRect.left : 0;
-
   return (
     <div
       ref={toolbarRef}
@@ -153,14 +150,19 @@ export function FloatingFormatToolbar({
       // Prevent any mouse interaction from stealing focus from the editable
       onMouseDown={(e) => e.preventDefault()}
     >
-      {/* Font family — custom dropdown for per-item hover styling */}
+      {/* Font family — custom dropdown portaled to body so z-index is independent */}
       <button
         ref={fontBtnRef}
         type="button"
         aria-label="Font family"
         aria-expanded={fontMenuOpen}
         onMouseDown={(e) => e.stopPropagation()}
-        onClick={() => setFontMenuOpen((v) => !v)}
+        onClick={(e) => {
+          e.stopPropagation();
+          const rect = fontBtnRef.current?.getBoundingClientRect();
+          if (rect) setFontMenuPos({ top: rect.bottom + 4, left: rect.left });
+          setFontMenuOpen((v) => !v);
+        }}
         className={cn(
           "flex h-7 items-center gap-1 rounded px-1.5 text-xs",
           "hover:bg-accent hover:text-accent-foreground",
@@ -178,15 +180,15 @@ export function FloatingFormatToolbar({
         </svg>
       </button>
 
-      {fontMenuOpen && (
+      {fontMenuOpen && typeof document !== "undefined" && createPortal(
         <div
           ref={fontMenuRef}
           data-format-toolbar
           className={cn(
-            "fixed z-[60] min-w-[160px] rounded-lg border border-border",
+            "fixed z-[200] min-w-[160px] rounded-lg border border-border",
             "bg-popover py-1 shadow-lg",
           )}
-          style={{ top: fontMenuTop, left: fontMenuLeft }}
+          style={{ top: fontMenuPos.top, left: fontMenuPos.left }}
           onMouseDown={(e) => e.stopPropagation()}
         >
           {FONT_FAMILIES.map((f) => (
@@ -208,7 +210,8 @@ export function FloatingFormatToolbar({
               {f.label}
             </button>
           ))}
-        </div>
+        </div>,
+        document.body,
       )}
 
 
