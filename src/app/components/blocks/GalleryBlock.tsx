@@ -1,4 +1,4 @@
-import { parseCfg, cropClipPath } from "@/lib/editableField";
+import { blockSectionStyle, parseCfg, cropClipPath } from "@/lib/editableField";
 
 interface Block { id: string; type: string; [key: string]: unknown }
 
@@ -14,7 +14,7 @@ export function GalleryBlock({ block }: { block: Block }) {
     const imageLayout = String(cfg.imageLayout ?? "left");
 
     return (
-      <section className="block block-gallery" data-block-id={block.id} data-block-type={block.type}>
+      <section className="block block-gallery" data-block-id={block.id} data-block-type={block.type} style={blockSectionStyle(cfg)}>
         <div style={{
           display: "flex",
           flexDirection: imageLayout === "right" ? "row-reverse" : "row",
@@ -47,7 +47,7 @@ export function GalleryBlock({ block }: { block: Block }) {
   const images = imageSlot ? [imageSlot] : urls;
 
   return (
-    <section className="block block-gallery" data-block-id={block.id} data-block-type={block.type}>
+    <section className="block block-gallery" data-block-id={block.id} data-block-type={block.type} style={blockSectionStyle(cfg)}>
       {images.length > 0 ? (
         <div style={{ display: "grid", gap: "0.5rem", gridTemplateColumns: images.length > 1 ? "1fr 1fr" : "1fr" }}>
           {images.map((url, i) => (

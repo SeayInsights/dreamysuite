@@ -1,3 +1,5 @@
+import { blockSectionStyle, parseCfg } from "@/lib/editableField";
+
 interface TimelineEvent {
   date?: string;
   title?: string;
@@ -14,7 +16,7 @@ const DEFAULT_EVENTS: TimelineEvent[] = [
 ];
 
 export function StoryTimelineBlock({ block }: { block: Block }) {
-  const cfg = typeof block.config === "string" ? JSON.parse(block.config || "{}") : (block.config ?? {});
+  const cfg = parseCfg(block.config);
   const heading = String(cfg.heading ?? "Our Story");
   const events: TimelineEvent[] = Array.isArray(cfg.events) && cfg.events.length > 0
     ? cfg.events as TimelineEvent[]
@@ -22,7 +24,7 @@ export function StoryTimelineBlock({ block }: { block: Block }) {
 
   return (
     <section className="block block-story-timeline" data-block-id={block.id} data-block-type={block.type}
-      style={{ padding: "2rem 1rem" }}>
+      style={{ padding: "2rem 1rem", ...blockSectionStyle(cfg) }}>
       {heading && <h2 style={{ textAlign: "center", marginBottom: "2rem" }}>{heading}</h2>}
       <div style={{ position: "relative", maxWidth: "600px", margin: "0 auto" }}>
         {/* Vertical line */}

@@ -1,12 +1,14 @@
+import { blockSectionStyle, parseCfg } from "@/lib/editableField";
+
 interface Block { id: string; type: string; [key: string]: unknown }
 
 export function ImagesBlock({ block }: { block: Block }) {
-  const cfg = typeof block.config === "string" ? JSON.parse(block.config || "{}") : (block.config ?? {});
+  const cfg = parseCfg(block.config);
   const urls = Array.isArray(cfg.urls) ? (cfg.urls as string[]) : [];
   const imageSlot = cfg.imageSlot as string | undefined;
 
   return (
-    <section className="block block-images" data-block-id={block.id} data-block-type={block.type}>
+    <section className="block block-images" data-block-id={block.id} data-block-type={block.type} style={blockSectionStyle(cfg)}>
       {urls.length > 0 || imageSlot ? (
         <div style={{ display: "grid", gap: "0.5rem", gridTemplateColumns: urls.length > 1 ? "1fr 1fr" : "1fr" }}>
           {(imageSlot ? [imageSlot] : urls).map((url, i) => (

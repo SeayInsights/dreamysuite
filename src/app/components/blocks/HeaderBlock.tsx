@@ -1,4 +1,4 @@
-import { editableProps, parseCfg, styleFromField } from "@/lib/editableField";
+import { blockSectionStyle, editableProps, parseCfg, styleFromField } from "@/lib/editableField";
 
 interface Block { id: string; type: string; [key: string]: unknown }
 
@@ -20,7 +20,7 @@ export function HeaderBlock({ block }: { block: Block }) {
   const fieldStyle = { ...legacyStyle, ...styleFromField(cfg, "title") };
 
   return (
-    <section className="block block-header" data-block-id={block.id} data-block-type={block.type}>
+    <section className="block block-header" data-block-id={block.id} data-block-type={block.type} style={blockSectionStyle(cfg)}>
       <h2
         className="section-heading"
         data-editable-field="title"
