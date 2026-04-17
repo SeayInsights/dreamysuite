@@ -234,11 +234,8 @@ export function TextEditor({
     function handleBlur(e: FocusEvent) {
       const rt = e.relatedTarget as HTMLElement | null;
       if (rt?.closest("[data-format-toolbar]")) {
-        // Focus moved to the format toolbar — don't commit; restore focus after interaction
-        setTimeout(() => {
-          const state = editStateRef.current;
-          if (state) state.element.focus();
-        }, 0);
+        // Focus moved to the format toolbar (e.g. font select, color picker).
+        // Don't commit — handleFormat will re-focus the CE after the interaction.
         return;
       }
       const state = editStateRef.current;
