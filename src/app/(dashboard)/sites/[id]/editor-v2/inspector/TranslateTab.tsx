@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { Languages, RefreshCw, Check, AlertTriangle } from "lucide-react";
 import { useEditorStore } from "@/app/stores/editorStore";
 import { TRANSLATABLE_FIELDS } from "@/lib/translations";
@@ -153,6 +153,14 @@ function LanguageSection({
 	setTranslation: (blockId: string, lang: string, field: string, value: string) => void;
 }) {
 	const [translating, setTranslating] = useState<string | null>(null);
+	const [error, setError] = useState<string | null>(null);
+	const errorTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
+
+	const showError = useCallback((msg: string) => {
+		setError(msg);
+		clearTimeout(errorTimer.current);
+		errorTimer.current = setTimeout(() => setError(null), 4000);
+	}, []);
 
 	const translateField = useCallback(
 		async (fieldKey: string) => {
@@ -160,6 +168,7 @@ function LanguageSection({
 			const source = String(cfg[fieldKey] ?? "");
 			if (!source.trim()) return;
 			setTranslating(fieldKey);
+			setError(null);
 			try {
 				const res = await fetch(`/api/sites/${siteId}/translate`, {
 					method: "POST",
@@ -176,14 +185,16 @@ function LanguageSection({
 					};
 					const val = data.translations?.[blockId]?.[fieldKey];
 					if (val) setTranslation(blockId, lang, fieldKey, val);
+				} else {
+					showError(res.status === 429 ? "Rate limit reached — try again shortly" : "Translation failed");
 				}
 			} catch {
-				// silently fail
+				showError("Network error — check your connection");
 			} finally {
 				setTranslating(null);
 			}
 		},
-		[siteId, blockId, lang, mainLang, cfg, setTranslation],
+		[siteId, blockId, lang, mainLang, cfg, setTranslation, showError],
 	);
 
 	return (
@@ -191,6 +202,11 @@ function LanguageSection({
 			<span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
 				{LANG_LABELS[lang] ?? lang}
 			</span>
+			{error && (
+				<div className="rounded-md bg-destructive/10 px-2 py-1.5 text-[11px] text-destructive">
+					{error}
+				</div>
+			)}
 			{fields.map((f) => {
 				const value = getTranslation(blockId, lang, f.key);
 				const isTranslating = translating === f.key;
@@ -256,6 +272,7 @@ function BulkTranslateButton({
 	setTranslation: (blockId: string, lang: string, field: string, value: string) => void;
 }) {
 	const [busy, setBusy] = useState(false);
+	const [error, setError] = useState<string | null>(null);
 
 	const translateAll = useCallback(async () => {
 		if (!siteId) return;
@@ -268,6 +285,8 @@ function BulkTranslateButton({
 		}
 		if (!content[blockId]) return;
 		setBusy(true);
+		setError(null);
+		let failures = 0;
 		try {
 			for (const lang of langs) {
 				const res = await fetch(`/api/sites/${siteId}/translate`, {
@@ -285,25 +304,36 @@ function BulkTranslateButton({
 							setTranslation(blockId, lang, field, value);
 						}
 					}
+				} else {
+					failures++;
+					if (res.status === 429) break;
 				}
 			}
 		} catch {
-			// silently fail
+			failures++;
 		} finally {
 			setBusy(false);
+			if (failures > 0) setError(`${failures} language(s) failed — try again shortly`);
 		}
 	}, [siteId, blockId, fields, cfg, langs, mainLang, setTranslation]);
 
 	return (
-		<button
-			type="button"
-			onClick={translateAll}
-			disabled={busy}
-			className="flex items-center justify-center gap-1.5 rounded-md border border-border px-3 py-2 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:opacity-50"
-		>
-			<RefreshCw className={`size-3 ${busy ? "animate-spin" : ""}`} />
-			{busy ? "Translating..." : "Translate All Fields"}
-		</button>
+		<div className="flex flex-col gap-1.5">
+			{error && (
+				<div className="rounded-md bg-destructive/10 px-2 py-1.5 text-[11px] text-destructive">
+					{error}
+				</div>
+			)}
+			<button
+				type="button"
+				onClick={translateAll}
+				disabled={busy}
+				className="flex items-center justify-center gap-1.5 rounded-md border border-border px-3 py-2 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:opacity-50"
+			>
+				<RefreshCw className={`size-3 ${busy ? "animate-spin" : ""}`} />
+				{busy ? "Translating..." : "Translate All Fields"}
+			</button>
+		</div>
 	);
 }
 
@@ -320,6 +350,7 @@ function PageTranslationSummary({
 	const setTranslation = useEditorStore((s) => s.setTranslation);
 	const settings = useEditorStore((s) => s.settings);
 	const [busy, setBusy] = useState(false);
+	const [error, setError] = useState<string | null>(null);
 
 	const translatableBlocks = blocks.filter(
 		(b) => TRANSLATABLE_FIELDS[b.type]?.length,
@@ -341,6 +372,8 @@ function PageTranslationSummary({
 	const translateEntirePage = useCallback(async () => {
 		if (!siteId) return;
 		setBusy(true);
+		setError(null);
+		let failures = 0;
 		try {
 			for (const lang of langs) {
 				const content: Record<string, Record<string, string>> = {};
@@ -373,12 +406,16 @@ function PageTranslationSummary({
 							setTranslation(blockId, lang, field, value);
 						}
 					}
+				} else {
+					failures++;
+					if (res.status === 429) break;
 				}
 			}
 		} catch {
-			// silently fail
+			failures++;
 		} finally {
 			setBusy(false);
+			if (failures > 0) setError(`${failures} language(s) failed — try again shortly`);
 		}
 	}, [siteId, langs, mainLang, translatableBlocks, translations, setTranslation]);
 
@@ -446,6 +483,11 @@ function PageTranslationSummary({
 				})}
 			</div>
 
+			{error && (
+				<div className="rounded-md bg-destructive/10 px-2 py-1.5 text-[11px] text-destructive">
+					{error}
+				</div>
+			)}
 			<button
 				type="button"
 				onClick={translateEntirePage}

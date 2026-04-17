@@ -2,6 +2,7 @@
 
 import { useEditorStore } from "@/app/stores/editorStore";
 import { ColorInput } from "./ColorInput";
+import { SitePhotoPicker } from "../SitePhotoPicker";
 
 export function StyleTab() {
   const settings = useEditorStore((s) => s.settings);
@@ -25,26 +26,13 @@ export function StyleTab() {
         <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
           Background Image
         </p>
-        <input
-          type="url"
-          value={settings.bgImage ?? ""}
-          placeholder="https://..."
-          onChange={(e) => updateSettings({ bgImage: e.target.value || null })}
-          onKeyDown={(e) => e.stopPropagation()}
-          className="h-8 w-full rounded border border-input bg-background px-2.5 text-xs focus:outline-none focus:ring-1 focus:ring-ring"
+        <SitePhotoPicker
+          value={settings.bgImage ?? null}
+          onChange={(v) => updateSettings({ bgImage: v })}
         />
 
         {settings.bgImage && (
           <>
-            <div className="overflow-hidden rounded border border-border">
-              <img
-                src={settings.bgImage}
-                alt="Background preview"
-                className="h-20 w-full object-cover"
-                onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
-              />
-            </div>
-
             <div className="space-y-1">
               <div className="flex items-center justify-between text-[10px] text-muted-foreground">
                 <span>Opacity</span>

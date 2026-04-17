@@ -51,16 +51,26 @@ export async function GET(
     return new Response(comingSoonHtml(site.name), { status: 200, headers: { "content-type": "text/html; charset=utf-8" } });
   }
 
+  let passwordPages: string[] = [];
+  if (settings?.passwordPages) {
+    try { passwordPages = JSON.parse(settings.passwordPages); } catch { /* ignore */ }
+  }
+  const hasPerPagePassword = passwordPages.length > 0;
+
+  let pwUnlocked = false;
   if (!isOwner && settings?.guestPassword) {
     const url = new URL(req.url);
     const pw = url.searchParams.get("pw");
-    if (pw !== settings.guestPassword) {
+    if (pw === settings.guestPassword) {
+      pwUnlocked = true;
+    } else if (!hasPerPagePassword) {
       const accent = settings.accentColor ?? "#B8921A";
       const siteName = settings.eventName ?? site.name;
       const gateHtml = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/><title>${escHtml(siteName)}</title><style>*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}body{font-family:Georgia,serif;background:#faf8f5;color:#292524;display:flex;align-items:center;justify-content:center;min-height:100dvh;padding:1.5rem}.gate-wrap{text-align:center;max-width:360px;width:100%}h1{font-size:1.75rem;font-weight:normal;margin-bottom:.5rem}p{color:#78716c;margin-bottom:1.75rem;font-size:.9375rem}.gate-form{display:flex;flex-direction:column;gap:.875rem}.gate-input{width:100%;border:1px solid #e7e5e4;border-radius:6px;padding:.625rem .875rem;font-family:inherit;font-size:1rem;color:#292524;outline:none;transition:border-color .15s}.gate-input:focus{border-color:${escHtml(accent)}}.gate-btn{padding:.75rem 2rem;border:none;border-radius:6px;background:${escHtml(accent)};color:#fff;font-family:inherit;font-size:.9375rem;cursor:pointer;transition:opacity .15s}.gate-btn:hover{opacity:.88}</style></head><body><div class="gate-wrap"><h1>${escHtml(siteName)}</h1><p>This site is password protected. Please enter the password to continue.</p><form class="gate-form" method="get"><input class="gate-input" type="password" name="pw" placeholder="Enter password" aria-label="Site password" required/><button class="gate-btn" type="submit">Enter</button></form></div></body></html>`;
       return new Response(gateHtml, { status: 401, headers: { "content-type": "text/html; charset=utf-8" } });
     }
   }
+  const lockedPageIds = new Set(!isOwner && hasPerPagePassword && !pwUnlocked ? passwordPages : []);
 
   const pagesResult = await db.prepare("SELECT * FROM page WHERE siteId = ? AND isVisible = 1 ORDER BY sortOrder ASC").bind(site.id).all<PageRow>();
   const blocksResult = await db.prepare("SELECT * FROM block WHERE siteId = ? AND isVisible = 1 ORDER BY sortOrder ASC").bind(site.id).all<BlockRow>();
@@ -94,7 +104,7 @@ export async function GET(
   }
 
   const activeLang = new URL(req.url).searchParams.get("_lang") ?? null;
-  return new Response(buildHtml(site, settings ?? null, pages, contentMap, blockTransMap, site.slug, activeLang), {
+  return new Response(buildHtml(site, settings ?? null, pages, contentMap, blockTransMap, site.slug, activeLang, lockedPageIds), {
     status: 200,
     headers: { "content-type": "text/html; charset=utf-8", "cache-control": "public, max-age=10, stale-while-revalidate=30" },
   });
@@ -139,6 +149,7 @@ interface SiteSettingRow {
   showNavBrand?: number | null;
   navPosition: string | null;       // "fixed" | "scroll-away" | null
   navShape: string | null;          // "bar" | "pill" | "floating" | null
+  navMaterial: string | null;       // "solid" | "glass" | "frosted" | null
   navBrandColor: string | null;
   navLinkColor: string | null;
   navHighlightColor: string | null;
@@ -168,6 +179,7 @@ interface SiteSettingRow {
   bgImageLayer: string | null;
   bgImageOpacity: number | null;
   siteMaxWidth: number | null;
+  passwordPages: string | null;
 }
 
 interface PageRow {
@@ -300,9 +312,10 @@ function buildStyles(settings: SiteSettingRow | null): BuiltStyles {
   const headingFont = settings?.headingFont ?? "Georgia";
   const bodyFont = settings?.bodyFont ?? "Inter";
   const bg = settings?.bgColor ?? "#ffffff";
-  const navPosition = settings?.navPosition ?? null;
-  const isFixed = navPosition === "fixed";
-  const isScrollAway = navPosition === "scroll-away";
+  const navPosition = settings?.navPosition ?? "fixed";
+  const isFixed = navPosition === "fixed" || navPosition === "hide-on-scroll";
+  const isHideOnScroll = navPosition === "hide-on-scroll";
+  const isScrollAway = navPosition === "scroll-away" || navPosition === "static";
   const navLinkPadding = settings?.navLinkPadding ?? "0.875rem";
   const bgImage = settings?.bgImage ?? null;
   // Escape a URL for safe use inside CSS url('...')
@@ -1242,6 +1255,30 @@ function buildStyles(settings: SiteSettingRow | null): BuiltStyles {
       text-underline-offset: 3px;
       text-decoration-thickness: 2px;
     }
+    .site-nav.nav-glass {
+      background: rgba(255,255,255,0.15);
+      backdrop-filter: blur(12px) saturate(1.2);
+      -webkit-backdrop-filter: blur(12px) saturate(1.2);
+      border-bottom-color: rgba(255,255,255,0.25);
+    }
+    .site-nav.nav-glass.nav-pill,
+    .site-nav.nav-glass.nav-floating {
+      border-color: rgba(255,255,255,0.25);
+      box-shadow: 0 2px 16px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.3);
+    }
+    .site-nav.nav-frosted {
+      background: rgba(255,255,255,0.3);
+      backdrop-filter: blur(24px) saturate(1.4);
+      -webkit-backdrop-filter: blur(24px) saturate(1.4);
+      border-bottom-color: rgba(255,255,255,0.4);
+    }
+    .site-nav.nav-frosted.nav-pill,
+    .site-nav.nav-frosted.nav-floating {
+      border-color: rgba(255,255,255,0.4);
+      box-shadow: 0 4px 24px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.5);
+    }
+    .site-nav-row.nav-glass-row { backdrop-filter: blur(12px) saturate(1.2); -webkit-backdrop-filter: blur(12px) saturate(1.2); }
+    .site-nav-row.nav-frosted-row { backdrop-filter: blur(24px) saturate(1.4); -webkit-backdrop-filter: blur(24px) saturate(1.4); }
 
     /* ── Page sections ── */
     .page-section { display: none; }
@@ -2438,7 +2475,8 @@ function buildHtml(
   contentMap: ContentMap,
   blockTransMap: BlockTransMap,
   siteSlug: string,
-  activeLang?: string | null
+  activeLang?: string | null,
+  lockedPageIds: Set<string> = new Set(),
 ): string {
   const mainLang = settings?.mainLanguage ?? "en";
   const lang = escHtml(mainLang);
@@ -2466,7 +2504,7 @@ function buildHtml(
 
   // Build nav bar (only if there are multiple pages, all visible)
   const visiblePages = pages.filter((p) => p.isVisible !== 0);
-  const hasMultiplePages = visiblePages.length > 1;
+  const hasMultiplePages = visiblePages.length >= 1;
 
   // Nav labels: use page label, fall back to slug with initial cap
   function pageLabel(p: PageRow): string {
@@ -2486,8 +2524,10 @@ function buildHtml(
   const isMultiLang = extraLangs.length > 1;
 
   const navShape = settings?.navShape ?? "";
+  const navMaterial = settings?.navMaterial ?? "solid";
   const navUnderlineClass = (settings?.navUnderline ?? "on") !== "off" ? " nav-underline" : "";
-  const navShapeClass = (navShape === "pill" ? " nav-pill" : navShape === "floating" ? " nav-floating" : "") + navUnderlineClass;
+  const navMaterialClass = navMaterial === "glass" ? " nav-glass" : navMaterial === "frosted" ? " nav-frosted" : "";
+  const navShapeClass = (navShape === "pill" ? " nav-pill" : navShape === "floating" ? " nav-floating" : "") + navUnderlineClass + navMaterialClass;
   const isPillOrFloating = navShape === "pill" || navShape === "floating";
   const navLinksHtml = visiblePages
     .map(
@@ -2520,7 +2560,7 @@ function buildHtml(
   const showNavBrand = !!(settings?.showNavBrand ?? 1);
   const navHtml = hasMultiplePages
     ? isPillOrFloating
-      ? `<div class="site-nav-row" role="navigation" aria-label="Site navigation">
+      ? `<div class="site-nav-row${navMaterial === "glass" ? " nav-glass-row" : navMaterial === "frosted" ? " nav-frosted-row" : ""}" role="navigation" aria-label="Site navigation">
           ${showNavBrand ? `<a class="site-nav-brand-outside" href="#" onclick="return false;">${escHtml(eventTitle)}</a>` : `<div></div>`}
           <nav class="site-nav${navShapeClass}">
             <div class="site-nav-inner">
@@ -2546,7 +2586,15 @@ function buildHtml(
   let _anyLangFallback = false;
   const pageSectionsHtml = visiblePages
     .map((page, i) => {
-      // Get content for this page — use activeLang if set, fall back to mainLang
+      const sectionClass = hasMultiplePages
+        ? `page-section${i === 0 ? " active" : ""}`
+        : "page-section active";
+
+      if (lockedPageIds.has(page.id)) {
+        const accent = settings?.accentColor ?? "#B8921A";
+        return `<div class="${sectionClass}" id="page-${escHtml(page.id)}"><div style="display:flex;align-items:center;justify-content:center;min-height:40vh;padding:2rem"><div style="text-align:center;max-width:320px"><p style="color:#78716c;margin-bottom:1.25rem;font-size:.9375rem">This page is password protected.</p><form method="get" style="display:flex;flex-direction:column;gap:.75rem"><input type="password" name="pw" placeholder="Enter password" required style="border:1px solid #e7e5e4;border-radius:6px;padding:.625rem .875rem;font-family:inherit;font-size:1rem;outline:none" aria-label="Page password"/><button type="submit" style="padding:.625rem 1.5rem;border:none;border-radius:6px;background:${escHtml(accent)};color:#fff;font-family:inherit;font-size:.875rem;cursor:pointer">Unlock</button></form></div></div></div>`;
+      }
+
       const pageContentByLang = contentMap.get(page.slug);
       const renderLang = activeLang ?? mainLang;
       if (activeLang && !pageContentByLang?.get(activeLang)) _anyLangFallback = true;
@@ -2561,9 +2609,6 @@ function buildHtml(
           return html.replace(/(<section\b[^>]*)(>)/, `$1 data-animation="${escHtml(animPreset)}"$2`);
         })
         .join("\n");
-      const sectionClass = hasMultiplePages
-        ? `page-section${i === 0 ? " active" : ""}`
-        : "page-section active";
       return `<div class="${sectionClass}" id="page-${escHtml(page.id)}">${blocksHtml}</div>`;
     })
     .join("\n");
@@ -2592,6 +2637,21 @@ function buildHtml(
     ? `<div style="background:#fffbeb;border-bottom:1px solid #fcd34d;padding:8px 16px;font-size:0.82rem;color:#92400e;text-align:center;">${LANG_NATIVE[activeLang] ?? activeLang.toUpperCase()} content not yet available — showing original language</div>`
     : "";
 
+  const hideOnScrollScript = (settings?.navPosition === "hide-on-scroll")
+    ? `
+(function(){
+  var nav = document.querySelector('.site-nav, .site-nav-row');
+  if (!nav) return;
+  var lastY = 0;
+  nav.style.transition = 'transform .25s ease';
+  window.addEventListener('scroll', function(){
+    var y = window.scrollY;
+    if (y > lastY && y > 60) nav.style.transform = 'translateY(-100%)';
+    else nav.style.transform = 'translateY(0)';
+    lastY = y;
+  }, {passive:true});
+})();`
+    : "";
   const navScript = hasMultiplePages
     ? `<script>
 function showPage(pageId) {
@@ -2608,6 +2668,7 @@ function showPage(pageId) {
   var pid = new URLSearchParams(location.search).get('_page');
   if (pid) showPage(pid);
 })();
+${hideOnScrollScript}
 </script>`
     : "";
 

@@ -64,7 +64,7 @@ export function BreakpointFrame({ children }: Props) {
 				style={{
 					...(isDesktop ? {} : { width: WIDTHS[breakpoint] }),
 					...themeVars(themeTokens.colors, themeTokens.typography),
-					backgroundColor: pageBgDisabled ? "transparent" : (settings.bgColor ?? themeTokens.colors.background),
+					background: pageBgDisabled ? "transparent" : (settings.bgColor ?? themeTokens.colors.background),
 				}}
 			>
 				{children}

@@ -1,0 +1,55 @@
+{
+  "topic": "dreamysuite-effect-system",
+  "date": "2026-04-17",
+  "plan_path": ".planning/effect-system-plan.md",
+  "spec_path": ".planning/effect-system-spec.md",
+  "pipeline_phase": "plan",
+  "current_task_id": "1",
+  "current_task_name": "Install ReactBits package",
+  "tasks_completed": 0,
+  "tasks_total": 25,
+  "branch": "feat/editor-overhaul",
+  "last_commit": "d847e95",
+  "uncommitted_files": 16,
+  "working": [
+    "NavPreview renders in editor (1+ page visibility)",
+    "NavPreview matches public site rendering",
+    "Public site nav shows with 1+ pages",
+    "Nav material toggle: solid/glass/frosted in editor",
+    "Glass/frosted CSS on public route",
+    "Gradient backgrounds in editor canvas",
+    "SitePhotoPicker replaces URL inputs in StyleTab, ContentTab, ReplaceMediaDialog"
+  ],
+  "broken": [
+    {
+      "item": "navMaterial on public site",
+      "detail": "Migration 0030_nav_material.sql needs to be applied: npx wrangler d1 migrations apply dreamysuite-db --local"
+    },
+    {
+      "item": "uncommitted changes",
+      "detail": "12 modified + 4 new files need to be committed"
+    }
+  ],
+  "pending_decisions": [],
+  "active_files": [
+    "src/app/(dashboard)/sites/[id]/editor-v2/NavPreview.tsx",
+    "src/app/(dashboard)/sites/[id]/editor-v2/SitePhotoPicker.tsx",
+    "src/app/(dashboard)/sites/[id]/editor-v2/BreakpointFrame.tsx",
+    "src/app/(dashboard)/sites/[id]/editor-v2/editing/ReplaceMediaDialog.tsx",
+    "src/app/(dashboard)/sites/[id]/editor-v2/inspector/ContentTab.tsx",
+    "src/app/(dashboard)/sites/[id]/editor-v2/inspector/StyleTab.tsx",
+    "src/app/(dashboard)/sites/[id]/editor-v2/trays/NavigationTray.tsx",
+    "src/app/[slug]/route.ts",
+    "src/lib/schemas/settings.ts",
+    "migrations/0030_nav_material.sql"
+  ],
+  "next_action": "Run migration 0030, commit all changes, then start Effect System Phase 1 Task 1-5",
+  "effect_system_phases": {
+    "phase_1": "Foundation — registry, presets, dynamic loader, settings (Tasks 1-5)",
+    "phase_2": "Picker UI — EffectPicker, PresetPicker, perf guard (Tasks 6-8)",
+    "phase_3": "Editor integration — Effects tray, wire into StyleTab/NavTray/SectionToolbar (Tasks 9-12)",
+    "phase_4": "Render in canvas + public site (Tasks 13-16)",
+    "phase_5": "Install effects batch 1 — 38 components (Tasks 17-21)",
+    "phase_6": "Polish + batch 2 — thumbnails + 63 components (Tasks 22-25)"
+  }
+}
