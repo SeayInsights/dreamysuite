@@ -206,7 +206,7 @@ export function FloatingFormatToolbar({
           type="color"
           aria-label="Pick text color"
           className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
-          onMouseDown={(e) => e.stopPropagation()}
+          onMouseDown={(e) => e.preventDefault()}
           onChange={(e) => onFormat({ type: "foreColor", value: e.target.value })}
         />
       </div>

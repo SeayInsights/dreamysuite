@@ -82,7 +82,7 @@ export function SlideTray() {
 			ref={ref}
 			role="dialog"
 			aria-hidden={!openTray}
-			className="fixed top-12 bottom-0 z-[150] w-72 border-r border-border bg-white shadow-xl"
+			className="fixed top-12 bottom-0 z-[9999] w-72 border-r border-border bg-white shadow-xl"
 			style={{ left: railCollapsed ? 0 : 48 }}
 		>
 			{openTray === "pages" && <PagesTray />}
