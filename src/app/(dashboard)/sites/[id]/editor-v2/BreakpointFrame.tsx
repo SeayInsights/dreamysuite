@@ -33,8 +33,6 @@ function themeVars(colors: ThemeColors, typography: ThemeTypography): React.CSSP
 		"--theme-heading-font": typography.headingFont,
 		"--theme-body-font": typography.bodyFont,
 		"--theme-scale": String(typography.scale),
-		color: colors.text,
-		fontFamily: typography.bodyFont,
 	} as React.CSSProperties;
 }
 

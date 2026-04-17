@@ -48,22 +48,25 @@ interface PopoverProps {
   top: number;
   left: number;
   onClose: () => void;
+  toolbarRef?: React.RefObject<HTMLDivElement | null>;
   children: ReactNode;
 }
 
-function FloatingPopover({ open, top, left, onClose, children }: PopoverProps) {
+function FloatingPopover({ open, top, left, onClose, toolbarRef, children }: PopoverProps) {
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!open) return;
     function handleClick(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) {
+      const target = e.target as Node;
+      if (ref.current && !ref.current.contains(target)) {
+        if (toolbarRef?.current?.contains(target)) return;
         onClose();
       }
     }
     document.addEventListener("mousedown", handleClick);
     return () => document.removeEventListener("mousedown", handleClick);
-  }, [open, onClose]);
+  }, [open, onClose, toolbarRef]);
 
   if (!open || typeof document === "undefined") return null;
 
@@ -166,9 +169,9 @@ function BackgroundPopover({ currentValue, onSelect, swatches, gradients }: BgPo
       {tab === "solid" && (
         <>
           <div className="grid grid-cols-4 gap-1.5">
-            {swatches.map((color) => (
+            {swatches.map((color, i) => (
               <button
-                key={color}
+                key={i}
                 type="button"
                 aria-label={`Set background to ${color}`}
                 onClick={() => { setHex(color); applyHexOpacity(color, opacity); }}
@@ -482,6 +485,7 @@ interface AnimationPopoverProps {
 
 function AnimationPopoverContent({ blockId, anim, isPro, onUpdate }: AnimationPopoverProps) {
   const easingOptions = isPro ? EASING_OPTIONS_PRO : EASING_OPTIONS_SIMPLE;
+  const hasPreset = !!anim.presetId;
 
   function updateWithPreview(patch: Partial<AnimationConfig>) {
     onUpdate(patch);
@@ -493,125 +497,96 @@ function AnimationPopoverContent({ blockId, anim, isPro, onUpdate }: AnimationPo
   }
 
   return (
-    <div className="w-64 space-y-3">
-      <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-        Entrance Preset
-      </p>
-      <AnimationPresetPicker
-        value={anim.presetId}
-        onChange={(id) => updateWithPreview({ presetId: id })}
-      />
+    <div className="flex">
+      {/* Left panel — preset picker */}
+      <div className="w-64 space-y-3">
+        <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+          Entrance Preset
+        </p>
+        <AnimationPresetPicker
+          value={anim.presetId}
+          onChange={(id) => {
+            if (id) updateWithPreview({ presetId: id });
+            else onUpdate({ presetId: null });
+          }}
+        />
+      </div>
 
-      {anim.presetId && (
-        <button
-          type="button"
-          onClick={() => onUpdate({ presetId: null })}
-          className="text-xs text-muted-foreground underline hover:text-foreground"
-        >
-          Remove animation
-        </button>
-      )}
+      {/* Right panel — timing options, pro mode only */}
+      <div
+        className={cn(
+          "overflow-hidden transition-all duration-200 ease-out",
+          hasPreset && isPro ? "ml-3 w-56 border-l border-border pl-3 opacity-100" : "w-0 opacity-0",
+        )}
+      >
+        {hasPreset && isPro && (
+          <div className="w-56 space-y-3">
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+              Timing
+            </p>
 
-      {anim.presetId && (
-        <div className="space-y-3 border-t border-border pt-3">
-          <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-            Timing
-          </p>
-
-          {isPro ? (
-            <>
-              <div className="flex items-center gap-2">
-                <label className="w-12 shrink-0 text-[11px] text-muted-foreground">Duration</label>
-                <input
-                  type="number" min={50} max={5000} step={50}
-                  value={Math.round(anim.duration * 1000)}
-                  onChange={(e) => onUpdate({ duration: Math.max(0.05, Number(e.target.value) / 1000) })}
-                  className="h-7 w-16 rounded border border-input bg-background px-1.5 text-xs tabular-nums focus:outline-none focus:ring-1 focus:ring-ring"
-                  onKeyDown={(e) => e.stopPropagation()}
-                />
-                <span className="text-[10px] text-muted-foreground">ms</span>
-                <input type="range" min={50} max={5000} step={50}
-                  value={Math.round(anim.duration * 1000)}
-                  onChange={(e) => onUpdate({ duration: Number(e.target.value) / 1000 })}
-                  className="flex-1 accent-primary"
-                />
-              </div>
-              <div className="flex items-center gap-2">
-                <label className="w-12 shrink-0 text-[11px] text-muted-foreground">Delay</label>
-                <input
-                  type="number" min={0} max={5000} step={50}
-                  value={Math.round(anim.delay * 1000)}
-                  onChange={(e) => onUpdate({ delay: Math.max(0, Number(e.target.value) / 1000) })}
-                  className="h-7 w-16 rounded border border-input bg-background px-1.5 text-xs tabular-nums focus:outline-none focus:ring-1 focus:ring-ring"
-                  onKeyDown={(e) => e.stopPropagation()}
-                />
-                <span className="text-[10px] text-muted-foreground">ms</span>
-                <input type="range" min={0} max={5000} step={50}
-                  value={Math.round(anim.delay * 1000)}
-                  onChange={(e) => onUpdate({ delay: Number(e.target.value) / 1000 })}
-                  className="flex-1 accent-primary"
-                />
-              </div>
-            </>
-          ) : (
-            <>
-              <div className="flex items-center gap-2">
-                <label className="w-12 shrink-0 text-[11px] text-muted-foreground">Duration</label>
-                <input type="range" min={0.1} max={3} step={0.05} value={anim.duration}
-                  onChange={(e) => onUpdate({ duration: parseFloat(e.target.value) })}
-                  className="flex-1 accent-primary"
-                />
-                <span className="w-9 text-right text-xs tabular-nums text-muted-foreground">{anim.duration.toFixed(2)}s</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <label className="w-12 shrink-0 text-[11px] text-muted-foreground">Delay</label>
-                <input type="range" min={0} max={2} step={0.05} value={anim.delay}
-                  onChange={(e) => onUpdate({ delay: parseFloat(e.target.value) })}
-                  className="flex-1 accent-primary"
-                />
-                <span className="w-9 text-right text-xs tabular-nums text-muted-foreground">{anim.delay.toFixed(2)}s</span>
-              </div>
-            </>
-          )}
-
-          <div className="flex items-center gap-2">
-            <label className="w-12 shrink-0 text-[11px] text-muted-foreground">Easing</label>
-            <select
-              value={anim.easing}
-              onChange={(e) => onUpdate({ easing: e.target.value })}
-              className="h-7 flex-1 rounded border border-input bg-background px-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-ring"
-            >
-              {easingOptions.map((opt) => (
-                <option key={opt} value={opt}>{opt}</option>
-              ))}
-            </select>
-          </div>
-
-          {isPro && (
-            <div className="space-y-1.5 border-t border-border pt-3">
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                Trigger
-              </p>
-              <div className="flex gap-1">
-                {TRIGGER_OPTIONS.map((opt) => (
-                  <button
-                    key={opt.id}
-                    type="button"
-                    onClick={() => onUpdate({ trigger: opt.id })}
-                    className={`h-7 rounded-sm px-2 text-[11px] font-medium transition-colors ${
-                      anim.trigger === opt.id
-                        ? "bg-accent text-accent-foreground"
-                        : "text-muted-foreground hover:bg-accent/50"
-                    }`}
-                  >
-                    {opt.label}
-                  </button>
-                ))}
-              </div>
+            <div className="flex items-center gap-2">
+              <label className="w-12 shrink-0 text-[11px] text-muted-foreground">Duration</label>
+              <input
+                type="number" min={50} max={5000} step={50}
+                value={Math.round(anim.duration * 1000)}
+                onChange={(e) => onUpdate({ duration: Math.max(0.05, Number(e.target.value) / 1000) })}
+                className="h-7 w-16 rounded border border-input bg-background px-1.5 text-xs tabular-nums focus:outline-none focus:ring-1 focus:ring-ring"
+                onKeyDown={(e) => e.stopPropagation()}
+              />
+              <span className="text-[10px] text-muted-foreground">ms</span>
             </div>
-          )}
-        </div>
-      )}
+            <div className="flex items-center gap-2">
+              <label className="w-12 shrink-0 text-[11px] text-muted-foreground">Delay</label>
+              <input
+                type="number" min={0} max={5000} step={50}
+                value={Math.round(anim.delay * 1000)}
+                onChange={(e) => onUpdate({ delay: Math.max(0, Number(e.target.value) / 1000) })}
+                className="h-7 w-16 rounded border border-input bg-background px-1.5 text-xs tabular-nums focus:outline-none focus:ring-1 focus:ring-ring"
+                onKeyDown={(e) => e.stopPropagation()}
+              />
+              <span className="text-[10px] text-muted-foreground">ms</span>
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-[11px] text-muted-foreground">Easing</label>
+              <select
+                value={anim.easing}
+                onChange={(e) => onUpdate({ easing: e.target.value })}
+                className="h-7 w-full rounded border border-input bg-background px-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-ring"
+              >
+                {easingOptions.map((opt) => (
+                  <option key={opt} value={opt}>{opt}</option>
+                ))}
+              </select>
+            </div>
+
+            {isPro && (
+              <div className="space-y-1.5 border-t border-border pt-3">
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  Trigger
+                </p>
+                <div className="flex flex-wrap gap-1">
+                  {TRIGGER_OPTIONS.map((opt) => (
+                    <button
+                      key={opt.id}
+                      type="button"
+                      onClick={() => onUpdate({ trigger: opt.id })}
+                      className={`h-7 rounded-sm px-2 text-[11px] font-medium transition-colors ${
+                        anim.trigger === opt.id
+                          ? "bg-accent text-accent-foreground"
+                          : "text-muted-foreground hover:bg-accent/50"
+                      }`}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -996,6 +971,7 @@ export function SectionToolbar({
         top={popoverPos.top}
         left={popoverPos.left}
         onClose={() => setActivePopover(null)}
+        toolbarRef={toolbarRef}
       >
         <BackgroundPopover
           currentValue={currentBg}
@@ -1015,6 +991,7 @@ export function SectionToolbar({
         top={popoverPos.top}
         left={popoverPos.left}
         onClose={() => setActivePopover(null)}
+        toolbarRef={toolbarRef}
       >
         <PaddingPopover
           current={currentPadding}
@@ -1032,6 +1009,7 @@ export function SectionToolbar({
         top={popoverPos.top}
         left={popoverPos.left}
         onClose={() => setActivePopover(null)}
+        toolbarRef={toolbarRef}
       >
         <HeightPopover
           current={activePopover === "height" ? (getBlockHeight() ?? currentHeight) : currentHeight}
@@ -1049,6 +1027,7 @@ export function SectionToolbar({
         top={popoverPos.top}
         left={popoverPos.left}
         onClose={() => setActivePopover(null)}
+        toolbarRef={toolbarRef}
       >
         <AnimationPopoverContent
           blockId={renderBlockId!}

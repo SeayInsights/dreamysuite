@@ -23,6 +23,7 @@ export const SettingsSchema = z.object({
   mainLanguage: z.string().default("en"),
   secondLanguage: z.string().nullable().default(null),
   guestPassword: z.string().nullable().default(null),
+  passwordPages: z.string().nullable().default(null),
   isLive: intBool.default(0),
   headingFont: z.string().default("Georgia"),
   bodyFont: z.string().default("Inter"),

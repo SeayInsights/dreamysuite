@@ -44,12 +44,14 @@ export function EditorShell({ site, user: _user, children }: Props) {
 	useShortcuts();
 	useSettingsSync(site.id);
 	const setSiteId = useEditorStore((s) => s.setSiteId);
+	const setSiteMeta = useEditorStore((s) => s.setSiteMeta);
 
 	useEffect(() => {
 		setSiteId(site.id);
+		setSiteMeta({ slug: site.slug, customDomain: site.customDomain, eventType: site.eventType });
 		trackEditorMount(site.id);
 		return () => flushEditorTelemetry();
-	}, [site.id, setSiteId]);
+	}, [site.id, site.slug, site.customDomain, site.eventType, setSiteId, setSiteMeta]);
 
 	return (
 		<div className="fixed inset-0 flex flex-col bg-background text-foreground antialiased">

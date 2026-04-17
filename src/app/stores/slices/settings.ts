@@ -1,6 +1,7 @@
 import type { StateCreator } from "zustand";
 import type { Settings, SettingsPatch } from "@/lib/schemas/settings";
 import { DEFAULTS } from "@/lib/schemas/settings";
+import { settingsToTheme, type EditorShellSlice } from "./editorShell";
 
 export interface SettingsSlice {
   settings: Settings;
@@ -12,7 +13,7 @@ export interface SettingsSlice {
   markSettingsClean: () => void;
 }
 
-export const createSettingsSlice: StateCreator<SettingsSlice> = (set, get) => ({
+export const createSettingsSlice: StateCreator<SettingsSlice & EditorShellSlice, [], [], SettingsSlice> = (set, get) => ({
   settings: { ...DEFAULTS },
   settingsLoaded: false,
   settingsDirty: false,
@@ -22,7 +23,8 @@ export const createSettingsSlice: StateCreator<SettingsSlice> = (set, get) => ({
       const res = await fetch(`/api/sites/${siteId}/settings`);
       if (!res.ok) return;
       const { settings } = (await res.json()) as { settings: Settings };
-      set({ settings: { ...DEFAULTS, ...settings }, settingsLoaded: true, settingsDirty: false });
+      const merged = { ...DEFAULTS, ...settings };
+      set({ settings: merged, settingsLoaded: true, settingsDirty: false, themeTokens: settingsToTheme(merged) });
     } catch {
       // Silently fail — editor still works with defaults
     }
@@ -37,14 +39,15 @@ export const createSettingsSlice: StateCreator<SettingsSlice> = (set, get) => ({
     if (!get().settingsDirty) return;
     const settings = get().settings;
     try {
-      await fetch(`/api/sites/${siteId}/settings`, {
+      const res = await fetch(`/api/sites/${siteId}/settings`, {
         method: "PUT",
         headers: { "content-type": "application/json" },
         body: JSON.stringify(settings),
       });
+      if (!res.ok) return;
       set({ settingsDirty: false });
-    } catch {
-      // Save failed — stays dirty, will retry on next debounce
+    } catch (e) {
+      console.error("[settings:save] network error:", e);
     }
   },
 
