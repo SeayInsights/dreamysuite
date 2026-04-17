@@ -100,8 +100,20 @@ export function InsertButton({ containerRef }: Props) {
     if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
   }, []);
 
-  if (selectedBlockId) return null;
   if (!slot) return null;
+
+  // Suppress the insert button only at the two slot boundaries that border the
+  // selected block (above and below it) — they visually collide with the
+  // selection ring. Slots between other blocks remain interactive.
+  if (selectedBlockId) {
+    const selectedIndex = blocks.findIndex((b) => b.id === selectedBlockId);
+    if (
+      selectedIndex !== -1 &&
+      (slot.insertIndex === selectedIndex || slot.insertIndex === selectedIndex + 1)
+    ) {
+      return null;
+    }
+  }
 
   return (
     <>
