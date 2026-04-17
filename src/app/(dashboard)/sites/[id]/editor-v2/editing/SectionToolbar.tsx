@@ -13,6 +13,9 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useEditorStore } from "@/app/stores/editorStore";
 import { parseCfg } from "@/lib/editableField";
+import { AnimationPresetPicker } from "../inspector/AnimationPresetPicker";
+import { getPreset } from "@/app/animations/registry";
+import "@/app/animations/presets/index";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -446,38 +449,180 @@ function HeightPopover({ current, onChange }: HeightPopoverProps) {
 }
 
 // ---------------------------------------------------------------------------
-// Animation stub tooltip
+// Animation popover content
 // ---------------------------------------------------------------------------
 
-function AnimationStub() {
-  const [show, setShow] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
+interface AnimationConfig {
+  presetId: string | null;
+  duration: number;
+  delay: number;
+  easing: string;
+  trigger: "on-view" | "on-hover" | "on-scroll-scrub";
+}
+
+const DEFAULT_ANIM: AnimationConfig = {
+  presetId: null,
+  duration: 0.6,
+  delay: 0,
+  easing: "power2.out",
+  trigger: "on-view",
+};
+
+const EASING_OPTIONS_SIMPLE = [
+  "power2.out", "power2.inOut", "power3.out", "expo.out",
+  "elastic.out(1, 0.3)", "back.out(1.7)", "bounce.out", "sine.out", "linear",
+];
+
+const EASING_OPTIONS_PRO = [
+  ...EASING_OPTIONS_SIMPLE,
+  "power1.in", "power1.out", "power1.inOut", "power4.out", "power4.inOut",
+  "circ.out", "circ.inOut", "expo.inOut", "sine.inOut", "back.inOut",
+  "elastic.out(1, 0.5)", "elastic.out(2, 0.3)", "steps(5)", "steps(10)",
+];
+
+const TRIGGER_OPTIONS: { id: AnimationConfig["trigger"]; label: string }[] = [
+  { id: "on-view", label: "On view" },
+  { id: "on-hover", label: "On hover" },
+  { id: "on-scroll-scrub", label: "Scroll scrub" },
+];
+
+interface AnimationPopoverProps {
+  blockId: string;
+  anim: AnimationConfig;
+  isPro: boolean;
+  onUpdate: (patch: Partial<AnimationConfig>) => void;
+}
+
+function AnimationPopoverContent({ blockId, anim, isPro, onUpdate }: AnimationPopoverProps) {
+  const easingOptions = isPro ? EASING_OPTIONS_PRO : EASING_OPTIONS_SIMPLE;
+
+  function updateWithPreview(patch: Partial<AnimationConfig>) {
+    onUpdate(patch);
+    const presetId = patch.presetId ?? anim.presetId;
+    if (presetId) {
+      const el = document.querySelector<Element>(`[data-block-id="${blockId}"]`);
+      if (el) getPreset(presetId)?.().then((fn) => fn(el));
+    }
+  }
 
   return (
-    <div className="relative" ref={ref}>
-      <Button
-        variant="ghost"
-        size="sm"
-        className="h-8 gap-1.5 text-xs"
-        onMouseEnter={() => setShow(true)}
-        onMouseLeave={() => setShow(false)}
-        onClick={(e) => { e.stopPropagation(); setShow((v) => !v); }}
-        aria-label="Animation settings (coming soon)"
-      >
-        <AnimationIcon />
-        Animation
-      </Button>
-      {show && (
-        <div
-          className={cn(
-            "absolute bottom-full left-1/2 mb-2 -translate-x-1/2",
-            "whitespace-nowrap rounded-md border border-border bg-popover px-3 py-1.5",
-            "text-xs text-muted-foreground shadow-md",
-            "pointer-events-none z-[70]",
-          )}
-          role="tooltip"
+    <div className="w-64 space-y-3">
+      <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+        Entrance Preset
+      </p>
+      <AnimationPresetPicker
+        value={anim.presetId}
+        onChange={(id) => updateWithPreview({ presetId: id })}
+      />
+
+      {anim.presetId && (
+        <button
+          type="button"
+          onClick={() => onUpdate({ presetId: null })}
+          className="text-xs text-muted-foreground underline hover:text-foreground"
         >
-          Coming in Phase 6
+          Remove animation
+        </button>
+      )}
+
+      {anim.presetId && (
+        <div className="space-y-3 border-t border-border pt-3">
+          <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+            Timing
+          </p>
+
+          {isPro ? (
+            <>
+              <div className="flex items-center gap-2">
+                <label className="w-12 shrink-0 text-[11px] text-muted-foreground">Duration</label>
+                <input
+                  type="number" min={50} max={5000} step={50}
+                  value={Math.round(anim.duration * 1000)}
+                  onChange={(e) => onUpdate({ duration: Math.max(0.05, Number(e.target.value) / 1000) })}
+                  className="h-7 w-16 rounded border border-input bg-background px-1.5 text-xs tabular-nums focus:outline-none focus:ring-1 focus:ring-ring"
+                  onKeyDown={(e) => e.stopPropagation()}
+                />
+                <span className="text-[10px] text-muted-foreground">ms</span>
+                <input type="range" min={50} max={5000} step={50}
+                  value={Math.round(anim.duration * 1000)}
+                  onChange={(e) => onUpdate({ duration: Number(e.target.value) / 1000 })}
+                  className="flex-1 accent-primary"
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <label className="w-12 shrink-0 text-[11px] text-muted-foreground">Delay</label>
+                <input
+                  type="number" min={0} max={5000} step={50}
+                  value={Math.round(anim.delay * 1000)}
+                  onChange={(e) => onUpdate({ delay: Math.max(0, Number(e.target.value) / 1000) })}
+                  className="h-7 w-16 rounded border border-input bg-background px-1.5 text-xs tabular-nums focus:outline-none focus:ring-1 focus:ring-ring"
+                  onKeyDown={(e) => e.stopPropagation()}
+                />
+                <span className="text-[10px] text-muted-foreground">ms</span>
+                <input type="range" min={0} max={5000} step={50}
+                  value={Math.round(anim.delay * 1000)}
+                  onChange={(e) => onUpdate({ delay: Number(e.target.value) / 1000 })}
+                  className="flex-1 accent-primary"
+                />
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="flex items-center gap-2">
+                <label className="w-12 shrink-0 text-[11px] text-muted-foreground">Duration</label>
+                <input type="range" min={0.1} max={3} step={0.05} value={anim.duration}
+                  onChange={(e) => onUpdate({ duration: parseFloat(e.target.value) })}
+                  className="flex-1 accent-primary"
+                />
+                <span className="w-9 text-right text-xs tabular-nums text-muted-foreground">{anim.duration.toFixed(2)}s</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <label className="w-12 shrink-0 text-[11px] text-muted-foreground">Delay</label>
+                <input type="range" min={0} max={2} step={0.05} value={anim.delay}
+                  onChange={(e) => onUpdate({ delay: parseFloat(e.target.value) })}
+                  className="flex-1 accent-primary"
+                />
+                <span className="w-9 text-right text-xs tabular-nums text-muted-foreground">{anim.delay.toFixed(2)}s</span>
+              </div>
+            </>
+          )}
+
+          <div className="flex items-center gap-2">
+            <label className="w-12 shrink-0 text-[11px] text-muted-foreground">Easing</label>
+            <select
+              value={anim.easing}
+              onChange={(e) => onUpdate({ easing: e.target.value })}
+              className="h-7 flex-1 rounded border border-input bg-background px-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-ring"
+            >
+              {easingOptions.map((opt) => (
+                <option key={opt} value={opt}>{opt}</option>
+              ))}
+            </select>
+          </div>
+
+          {isPro && (
+            <div className="space-y-1.5 border-t border-border pt-3">
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                Trigger
+              </p>
+              <div className="flex gap-1">
+                {TRIGGER_OPTIONS.map((opt) => (
+                  <button
+                    key={opt.id}
+                    type="button"
+                    onClick={() => onUpdate({ trigger: opt.id })}
+                    className={`h-7 rounded-sm px-2 text-[11px] font-medium transition-colors ${
+                      anim.trigger === opt.id
+                        ? "bg-accent text-accent-foreground"
+                        : "text-muted-foreground hover:bg-accent/50"
+                    }`}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -565,10 +710,11 @@ export function SectionToolbar({
   const blocks = useEditorStore((s) => s.blocks);
   const updateBlock = useEditorStore((s) => s.updateBlock);
   const selectBlock = useEditorStore((s) => s.selectBlock);
+  const mode = useEditorStore((s) => s.mode);
 
   const toolbarRef = useRef<HTMLDivElement>(null);
   const [position, setPosition] = useState<Position | null>(null);
-  const [activePopover, setActivePopover] = useState<"bg" | "padding" | "height" | null>(null);
+  const [activePopover, setActivePopover] = useState<"bg" | "padding" | "height" | "animation" | null>(null);
   const [popoverPos, setPopoverPos] = useState<Position>({ top: 0, left: 0 });
 
   const TOOLBAR_HEIGHT = 44;
@@ -767,7 +913,15 @@ export function SectionToolbar({
 
   const currentHeight = typeof config.blockHeight === "number" ? config.blockHeight : undefined;
 
-  function openPopover(which: "bg" | "padding" | "height", btnEl: HTMLElement) {
+  const rawAnim = config.animation;
+  const currentAnim: AnimationConfig = {
+    ...DEFAULT_ANIM,
+    ...(rawAnim !== null && typeof rawAnim === "object" && !Array.isArray(rawAnim)
+      ? (rawAnim as Partial<AnimationConfig>)
+      : {}),
+  };
+
+  function openPopover(which: "bg" | "padding" | "height" | "animation", btnEl: HTMLElement) {
     const btnBox = btnEl.getBoundingClientRect();
     setPopoverPos({ top: btnBox.bottom + 6, left: btnBox.left });
     setActivePopover((prev) => (prev === which ? null : which));
@@ -834,8 +988,17 @@ export function SectionToolbar({
 
       <DividerLine />
 
-      {/* Animation stub */}
-      <AnimationStub />
+      {/* Animation button */}
+      <Button
+        variant="ghost"
+        size="sm"
+        className="h-8 gap-1.5 text-xs"
+        aria-label="Set block animation"
+        onClick={(e) => { e.stopPropagation(); openPopover("animation", e.currentTarget); }}
+      >
+        <AnimationIcon />
+        Animation
+      </Button>
 
       {/* Background popover */}
       <FloatingPopover
@@ -883,6 +1046,26 @@ export function SectionToolbar({
           onChange={(blockHeight) => {
             updateBlock(renderBlockId!, {
               config: { ...config, blockHeight },
+            });
+          }}
+        />
+      </FloatingPopover>
+
+      {/* Animation popover */}
+      <FloatingPopover
+        open={activePopover === "animation"}
+        top={popoverPos.top}
+        left={popoverPos.left}
+        onClose={() => setActivePopover(null)}
+      >
+        <AnimationPopoverContent
+          blockId={renderBlockId!}
+          anim={currentAnim}
+          isPro={mode === "pro"}
+          onUpdate={(patch) => {
+            const next = { ...currentAnim, ...patch };
+            updateBlock(renderBlockId!, {
+              config: { ...config, animation: next },
             });
           }}
         />

@@ -1,81 +1,139 @@
 "use client";
 
 import { useEditorStore } from "@/app/stores/editorStore";
-import { useStyledValue } from "../hooks/useStyledValue";
 import { ColorInput } from "./ColorInput";
-import { CustomCssPanel } from "./CustomCssPanel";
-
-function InheritBadge({ isInheriting, onClear }: { isInheriting: boolean; onClear: () => void }) {
-	const mode = useEditorStore((s) => s.mode);
-	const breakpoint = useEditorStore((s) => s.breakpoint);
-
-	if (breakpoint === "desktop") return null;
-
-	if (isInheriting) {
-		return <span className="text-[10px] italic text-muted-foreground">inheriting</span>;
-	}
-
-	if (mode === "pro") {
-		return (
-			<button
-				type="button"
-				onClick={onClear}
-				className="text-[10px] text-muted-foreground underline hover:text-foreground"
-			>
-				clear override
-			</button>
-		);
-	}
-
-	return null;
-}
 
 export function StyleTab() {
-	const selectedBlockId = useEditorStore((s) => s.selectedBlockId);
-	const mode = useEditorStore((s) => s.mode);
-	const breakpoint = useEditorStore((s) => s.breakpoint);
+  const settings = useEditorStore((s) => s.settings);
+  const updateSettings = useEditorStore((s) => s.updateSettings);
+  const themeTokens = useEditorStore((s) => s.themeTokens);
+  const setOpenTray = useEditorStore((s) => s.setOpenTray);
 
-	if (!selectedBlockId) {
-		return (
-			<div className="p-4 text-sm text-muted-foreground">
-				Select a block to edit styles.
-			</div>
-		);
-	}
+  return (
+    <div className="space-y-4 p-4">
+      <div className="space-y-2">
+        <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+          Page Background
+        </p>
+        <ColorInput
+          value={settings.bgColor ?? "#ffffff"}
+          onChange={(v) => updateSettings({ bgColor: v })}
+        />
+      </div>
 
-	return (
-		<div className="space-y-4 p-4">
-			{breakpoint !== "desktop" && mode === "pro" && (
-				<div className="rounded bg-accent/50 px-2.5 py-1.5 text-[10px] text-muted-foreground">
-					Editing <span className="font-semibold">{breakpoint}</span> overrides
-				</div>
-			)}
-			<BackgroundColorControl blockId={selectedBlockId} />
-			{mode === "pro" && <CustomCssPanel blockId={selectedBlockId} />}
-		</div>
-	);
-}
+      <div className="space-y-2 border-t border-border pt-4">
+        <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+          Background Image
+        </p>
+        <input
+          type="url"
+          value={settings.bgImage ?? ""}
+          placeholder="https://..."
+          onChange={(e) => updateSettings({ bgImage: e.target.value || null })}
+          onKeyDown={(e) => e.stopPropagation()}
+          className="h-8 w-full rounded border border-input bg-background px-2.5 text-xs focus:outline-none focus:ring-1 focus:ring-ring"
+        />
 
-function BackgroundColorControl({ blockId }: { blockId: string }) {
-	const [bgColor, setBgColor, isInheriting, clearBgColor] = useStyledValue<string>(
-		blockId,
-		"backgroundColor",
-		"",
-	);
+        {settings.bgImage && (
+          <>
+            <div className="overflow-hidden rounded border border-border">
+              <img
+                src={settings.bgImage}
+                alt="Background preview"
+                className="h-20 w-full object-cover"
+                onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+              />
+            </div>
 
-	return (
-		<div className="space-y-2">
-			<div className="flex items-center justify-between">
-				<p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-					Background
-				</p>
-				<InheritBadge isInheriting={isInheriting} onClear={clearBgColor} />
-			</div>
-			<ColorInput
-				value={bgColor}
-				onChange={setBgColor}
-				isInheriting={isInheriting}
-			/>
-		</div>
-	);
+            <div className="space-y-1">
+              <div className="flex items-center justify-between text-[10px] text-muted-foreground">
+                <span>Opacity</span>
+                <span className="tabular-nums">{Math.round((settings.bgImageOpacity ?? 1) * 100)}%</span>
+              </div>
+              <input
+                type="range"
+                min={0}
+                max={1}
+                step={0.01}
+                value={settings.bgImageOpacity ?? 1}
+                onChange={(e) => updateSettings({ bgImageOpacity: parseFloat(e.target.value) })}
+                className="w-full accent-primary"
+              />
+            </div>
+
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] text-muted-foreground">Layer</span>
+              <div className="flex overflow-hidden rounded border border-input text-[10px] font-medium">
+                {(["behind", "overlay"] as const).map((layer) => (
+                  <button
+                    key={layer}
+                    type="button"
+                    onClick={() => updateSettings({ bgImageLayer: layer })}
+                    className={`px-2.5 py-1 capitalize transition-colors ${
+                      (settings.bgImageLayer ?? "behind") === layer
+                        ? "bg-accent text-accent-foreground"
+                        : "bg-background text-muted-foreground hover:bg-accent/50"
+                    }`}
+                  >
+                    {layer}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </>
+        )}
+      </div>
+
+      <div className="space-y-2 border-t border-border pt-4">
+        <div className="flex items-center justify-between">
+          <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+            Theme Colors
+          </p>
+          <button
+            type="button"
+            onClick={() => setOpenTray("theme")}
+            className="text-[10px] text-primary underline hover:text-primary/80"
+          >
+            Edit in Theme tray
+          </button>
+        </div>
+        <div className="flex gap-1.5">
+          {(["primary", "secondary", "accent", "background", "text"] as const).map((key) => (
+            <div key={key} className="flex flex-col items-center gap-1">
+              <div
+                className="h-6 w-6 rounded-full border border-border"
+                style={{ backgroundColor: themeTokens.colors[key] }}
+                title={`${key}: ${themeTokens.colors[key]}`}
+              />
+              <span className="text-[8px] text-muted-foreground">{key.slice(0, 3)}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="flex items-center justify-between border-t border-border pt-4">
+        <div>
+          <p className="text-xs font-medium">Disable all animations</p>
+          <p className="text-[10px] text-muted-foreground">
+            Turns off animations for visitors
+          </p>
+        </div>
+        <button
+          type="button"
+          role="switch"
+          aria-checked={!!settings.animationsDisabled}
+          onClick={() => updateSettings({ animationsDisabled: settings.animationsDisabled ? 0 : 1 })}
+          className={`relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors ${
+            settings.animationsDisabled ? "bg-primary" : "bg-muted"
+          }`}
+        >
+          <span
+            className={`inline-block h-3.5 w-3.5 rounded-full bg-white shadow-sm transition-transform ${
+              settings.animationsDisabled ? "translate-x-4" : "translate-x-0.5"
+            }`}
+          />
+        </button>
+      </div>
+    </div>
+  );
 }

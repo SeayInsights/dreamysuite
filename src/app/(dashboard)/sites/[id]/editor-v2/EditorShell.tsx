@@ -1,6 +1,6 @@
 "use client";
 
-import { type ReactNode } from "react";
+import { type ReactNode, useEffect } from "react";
 
 import { IconRail } from "./IconRail";
 import { SlideTray } from "./SlideTray";
@@ -8,7 +8,14 @@ import { TopBar } from "./TopBar";
 import { Inspector } from "./Inspector";
 import { Breadcrumb } from "./Breadcrumb";
 import { Canvas } from "./Canvas";
+import { EditorErrorBoundary } from "./EditorErrorBoundary";
 import { useShortcuts } from "./hooks/useShortcuts";
+import { useSettingsSync } from "./hooks/useSettingsSync";
+import { useEditorStore } from "@/app/stores/editorStore";
+import {
+  trackEditorMount,
+  flushEditorTelemetry,
+} from "@/lib/telemetry/editor";
 
 export interface EditorV2Site {
 	id: string;
@@ -35,6 +42,15 @@ interface Props {
 
 export function EditorShell({ site, user: _user, children }: Props) {
 	useShortcuts();
+	useSettingsSync(site.id);
+	const setSiteId = useEditorStore((s) => s.setSiteId);
+
+	useEffect(() => {
+		setSiteId(site.id);
+		trackEditorMount(site.id);
+		return () => flushEditorTelemetry();
+	}, [site.id, setSiteId]);
+
 	return (
 		<div className="fixed inset-0 flex flex-col bg-background text-foreground antialiased">
 			<div className="pointer-events-none absolute right-3 top-3 z-30 rounded-md bg-neutral-900/90 px-2 py-1 text-[10px] font-semibold uppercase tracking-widest text-white shadow-sm">
@@ -48,7 +64,9 @@ export function EditorShell({ site, user: _user, children }: Props) {
 				<SlideTray />
 
 				<main className="relative flex-1">
-					{children ?? <Canvas siteId={site.id} />}
+					<EditorErrorBoundary siteId={site.id}>
+						{children ?? <Canvas siteId={site.id} />}
+					</EditorErrorBoundary>
 					<Breadcrumb />
 				</main>
 

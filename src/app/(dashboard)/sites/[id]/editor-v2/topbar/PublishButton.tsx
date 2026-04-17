@@ -4,6 +4,8 @@ import { useState } from "react";
 import { Rocket } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { useEditorStore } from "@/app/stores/editorStore";
+import { trackEditorSave } from "@/lib/telemetry/editor";
 
 interface Props {
 	siteId: string;
@@ -11,16 +13,22 @@ interface Props {
 
 export function PublishButton({ siteId }: Props) {
 	const [publishing, setPublishing] = useState(false);
+	const saveSettings = useEditorStore((s) => s.saveSettings);
 
 	async function handlePublish() {
 		setPublishing(true);
+		const start = performance.now();
+		let ok = false;
 		try {
-			await fetch(`/api/sites/${siteId}/settings`, {
+			await saveSettings(siteId);
+			const res = await fetch(`/api/sites/${siteId}/settings`, {
 				method: "PUT",
 				headers: { "content-type": "application/json" },
 				body: JSON.stringify({ isLive: 1 }),
 			});
+			ok = res.ok;
 		} finally {
+			trackEditorSave(siteId, ok, performance.now() - start);
 			setPublishing(false);
 		}
 	}
