@@ -47,7 +47,7 @@ export function Inspector() {
 	const [tab, setTab] = useState<TabId>("layout");
 
 	const visibleTabs = mode === "simple"
-		? TABS.filter((t) => t.id === "layout" || t.id === "content" || t.id === "motion")
+		? TABS.filter((t) => t.id === "layout" || t.id === "content" || t.id === "style" || t.id === "motion")
 		: TABS;
 
 	useEffect(() => {

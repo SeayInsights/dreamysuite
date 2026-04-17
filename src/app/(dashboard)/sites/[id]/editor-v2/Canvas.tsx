@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { useEditorStore } from "@/app/stores/editorStore";
+import { parseCfg, resolveBreakpointConfig } from "@/lib/editableField";
 import { SiteRenderer } from "@/app/components/SiteRenderer";
 import { BreakpointFrame } from "./BreakpointFrame";
 import { EditorOverlay } from "./EditorOverlay";
@@ -28,8 +29,18 @@ export function Canvas({ siteId }: Props) {
 	const containerRef = useRef<HTMLDivElement>(null);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
-	const blocks = useEditorStore((s) => s.blocks);
+	const rawBlocks = useEditorStore((s) => s.blocks);
 	const setBlocks = useEditorStore((s) => s.setBlocks);
+	const breakpoint = useEditorStore((s) => s.breakpoint);
+
+	const blocks = useMemo(
+		() =>
+			rawBlocks.map((b) => ({
+				...b,
+				config: resolveBreakpointConfig(parseCfg(b.config), breakpoint),
+			})),
+		[rawBlocks, breakpoint],
+	);
 
 	useEffect(() => {
 		let cancelled = false;
