@@ -35,9 +35,11 @@ function findRect(
 	if (!node) return null;
 	const frameBox = frame.getBoundingClientRect();
 	const box = node.getBoundingClientRect();
+	// getBoundingClientRect() is viewport-relative; the SelectionLayer lives in
+	// content-space inside the scrollable frame, so add scroll offset to align.
 	return {
-		top: box.top - frameBox.top,
-		left: box.left - frameBox.left,
+		top: box.top - frameBox.top + frame.scrollTop,
+		left: box.left - frameBox.left + frame.scrollLeft,
 		width: box.width,
 		height: box.height,
 	};
