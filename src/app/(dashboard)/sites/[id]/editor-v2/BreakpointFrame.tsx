@@ -1,11 +1,13 @@
 "use client";
 
-import { useEffect, useRef, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, type ReactNode } from "react";
 import { animate } from "motion/mini";
 
 import { useEditorStore, type Breakpoint } from "@/app/stores/editorStore";
 import { duration, EASING } from "@/lib/motion";
 import type { ThemeColors, ThemeTypography } from "@/app/stores/slices/editorShell";
+import { getEffectComponent } from "@/lib/effects/loader";
+import { useEffectsEnabled } from "@/lib/effects/performance";
 
 const WIDTHS: Record<Breakpoint, number> = {
 	desktop: 1280,
@@ -42,6 +44,11 @@ export function BreakpointFrame({ children }: Props) {
 	const themeTokens = useEditorStore((s) => s.themeTokens);
 	const settings = useEditorStore((s) => s.settings);
 	const pageBgDisabled = !!settings.pageBgDisabled;
+	const effectsEnabled = useEffectsEnabled();
+	const BgEffect = useMemo(
+		() => (effectsEnabled.backgrounds && settings.effectBg ? getEffectComponent(settings.effectBg) : null),
+		[effectsEnabled.backgrounds, settings.effectBg],
+	);
 
 	useEffect(() => {
 		const el = ref.current;
@@ -67,7 +74,12 @@ export function BreakpointFrame({ children }: Props) {
 					background: pageBgDisabled ? "transparent" : (settings.bgColor ?? themeTokens.colors.background),
 				}}
 			>
-				{children}
+				{BgEffect && (
+					<div className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
+						<BgEffect />
+					</div>
+				)}
+				<div className="relative z-10">{children}</div>
 			</div>
 		</div>
 	);
