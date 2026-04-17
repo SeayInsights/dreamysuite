@@ -9,6 +9,7 @@ import { SiteRenderer } from "@/app/components/SiteRenderer";
 import { BreakpointFrame } from "./BreakpointFrame";
 import { EditorOverlay } from "./EditorOverlay";
 import { GridOverlay } from "./GridOverlay";
+import { NavPreview } from "./NavPreview";
 import { TextEditor } from "./editing/TextEditor";
 import { ImageEditor } from "./editing/ImageEditor";
 import { SectionToolbar } from "./editing/SectionToolbar";
@@ -132,6 +133,7 @@ export function Canvas({ siteId }: Props) {
 		<ContextMenu>
 			<div className="relative h-full w-full">
 				<BreakpointFrame>
+					<NavPreview />
 					<EditorOverlay containerRef={containerRef}>
 						<SiteRenderer blocks={blocks} ordered />
 						<GridOverlay />

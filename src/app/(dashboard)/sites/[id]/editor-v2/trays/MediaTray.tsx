@@ -178,18 +178,41 @@ function PhotosPanel() {
 // ── Videos Panel ──────────────────────────────────────────────────────────
 
 function VideosPanel() {
+	const siteId = useEditorStore((s) => s.siteId);
 	const [url, setUrl] = useState("");
-	const [videos, setVideos] = useState<{ id: string; url: string; label: string }[]>([]);
+	const [videos, setVideos] = useState<{ id: string; url: string; title: string | null }[]>([]);
+	const [loading, setLoading] = useState(true);
 
-	function addVideo() {
+	useEffect(() => {
+		if (!siteId) return;
+		fetch(`/api/sites/${siteId}/media?type=video`)
+			.then((r) => (r.ok ? r.json() : Promise.reject()))
+			.then((d) => setVideos((d as { items: { id: string; url: string; title: string | null }[] }).items))
+			.catch(() => {})
+			.finally(() => setLoading(false));
+	}, [siteId]);
+
+	async function addVideo() {
 		const trimmed = url.trim();
-		if (!trimmed) return;
+		if (!trimmed || !siteId) return;
 		const label = extractVideoLabel(trimmed);
-		setVideos((prev) => [...prev, { id: crypto.randomUUID(), url: trimmed, label }]);
+		try {
+			const res = await fetch(`/api/sites/${siteId}/media`, {
+				method: "POST",
+				headers: { "content-type": "application/json" },
+				body: JSON.stringify({ url: trimmed, title: label, mediaType: "video" }),
+			});
+			if (res.ok) {
+				const { item } = (await res.json()) as { item: { id: string; url: string; title: string | null } };
+				setVideos((prev) => [...prev, item]);
+			}
+		} catch { /* skip */ }
 		setUrl("");
 	}
 
-	function removeVideo(id: string) {
+	async function removeVideo(id: string) {
+		if (!siteId) return;
+		await fetch(`/api/sites/${siteId}/media/${id}`, { method: "DELETE" }).catch(() => {});
 		setVideos((prev) => prev.filter((v) => v.id !== id));
 	}
 
@@ -222,7 +245,9 @@ function VideosPanel() {
 			</div>
 
 			<div className="flex-1 overflow-y-auto p-3">
-				{videos.length === 0 ? (
+				{loading ? (
+					<p className="text-center text-xs text-muted-foreground">Loading...</p>
+				) : videos.length === 0 ? (
 					<div className="flex flex-col items-center gap-1.5 rounded-md border border-dashed border-border px-3 py-4 text-center">
 						<Film className="size-5 text-muted-foreground" />
 						<p className="text-xs text-muted-foreground">No videos added yet</p>
@@ -236,7 +261,7 @@ function VideosPanel() {
 							>
 								<Film className="size-3.5 shrink-0 text-muted-foreground" />
 								<div className="min-w-0 flex-1">
-									<p className="truncate text-sm">{video.label}</p>
+									<p className="truncate text-sm">{video.title || "Video"}</p>
 									<p className="truncate text-[11px] text-muted-foreground">{video.url}</p>
 								</div>
 								<button

@@ -51,7 +51,6 @@ export async function DELETE(
     return NextResponse.json({ error: { code: "NOT_FOUND", message: "Page not found" } }, { status: 404 });
   }
 
-  // Get block IDs on this page so we can clean up their translations
   const pageBlocks = await env.DB
     .prepare("SELECT id FROM block WHERE pageId = ?")
     .bind(pageId)
@@ -59,6 +58,7 @@ export async function DELETE(
 
   const stmts = [
     env.DB.prepare("DELETE FROM page WHERE id = ?").bind(pageId),
+    env.DB.prepare("DELETE FROM block WHERE pageId = ?").bind(pageId),
   ];
   for (const b of pageBlocks.results) {
     stmts.push(env.DB.prepare("DELETE FROM block_translation WHERE blockId = ?").bind(b.id));
