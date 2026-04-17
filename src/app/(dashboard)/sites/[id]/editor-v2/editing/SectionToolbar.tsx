@@ -339,7 +339,7 @@ function PaddingPopover({ current, onChange }: PaddingPopoverProps) {
           </div>
         ))}
       </div>
-      <p className="text-[10px] text-muted-foreground">Leave blank to keep default</p>
+      <p className="text-[10px] text-muted-foreground">Blank = 0. Set all sides you want.</p>
     </div>
   );
 }
@@ -355,6 +355,15 @@ interface HeightPopoverProps {
 
 function HeightPopover({ current, onChange }: HeightPopoverProps) {
   const [val, setVal] = useState(current !== undefined ? String(current) : "");
+
+  // Re-sync when the measured DOM height arrives (current changes on first open)
+  const prevCurrent = useRef(current);
+  useEffect(() => {
+    if (prevCurrent.current !== current && current !== undefined) {
+      setVal(String(current));
+    }
+    prevCurrent.current = current;
+  }, [current]);
 
   function commit(raw: string) {
     const trimmed = raw.trim();
@@ -387,7 +396,7 @@ function HeightPopover({ current, onChange }: HeightPopoverProps) {
         }}
       />
       <p className="text-[10px] text-muted-foreground">
-        Sets minimum height. Padding insets content within this height.
+        Shows current block height. Edit to lock it. Clear to restore auto.
       </p>
     </div>
   );
@@ -622,12 +631,19 @@ export function SectionToolbar({
         }
       : {};
 
-  const currentHeight =
-    typeof config.blockHeight === "number" ? config.blockHeight : undefined;
+  // Prefer the config value; fall back to measuring the DOM block height.
+  function getBlockHeight(): number | undefined {
+    if (typeof config.blockHeight === "number") return config.blockHeight;
+    const container = containerRef.current;
+    if (!container || !selectedBlockId) return undefined;
+    const node = container.querySelector<HTMLElement>(`[data-block-id="${selectedBlockId}"]`);
+    return node ? Math.round(node.getBoundingClientRect().height) : undefined;
+  }
+
+  const currentHeight = typeof config.blockHeight === "number" ? config.blockHeight : undefined;
 
   function openPopover(which: "bg" | "padding" | "height", btnEl: HTMLElement) {
     const btnBox = btnEl.getBoundingClientRect();
-    // Use viewport coords — popover is position:fixed
     setPopoverPos({ top: btnBox.bottom + 6, left: btnBox.left });
     setActivePopover((prev) => (prev === which ? null : which));
   }
@@ -733,7 +749,7 @@ export function SectionToolbar({
         onClose={() => setActivePopover(null)}
       >
         <HeightPopover
-          current={currentHeight}
+          current={activePopover === "height" ? (getBlockHeight() ?? currentHeight) : currentHeight}
           onChange={(blockHeight) => {
             updateBlock(selectedBlockId, {
               config: { ...config, blockHeight },
