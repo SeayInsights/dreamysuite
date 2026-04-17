@@ -10,6 +10,14 @@ import { RegistryCardBlock } from './RegistryCardBlock'
 import { HotelCardBlock } from './HotelCardBlock'
 import { VenueMapBlock } from './VenueMapBlock'
 import { PhotoSplitBlock } from './PhotoSplitBlock'
+// Consolidated (Task 18)
+import { MediaVideoBlock } from './MediaVideoBlock'
+import { GalleryBlock } from './GalleryBlock'
+import { InfoCardBlock } from './InfoCardBlock'
+// New (Task 19)
+import { RsvpFormBlock } from './RsvpFormBlock'
+import { StoryTimelineBlock } from './StoryTimelineBlock'
+import { GuestBookBlock } from './GuestBookBlock'
 
 interface Block {
   id: string
@@ -18,6 +26,7 @@ interface Block {
 }
 
 export const BLOCK_COMPONENTS: Record<string, React.ComponentType<{ block: Block }>> = {
+  // Legacy (kept for un-migrated DB records)
   'home-hero':     HomeHeroBlock,
   'couple':        HomeHeroBlock,
   'header':        HeaderBlock,
@@ -31,6 +40,14 @@ export const BLOCK_COMPONENTS: Record<string, React.ComponentType<{ block: Block
   'hotel-card':    HotelCardBlock,
   'venue-map':     VenueMapBlock,
   'photo-split':   PhotoSplitBlock,
+  // Consolidated
+  'media-video':   MediaVideoBlock,
+  'gallery':       GalleryBlock,
+  'info-card':     InfoCardBlock,
+  // New
+  'rsvp-form':     RsvpFormBlock,
+  'story-timeline': StoryTimelineBlock,
+  'guest-book':    GuestBookBlock,
 }
 
 export {
@@ -46,4 +63,10 @@ export {
   HotelCardBlock,
   VenueMapBlock,
   PhotoSplitBlock,
+  MediaVideoBlock,
+  GalleryBlock,
+  InfoCardBlock,
+  RsvpFormBlock,
+  StoryTimelineBlock,
+  GuestBookBlock,
 }

@@ -1,0 +1,127 @@
+import type React from "react";
+import { BLOCK_COMPONENTS } from "@/app/components/blocks";
+
+export type BlockCategory = "Simple" | "Pro";
+
+export interface BlockRegistryEntry {
+  component: React.ComponentType<{ block: { id: string; type: string; [key: string]: unknown } }>;
+  displayName: string;
+  icon: string;
+  category: BlockCategory;
+  defaultData: Record<string, unknown>;
+  visible: boolean;
+}
+
+export const BLOCK_REGISTRY: Record<string, BlockRegistryEntry> = {
+  // ── Core ─────────────────────────────────────────────────────────────────
+  "home-hero": {
+    component: BLOCK_COMPONENTS["home-hero"],
+    displayName: "Hero",
+    icon: "Sparkles",
+    category: "Simple",
+    defaultData: { coupleNames: "Name & Name", dateText: "", locationText: "" },
+    visible: true,
+  },
+  "header": {
+    component: BLOCK_COMPONENTS["header"],
+    displayName: "Header",
+    icon: "Heading",
+    category: "Simple",
+    defaultData: { title: "Section Title", titleAlign: "center" },
+    visible: true,
+  },
+  "multi-text": {
+    component: BLOCK_COMPONENTS["multi-text"],
+    displayName: "Text",
+    icon: "AlignLeft",
+    category: "Simple",
+    defaultData: { mode: "text", heading: "", body: "" },
+    visible: true,
+  },
+  "countdown": {
+    component: BLOCK_COMPONENTS["countdown"],
+    displayName: "Countdown",
+    icon: "Timer",
+    category: "Simple",
+    defaultData: { label: "Until the big day" },
+    visible: true,
+  },
+  "spacer": {
+    component: BLOCK_COMPONENTS["spacer"],
+    displayName: "Spacer",
+    icon: "Minus",
+    category: "Simple",
+    defaultData: { height: "48px" },
+    visible: true,
+  },
+  "venue-map": {
+    component: BLOCK_COMPONENTS["venue-map"],
+    displayName: "Venue Map",
+    icon: "MapPin",
+    category: "Simple",
+    defaultData: { venueName: "", embedUrl: "", mapUrl: "" },
+    visible: true,
+  },
+  // ── Consolidated ─────────────────────────────────────────────────────────
+  "media-video": {
+    component: BLOCK_COMPONENTS["media-video"],
+    displayName: "Video",
+    icon: "Video",
+    category: "Simple",
+    defaultData: { provider: "youtube", url: "" },
+    visible: true,
+  },
+  "gallery": {
+    component: BLOCK_COMPONENTS["gallery"],
+    displayName: "Gallery",
+    icon: "Images",
+    category: "Simple",
+    defaultData: { layout: "grid", urls: [] },
+    visible: true,
+  },
+  "info-card": {
+    component: BLOCK_COMPONENTS["info-card"],
+    displayName: "Info Card",
+    icon: "CreditCard",
+    category: "Simple",
+    defaultData: { variant: "registry", name: "", url: "" },
+    visible: true,
+  },
+  // ── New blocks ────────────────────────────────────────────────────────────
+  "rsvp-form": {
+    component: BLOCK_COMPONENTS["rsvp-form"],
+    displayName: "RSVP Form",
+    icon: "ClipboardCheck",
+    category: "Simple",
+    defaultData: { heading: "RSVP", subheading: "We hope to see you there!" },
+    visible: true,
+  },
+  "story-timeline": {
+    component: BLOCK_COMPONENTS["story-timeline"],
+    displayName: "Story Timeline",
+    icon: "BookOpen",
+    category: "Simple",
+    defaultData: { heading: "Our Story", events: [] },
+    visible: true,
+  },
+  "guest-book": {
+    component: BLOCK_COMPONENTS["guest-book"],
+    displayName: "Guest Book",
+    icon: "BookHeart",
+    category: "Pro",
+    defaultData: { heading: "Guest Book", placeholder: "Leave a message for the happy couple…" },
+    visible: true,
+  },
+};
+
+export function getRegistryEntry(type: string): BlockRegistryEntry | undefined {
+  return BLOCK_REGISTRY[type];
+}
+
+export function getVisibleBlocks(category?: BlockCategory): [string, BlockRegistryEntry][] {
+  return Object.entries(BLOCK_REGISTRY).filter(([, entry]) => {
+    if (!entry.visible) return false;
+    if (category && entry.category !== category) return false;
+    return true;
+  });
+}
