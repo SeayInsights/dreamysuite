@@ -11,6 +11,7 @@ import { createPortal } from "react-dom";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useEditorStore } from "@/app/stores/editorStore";
+import { parseCfg } from "@/lib/editableField";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -22,10 +23,10 @@ interface Position {
 }
 
 interface PaddingValue {
-  top: number;
-  right: number;
-  bottom: number;
-  left: number;
+  top?: number;
+  right?: number;
+  bottom?: number;
+  left?: number;
 }
 
 // ---------------------------------------------------------------------------
@@ -35,17 +36,19 @@ interface PaddingValue {
 const BG_SOLID_SWATCHES = [
   "#ffffff", "#faf8f6", "#f1f5f9", "#f0fdf4",
   "#fdf4ff", "#fff7ed", "#fef2f2", "#fffbeb",
-  "#1c1917", "#0f172a", "#1e293b", "#000000",
+  "#6b7280", "#1e3a5f", "#312e81", "#000000",
 ] as const;
 
-const BG_GRADIENTS = [
-  { label: "Warm Ivory",   value: "linear-gradient(160deg,#fdf8f0,#f5e8d0)" },
-  { label: "Blush",        value: "linear-gradient(160deg,#fdf2f8,#fce7f3)" },
-  { label: "Sky",          value: "linear-gradient(160deg,#eff6ff,#dbeafe)" },
-  { label: "Sage",         value: "linear-gradient(160deg,#f0fdf4,#dcfce7)" },
-  { label: "Dusk",         value: "linear-gradient(160deg,#1e1b4b,#312e81)" },
-  { label: "Midnight",     value: "linear-gradient(160deg,#0f172a,#1e293b)" },
-] as const;
+const BG_GRADIENTS: { label: string; value: string; dark?: boolean }[] = [
+  { label: "Warm Ivory",  value: "linear-gradient(135deg,#fff8f0 0%,#e8c98a 100%)" },
+  { label: "Blush Rose",  value: "linear-gradient(135deg,#fff0f6 0%,#f9a8d4 100%)" },
+  { label: "Ocean Sky",   value: "linear-gradient(135deg,#e0f2fe 0%,#3b82f6 100%)" },
+  { label: "Sage Garden", value: "linear-gradient(135deg,#f0fdf4 0%,#4ade80 100%)" },
+  { label: "Champagne",   value: "linear-gradient(135deg,#fffbeb 0%,#b45309 100%)" },
+  { label: "Lavender",    value: "linear-gradient(135deg,#f5f3ff 0%,#8b5cf6 100%)" },
+  { label: "Twilight",    value: "linear-gradient(135deg,#312e81 0%,#7c3aed 100%)", dark: true },
+  { label: "Midnight",    value: "linear-gradient(135deg,#0f172a 0%,#1e40af 100%)", dark: true },
+];
 
 // ---------------------------------------------------------------------------
 // Popover primitive (shared, portal-less, position:fixed)
@@ -103,12 +106,24 @@ interface BgPopoverProps {
   onSelect: (value: string) => void;
 }
 
+const GRAD_DIRECTIONS: { label: string; angle: string; icon: string }[] = [
+  { label: "Left → Right", angle: "90deg",  icon: "→" },
+  { label: "Top → Bottom", angle: "180deg", icon: "↓" },
+  { label: "Bottom → Top", angle: "0deg",   icon: "↑" },
+  { label: "Right → Left", angle: "270deg", icon: "←" },
+];
+
+function applyAngle(gradValue: string, angle: string): string {
+  return gradValue.replace(/^linear-gradient\([^,]+,/, `linear-gradient(${angle},`);
+}
+
 function BackgroundPopover({ currentValue, onSelect }: BgPopoverProps) {
   const isGradient = currentValue.startsWith("linear-gradient") || currentValue.startsWith("radial-gradient");
   const isTransparent = currentValue === "transparent" || currentValue === "";
   const [tab, setTab] = useState<BgTab>(isGradient ? "gradient" : isTransparent ? "transparent" : "solid");
   const [hex, setHex] = useState(isGradient || isTransparent ? "#ffffff" : currentValue);
   const [opacity, setOpacity] = useState(100);
+  const [gradDir, setGradDir] = useState("135deg");
 
   function applyHexOpacity(h: string, op: number) {
     if (op >= 100) { onSelect(h); return; }
@@ -187,22 +202,59 @@ function BackgroundPopover({ currentValue, onSelect }: BgPopoverProps) {
       )}
 
       {tab === "gradient" && (
-        <div className="grid grid-cols-2 gap-1.5">
-          {BG_GRADIENTS.map((g) => (
-            <button
-              key={g.value}
-              type="button"
-              aria-label={g.label}
-              onClick={() => onSelect(g.value)}
-              className={cn(
-                "h-12 w-full rounded border text-xs font-medium transition-transform hover:scale-105",
-                currentValue === g.value ? "border-primary ring-1 ring-primary" : "border-border",
-              )}
-              style={{ background: g.value }}
-            >
-              <span className="sr-only">{g.label}</span>
-            </button>
-          ))}
+        <div className="space-y-2.5">
+          {/* Direction picker */}
+          <div className="space-y-1">
+            <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Direction</p>
+            <div className="grid grid-cols-4 gap-1">
+              {GRAD_DIRECTIONS.map((d) => (
+                <button
+                  key={d.angle}
+                  type="button"
+                  title={d.label}
+                  onClick={() => {
+                    setGradDir(d.angle);
+                    if (currentValue.startsWith("linear-gradient")) {
+                      onSelect(applyAngle(currentValue, d.angle));
+                    }
+                  }}
+                  className={cn(
+                    "flex h-7 items-center justify-center rounded border text-sm transition-colors",
+                    gradDir === d.angle
+                      ? "border-primary bg-primary/10 text-primary"
+                      : "border-border bg-background text-muted-foreground hover:bg-muted",
+                  )}
+                >
+                  {d.icon}
+                </button>
+              ))}
+            </div>
+          </div>
+          {/* Gradient presets */}
+          <div className="space-y-1.5">
+            {BG_GRADIENTS.map((g) => {
+              const value = applyAngle(g.value, gradDir);
+              return (
+                <button
+                  key={g.value}
+                  type="button"
+                  onClick={() => onSelect(value)}
+                  className={cn(
+                    "h-10 w-full rounded-md border px-3 text-left transition-transform hover:scale-[1.02]",
+                    currentValue === value ? "border-primary ring-1 ring-primary" : "border-border",
+                  )}
+                  style={{ background: value }}
+                >
+                  <span
+                    className="text-[10px] font-semibold uppercase tracking-wide"
+                    style={{ color: g.dark ? "rgba(255,255,255,0.85)" : "rgba(0,0,0,0.55)", textShadow: g.dark ? "0 1px 2px rgba(0,0,0,0.4)" : "none" }}
+                  >
+                    {g.label}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
         </div>
       )}
 
@@ -227,17 +279,31 @@ interface PaddingPopoverProps {
   onChange: (v: PaddingValue) => void;
 }
 
-function PaddingPopover({ current, onChange }: PaddingPopoverProps) {
-  const [vals, setVals] = useState<PaddingValue>(current);
+type PaddingInputState = { top: string; right: string; bottom: string; left: string };
 
-  function update(key: keyof PaddingValue, raw: string) {
-    const n = parseInt(raw, 10);
-    const next = { ...vals, [key]: isNaN(n) ? 0 : Math.max(0, n) };
+function PaddingPopover({ current, onChange }: PaddingPopoverProps) {
+  const toStr = (v: number | undefined) => (v !== undefined ? String(v) : "");
+  const [vals, setVals] = useState<PaddingInputState>({
+    top: toStr(current.top),
+    right: toStr(current.right),
+    bottom: toStr(current.bottom),
+    left: toStr(current.left),
+  });
+
+  function update(key: keyof PaddingInputState, raw: string) {
+    const next = { ...vals, [key]: raw };
     setVals(next);
-    onChange(next);
+    const parsed: PaddingValue = {};
+    for (const k of ["top", "right", "bottom", "left"] as const) {
+      const trimmed = next[k].trim();
+      if (trimmed === "") continue;
+      const n = parseInt(trimmed, 10);
+      if (!isNaN(n)) parsed[k] = Math.max(0, n);
+    }
+    onChange(parsed);
   }
 
-  const fields: { key: keyof PaddingValue; label: string }[] = [
+  const fields: { key: keyof PaddingInputState; label: string }[] = [
     { key: "top", label: "Top" },
     { key: "right", label: "Right" },
     { key: "bottom", label: "Bottom" },
@@ -252,30 +318,28 @@ function PaddingPopover({ current, onChange }: PaddingPopoverProps) {
       <div className="grid grid-cols-2 gap-2">
         {fields.map(({ key, label }) => (
           <div key={key} className="flex flex-col gap-0.5">
-            <label
-              htmlFor={`pad-${key}`}
-              className="text-[10px] text-muted-foreground"
-            >
+            <label htmlFor={`pad-${key}`} className="text-[10px] text-muted-foreground">
               {label}
             </label>
             <input
               id={`pad-${key}`}
-              type="number"
-              min={0}
+              type="text"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              placeholder="auto"
               value={vals[key]}
               className={cn(
                 "h-7 w-full rounded border border-input bg-background px-2 text-xs",
                 "focus:outline-none focus:ring-1 focus:ring-ring",
-                "[appearance:textfield]",
-                "[&::-webkit-inner-spin-button]:appearance-none",
-                "[&::-webkit-outer-spin-button]:appearance-none",
               )}
               onChange={(e) => update(key, e.target.value)}
+              onFocus={(e) => e.target.select()}
               onKeyDown={(e) => e.stopPropagation()}
             />
           </div>
         ))}
       </div>
+      <p className="text-[10px] text-muted-foreground">Leave blank to keep default</p>
     </div>
   );
 }
@@ -475,9 +539,7 @@ export function SectionToolbar({
   if (!selectedBlockId || !position || isTextEditing) return null;
 
   const block = blocks.find((b) => b.id === selectedBlockId);
-  const config = (
-    block?.config && typeof block.config === "object" ? block.config : {}
-  ) as Record<string, unknown>;
+  const config = parseCfg(block?.config);
 
   const currentBg =
     typeof config.backgroundColor === "string" ? config.backgroundColor : "#ffffff";
@@ -490,18 +552,18 @@ export function SectionToolbar({
       ? {
           top: typeof (rawPadding as Record<string, unknown>).top === "number"
             ? ((rawPadding as Record<string, unknown>).top as number)
-            : 0,
+            : undefined,
           right: typeof (rawPadding as Record<string, unknown>).right === "number"
             ? ((rawPadding as Record<string, unknown>).right as number)
-            : 0,
+            : undefined,
           bottom: typeof (rawPadding as Record<string, unknown>).bottom === "number"
             ? ((rawPadding as Record<string, unknown>).bottom as number)
-            : 0,
+            : undefined,
           left: typeof (rawPadding as Record<string, unknown>).left === "number"
             ? ((rawPadding as Record<string, unknown>).left as number)
-            : 0,
+            : undefined,
         }
-      : { top: 0, right: 0, bottom: 0, left: 0 };
+      : {};
 
   function openPopover(which: "bg" | "padding", btnEl: HTMLElement) {
     const btnBox = btnEl.getBoundingClientRect();

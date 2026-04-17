@@ -1,11 +1,12 @@
 "use client";
 
 import { useState } from "react";
+import { blockSectionStyle, parseCfg } from "@/lib/editableField";
 
 interface Block { id: string; type: string; [key: string]: unknown }
 
 export function RsvpFormBlock({ block }: { block: Block }) {
-  const cfg = typeof block.config === "string" ? JSON.parse(block.config || "{}") : (block.config ?? {});
+  const cfg = parseCfg(block.config);
   const heading = String(cfg.heading ?? "RSVP");
   const subheading = String(cfg.subheading ?? "We hope to see you there!");
   const siteId = String(cfg.siteId ?? "");
@@ -46,7 +47,7 @@ export function RsvpFormBlock({ block }: { block: Block }) {
 
   return (
     <section className="block block-rsvp-form" data-block-id={block.id} data-block-type={block.type}
-      style={{ padding: "2rem", maxWidth: "480px", margin: "0 auto" }}>
+      style={{ padding: "2rem", maxWidth: "480px", margin: "0 auto", ...blockSectionStyle(cfg) }}>
       <h2 style={{ textAlign: "center", marginBottom: "0.25rem" }}>{heading}</h2>
       {subheading && <p style={{ textAlign: "center", color: "#9b8e85", marginBottom: "1.5rem" }}>{subheading}</p>}
 

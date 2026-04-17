@@ -1,4 +1,4 @@
-import { parseCfg, cropClipPath } from "@/lib/editableField";
+import { blockSectionStyle, parseCfg, cropClipPath } from "@/lib/editableField";
 
 interface Block { id: string; type: string; [key: string]: unknown }
 
@@ -11,7 +11,7 @@ export function PhotoSplitBlock({ block }: { block: Block }) {
   const clipPath = cropClipPath(cfg);
 
   return (
-    <section className="block block-photo-split" data-block-id={block.id} data-block-type={block.type}>
+    <section className="block block-photo-split" data-block-id={block.id} data-block-type={block.type} style={blockSectionStyle(cfg)}>
       <div style={{
         display: "flex",
         flexDirection: layout === "right" ? "row-reverse" : "row",
