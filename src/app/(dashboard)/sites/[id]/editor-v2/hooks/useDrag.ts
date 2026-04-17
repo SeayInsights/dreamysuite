@@ -25,6 +25,7 @@ interface DragSession {
 	startY: number;
 	// Reorder
 	fromIndex?: number;
+	currentDropIndex?: number;
 	// Resize
 	startWidthPct?: number;
 	startHeightPx?: number;
@@ -161,7 +162,9 @@ export function useDrag(
 		if (!session) return;
 
 		if (session.kind === "reorder" && session.fromIndex !== undefined) {
-			const idx = dropIndex >= 0 ? dropIndex : session.fromIndex;
+			const idx = (session.currentDropIndex !== undefined && session.currentDropIndex >= 0)
+				? session.currentDropIndex
+				: session.fromIndex;
 			if (idx !== session.fromIndex) {
 				const next = [...blocks];
 				const [moved] = next.splice(session.fromIndex, 1);
@@ -182,7 +185,7 @@ export function useDrag(
 			cleanupRef.current();
 			cleanupRef.current = null;
 		}
-	}, [blocks, dropIndex, setBlocks, setDrag]);
+	}, [blocks, setBlocks, setDrag]);
 
 	// ── Pointer move ───────────────────────────────────────────────────────
 
@@ -200,7 +203,9 @@ export function useDrag(
 				const containerBox = container.getBoundingClientRect();
 				const relY =
 					e.clientY - containerBox.top + container.scrollTop;
-				setDropIndex(computeDropIndex(relY));
+				const idx = computeDropIndex(relY);
+				session.currentDropIndex = idx;
+				setDropIndex(idx);
 			} else if (session.kind === "resize" && session.handle) {
 				const container = containerRef.current;
 				if (!container || session.containerWidth === undefined) return;
