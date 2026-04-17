@@ -598,25 +598,32 @@ export function SectionToolbar({
     };
   }, [containerRef, measurePosition]);
 
-  // Drive enter/exit animation on selection change.
-  // Keeps the toolbar mounted through the exit so CSS transition plays fully.
+  // Single effect handles enter/exit animation AND live position updates.
+  // Position is included as a dependency because measurePosition fires as a
+  // separate state update — reading position via closure would be stale.
+  // phaseRef guards against re-triggering the enter animation on scroll
+  // repositioning (position-only changes while already shown).
   useEffect(() => {
-    const shouldShow = !!(selectedBlockId && !isTextEditing);
+    const shouldShow = !!(selectedBlockId && position && !isTextEditing);
     if (animTimerRef.current) { clearTimeout(animTimerRef.current); animTimerRef.current = null; }
 
     if (shouldShow) {
-      if (position) setRenderPos(position);
+      setRenderPos(position);
       setRenderBlockId(selectedBlockId);
-      phaseRef.current = "entering";
-      setToolbarPhaseState("entering");
-      // One rAF guarantees the entering (opacity:0 / translateY(8px)) frame is
-      // painted before we flip to shown — giving CSS transition a start value.
-      const rafId = requestAnimationFrame(() => {
-        phaseRef.current = "shown";
-        setToolbarPhaseState("shown");
-      });
-      return () => cancelAnimationFrame(rafId);
-    } else if (phaseRef.current !== "hidden") {
+      if (phaseRef.current !== "shown" && phaseRef.current !== "entering") {
+        // Fresh mount — slide+fade in.
+        phaseRef.current = "entering";
+        setToolbarPhaseState("entering");
+        // One rAF guarantees the entering (opacity:0 / translateY(8px)) frame is
+        // painted before we flip to shown — giving CSS transition a start value.
+        const rafId = requestAnimationFrame(() => {
+          phaseRef.current = "shown";
+          setToolbarPhaseState("shown");
+        });
+        return () => cancelAnimationFrame(rafId);
+      }
+    } else if (phaseRef.current !== "hidden" && phaseRef.current !== "exiting") {
+      // Selection cleared — slide up and fade out, then unmount.
       phaseRef.current = "exiting";
       setToolbarPhaseState("exiting");
       animTimerRef.current = setTimeout(() => {
@@ -626,15 +633,7 @@ export function SectionToolbar({
         setRenderBlockId(null);
       }, ANIM_MS);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedBlockId, isTextEditing]);
-
-  // Keep renderPos fresh during scroll/resize without re-triggering the animation.
-  useEffect(() => {
-    if (position && (phaseRef.current === "shown" || phaseRef.current === "entering")) {
-      setRenderPos(position);
-    }
-  }, [position]);
+  }, [selectedBlockId, isTextEditing, position]);
 
   // Cleanup timer on unmount.
   useEffect(() => () => {
