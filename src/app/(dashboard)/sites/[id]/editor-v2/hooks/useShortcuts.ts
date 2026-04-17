@@ -38,10 +38,17 @@ export function useShortcuts() {
 	const toggleInspector = useEditorStore((s) => s.toggleInspector);
 	const setInspectorOpen = useEditorStore((s) => s.setInspectorOpen);
 	const toggleFullPreview = useEditorStore((s) => s.toggleFullPreview);
+	const selectBlock = useEditorStore((s) => s.selectBlock);
 
 	useEffect(() => {
 		function handler(e: KeyboardEvent) {
 			if (isEditableTarget(e.target)) return;
+
+			if (e.key === "Escape") {
+				e.preventDefault();
+				selectBlock(null);
+				return;
+			}
 
 			const mod = e.metaKey || e.ctrlKey;
 
@@ -99,5 +106,5 @@ export function useShortcuts() {
 
 		window.addEventListener("keydown", handler);
 		return () => window.removeEventListener("keydown", handler);
-	}, [toggleRail, toggleInspector, setInspectorOpen, toggleFullPreview]);
+	}, [toggleRail, toggleInspector, setInspectorOpen, toggleFullPreview, selectBlock]);
 }
