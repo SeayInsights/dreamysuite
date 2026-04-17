@@ -10,18 +10,9 @@ import {
 import { createPortal } from "react-dom";
 
 import { useEditorStore } from "@/app/stores/editorStore";
+import { parseCfg } from "@/lib/editableField";
 import { FloatingFormatToolbar, type FormatCommand } from "./FloatingFormatToolbar";
 import { useFloatingToolbar } from "../hooks/useFloatingToolbar";
-
-// ---------------------------------------------------------------------------
-// Constants
-// ---------------------------------------------------------------------------
-
-/**
- * Block types that carry text content and therefore support inline editing.
- * Attempting to double-click any other block type bails silently.
- */
-const TEXT_BLOCK_TYPES = new Set(["home-hero", "header", "multi-text"]);
 
 // ---------------------------------------------------------------------------
 // Types
@@ -29,54 +20,65 @@ const TEXT_BLOCK_TYPES = new Set(["home-hero", "header", "multi-text"]);
 
 interface EditState {
   blockId: string;
-  /** Saved innerHTML snapshot for Escape-to-revert */
-  originalHtml: string;
-  /** Viewport-relative DOMRect of the block element at edit-start time */
+  field: string;
+  /** Saved text snapshot for Escape-to-revert */
+  originalText: string;
+  /** Saved cfg snapshot for Escape-to-revert of style keys */
+  originalCfg: Record<string, unknown>;
+  /** Viewport-relative DOMRect at edit-start */
   blockRect: DOMRect;
+  /** The actual DOM element being edited */
+  element: HTMLElement;
 }
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
-/**
- * Reads the block type from the nearest `[data-block-id]` ancestor.
- * The block component must also expose `data-block-type` for this to work;
- * if it doesn't, we fall back to a store lookup.
- */
-function getBlockType(
-  el: HTMLElement,
-  blocks: ReturnType<typeof useEditorStore.getState>["blocks"],
-): string | null {
-  const blockEl = el.closest<HTMLElement>("[data-block-id]");
-  if (!blockEl) return null;
-  // Prefer explicit data attribute set by the block component
-  if (blockEl.dataset.blockType) return blockEl.dataset.blockType;
-  // Fallback: derive from store
-  const id = blockEl.dataset.blockId;
-  return blocks.find((b) => b.id === id)?.type ?? null;
+function parseCfgFromBlock(
+  block: { config?: unknown } & Record<string, unknown>,
+): Record<string, unknown> {
+  return parseCfg(block.config);
 }
 
-/**
- * Position the contentEditable overlay directly over the block element.
- * Returns inline style values (top/left/width/height) relative to the
- * `containerRef` scroll container.
- */
-function computeOverlayStyle(
-  blockEl: HTMLElement,
-  container: HTMLElement,
-): React.CSSProperties {
-  const blockBox = blockEl.getBoundingClientRect();
-  const containerBox = container.getBoundingClientRect();
-  const scrollTop = container.scrollTop;
-  const scrollLeft = container.scrollLeft;
-
-  return {
-    top: blockBox.top - containerBox.top + scrollTop,
-    left: blockBox.left - containerBox.left + scrollLeft,
-    width: blockBox.width,
-    height: blockBox.height,
-  };
+function applyStyleKeyToCfg(
+  cfg: Record<string, unknown>,
+  field: string,
+  cmd: FormatCommand,
+): Record<string, unknown> {
+  const next = { ...cfg };
+  switch (cmd.type) {
+    case "fontName":
+      next[field + "FontFamily"] = cmd.value;
+      break;
+    case "fontSize":
+      next[field + "Size"] = cmd.value.includes("px") || cmd.value.includes("rem")
+        ? cmd.value
+        : cmd.value + "px";
+      break;
+    case "foreColor":
+      next[field + "Color"] = cmd.value;
+      break;
+    case "justifyLeft":
+      next[field + "Align"] = "left";
+      break;
+    case "justifyCenter":
+      next[field + "Align"] = "center";
+      break;
+    case "justifyRight":
+      next[field + "Align"] = "right";
+      break;
+    case "bold":
+      next[field + "Bold"] = !cfg[field + "Bold"];
+      break;
+    case "italic":
+      next[field + "Italic"] = !cfg[field + "Italic"];
+      break;
+    case "underline":
+      next[field + "Underline"] = !cfg[field + "Underline"];
+      break;
+  }
+  return next;
 }
 
 // ---------------------------------------------------------------------------
@@ -86,18 +88,13 @@ function computeOverlayStyle(
 /**
  * TextEditor
  *
- * Mounts as an invisible absolute-positioned layer inside the canvas scroll
- * container. It listens for `dblclick` events that bubble up from any element
- * bearing `[data-block-id]`, activates edit mode for text-bearing block types,
- * and renders:
- *   - a transparent contentEditable overlay precisely covering the block
- *   - the FloatingFormatToolbar (via portal, position:fixed)
+ * Activates on dblclick of any element with `data-editable-field="<cfgKey>"`.
+ * Flips contentEditable directly on that element (no overlay — true in-place
+ * editing). On blur or Escape, writes the field value + style keys back into
+ * cfg via updateBlock. Floating toolbar changes persist immediately.
  *
- * On blur or Enter-key commit, the edited innerHTML is stored on the block
- * under the `editedText` key via `updateBlock`. Escape reverts.
- *
- * @param containerRef - ref to the scroll container that wraps the canvas
- *   (the EditorOverlay div). Position math is relative to this element.
+ * Mount this as a sibling of the canvas content inside EditorOverlay.
+ * No ref needed — it attaches listeners to the container.
  */
 export function TextEditor({
   containerRef,
@@ -108,69 +105,56 @@ export function TextEditor({
   const updateBlock = useEditorStore((s) => s.updateBlock);
 
   const [editState, setEditState] = useState<EditState | null>(null);
-  const [overlayStyle, setOverlayStyle] = useState<React.CSSProperties>({});
-
-  const editableRef = useRef<HTMLDivElement>(null);
   const toolbar = useFloatingToolbar();
 
-  // -------------------------------------------------------------------------
-  // Activate edit mode
-  // -------------------------------------------------------------------------
-
-  const activate = useCallback(
-    (blockId: string, blockEl: HTMLElement) => {
-      const container = containerRef.current;
-      if (!container) return;
-
-      const style = computeOverlayStyle(blockEl, container);
-      const blockRect = blockEl.getBoundingClientRect();
-      const originalHtml = blockEl.innerHTML;
-
-      setOverlayStyle(style);
-      setEditState({ blockId, originalHtml, blockRect });
-
-      // Show toolbar after a brief frame so the overlay has mounted
-      requestAnimationFrame(() => {
-        toolbar.show(blockRect);
-        editableRef.current?.focus();
-        // Place cursor at end
-        const sel = window.getSelection();
-        const range = document.createRange();
-        if (editableRef.current && sel) {
-          range.selectNodeContents(editableRef.current);
-          range.collapse(false);
-          sel.removeAllRanges();
-          sel.addRange(range);
-        }
-      });
-    },
-    [containerRef, toolbar],
-  );
+  // Keep a ref to editState so event handlers close over the ref, not stale state
+  const editStateRef = useRef<EditState | null>(null);
+  editStateRef.current = editState;
 
   // -------------------------------------------------------------------------
   // Commit / discard
   // -------------------------------------------------------------------------
 
-  const commit = useCallback(() => {
-    if (!editState) return;
-    const el = editableRef.current;
-    if (!el) return;
+  const commit = useCallback(
+    (state: EditState) => {
+      const el = state.element;
+      const text = el.innerText.trim();
+      const currentBlock = useEditorStore
+        .getState()
+        .blocks.find((b) => b.id === state.blockId);
+      if (!currentBlock) return;
 
-    updateBlock(editState.blockId, {
-      editedText: el.innerHTML,
-    });
+      const currentCfg = parseCfgFromBlock(currentBlock);
+      updateBlock(state.blockId, {
+        config: { ...currentCfg, [state.field]: text },
+      });
+
+      el.removeAttribute("contenteditable");
+      el.removeAttribute("spellcheck");
+      el.style.outline = "";
+      toolbar.hide();
+      setEditState(null);
+    },
+    [updateBlock, toolbar],
+  );
+
+  const discard = useCallback((state: EditState) => {
+    const el = state.element;
+    // Restore original text
+    el.innerText = state.originalText;
+    el.removeAttribute("contenteditable");
+    el.removeAttribute("spellcheck");
+    el.style.outline = "";
+
+    // Restore original cfg (reverts any mid-session style changes)
+    updateBlock(state.blockId, { config: state.originalCfg });
 
     toolbar.hide();
     setEditState(null);
-  }, [editState, updateBlock, toolbar]);
-
-  const discard = useCallback(() => {
-    toolbar.hide();
-    setEditState(null);
-  }, [toolbar]);
+  }, [updateBlock, toolbar]);
 
   // -------------------------------------------------------------------------
-  // dblclick listener on the container
+  // dblclick listener
   // -------------------------------------------------------------------------
 
   useEffect(() => {
@@ -179,136 +163,155 @@ export function TextEditor({
 
     function handleDblClick(e: MouseEvent) {
       const target = e.target as HTMLElement;
-      const blockEl = target.closest<HTMLElement>("[data-block-id]");
-      if (!blockEl) return;
+      // Walk up to find an editable field element
+      const fieldEl = target.closest<HTMLElement>("[data-editable-field]");
+      if (!fieldEl) return;
 
-      const blockId = blockEl.dataset.blockId;
+      const field = fieldEl.dataset.editableField;
+      if (!field) return;
+
+      const blockEl = fieldEl.closest<HTMLElement>("[data-block-id]");
+      const blockId = blockEl?.dataset.blockId;
       if (!blockId) return;
 
-      const type = getBlockType(target, blocks);
-      if (!type || !TEXT_BLOCK_TYPES.has(type)) return; // bail silently
-
       e.preventDefault();
-      activate(blockId, blockEl);
+      e.stopPropagation();
+
+      const block = useEditorStore.getState().blocks.find((b) => b.id === blockId);
+      if (!block) return;
+
+      const cfg = parseCfgFromBlock(block);
+      const blockRect = blockEl!.getBoundingClientRect();
+
+      // Activate contentEditable on the element directly
+      fieldEl.setAttribute("contenteditable", "true");
+      fieldEl.setAttribute("spellcheck", "true");
+      fieldEl.style.outline = "2px solid var(--primary, #6366f1)";
+      fieldEl.style.outlineOffset = "2px";
+      fieldEl.style.borderRadius = "2px";
+
+      const state: EditState = {
+        blockId,
+        field,
+        originalText: fieldEl.innerText,
+        originalCfg: cfg,
+        blockRect,
+        element: fieldEl,
+      };
+      setEditState(state);
+
+      requestAnimationFrame(() => {
+        fieldEl.focus();
+        // Place cursor at click position (already positioned) or at end
+        const sel = window.getSelection();
+        if (sel && sel.rangeCount === 0) {
+          const range = document.createRange();
+          range.selectNodeContents(fieldEl);
+          range.collapse(false);
+          sel.removeAllRanges();
+          sel.addRange(range);
+        }
+        toolbar.show(blockRect);
+      });
     }
 
     container.addEventListener("dblclick", handleDblClick);
     return () => container.removeEventListener("dblclick", handleDblClick);
-  }, [containerRef, blocks, activate]);
+  }, [containerRef, toolbar]);
+
+  // -------------------------------------------------------------------------
+  // Blur → commit
+  // -------------------------------------------------------------------------
+
+  useEffect(() => {
+    if (!editState) return;
+    const el = editState.element;
+
+    function handleBlur() {
+      const state = editStateRef.current;
+      if (state) commit(state);
+    }
+
+    el.addEventListener("blur", handleBlur);
+    return () => el.removeEventListener("blur", handleBlur);
+  }, [editState, commit]);
 
   // -------------------------------------------------------------------------
   // Keyboard shortcuts while editing
   // -------------------------------------------------------------------------
 
-  const handleKeyDown = useCallback(
-    (e: React.KeyboardEvent<HTMLDivElement>) => {
+  useEffect(() => {
+    if (!editState) return;
+    const el = editState.element;
+
+    function handleKeyDown(e: KeyboardEvent) {
+      const state = editStateRef.current;
+      if (!state) return;
       const meta = e.metaKey || e.ctrlKey;
 
       if (e.key === "Escape") {
         e.preventDefault();
-        discard();
+        e.stopPropagation();
+        discard(state);
         return;
       }
 
       if (meta && e.key === "b") {
         e.preventDefault();
-        document.execCommand("bold");
+        handleFormatForState(state, { type: "bold" });
         return;
       }
       if (meta && e.key === "i") {
         e.preventDefault();
-        document.execCommand("italic");
+        handleFormatForState(state, { type: "italic" });
         return;
       }
       if (meta && e.key === "u") {
         e.preventDefault();
-        document.execCommand("underline");
+        handleFormatForState(state, { type: "underline" });
         return;
       }
+    }
+
+    el.addEventListener("keydown", handleKeyDown);
+    return () => el.removeEventListener("keydown", handleKeyDown);
+  }, [editState, discard]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // -------------------------------------------------------------------------
+  // Format handler — applies to cfg immediately, reflects in element style
+  // -------------------------------------------------------------------------
+
+  function handleFormatForState(state: EditState, cmd: FormatCommand) {
+    const block = useEditorStore
+      .getState()
+      .blocks.find((b) => b.id === state.blockId);
+    if (!block) return;
+
+    const currentCfg = parseCfgFromBlock(block);
+    const nextCfg = applyStyleKeyToCfg(currentCfg, state.field, cmd);
+    updateBlock(state.blockId, { config: nextCfg });
+    // Keep element's text in sync (style updates re-render via React, but
+    // contentEditable element is owned by the DOM; its text won't reset
+    // because React won't reconcile contentEditable children)
+  }
+
+  const handleFormat = useCallback(
+    (cmd: FormatCommand) => {
+      const state = editStateRef.current;
+      if (state) handleFormatForState(state, cmd);
     },
-    [discard],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [updateBlock],
   );
 
   // -------------------------------------------------------------------------
-  // Format command handler (forwarded from toolbar)
-  // -------------------------------------------------------------------------
-
-  const handleFormat = useCallback((cmd: FormatCommand) => {
-    // Restore focus to the contentEditable before issuing execCommand
-    editableRef.current?.focus();
-
-    switch (cmd.type) {
-      case "bold":
-        document.execCommand("bold");
-        break;
-      case "italic":
-        document.execCommand("italic");
-        break;
-      case "underline":
-        document.execCommand("underline");
-        break;
-      case "fontName":
-        document.execCommand("fontName", false, cmd.value);
-        break;
-      case "fontSize":
-        // execCommand fontSize accepts 1-7 (HTML size), so we use a workaround:
-        // wrap selection in a span with an explicit style instead.
-        document.execCommand("styleWithCSS", false, "true");
-        document.execCommand(
-          "fontSize",
-          false,
-          // Map px value to the nearest HTML size level (execCommand accepts 1-7)
-          // We abuse styleWithCSS=true here so the browser emits a <span style="font-size:…">
-          cmd.value,
-        );
-        break;
-      case "foreColor":
-        document.execCommand("foreColor", false, cmd.value);
-        break;
-      case "justifyLeft":
-        document.execCommand("justifyLeft");
-        break;
-      case "justifyCenter":
-        document.execCommand("justifyCenter");
-        break;
-      case "justifyRight":
-        document.execCommand("justifyRight");
-        break;
-    }
-  }, []);
-
-  // -------------------------------------------------------------------------
-  // Render
+  // Render toolbar portal only
   // -------------------------------------------------------------------------
 
   if (!editState) return <></>;
 
   return (
     <>
-      {/* Transparent contentEditable overlay — covers the block exactly */}
-      <div
-        ref={editableRef}
-        contentEditable
-        suppressContentEditableWarning
-        role="textbox"
-        aria-multiline="true"
-        aria-label="Edit block text"
-        spellCheck
-        // Seed with the block's current rendered HTML so the user sees the
-        // existing content and can edit in-place.
-        dangerouslySetInnerHTML={{ __html: editState.originalHtml }}
-        onBlur={commit}
-        onKeyDown={handleKeyDown}
-        className="absolute z-20 cursor-text overflow-auto outline-none ring-2 ring-primary/60 focus:ring-primary"
-        style={{
-          ...overlayStyle,
-          // Transparent background so the original block renders through, giving
-          // the illusion of direct editing while the overlay captures input.
-          background: "transparent",
-        }}
-      />
-
-      {/* Floating toolbar via portal so it isn't clipped by the canvas overflow */}
       {toolbar.visible &&
         typeof document !== "undefined" &&
         createPortal(

@@ -35,6 +35,7 @@ import {
   X,
 } from "lucide-react";
 import { useEditorStore } from "@/app/stores/editorStore";
+import { parseCfg } from "@/lib/editableField";
 import { CropHandles } from "./CropHandles";
 import { ReplaceMediaDialog } from "./ReplaceMediaDialog";
 
@@ -370,9 +371,10 @@ export function ImageEditor({ containerRef }: Props) {
 
   const handleSelectImage = useCallback(
     (url: string) => {
-      if (active) {
-        updateBlock(active.blockId, { imageUrl: url });
-      }
+      if (!active) return;
+      const block = useEditorStore.getState().blocks.find((b) => b.id === active.blockId);
+      const cfg = parseCfg(block?.config);
+      updateBlock(active.blockId, { config: { ...cfg, imageUrl: url } });
     },
     [active, updateBlock],
   );
