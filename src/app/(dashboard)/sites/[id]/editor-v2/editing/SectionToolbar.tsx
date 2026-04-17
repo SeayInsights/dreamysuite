@@ -419,7 +419,7 @@ function AnimationStub() {
         className="h-8 gap-1.5 text-xs"
         onMouseEnter={() => setShow(true)}
         onMouseLeave={() => setShow(false)}
-        onClick={() => setShow((v) => !v)}
+        onClick={(e) => { e.stopPropagation(); setShow((v) => !v); }}
         aria-label="Animation settings (coming soon)"
       >
         <AnimationIcon />
@@ -742,7 +742,6 @@ export function SectionToolbar({
       )}
       style={{ top: renderPos.top, left: renderPos.left }}
       onMouseDown={(e) => e.stopPropagation()}
-      onClick={(e) => e.stopPropagation()}
     >
       {/* Background button */}
       <Button
@@ -750,7 +749,7 @@ export function SectionToolbar({
         size="sm"
         className="h-8 gap-1.5 text-xs"
         aria-label="Set section background"
-        onClick={(e) => openPopover("bg", e.currentTarget)}
+        onClick={(e) => { e.stopPropagation(); openPopover("bg", e.currentTarget); }}
       >
         <PaletteIcon />
         Background
@@ -764,7 +763,7 @@ export function SectionToolbar({
         size="sm"
         className="h-8 gap-1.5 text-xs"
         aria-label="Set section padding"
-        onClick={(e) => openPopover("padding", e.currentTarget)}
+        onClick={(e) => { e.stopPropagation(); openPopover("padding", e.currentTarget); }}
       >
         <PaddingIcon />
         Padding
@@ -778,7 +777,7 @@ export function SectionToolbar({
         size="sm"
         className="h-8 gap-1.5 text-xs"
         aria-label="Set block height"
-        onClick={(e) => openPopover("height", e.currentTarget)}
+        onClick={(e) => { e.stopPropagation(); openPopover("height", e.currentTarget); }}
       >
         <SizeIcon />
         Size
