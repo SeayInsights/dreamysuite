@@ -25,8 +25,8 @@ export function TopBar({ site }: Props) {
 			{/* Left cluster: back + site name */}
 			<div className="flex min-w-0 items-center gap-2">
 				<Link
-					href="/sites"
-					aria-label="Back to sites"
+					href="/"
+					aria-label="Back to dashboard"
 					className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-accent-foreground"
 				>
 					<ChevronLeft className="size-4" />

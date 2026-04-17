@@ -16,6 +16,7 @@ const ITEMS: Item[] = [
 export function BreakpointToggle() {
 	const breakpoint = useEditorStore((s) => s.breakpoint);
 	const setBreakpoint = useEditorStore((s) => s.setBreakpoint);
+	const selectBlock = useEditorStore((s) => s.selectBlock);
 
 	return (
 		<div
@@ -33,7 +34,7 @@ export function BreakpointToggle() {
 						aria-checked={active}
 						aria-label={label}
 						title={label}
-						onClick={() => setBreakpoint(id)}
+						onClick={() => { setBreakpoint(id); selectBlock(null); }}
 						className={cn(
 							"flex h-7 w-8 items-center justify-center rounded-sm transition-colors",
 							active

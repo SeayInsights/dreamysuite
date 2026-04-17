@@ -17,6 +17,7 @@ export function NewSiteForm({ action }: { action: ActionFn }) {
   const [state, formAction, pending] = useActionState(action, null);
 
   const [name, setName] = useState("");
+  const [nameTouched, setNameTouched] = useState(false);
   const [eventType, setEventType] = useState("wedding");
   const [slug, setSlug] = useState("");
   const [slugEdited, setSlugEdited] = useState(false);
@@ -72,11 +73,22 @@ export function NewSiteForm({ action }: { action: ActionFn }) {
             placeholder="e.g. Dannis & Naomi"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            style={inputStyle}
-            onFocus={(e) => (e.target.style.borderColor = "#B8921A")}
-            onBlur={(e) => (e.target.style.borderColor = "#e8e4e0")}
+            style={{
+              ...inputStyle,
+              borderColor: nameTouched && !name.trim() ? "#dc2626" : "#e8e4e0",
+            }}
+            onFocus={(e) => (e.target.style.borderColor = nameTouched && !name.trim() ? "#dc2626" : "#B8921A")}
+            onBlur={(e) => {
+              setNameTouched(true);
+              e.target.style.borderColor = !name.trim() ? "#dc2626" : "#e8e4e0";
+            }}
           />
-          {displaySlug && (
+          {nameTouched && !name.trim() && (
+            <p style={{ fontSize: "0.75rem", color: "#dc2626", marginTop: "0.375rem" }}>
+              Site name is required
+            </p>
+          )}
+          {displaySlug && name.trim() && (
             <p style={{ fontSize: "0.75rem", color: "#9b8e85", marginTop: "0.375rem" }}>
               URL: <span style={{ color: "#B8921A" }}>{displaySlug}.dreamysuite.com</span>
             </p>
@@ -158,6 +170,7 @@ export function NewSiteForm({ action }: { action: ActionFn }) {
         )}
 
         <div style={{ display: "flex", gap: "0.75rem", alignItems: "center" }}>
+          <div onClick={() => { if (!name.trim()) setNameTouched(true); }}>
           <button
             type="submit"
             disabled={pending || !name.trim()}
@@ -175,6 +188,7 @@ export function NewSiteForm({ action }: { action: ActionFn }) {
           >
             {pending ? "Creating…" : "Create Site"}
           </button>
+          </div>
           <a
             href="/"
             style={{ fontSize: "0.85rem", color: "#9b8e85", textDecoration: "none" }}
