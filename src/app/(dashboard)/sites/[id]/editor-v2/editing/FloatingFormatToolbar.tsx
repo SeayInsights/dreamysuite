@@ -98,6 +98,7 @@ export function FloatingFormatToolbar({
   useEffect(() => {
     const el = toolbarRef.current;
     if (!el) return;
+    el.style.opacity = "0";
     animate(
       el,
       { opacity: [0, 1], scale: [0.95, 1] },
@@ -114,7 +115,7 @@ export function FloatingFormatToolbar({
         "fixed z-50 flex items-center gap-0.5 rounded-lg border border-border",
         "bg-popover px-2 py-1.5 shadow-lg",
       )}
-      style={{ top, left, opacity: 0 }}
+      style={{ top, left }}
       // Prevent any mouse interaction from stealing focus from the editable
       onMouseDown={(e) => e.preventDefault()}
     >
