@@ -345,6 +345,55 @@ function PaddingPopover({ current, onChange }: PaddingPopoverProps) {
 }
 
 // ---------------------------------------------------------------------------
+// Height (size) popover content
+// ---------------------------------------------------------------------------
+
+interface HeightPopoverProps {
+  current: number | undefined;
+  onChange: (v: number | undefined) => void;
+}
+
+function HeightPopover({ current, onChange }: HeightPopoverProps) {
+  const [val, setVal] = useState(current !== undefined ? String(current) : "");
+
+  function commit(raw: string) {
+    const trimmed = raw.trim();
+    if (trimmed === "") { onChange(undefined); return; }
+    const n = parseInt(trimmed, 10);
+    if (!isNaN(n) && n >= 0) onChange(n);
+  }
+
+  return (
+    <div className="w-44 space-y-2">
+      <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+        Block Height (px)
+      </p>
+      <input
+        type="text"
+        inputMode="numeric"
+        pattern="[0-9]*"
+        placeholder="auto"
+        value={val}
+        className={cn(
+          "h-7 w-full rounded border border-input bg-background px-2 text-xs",
+          "focus:outline-none focus:ring-1 focus:ring-ring",
+        )}
+        onChange={(e) => setVal(e.target.value)}
+        onBlur={(e) => commit(e.target.value)}
+        onFocus={(e) => e.target.select()}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") commit((e.target as HTMLInputElement).value);
+          e.stopPropagation();
+        }}
+      />
+      <p className="text-[10px] text-muted-foreground">
+        Sets minimum height. Padding insets content within this height.
+      </p>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Animation stub tooltip
 // ---------------------------------------------------------------------------
 
@@ -418,6 +467,14 @@ function PaddingIcon() {
   );
 }
 
+function SizeIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden>
+      <path d="M7 2v10M4 4.5l3-3 3 3M4 9.5l3 3 3-3" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
 function AnimationIcon() {
   return (
     <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden>
@@ -458,7 +515,7 @@ export function SectionToolbar({
 
   const toolbarRef = useRef<HTMLDivElement>(null);
   const [position, setPosition] = useState<Position | null>(null);
-  const [activePopover, setActivePopover] = useState<"bg" | "padding" | null>(null);
+  const [activePopover, setActivePopover] = useState<"bg" | "padding" | "height" | null>(null);
   const [popoverPos, setPopoverPos] = useState<Position>({ top: 0, left: 0 });
 
   const TOOLBAR_HEIGHT = 44;
@@ -565,7 +622,10 @@ export function SectionToolbar({
         }
       : {};
 
-  function openPopover(which: "bg" | "padding", btnEl: HTMLElement) {
+  const currentHeight =
+    typeof config.blockHeight === "number" ? config.blockHeight : undefined;
+
+  function openPopover(which: "bg" | "padding" | "height", btnEl: HTMLElement) {
     const btnBox = btnEl.getBoundingClientRect();
     // Use viewport coords — popover is position:fixed
     setPopoverPos({ top: btnBox.bottom + 6, left: btnBox.left });
@@ -614,6 +674,20 @@ export function SectionToolbar({
 
       <DividerLine />
 
+      {/* Size (height) button */}
+      <Button
+        variant="ghost"
+        size="sm"
+        className="h-8 gap-1.5 text-xs"
+        aria-label="Set block height"
+        onClick={(e) => openPopover("height", e.currentTarget)}
+      >
+        <SizeIcon />
+        Size
+      </Button>
+
+      <DividerLine />
+
       {/* Animation stub */}
       <AnimationStub />
 
@@ -646,6 +720,23 @@ export function SectionToolbar({
           onChange={(padding) => {
             updateBlock(selectedBlockId, {
               config: { ...config, padding },
+            });
+          }}
+        />
+      </FloatingPopover>
+
+      {/* Height popover */}
+      <FloatingPopover
+        open={activePopover === "height"}
+        top={popoverPos.top}
+        left={popoverPos.left}
+        onClose={() => setActivePopover(null)}
+      >
+        <HeightPopover
+          current={currentHeight}
+          onChange={(blockHeight) => {
+            updateBlock(selectedBlockId, {
+              config: { ...config, blockHeight },
             });
           }}
         />

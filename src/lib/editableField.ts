@@ -95,6 +95,9 @@ export function blockSectionStyle(cfg: Record<string, unknown>): CSSProperties {
   if (typeof cfg.backgroundColor === "string" && cfg.backgroundColor) {
     style.background = cfg.backgroundColor;
   }
+  if (typeof cfg.blockHeight === "number" && cfg.blockHeight > 0) {
+    style.minHeight = `${cfg.blockHeight}px`;
+  }
   const pad = cfg.padding;
   if (pad && typeof pad === "object" && !Array.isArray(pad)) {
     const p = pad as Record<string, unknown>;
