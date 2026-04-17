@@ -327,6 +327,7 @@ export function SectionToolbar({
   containerRef: React.RefObject<HTMLElement | null>;
 }): React.JSX.Element | null {
   const selectedBlockId = useEditorStore((s) => s.selectedBlockId);
+  const isTextEditing = useEditorStore((s) => s.isTextEditing);
   const blocks = useEditorStore((s) => s.blocks);
   const updateBlock = useEditorStore((s) => s.updateBlock);
 
@@ -410,7 +411,7 @@ export function SectionToolbar({
     });
   }, [position, selectedBlockId]);
 
-  if (!selectedBlockId || !position) return null;
+  if (!selectedBlockId || !position || isTextEditing) return null;
 
   const block = blocks.find((b) => b.id === selectedBlockId);
   const config = (
