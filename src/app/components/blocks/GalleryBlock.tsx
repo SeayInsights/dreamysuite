@@ -1,8 +1,11 @@
+import { parseCfg, cropClipPath } from "@/lib/editableField";
+
 interface Block { id: string; type: string; [key: string]: unknown }
 
 export function GalleryBlock({ block }: { block: Block }) {
-  const cfg = typeof block.config === "string" ? JSON.parse(block.config || "{}") : (block.config ?? {});
+  const cfg = parseCfg(block.config);
   const layout = String(cfg.layout ?? "grid");
+  const clipPath = cropClipPath(cfg);
 
   if (layout === "split") {
     const imageUrl = cfg.imageUrl as string | undefined;
@@ -20,7 +23,7 @@ export function GalleryBlock({ block }: { block: Block }) {
         }}>
           <div style={{ flex: 1 }}>
             {imageUrl ? (
-              <img src={imageUrl} alt="" style={{ width: "100%", borderRadius: "8px", objectFit: "cover" }} />
+              <img src={imageUrl} alt="" style={{ width: "100%", borderRadius: "8px", objectFit: "cover", ...(clipPath ? { clipPath } : {}) }} />
             ) : (
               <div style={{ background: "#f5f0eb", borderRadius: "8px", height: "200px", display: "flex", alignItems: "center", justifyContent: "center", color: "#9b8e85" }}>
                 Photo
@@ -40,7 +43,7 @@ export function GalleryBlock({ block }: { block: Block }) {
 
   // Grid layout
   const urls = Array.isArray(cfg.urls) ? (cfg.urls as string[]) : [];
-  const imageSlot = cfg.imageSlot as string | undefined;
+  const imageSlot = cfg.imageUrl as string | undefined;
   const images = imageSlot ? [imageSlot] : urls;
 
   return (
@@ -48,7 +51,7 @@ export function GalleryBlock({ block }: { block: Block }) {
       {images.length > 0 ? (
         <div style={{ display: "grid", gap: "0.5rem", gridTemplateColumns: images.length > 1 ? "1fr 1fr" : "1fr" }}>
           {images.map((url, i) => (
-            <img key={i} src={url} alt="" style={{ width: "100%", borderRadius: "8px", objectFit: "cover" }} />
+            <img key={i} src={url} alt="" style={{ width: "100%", borderRadius: "8px", objectFit: "cover", ...(clipPath ? { clipPath } : {}) }} />
           ))}
         </div>
       ) : (

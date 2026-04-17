@@ -17,6 +17,7 @@
 
 import { useRef, useCallback } from "react";
 import { useEditorStore } from "@/app/stores/editorStore";
+import { parseCfg } from "@/lib/editableField";
 
 export interface CropDelta {
   top: number;
@@ -114,8 +115,9 @@ export function CropHandles({ blockId, rect }: Props) {
 
   // Sync currentDelta from store on each render
   const block = blocks.find((b) => b.id === blockId);
-  if (block?.cropDelta) {
-    const cd = block.cropDelta as CropDelta;
+  const blockCfg = parseCfg(block?.config);
+  if (blockCfg.cropDelta) {
+    const cd = blockCfg.cropDelta as CropDelta;
     currentDelta.current = { ...cd };
   }
 
@@ -146,7 +148,9 @@ export function CropHandles({ blockId, rect }: Props) {
         }
 
         currentDelta.current = next;
-        updateBlock(blockId, { cropDelta: next });
+        const block = useEditorStore.getState().blocks.find((b) => b.id === blockId);
+        const cfg = parseCfg(block?.config);
+        updateBlock(blockId, { config: { ...cfg, cropDelta: next } });
       };
 
       const onPointerUp = (e: PointerEvent) => {
