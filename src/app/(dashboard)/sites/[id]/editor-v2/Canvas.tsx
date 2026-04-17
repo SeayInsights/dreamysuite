@@ -1,11 +1,17 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { useEditorStore } from "@/app/stores/editorStore";
 import { SiteRenderer } from "@/app/components/SiteRenderer";
 import { BreakpointFrame } from "./BreakpointFrame";
 import { EditorOverlay } from "./EditorOverlay";
+import { GridOverlay } from "./GridOverlay";
+import { TextEditor } from "./editing/TextEditor";
+import { ImageEditor } from "./editing/ImageEditor";
+import { SectionToolbar } from "./editing/SectionToolbar";
+import { DragHandles } from "./editing/DragHandles";
+import { ContextMenu } from "./editing/ContextMenu";
 
 interface Page {
 	id: string;
@@ -19,6 +25,7 @@ interface Props {
 }
 
 export function Canvas({ siteId }: Props) {
+	const containerRef = useRef<HTMLDivElement>(null);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
 	const blocks = useEditorStore((s) => s.blocks);
@@ -83,12 +90,20 @@ export function Canvas({ siteId }: Props) {
 	}
 
 	return (
-		<div className="relative h-full w-full">
-			<BreakpointFrame>
-				<EditorOverlay>
-					<SiteRenderer blocks={blocks} />
-				</EditorOverlay>
-			</BreakpointFrame>
-		</div>
+		<ContextMenu>
+			<div className="relative h-full w-full">
+				<BreakpointFrame>
+					<EditorOverlay containerRef={containerRef}>
+						<SiteRenderer blocks={blocks} />
+						<GridOverlay />
+					</EditorOverlay>
+				</BreakpointFrame>
+
+				<TextEditor containerRef={containerRef} />
+				<ImageEditor containerRef={containerRef} />
+				<SectionToolbar containerRef={containerRef} />
+				<DragHandles containerRef={containerRef} />
+			</div>
+		</ContextMenu>
 	);
 }

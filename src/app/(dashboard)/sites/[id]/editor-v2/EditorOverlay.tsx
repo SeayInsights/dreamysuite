@@ -1,21 +1,22 @@
 "use client";
 
-import { useRef, type ReactNode } from "react";
+import { type ReactNode, type RefObject } from "react";
 
 import { useSelection } from "./hooks/useSelection";
 import { SelectionLayer } from "./SelectionLayer";
 
 interface Props {
 	children: ReactNode;
+	containerRef: RefObject<HTMLDivElement | null>;
 }
 
-export function EditorOverlay({ children }: Props) {
-	const frameRef = useRef<HTMLDivElement>(null);
+export function EditorOverlay({ children, containerRef }: Props) {
+	const frameRef = containerRef;
 	const { select, hover, clear } = useSelection();
 
 	return (
 		<div
-			ref={frameRef}
+			ref={containerRef}
 			className="relative h-full w-full overflow-y-auto"
 			onClick={(e) => {
 				const id = (e.target as HTMLElement)
