@@ -31,9 +31,19 @@ export interface FloatingFormatToolbarProps {
 // ---------------------------------------------------------------------------
 
 const FONT_FAMILIES = [
-  { label: "Sans-serif", value: "ui-sans-serif, system-ui, sans-serif" },
-  { label: "Serif", value: "ui-serif, Georgia, serif" },
-  { label: "Mono", value: "ui-monospace, monospace" },
+  { label: "System Sans",   value: "ui-sans-serif, system-ui, sans-serif" },
+  { label: "System Serif",  value: "ui-serif, Georgia, serif" },
+  { label: "Monospace",     value: "ui-monospace, 'Courier New', monospace" },
+  { label: "Inter",         value: "'Inter', sans-serif" },
+  { label: "Playfair",      value: "'Playfair Display', Georgia, serif" },
+  { label: "Cormorant",     value: "'Cormorant Garamond', Georgia, serif" },
+  { label: "Lora",          value: "'Lora', Georgia, serif" },
+  { label: "Montserrat",    value: "'Montserrat', sans-serif" },
+  { label: "Raleway",       value: "'Raleway', sans-serif" },
+  { label: "Nunito",        value: "'Nunito', sans-serif" },
+  { label: "Great Vibes",   value: "'Great Vibes', cursive" },
+  { label: "Dancing Script", value: "'Dancing Script', cursive" },
+  { label: "Libre Baskerville", value: "'Libre Baskerville', serif" },
 ];
 
 // ---------------------------------------------------------------------------
