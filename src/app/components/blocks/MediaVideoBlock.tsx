@@ -1,3 +1,5 @@
+import { blockSectionStyle, parseCfg } from "@/lib/editableField";
+
 interface Block { id: string; type: string; [key: string]: unknown }
 
 function extractYoutubeId(url: string): string | null {
@@ -6,18 +8,18 @@ function extractYoutubeId(url: string): string | null {
 }
 
 export function MediaVideoBlock({ block }: { block: Block }) {
-  const cfg = typeof block.config === "string" ? JSON.parse(block.config || "{}") : (block.config ?? {});
+  const cfg = parseCfg(block.config);
   const url = String(cfg.url ?? "");
   const height = String(cfg.height ?? "100dvh");
+  const sectionStyle = blockSectionStyle(cfg);
 
-  // Infer provider from URL if not set explicitly
   const isYoutube = cfg.provider === "youtube" ||
     (cfg.provider !== "direct" && (url.includes("youtube.com") || url.includes("youtu.be")));
 
   if (!url) {
     return (
       <section className="block block-media-video" data-block-id={block.id} data-block-type={block.type}
-        style={{ height: "160px", display: "flex", alignItems: "center", justifyContent: "center", color: "#9b8e85", border: "1px dashed #e0dbd4", borderRadius: "8px" }}>
+        style={{ height: "160px", display: "flex", alignItems: "center", justifyContent: "center", color: "#9b8e85", border: "1px dashed #e0dbd4", borderRadius: "8px", ...sectionStyle }}>
         No video selected
       </section>
     );
@@ -26,7 +28,7 @@ export function MediaVideoBlock({ block }: { block: Block }) {
   if (isYoutube) {
     const videoId = extractYoutubeId(url);
     return (
-      <section className="block block-media-video" data-block-id={block.id} data-block-type={block.type}>
+      <section className="block block-media-video" data-block-id={block.id} data-block-type={block.type} style={sectionStyle}>
         {videoId ? (
           <div style={{ position: "relative", paddingBottom: "56.25%", height: 0, overflow: "hidden", borderRadius: "8px" }}>
             <iframe
@@ -48,7 +50,7 @@ export function MediaVideoBlock({ block }: { block: Block }) {
 
   return (
     <section className="block block-media-video" data-block-id={block.id} data-block-type={block.type}
-      style={{ height, position: "relative" }}>
+      style={{ height, position: "relative", ...sectionStyle }}>
       <video
         src={url}
         autoPlay

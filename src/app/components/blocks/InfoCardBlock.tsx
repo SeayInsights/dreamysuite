@@ -1,7 +1,9 @@
+import { blockSectionStyle, parseCfg } from "@/lib/editableField";
+
 interface Block { id: string; type: string; [key: string]: unknown }
 
 export function InfoCardBlock({ block }: { block: Block }) {
-  const cfg = typeof block.config === "string" ? JSON.parse(block.config || "{}") : (block.config ?? {});
+  const cfg = parseCfg(block.config);
   const variant = String(cfg.variant ?? "registry");
   const name = String(cfg.name ?? cfg.title ?? (variant === "hotel" ? "Hotel" : "Registry"));
   const address = String(cfg.address ?? "");
@@ -9,7 +11,7 @@ export function InfoCardBlock({ block }: { block: Block }) {
   const imageUrl = cfg.imageUrl as string | undefined;
 
   return (
-    <section className="block block-info-card" data-block-id={block.id} data-block-type={block.type}>
+    <section className="block block-info-card" data-block-id={block.id} data-block-type={block.type} style={blockSectionStyle(cfg)}>
       <div style={{ textAlign: "center", padding: "1.5rem" }}>
         {imageUrl && (
           <img

@@ -85,6 +85,27 @@ export function parseCfg(raw: unknown): Record<string, unknown> {
   return {};
 }
 
+/**
+ * Inline styles for a block's root element — background color and padding
+ * from the SectionToolbar controls. Merges cleanly with existing inline styles
+ * by spreading last so individual longhand properties override any shorthand.
+ */
+export function blockSectionStyle(cfg: Record<string, unknown>): CSSProperties {
+  const style: CSSProperties = {};
+  if (typeof cfg.backgroundColor === "string" && cfg.backgroundColor) {
+    style.background = cfg.backgroundColor;
+  }
+  const pad = cfg.padding;
+  if (pad && typeof pad === "object" && !Array.isArray(pad)) {
+    const p = pad as Record<string, unknown>;
+    if (typeof p.top === "number") style.paddingTop = `${p.top}px`;
+    if (typeof p.right === "number") style.paddingRight = `${p.right}px`;
+    if (typeof p.bottom === "number") style.paddingBottom = `${p.bottom}px`;
+    if (typeof p.left === "number") style.paddingLeft = `${p.left}px`;
+  }
+  return style;
+}
+
 /** Clip-path derived from a cfg.cropDelta = { top, left, right, bottom } (px). */
 export function cropClipPath(cfg: Record<string, unknown>): string | undefined {
   const d = cfg.cropDelta as

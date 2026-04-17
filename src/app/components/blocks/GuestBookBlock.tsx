@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { blockSectionStyle, parseCfg } from "@/lib/editableField";
 
 interface GuestEntry {
   name: string;
@@ -10,7 +11,7 @@ interface GuestEntry {
 interface Block { id: string; type: string; [key: string]: unknown }
 
 export function GuestBookBlock({ block }: { block: Block }) {
-  const cfg = typeof block.config === "string" ? JSON.parse(block.config || "{}") : (block.config ?? {});
+  const cfg = parseCfg(block.config);
   const heading = String(cfg.heading ?? "Guest Book");
   const placeholder = String(cfg.placeholder ?? "Leave a message for the happy couple…");
 
@@ -34,7 +35,7 @@ export function GuestBookBlock({ block }: { block: Block }) {
 
   return (
     <section className="block block-guest-book" data-block-id={block.id} data-block-type={block.type}
-      style={{ padding: "2rem 1rem", maxWidth: "600px", margin: "0 auto" }}>
+      style={{ padding: "2rem 1rem", maxWidth: "600px", margin: "0 auto", ...blockSectionStyle(cfg) }}>
       {heading && <h2 style={{ textAlign: "center", marginBottom: "1.5rem" }}>{heading}</h2>}
 
       <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "0.6rem", marginBottom: "2rem" }}>
