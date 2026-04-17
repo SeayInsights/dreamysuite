@@ -11,12 +11,14 @@ export interface SiteBlock {
 
 interface Props {
 	blocks: SiteBlock[];
+	/** When true, skip sortOrder sort — store order is authoritative (editor mode). */
+	ordered?: boolean;
 }
 
-export function SiteRenderer({ blocks }: Props) {
-	const visible = blocks
-		.filter((b) => b.isVisible !== 0)
-		.sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
+export function SiteRenderer({ blocks, ordered = false }: Props) {
+	const visible = ordered
+		? blocks.filter((b) => b.isVisible !== 0)
+		: blocks.filter((b) => b.isVisible !== 0).sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
 
 	return (
 		<div className="site-renderer">
