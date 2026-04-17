@@ -68,6 +68,13 @@ export const SettingsSchema = z.object({
   bgImageLayer: z.string().default("behind"),
   bgImageOpacity: z.number().default(1.0),
   siteMaxWidth: z.string().nullable().default(null),
+  sectionSpacing: z.string().nullable().default(null),
+  pageTemplate: z.string().nullable().default(null),
+  seoTitle: z.string().nullable().default(null),
+  seoDescription: z.string().nullable().default(null),
+  ogImage: z.string().nullable().default(null),
+  animationsDisabled: intBool.default(0),
+  defaultAnimation: z.string().nullable().default(null),
 });
 
 /** All settings with defaults applied. Single source — no duplicate object. */
