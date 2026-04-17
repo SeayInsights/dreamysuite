@@ -29,10 +29,10 @@ export async function DELETE(
     return apiError("NOT_FOUND", "Block not found", 404);
   }
 
-  await env.DB
-    .prepare("DELETE FROM block WHERE id = ?")
-    .bind(blockId)
-    .run();
+  await env.DB.batch([
+    env.DB.prepare("DELETE FROM block WHERE id = ?").bind(blockId),
+    env.DB.prepare("DELETE FROM block_translation WHERE blockId = ?").bind(blockId),
+  ]);
 
   return NextResponse.json({ success: true });
 }

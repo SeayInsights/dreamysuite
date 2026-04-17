@@ -84,8 +84,17 @@ export async function GET(
     try { contentMap.get(row.pageSlug)!.set(row.lang, JSON.parse(row.content) as Record<string, unknown>); } catch { /* skip */ }
   }
 
+  // Block-level translations from the dedicated table
+  const btResult = await db.prepare("SELECT blockId, lang, field, value FROM block_translation WHERE siteId = ?").bind(site.id).all<{ blockId: string; lang: string; field: string; value: string }>();
+  const blockTransMap: Record<string, Record<string, Record<string, string>>> = {};
+  for (const r of btResult.results) {
+    if (!blockTransMap[r.blockId]) blockTransMap[r.blockId] = {};
+    if (!blockTransMap[r.blockId][r.lang]) blockTransMap[r.blockId][r.lang] = {};
+    blockTransMap[r.blockId][r.lang][r.field] = r.value;
+  }
+
   const activeLang = new URL(req.url).searchParams.get("_lang") ?? null;
-  return new Response(buildHtml(site, settings ?? null, pages, contentMap, site.slug, activeLang), {
+  return new Response(buildHtml(site, settings ?? null, pages, contentMap, blockTransMap, site.slug, activeLang), {
     status: 200,
     headers: { "content-type": "text/html; charset=utf-8", "cache-control": "public, max-age=10, stale-while-revalidate=30" },
   });
@@ -144,6 +153,7 @@ interface SiteSettingRow {
   cardImage: string | null;
   navLinkPadding: string | null;
   navUnderline: string | null;
+  siteLanguages: string | null;
   popupEnabled: number | null;
   popupTitle: string | null;
   popupTicker: number | null;
@@ -1313,13 +1323,21 @@ function renderBlock(
   block: ParsedBlock,
   settings: SiteSettingRow | null,
   pageContent?: Record<string, unknown>,
-  siteSlug?: string
+  siteSlug?: string,
+  blockTransMap?: BlockTransMap,
+  renderLang?: string,
+  mainLang?: string,
 ): string {
   const cfg = block.config;
   const accent = settings?.accentColor ?? "#B8921A";
-  // Helper: get value from content tab data, falling back to block config, then fallback
-  const cnt = (contentKey: string, cfgKey?: string, fallback = "") =>
-    String(pageContent?.[contentKey] ?? (cfgKey ? cfg[cfgKey] : undefined) ?? fallback);
+  const _ml = mainLang ?? "en";
+  const _rl = renderLang ?? _ml;
+  const _bt = blockTransMap?.[block.id]?.[_rl];
+  // Helper: get translated value → content tab data → block config → fallback
+  const cnt = (contentKey: string, cfgKey?: string, fallback = "") => {
+    if (_rl !== _ml && _bt && cfgKey && _bt[cfgKey]) return _bt[cfgKey];
+    return String(pageContent?.[contentKey] ?? (cfgKey ? cfg[cfgKey] : undefined) ?? fallback);
+  };
 
   // Compute inline style for block container (background color + text color from tile settings)
   const _bsParts: string[] = [];
@@ -2411,11 +2429,14 @@ for (const el of els) io.observe(el);
 </script>`;
 }
 
+type BlockTransMap = Record<string, Record<string, Record<string, string>>>;
+
 function buildHtml(
   site: SiteRow,
   settings: SiteSettingRow | null,
   pages: PageWithBlocks[],
   contentMap: ContentMap,
+  blockTransMap: BlockTransMap,
   siteSlug: string,
   activeLang?: string | null
 ): string {
@@ -2452,7 +2473,17 @@ function buildHtml(
     return escHtml(p.label || p.slug.charAt(0).toUpperCase() + p.slug.slice(1));
   }
 
-  const secondLang = settings?.secondLanguage ?? null;
+  // Parse all configured languages
+  let extraLangs: string[] = [];
+  if (settings?.siteLanguages) {
+    try { extraLangs = JSON.parse(settings.siteLanguages); } catch { /* ignore */ }
+  }
+  if (!extraLangs.length && settings?.secondLanguage) {
+    extraLangs = [settings.secondLanguage];
+  }
+  const allLangs = [mainLang, ...extraLangs];
+  const secondLang = extraLangs[0] ?? null;
+  const isMultiLang = extraLangs.length > 1;
 
   const navShape = settings?.navShape ?? "";
   const navUnderlineClass = (settings?.navUnderline ?? "on") !== "off" ? " nav-underline" : "";
@@ -2464,18 +2495,27 @@ function buildHtml(
         `<li><button class="site-nav-link${i === 0 ? " active" : ""}" data-page="${escHtml(p.id)}" onclick="showPage('${escHtml(p.id)}')">${pageLabel(p)}</button></li>`
     )
     .join("");
-  const secondNative = secondLang ? (LANG_NATIVE[secondLang] ?? secondLang.toUpperCase()) : "";
   const mainNative = LANG_NATIVE[mainLang] ?? mainLang.toUpperCase();
-  const isSecondActive = activeLang === secondLang;
-  const navLangToggle = secondLang
-    ? `<div class="lang-toggle">
-        <button class="lang-btn" id="lang-toggle-btn"
-          data-main="${escHtml(mainLang)}" data-second="${escHtml(secondLang)}"
-          data-main-label="${escHtml(mainNative)}" data-second-label="${escHtml(secondNative)}"
-          onclick="switchLang()"
-          aria-label="Switch language"
-        >${isSecondActive ? escHtml(mainNative) : escHtml(secondNative)}</button>
-      </div>`
+  const currentLang = activeLang ?? mainLang;
+  const navLangToggle = extraLangs.length > 0
+    ? isMultiLang
+      ? `<div class="lang-toggle">
+          <select class="lang-select" id="lang-select" onchange="switchLangTo(this.value)" aria-label="Select language">
+            ${allLangs.map((l) => `<option value="${escHtml(l)}"${l === currentLang ? " selected" : ""}>${escHtml(LANG_NATIVE[l] ?? l)}</option>`).join("")}
+          </select>
+        </div>`
+      : (() => {
+          const secondNative = LANG_NATIVE[secondLang!] ?? secondLang!.toUpperCase();
+          const isSecondActive = activeLang === secondLang;
+          return `<div class="lang-toggle">
+            <button class="lang-btn" id="lang-toggle-btn"
+              data-main="${escHtml(mainLang)}" data-second="${escHtml(secondLang!)}"
+              data-main-label="${escHtml(mainNative)}" data-second-label="${escHtml(secondNative)}"
+              onclick="switchLang()"
+              aria-label="Switch language"
+            >${isSecondActive ? escHtml(mainNative) : escHtml(secondNative)}</button>
+          </div>`;
+        })()
     : "";
   const showNavBrand = !!(settings?.showNavBrand ?? 1);
   const navHtml = hasMultiplePages
@@ -2515,7 +2555,7 @@ function buildHtml(
         ?? (pageContentByLang ? [...pageContentByLang.values()][0] : undefined);
       const blocksHtml = page.blocks
         .map((block) => {
-          const html = renderBlock(block, settings, pageContent, siteSlug);
+          const html = renderBlock(block, settings, pageContent, siteSlug, blockTransMap, renderLang, mainLang);
           const animPreset = (block.config as Record<string, unknown>).animation;
           if (typeof animPreset !== "string" || !animPreset) return html;
           return html.replace(/(<section\b[^>]*)(>)/, `$1 data-animation="${escHtml(animPreset)}"$2`);
@@ -2599,20 +2639,33 @@ function showPage(pageId) {
       </div>`
     : "";
 
-  // Language toggle — shown when a second language is configured
-  // Normally injected into the nav bar; this fallback is only for single-page sites with no nav.
-  const langToggleHtml = secondLang && !hasMultiplePages
-    ? `<div style="position:fixed;top:1rem;right:1rem;z-index:200">
-        <button class="lang-btn" id="lang-toggle-btn"
-          data-main="${escHtml(mainLang)}" data-second="${escHtml(secondLang)}"
-          data-main-label="${escHtml(mainNative)}" data-second-label="${escHtml(secondNative)}"
-          onclick="switchLang()"
-          aria-label="Switch language"
-        >${escHtml(secondNative)}</button>
-      </div>`
+  // Language toggle — fallback for single-page sites with no nav
+  const langToggleHtml = extraLangs.length > 0 && !hasMultiplePages
+    ? isMultiLang
+      ? `<div style="position:fixed;top:1rem;right:1rem;z-index:200">
+          <select class="lang-select" id="lang-select" onchange="switchLangTo(this.value)" aria-label="Select language">
+            ${allLangs.map((l) => `<option value="${escHtml(l)}"${l === currentLang ? " selected" : ""}>${escHtml(LANG_NATIVE[l] ?? l)}</option>`).join("")}
+          </select>
+        </div>`
+      : (() => {
+          const secondNative = LANG_NATIVE[secondLang!] ?? secondLang!.toUpperCase();
+          return `<div style="position:fixed;top:1rem;right:1rem;z-index:200">
+            <button class="lang-btn" id="lang-toggle-btn"
+              data-main="${escHtml(mainLang)}" data-second="${escHtml(secondLang!)}"
+              data-main-label="${escHtml(mainNative)}" data-second-label="${escHtml(secondNative)}"
+              onclick="switchLang()"
+              aria-label="Switch language"
+            >${escHtml(secondNative)}</button>
+          </div>`;
+        })()
     : "";
-  const langScript = secondLang
+  const langScript = extraLangs.length > 0
     ? `<script>
+function switchLangTo(target) {
+  var url = new URL(location.href);
+  if (target === '${escHtml(mainLang)}') { url.searchParams.delete('_lang'); } else { url.searchParams.set('_lang', target); }
+  location.href = url.toString();
+}
 function switchLang() {
   var btn = document.getElementById('lang-toggle-btn');
   if (!btn) return;
@@ -2620,15 +2673,13 @@ function switchLang() {
   var second = btn.getAttribute('data-second');
   var cur = '${escHtml(activeLang ?? mainLang)}';
   var target = (cur === second) ? main : second;
-  var url = new URL(location.href);
-  if (target === main) { url.searchParams.delete('_lang'); } else { url.searchParams.set('_lang', target); }
-  location.href = url.toString();
+  switchLangTo(target);
 }
 </script>`
     : "";
 
   // Serialize the per-lang content for client-side switching
-  const langContentJson = secondLang
+  const langContentJson = extraLangs.length > 0
     ? (() => {
         const out: Record<string, Record<string, unknown>> = {};
         for (const [, langMap] of contentMap) {
@@ -2924,16 +2975,26 @@ function toggleMusic(){var a=document.getElementById('audio-player'),b=document.
     }
   }
 
+  // hreflang tags for SEO
+  const hreflangTags = extraLangs.length > 0
+    ? allLangs.map((l) => {
+        const href = l === mainLang ? `/${escHtml(siteSlug)}` : `/${escHtml(siteSlug)}?_lang=${escHtml(l)}`;
+        return `<link rel="alternate" hreflang="${escHtml(l)}" href="${href}" />`;
+      }).join("\n  ") + `\n  <link rel="alternate" hreflang="x-default" href="/${escHtml(siteSlug)}" />`
+    : "";
+
   return `<!DOCTYPE html>
-<html lang="${lang}">
+<html lang="${escHtml(currentLang)}"${currentLang === "ar" || currentLang === "he" ? ' dir="rtl"' : ""}>
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>${pageTitle}</title>
   <meta name="description" content="${escHtml(metaDesc)}" />
+  ${hreflangTags}
   ${fontsTag}
   ${gsapCdn}
-  <style>${siteCss}</style>
+  <style>${siteCss}
+  .lang-select{appearance:none;border:1px solid var(--border,#e7e5e4);border-radius:6px;padding:0.375rem 1.75rem 0.375rem 0.625rem;font-family:inherit;font-size:0.8125rem;background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23666' d='M3 4.5L6 7.5L9 4.5'/%3E%3C/svg%3E") no-repeat right 0.5rem center;cursor:pointer;outline:none;color:var(--text,#292524)}</style>
 </head>
 <body>
   ${escapedBgImageUrl ? `<div id="bg-overlay" style="position:fixed;inset:0;z-index:0;pointer-events:none;background-image:url('${escapedBgImageUrl}');background-size:cover;background-position:center;background-attachment:fixed;opacity:${settings?.bgImageOpacity ?? 1};display:${settings?.bgImageLayer === 'overlay' ? '' : 'none'};"></div>` : ""}
