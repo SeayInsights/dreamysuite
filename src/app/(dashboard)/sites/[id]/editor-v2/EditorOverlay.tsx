@@ -4,6 +4,7 @@ import { type ReactNode, type RefObject } from "react";
 
 import { useSelection } from "./hooks/useSelection";
 import { SelectionLayer } from "./SelectionLayer";
+import { InsertButton } from "./editing/InsertButton";
 
 interface Props {
 	children: ReactNode;
@@ -35,6 +36,7 @@ export function EditorOverlay({ children, containerRef }: Props) {
 		>
 			{children}
 			<SelectionLayer frameRef={frameRef} />
+			<InsertButton containerRef={containerRef} />
 		</div>
 	);
 }
