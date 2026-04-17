@@ -13,13 +13,15 @@ import { ContentTab } from "./inspector/ContentTab";
 import { StyleTab } from "./inspector/StyleTab";
 import { MotionTab } from "./inspector/MotionTab";
 import { AssistantTab } from "./inspector/AssistantTab";
+import { TranslateTab } from "./inspector/TranslateTab";
 
 const PANEL_WIDTH = 320;
 
-type TabId = "layout" | "content" | "style" | "motion" | "assistant";
-const TABS: { id: TabId; label: string }[] = [
+type TabId = "layout" | "content" | "translate" | "style" | "motion" | "assistant";
+const TABS: { id: TabId; label: string; requiresLangs?: boolean }[] = [
 	{ id: "layout", label: "Layout" },
 	{ id: "content", label: "Content" },
+	{ id: "translate", label: "Translate", requiresLangs: true },
 	{ id: "style", label: "Style" },
 	{ id: "motion", label: "Motion" },
 	{ id: "assistant", label: "AI" },
@@ -46,9 +48,14 @@ export function Inspector() {
 	const settingsLoaded = useEditorStore((s) => s.settingsLoaded);
 	const [tab, setTab] = useState<TabId>("layout");
 
-	const visibleTabs = mode === "simple"
-		? TABS.filter((t) => t.id === "layout" || t.id === "content" || t.id === "style" || t.id === "motion")
-		: TABS;
+	const siteLanguages = useEditorStore((s) => s.settings.siteLanguages);
+	const hasLangs = !!siteLanguages && siteLanguages !== "[]";
+
+	const visibleTabs = TABS.filter((t) => {
+		if (t.requiresLangs && !hasLangs) return false;
+		if (mode === "simple" && t.id === "assistant") return false;
+		return true;
+	});
 
 	useEffect(() => {
 		const el = ref.current;
@@ -153,6 +160,8 @@ export function Inspector() {
 					<LayoutTab />
 				) : tab === "content" ? (
 					<ContentTab />
+				) : tab === "translate" ? (
+					<TranslateTab />
 				) : tab === "style" ? (
 					<StyleTab />
 				) : tab === "motion" ? (

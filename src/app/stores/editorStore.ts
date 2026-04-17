@@ -21,10 +21,14 @@ import {
 	createSettingsSlice,
 	type SettingsSlice,
 } from "./slices/settings";
+import {
+	createTranslationSlice,
+	type TranslationSlice,
+} from "./slices/translation";
 
 export type { Block, Breakpoint, EditorMode, Section, DragState };
 
-export type EditorState = DocumentSlice & EditorShellSlice & TransientSlice & SettingsSlice;
+export type EditorState = DocumentSlice & EditorShellSlice & TransientSlice & SettingsSlice & TranslationSlice;
 
 /**
  * Unified editor store composed of three slices:
@@ -43,6 +47,7 @@ export const useEditorStore = create<EditorState>()(
 			...createEditorShellSlice(...a),
 			...createTransientSlice(...a),
 			...createSettingsSlice(...a),
+			...createTranslationSlice(...a),
 		}),
 		{
 			partialize: (state) => ({ blocks: state.blocks }),
