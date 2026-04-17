@@ -94,7 +94,7 @@ export function Canvas({ siteId }: Props) {
 			<div className="relative h-full w-full">
 				<BreakpointFrame>
 					<EditorOverlay containerRef={containerRef}>
-						<SiteRenderer blocks={blocks} />
+						<SiteRenderer blocks={blocks} ordered />
 						<GridOverlay />
 						{/* Editing overlays inside containerRef so absolute coords are correct */}
 						<SectionToolbar containerRef={containerRef} />

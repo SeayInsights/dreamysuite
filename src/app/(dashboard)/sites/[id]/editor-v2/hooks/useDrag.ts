@@ -171,7 +171,9 @@ export function useDrag(
 				// Adjust target index after removal
 				const insertAt = idx > session.fromIndex ? idx - 1 : idx;
 				next.splice(insertAt, 0, moved);
-				setBlocks(next);
+				// Update sortOrder to match new array positions so re-sorts are stable
+				const withOrder = next.map((b, i) => ({ ...b, sortOrder: i }));
+				setBlocks(withOrder);
 			}
 		}
 

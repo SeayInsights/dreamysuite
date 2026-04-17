@@ -103,6 +103,7 @@ export function TextEditor({
 }): JSX.Element {
   const blocks = useEditorStore((s) => s.blocks);
   const updateBlock = useEditorStore((s) => s.updateBlock);
+  const setIsTextEditing = useEditorStore((s) => s.setIsTextEditing);
 
   const [editState, setEditState] = useState<EditState | null>(null);
   const toolbar = useFloatingToolbar();
@@ -134,8 +135,9 @@ export function TextEditor({
       el.style.outline = "";
       toolbar.hide();
       setEditState(null);
+      setIsTextEditing(false);
     },
-    [updateBlock, toolbar],
+    [updateBlock, toolbar, setIsTextEditing],
   );
 
   const discard = useCallback((state: EditState) => {
@@ -151,7 +153,8 @@ export function TextEditor({
 
     toolbar.hide();
     setEditState(null);
-  }, [updateBlock, toolbar]);
+    setIsTextEditing(false);
+  }, [updateBlock, toolbar, setIsTextEditing]);
 
   // -------------------------------------------------------------------------
   // dblclick listener
@@ -199,6 +202,7 @@ export function TextEditor({
         element: fieldEl,
       };
       setEditState(state);
+      setIsTextEditing(true);
 
       requestAnimationFrame(() => {
         fieldEl.focus();
