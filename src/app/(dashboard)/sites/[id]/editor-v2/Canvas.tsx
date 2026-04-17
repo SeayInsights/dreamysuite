@@ -29,6 +29,7 @@ export function Canvas({ siteId }: Props) {
 	const currentPageId = useEditorStore((s) => s.currentPageId);
 	const setPages = useEditorStore((s) => s.setPages);
 	const setCurrentPageId = useEditorStore((s) => s.setCurrentPageId);
+	const loadTranslations = useEditorStore((s) => s.loadTranslations);
 
 	const blocks = useMemo(
 		() =>
@@ -56,6 +57,7 @@ export function Canvas({ siteId }: Props) {
 					if (pages.length && !currentPageId) {
 						setCurrentPageId(pages[0].id);
 					}
+					loadTranslations(siteId);
 				}
 
 				if (!pages.length) {

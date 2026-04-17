@@ -76,6 +76,7 @@ export const SettingsSchema = z.object({
   ogImage: z.string().nullable().default(null),
   pageBgDisabled: intBool.default(0),
   defaultAnimation: z.string().nullable().default(null),
+  siteLanguages: z.string().nullable().default(null),
 });
 
 /** All settings with defaults applied. Single source — no duplicate object. */
