@@ -6,16 +6,18 @@
 
 /* Block CSS variables — scoped to .site-renderer so they don't bleed into dashboard UI */
 .site-renderer {
-  --accent: #B8921A;
-  --heading-font: Georgia, serif;
-  --body-font: Inter, system-ui, sans-serif;
-  --bg: #ffffff;
-  --text: #292524;
-  --muted: #78716c;
+  --accent: var(--theme-accent, #B8921A);
+  --heading-font: var(--theme-heading-font, Georgia, serif);
+  --body-font: var(--theme-body-font, Inter, system-ui, sans-serif);
+  --bg: var(--theme-background, #ffffff);
+  --text: var(--theme-text, #292524);
+  --muted: var(--theme-secondary, #78716c);
   --border: #e7e5e4;
+  color: var(--text);
+  font-family: var(--body-font);
   --radius: 12px;
   --max-width: 820px;
-  --heading-color: var(--text);
+  --heading-color: var(--theme-primary, var(--text));
   --body-color: var(--muted);
   --site-text: var(--text);
   --site-border: var(--border);

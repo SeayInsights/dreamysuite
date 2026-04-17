@@ -15,13 +15,6 @@ import { SectionToolbar } from "./editing/SectionToolbar";
 import { DragHandles } from "./editing/DragHandles";
 import { ContextMenu } from "./editing/ContextMenu";
 
-interface Page {
-	id: string;
-	slug: string;
-	label: string;
-	sortOrder: number;
-}
-
 interface Props {
 	siteId: string;
 }
@@ -33,6 +26,9 @@ export function Canvas({ siteId }: Props) {
 	const rawBlocks = useEditorStore((s) => s.blocks);
 	const setBlocks = useEditorStore((s) => s.setBlocks);
 	const breakpoint = useEditorStore((s) => s.breakpoint);
+	const currentPageId = useEditorStore((s) => s.currentPageId);
+	const setPages = useEditorStore((s) => s.setPages);
+	const setCurrentPageId = useEditorStore((s) => s.setCurrentPageId);
 
 	const blocks = useMemo(
 		() =>
@@ -46,31 +42,26 @@ export function Canvas({ siteId }: Props) {
 	useEffect(() => {
 		let cancelled = false;
 
-		async function load() {
+		async function loadPages() {
 			try {
 				setLoading(true);
 				setError(null);
 
 				const pagesRes = await fetch(`/api/sites/${siteId}/pages`);
 				if (!pagesRes.ok) throw new Error("Failed to load pages");
-				const { pages } = (await pagesRes.json()) as { pages: Page[] };
+				const { pages } = (await pagesRes.json()) as { pages: import("@/app/stores/slices/editorShell").EditorPage[] };
+
+				if (!cancelled) {
+					setPages(pages);
+					if (pages.length && !currentPageId) {
+						setCurrentPageId(pages[0].id);
+					}
+				}
 
 				if (!pages.length) {
 					if (!cancelled) setBlocks([]);
 					return;
 				}
-
-				const firstPage = pages[0];
-				const blocksRes = await fetch(
-					`/api/sites/${siteId}/pages/${firstPage.id}`,
-				);
-				if (!blocksRes.ok) throw new Error("Failed to load blocks");
-				const { blocks: rawBlocks } = (await blocksRes.json()) as {
-					blocks: unknown[];
-				};
-
-				// eslint-disable-next-line @typescript-eslint/no-explicit-any
-				if (!cancelled) setBlocks(rawBlocks as any[]);
 			} catch (err) {
 				if (!cancelled) {
 					const msg = err instanceof Error ? err.message : "Failed to load canvas";
@@ -82,11 +73,42 @@ export function Canvas({ siteId }: Props) {
 			}
 		}
 
-		load();
+		loadPages();
 		return () => {
 			cancelled = true;
 		};
-	}, [siteId, setBlocks]);
+	}, [siteId, setBlocks, setPages, setCurrentPageId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+	useEffect(() => {
+		if (!currentPageId) return;
+		let cancelled = false;
+
+		async function loadBlocks() {
+			try {
+				const blocksRes = await fetch(
+					`/api/sites/${siteId}/pages/${currentPageId}`,
+				);
+				if (!blocksRes.ok) throw new Error("Failed to load blocks");
+				const { blocks: rawBlocks } = (await blocksRes.json()) as {
+					blocks: unknown[];
+				};
+
+				// eslint-disable-next-line @typescript-eslint/no-explicit-any
+				if (!cancelled) setBlocks(rawBlocks as any[]);
+			} catch (err) {
+				if (!cancelled) {
+					const msg = err instanceof Error ? err.message : "Failed to load blocks";
+					setError(msg);
+					trackEditorError(siteId, msg, "canvas");
+				}
+			}
+		}
+
+		loadBlocks();
+		return () => {
+			cancelled = true;
+		};
+	}, [siteId, currentPageId, setBlocks]);
 
 	if (loading) {
 		return (

@@ -56,18 +56,6 @@ export function LayoutTab() {
     <div className="space-y-4 p-4">
       <div className="space-y-2">
         <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-          Page Width
-        </p>
-        <SettingsInput
-          label="Max width"
-          value={settings.siteMaxWidth}
-          onChange={(v) => updateSettings({ siteMaxWidth: v })}
-          placeholder="none"
-        />
-      </div>
-
-      <div className="space-y-2 border-t border-border pt-4">
-        <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
           Page Margins
         </p>
         <div className="grid grid-cols-2 gap-2">

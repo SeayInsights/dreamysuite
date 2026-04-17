@@ -94,9 +94,9 @@ export function ColorInput({ value, onChange, isInheriting }: ColorInputProps) {
 			{tab === "solid" && (
 				<>
 					<div className="grid grid-cols-4 gap-1.5">
-						{swatches.map((color) => (
+						{swatches.map((color, i) => (
 							<button
-								key={color}
+								key={i}
 								type="button"
 								aria-label={`Set color to ${color}`}
 								onClick={() => applySolid(color)}
