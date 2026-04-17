@@ -529,6 +529,20 @@ export function SectionToolbar({
 
   const TOOLBAR_HEIGHT = 44;
   const TOOLBAR_MARGIN = 8;
+  const ANIM_MS = 150;
+
+  // Animation phase state machine — keeps toolbar mounted during exit animation
+  type ToolbarPhase = "hidden" | "entering" | "shown" | "exiting";
+  const phaseRef = useRef<ToolbarPhase>("hidden");
+  const [toolbarPhase, setToolbarPhaseState] = useState<ToolbarPhase>("hidden");
+  const [renderPos, setRenderPos] = useState<Position | null>(null);
+  const [renderBlockId, setRenderBlockId] = useState<string | null>(null);
+  const animTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  function setToolbarPhase(p: ToolbarPhase) {
+    phaseRef.current = p;
+    setToolbarPhaseState(p);
+  }
 
   // Measure and position the toolbar relative to the selected block
   const measurePosition = useCallback(() => {
@@ -584,27 +598,52 @@ export function SectionToolbar({
     };
   }, [containerRef, measurePosition]);
 
-  // Animate in when toolbar becomes visible (scale-up from 0.95 + fade)
+  // Drive enter/exit animation on selection change.
+  // Keeps the toolbar mounted through the exit so CSS transition plays fully.
   useEffect(() => {
-    const el = toolbarRef.current;
-    if (!el || !position) return;
-    // Motion 12's element animate() accepts CSS properties (not transform
-    // shorthands). Drive opacity with animate(); drive scale via style + rAF
-    // so the 100ms ease-out reads as a combined scale+fade.
-    el.style.transformOrigin = "top left";
-    el.style.transform = "scale(0.95)";
-    el.style.opacity = "0";
-    requestAnimationFrame(() => {
-      if (!el) return;
-      el.style.transition = "transform 100ms ease-out, opacity 100ms ease-out";
-      el.style.transform = "scale(1)";
-      el.style.opacity = "1";
-    });
-  }, [position, selectedBlockId]);
+    const shouldShow = !!(selectedBlockId && !isTextEditing);
+    if (animTimerRef.current) { clearTimeout(animTimerRef.current); animTimerRef.current = null; }
 
-  if (!selectedBlockId || !position || isTextEditing) return null;
+    if (shouldShow) {
+      if (position) setRenderPos(position);
+      setRenderBlockId(selectedBlockId);
+      phaseRef.current = "entering";
+      setToolbarPhaseState("entering");
+      // One rAF guarantees the entering (opacity:0 / translateY(8px)) frame is
+      // painted before we flip to shown — giving CSS transition a start value.
+      const rafId = requestAnimationFrame(() => {
+        phaseRef.current = "shown";
+        setToolbarPhaseState("shown");
+      });
+      return () => cancelAnimationFrame(rafId);
+    } else if (phaseRef.current !== "hidden") {
+      phaseRef.current = "exiting";
+      setToolbarPhaseState("exiting");
+      animTimerRef.current = setTimeout(() => {
+        phaseRef.current = "hidden";
+        setToolbarPhaseState("hidden");
+        setRenderPos(null);
+        setRenderBlockId(null);
+      }, ANIM_MS);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedBlockId, isTextEditing]);
 
-  const block = blocks.find((b) => b.id === selectedBlockId);
+  // Keep renderPos fresh during scroll/resize without re-triggering the animation.
+  useEffect(() => {
+    if (position && (phaseRef.current === "shown" || phaseRef.current === "entering")) {
+      setRenderPos(position);
+    }
+  }, [position]);
+
+  // Cleanup timer on unmount.
+  useEffect(() => () => {
+    if (animTimerRef.current) clearTimeout(animTimerRef.current);
+  }, []);
+
+  if (toolbarPhase === "hidden" || !renderPos || !renderBlockId) return null;
+
+  const block = blocks.find((b) => b.id === renderBlockId);
   const config = parseCfg(block?.config);
 
   const currentBg =
@@ -635,8 +674,8 @@ export function SectionToolbar({
   function getBlockHeight(): number | undefined {
     if (typeof config.blockHeight === "number") return config.blockHeight;
     const container = containerRef.current;
-    if (!container || !selectedBlockId) return undefined;
-    const node = container.querySelector<HTMLElement>(`[data-block-id="${selectedBlockId}"]`);
+    if (!container || !renderBlockId) return undefined;
+    const node = container.querySelector<HTMLElement>(`[data-block-id="${renderBlockId}"]`);
     return node ? Math.round(node.getBoundingClientRect().height) : undefined;
   }
 
@@ -658,7 +697,21 @@ export function SectionToolbar({
         "absolute z-50 flex items-center gap-0.5 rounded-lg border border-border",
         "bg-popover px-2 py-1 shadow-lg",
       )}
-      style={{ top: position.top, left: position.left }}
+      style={{
+          top: renderPos.top,
+          left: renderPos.left,
+          opacity: toolbarPhase === "shown" ? 1 : 0,
+          transform:
+            toolbarPhase === "entering"
+              ? "translateY(8px)"
+              : toolbarPhase === "exiting"
+                ? "translateY(-8px)"
+                : "translateY(0)",
+          transition:
+            toolbarPhase === "entering"
+              ? "none"
+              : `opacity ${ANIM_MS}ms ease-out, transform ${ANIM_MS}ms ease-out`,
+        }}
       onMouseDown={(e) => e.stopPropagation()}
       onClick={(e) => e.stopPropagation()}
     >
@@ -717,7 +770,7 @@ export function SectionToolbar({
         <BackgroundPopover
           currentValue={currentBg}
           onSelect={(value) => {
-            updateBlock(selectedBlockId, {
+            updateBlock(renderBlockId!, {
               config: { ...config, backgroundColor: value },
             });
           }}
@@ -734,7 +787,7 @@ export function SectionToolbar({
         <PaddingPopover
           current={currentPadding}
           onChange={(padding) => {
-            updateBlock(selectedBlockId, {
+            updateBlock(renderBlockId!, {
               config: { ...config, padding },
             });
           }}
@@ -751,7 +804,7 @@ export function SectionToolbar({
         <HeightPopover
           current={activePopover === "height" ? (getBlockHeight() ?? currentHeight) : currentHeight}
           onChange={(blockHeight) => {
-            updateBlock(selectedBlockId, {
+            updateBlock(renderBlockId!, {
               config: { ...config, blockHeight },
             });
           }}
