@@ -1,0 +1,74 @@
+import { NextRequest, NextResponse } from "next/server";
+import { getCloudflareContext } from "@opennextjs/cloudflare";
+import type { Env } from "@/app/lib/auth.server";
+
+// Public RSVP endpoint — no auth required so guests can submit without an account.
+// Validates the site exists before inserting.
+
+export async function POST(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  const { env: rawEnv } = await getCloudflareContext({ async: true });
+  const env = rawEnv as unknown as Env;
+  const { id: siteId } = await params;
+
+  // Verify site exists (prevents submissions to phantom IDs)
+  const site = await env.DB
+    .prepare("SELECT id FROM site WHERE id = ?")
+    .bind(siteId)
+    .first();
+  if (!site) {
+    return NextResponse.json(
+      { error: { code: "NOT_FOUND", message: "Site not found" } },
+      { status: 404 },
+    );
+  }
+
+  let body: { firstName?: string; lastName?: string; email?: string; rsvpStatus?: string };
+  try {
+    body = await req.json();
+  } catch {
+    return NextResponse.json(
+      { error: { code: "BAD_REQUEST", message: "Invalid JSON" } },
+      { status: 400 },
+    );
+  }
+
+  const { firstName, lastName, email, rsvpStatus } = body;
+  if (!firstName?.trim()) {
+    return NextResponse.json(
+      { error: { code: "BAD_REQUEST", message: "firstName is required" } },
+      { status: 400 },
+    );
+  }
+
+  const VALID_STATUSES = ["pending", "yes", "no"];
+  const status = VALID_STATUSES.includes(rsvpStatus ?? "") ? rsvpStatus! : "pending";
+
+  const id = crypto.randomUUID();
+  const now = Date.now();
+
+  const maxOrder = await env.DB
+    .prepare("SELECT COALESCE(MAX(sortOrder), -1) as maxOrder FROM guest WHERE siteId = ?")
+    .bind(siteId)
+    .first<{ maxOrder: number }>();
+
+  const sortOrder = (maxOrder?.maxOrder ?? -1) + 1;
+
+  await env.DB
+    .prepare(
+      "INSERT INTO guest (id, siteId, firstName, lastName, email, rsvpStatus, rsvpSubmittedAt, sortOrder, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+    )
+    .bind(
+      id, siteId,
+      firstName.trim(),
+      lastName?.trim() ?? null,
+      email?.trim() ?? null,
+      status,
+      now, sortOrder, now, now,
+    )
+    .run();
+
+  return NextResponse.json({ success: true }, { status: 201 });
+}
