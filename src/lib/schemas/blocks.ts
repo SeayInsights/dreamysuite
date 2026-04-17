@@ -16,6 +16,8 @@ import { z } from "zod";
 
 const passthrough = z.unknown();
 
+// ─── Legacy schemas (kept for un-migrated records) ───────────────────────────
+
 const HomeHeroConfig = z.object({
   coupleNames: z.string().optional(),
   dateText: z.string().optional(),
@@ -93,9 +95,63 @@ const PhotoSplitConfig = z.object({
   layout: z.enum(["left", "right"]).optional(),
 }).catchall(passthrough);
 
+// ─── Consolidated schemas (Task 18) ──────────────────────────────────────────
+
+const MediaVideoConfig = z.object({
+  provider: z.enum(["direct", "youtube"]).optional(),
+  url: z.string().optional(),
+  height: z.string().optional(),
+}).catchall(passthrough);
+
+const GalleryConfig = z.object({
+  layout: z.enum(["grid", "split"]).optional(),
+  urls: z.array(z.string()).optional(),
+  imageUrl: z.string().optional(),
+  heading: z.string().optional(),
+  body: z.string().optional(),
+  imageLayout: z.enum(["left", "right"]).optional(),
+}).catchall(passthrough);
+
+const InfoCardConfig = z.object({
+  variant: z.enum(["registry", "hotel"]).optional(),
+  name: z.string().optional(),
+  title: z.string().optional(),
+  address: z.string().optional(),
+  url: z.string().optional(),
+  imageUrl: z.string().optional(),
+}).catchall(passthrough);
+
+// ─── New block schemas (Task 19) ─────────────────────────────────────────────
+
+const TimelineEvent = z.object({
+  date: z.string().optional(),
+  title: z.string().optional(),
+  description: z.string().optional(),
+  imageUrl: z.string().optional(),
+});
+
+const RsvpFormConfig = z.object({
+  heading: z.string().optional(),
+  subheading: z.string().optional(),
+  siteId: z.string().optional(),
+}).catchall(passthrough);
+
+const StoryTimelineConfig = z.object({
+  heading: z.string().optional(),
+  events: z.array(TimelineEvent).optional(),
+}).catchall(passthrough);
+
+const GuestBookConfig = z.object({
+  heading: z.string().optional(),
+  placeholder: z.string().optional(),
+}).catchall(passthrough);
+
+// ─── Registry ─────────────────────────────────────────────────────────────────
+
 export const BLOCK_TYPES = [
+  // Legacy (preserved for un-migrated records)
   "home-hero",
-  "couple", // alias for home-hero
+  "couple",
   "header",
   "multi-text",
   "video",
@@ -107,11 +163,20 @@ export const BLOCK_TYPES = [
   "hotel-card",
   "venue-map",
   "photo-split",
+  // Consolidated (Task 18)
+  "media-video",
+  "gallery",
+  "info-card",
+  // New (Task 19)
+  "rsvp-form",
+  "story-timeline",
+  "guest-book",
 ] as const;
 
 export type BlockType = (typeof BLOCK_TYPES)[number];
 
 const CONFIG_BY_TYPE: Record<BlockType, z.ZodTypeAny> = {
+  // Legacy
   "home-hero": HomeHeroConfig,
   couple: HomeHeroConfig,
   header: HeaderConfig,
@@ -125,6 +190,14 @@ const CONFIG_BY_TYPE: Record<BlockType, z.ZodTypeAny> = {
   "hotel-card": HotelCardConfig,
   "venue-map": VenueMapConfig,
   "photo-split": PhotoSplitConfig,
+  // Consolidated
+  "media-video": MediaVideoConfig,
+  gallery: GalleryConfig,
+  "info-card": InfoCardConfig,
+  // New
+  "rsvp-form": RsvpFormConfig,
+  "story-timeline": StoryTimelineConfig,
+  "guest-book": GuestBookConfig,
 };
 
 export function isKnownBlockType(type: string): type is BlockType {
@@ -191,9 +264,7 @@ export function parseBlockConfig(
 
 /**
  * Convenience wrapper for read paths: parse, log a diagnostic on mismatch,
- * and return the config (or fallback) as a plain record. Replaces the
- * `try { JSON.parse(raw) } catch { {} }` pattern strewn across editor/render
- * code — silent failures become observable while keeping UX soft.
+ * and return the config (or fallback) as a plain record.
  */
 export function safeBlockConfig(block: {
   id?: string;
