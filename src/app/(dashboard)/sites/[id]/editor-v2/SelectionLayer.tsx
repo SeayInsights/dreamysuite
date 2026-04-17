@@ -1,10 +1,9 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { animate } from "motion/mini";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
 import { cn } from "@/lib/utils";
-import { duration, EASING } from "@/lib/motion";
+import { prefersReducedMotion, MOTION } from "@/lib/motion";
 import { useSelection } from "./hooks/useSelection";
 
 interface Rect {
@@ -112,12 +111,17 @@ interface OutlineProps {
 function Outline({ rect, label, variant }: OutlineProps) {
 	const ref = useRef<HTMLDivElement>(null);
 
-	useEffect(() => {
+	useLayoutEffect(() => {
 		const el = ref.current;
 		if (!el) return;
 		el.style.opacity = "0";
-		animate(el, { opacity: [0, 1] }, { duration: duration("selectionFade") / 1000, ease: EASING.standard })
-			.finished.then(() => { if (ref.current) ref.current.style.opacity = "1"; });
+		const dur = prefersReducedMotion() ? 0 : MOTION.selectionFade;
+		const raf = requestAnimationFrame(() => {
+			if (!ref.current) return;
+			ref.current.style.transition = `opacity ${dur}ms ease`;
+			ref.current.style.opacity = "1";
+		});
+		return () => cancelAnimationFrame(raf);
 	}, []);
 
 	return (

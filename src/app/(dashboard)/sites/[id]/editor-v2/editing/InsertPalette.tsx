@@ -49,13 +49,22 @@ export function InsertPalette({ insertIndex, onClose, anchorRef }: Props) {
     ).finished.then(() => { if (paletteRef.current) paletteRef.current.style.opacity = "1"; });
   }, []);
 
-  // Position below anchor
+  const PALETTE_HEIGHT = 320;
+
+  // Position below anchor; flip above when near the bottom of the viewport.
   const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
+  const [flipped, setFlipped] = useState(false);
   useEffect(() => {
     const anchor = anchorRef.current;
     if (!anchor) return;
     const box = anchor.getBoundingClientRect();
-    setPos({ top: box.bottom + 6, left: Math.max(8, box.left - 80) });
+    const spaceBelow = window.innerHeight - box.bottom;
+    const shouldFlip = spaceBelow < PALETTE_HEIGHT + 16;
+    setFlipped(shouldFlip);
+    const top = shouldFlip
+      ? Math.max(8, box.top - PALETTE_HEIGHT - 6)
+      : box.bottom + 6;
+    setPos({ top, left: Math.max(8, box.left - 80) });
   }, [anchorRef]);
 
   // Close on outside click
@@ -114,7 +123,8 @@ export function InsertPalette({ insertIndex, onClose, anchorRef }: Props) {
         overflow: "hidden",
       }}
     >
-      <div style={{ padding: "8px" }}>
+      <div style={{ display: "flex", flexDirection: flipped ? "column-reverse" : "column" }}>
+      <div style={{ padding: "8px", borderTop: flipped ? "1px solid #e0dbd4" : "none" }}>
         <input
           ref={inputRef}
           value={query}
@@ -128,7 +138,7 @@ export function InsertPalette({ insertIndex, onClose, anchorRef }: Props) {
         />
       </div>
 
-      <div style={{ maxHeight: 280, overflowY: "auto" }}>
+      <div style={{ maxHeight: 230, overflowY: "auto" }}>
         {filtered.length === 0 ? (
           <p style={{ padding: "12px 16px", color: "#9b8e85", fontSize: "0.82rem", margin: 0 }}>
             No blocks found.
@@ -162,6 +172,7 @@ export function InsertPalette({ insertIndex, onClose, anchorRef }: Props) {
             </button>
           ))
         )}
+      </div>
       </div>
     </div>
   );
