@@ -2,8 +2,10 @@
 
 import { useRef, useEffect, useState, useCallback, type JSX } from "react";
 import { createPortal } from "react-dom";
+import { animate } from "motion/mini";
 import { ImageIcon, Crop, Wand2, Sparkles, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { duration, EASING } from "@/lib/motion";
 import { type FormatCommand } from "./FloatingFormatToolbar";
 
 // ---------------------------------------------------------------------------
@@ -257,6 +259,8 @@ export function BottomSheetToolbar({
   containerRef,
 }: BottomSheetToolbarProps): JSX.Element | null {
   const [translateY, setTranslateY] = useState(0);
+  const [entered, setEntered] = useState(false);
+  const sheetRef = useRef<HTMLDivElement>(null);
   const swipeStartY = useRef<number | null>(null);
   const isAnimating = translateY === 0;
 
@@ -270,6 +274,17 @@ export function BottomSheetToolbar({
       container.scrollBy({ top: blockRect.bottom - safeBottom + 8, behavior: "smooth" });
     }
   }, [blockRect, containerRef]);
+
+  // Entry slide-up animation on mount.
+  useEffect(() => {
+    const el = sheetRef.current;
+    if (!el) return;
+    animate(
+      el,
+      { y: ["100%", "0%"] },
+      { duration: duration("inspectorSlide") / 1000, ease: EASING.enter },
+    ).finished.then(() => setEntered(true));
+  }, []);
 
   // Swipe-down dismiss via pointer events on the drag pill
   const handlePillPointerDown = useCallback((e: React.PointerEvent) => {
@@ -299,16 +314,17 @@ export function BottomSheetToolbar({
 
   const sheet = (
     <div
+      ref={sheetRef}
       role="toolbar"
       aria-label={mode === "text" ? "Text format toolbar" : "Image toolbar"}
       className={cn(
         "fixed bottom-0 left-0 right-0 z-[65]",
         "rounded-t-2xl border-t border-border bg-popover shadow-2xl",
       )}
-      style={{
+      style={entered ? {
         transform: `translateY(${translateY}px)`,
         transition: isAnimating ? "transform 0.22s ease-out" : "none",
-      }}
+      } : undefined}
       // Prevent any interaction here from stealing focus (desktop mouse events)
       onMouseDown={(e) => e.preventDefault()}
     >

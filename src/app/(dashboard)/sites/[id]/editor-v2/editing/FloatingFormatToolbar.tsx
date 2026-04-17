@@ -1,7 +1,9 @@
 "use client";
 
-import { useRef, type JSX } from "react";
+import { useRef, useEffect, type JSX } from "react";
+import { animate } from "motion/mini";
 import { cn } from "@/lib/utils";
+import { duration, EASING } from "@/lib/motion";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -91,16 +93,28 @@ export function FloatingFormatToolbar({
   onFormat,
 }: FloatingFormatToolbarProps): JSX.Element {
   const colorRef = useRef<HTMLInputElement>(null);
+  const toolbarRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const el = toolbarRef.current;
+    if (!el) return;
+    animate(
+      el,
+      { opacity: [0, 1], scale: [0.95, 1] },
+      { duration: duration("toolbarPop") / 1000, ease: EASING.enter },
+    );
+  }, []);
 
   return (
     <div
+      ref={toolbarRef}
       role="toolbar"
       aria-label="Text format toolbar"
       className={cn(
         "fixed z-50 flex items-center gap-0.5 rounded-lg border border-border",
         "bg-popover px-2 py-1.5 shadow-lg",
       )}
-      style={{ top, left }}
+      style={{ top, left, opacity: 0 }}
       // Prevent any mouse interaction from stealing focus from the editable
       onMouseDown={(e) => e.preventDefault()}
     >
