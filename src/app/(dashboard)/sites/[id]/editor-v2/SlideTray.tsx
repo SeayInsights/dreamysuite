@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { animate } from "motion/mini";
 
 import { useEditorStore } from "@/app/stores/editorStore";
+import { duration, EASING } from "@/lib/motion";
 
 import { PagesTray } from "./trays/PagesTray";
 import { ElementsTray } from "./trays/ElementsTray";
@@ -11,50 +13,42 @@ import { ThemeTray } from "./trays/ThemeTray";
 import { SettingsTray } from "./trays/SettingsTray";
 
 const TRAY_WIDTH = 288;
-const ANIM_MS = 200;
 
 export function SlideTray() {
 	const ref = useRef<HTMLDivElement>(null);
-	const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 	const openTray = useEditorStore((s) => s.openTray);
 	const setOpenTray = useEditorStore((s) => s.setOpenTray);
 	const railCollapsed = useEditorStore((s) => s.railCollapsed);
 
-	// Set the initial off-screen position instantly (before paint), then
-	// enable the CSS transition so subsequent open/close are animated.
+	// Set initial off-screen position before first paint.
 	useEffect(() => {
 		const el = ref.current;
 		if (!el) return;
 		el.style.transform = `translateX(-${TRAY_WIDTH}px)`;
 		el.style.pointerEvents = "none";
-		const raf = requestAnimationFrame(() => {
-			if (ref.current) {
-				ref.current.style.transition = `transform ${ANIM_MS}ms ease-out, left ${ANIM_MS}ms ease-out`;
-			}
-		});
-		return () => cancelAnimationFrame(raf);
 	}, []);
 
-	// Slide in / out on openTray changes.
+	// Slide in / out with Motion One.
 	useEffect(() => {
 		const el = ref.current;
 		if (!el) return;
-		if (closeTimer.current) clearTimeout(closeTimer.current);
 
 		if (openTray) {
 			el.style.pointerEvents = "auto";
-			el.style.transform = "translateX(0px)";
+			animate(
+				el,
+				{ x: [`-${TRAY_WIDTH}px`, "0px"] },
+				{ duration: duration("traySlide") / 1000, ease: EASING.enter },
+			);
 		} else {
-			el.style.transform = `translateX(-${TRAY_WIDTH}px)`;
-			// Disable pointer events only after the slide-out animation finishes.
-			closeTimer.current = setTimeout(() => {
+			animate(
+				el,
+				{ x: ["0px", `-${TRAY_WIDTH}px`] },
+				{ duration: duration("traySlide") / 1000, ease: EASING.exit },
+			).finished.then(() => {
 				if (ref.current) ref.current.style.pointerEvents = "none";
-			}, ANIM_MS);
+			});
 		}
-
-		return () => {
-			if (closeTimer.current) clearTimeout(closeTimer.current);
-		};
 	}, [openTray]);
 
 	// Close when the user clicks outside the tray.

@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { animate } from "motion/mini";
 
 import { cn } from "@/lib/utils";
+import { duration, EASING } from "@/lib/motion";
 import { useSelection } from "./hooks/useSelection";
 
 interface Rect {
@@ -87,10 +89,11 @@ export function SelectionLayer({ frameRef }: Props) {
 			aria-hidden
 		>
 			{hoverVisible && (
-				<Outline rect={hoverRect} label={hoverLabel} variant="hover" />
+				<Outline key={hoveredBlockId} rect={hoverRect} label={hoverLabel} variant="hover" />
 			)}
 			{selectedRect && (
 				<Outline
+					key={selectedBlockId}
 					rect={selectedRect}
 					label={selectedLabel}
 					variant="selected"
@@ -107,15 +110,25 @@ interface OutlineProps {
 }
 
 function Outline({ rect, label, variant }: OutlineProps) {
+	const ref = useRef<HTMLDivElement>(null);
+
+	useEffect(() => {
+		const el = ref.current;
+		if (!el) return;
+		animate(el, { opacity: [0, 1] }, { duration: duration("selectionFade") / 1000, ease: EASING.standard });
+	}, []);
+
 	return (
 		<div
+			ref={ref}
 			className={cn(
-				"absolute ring-1 transition-opacity",
+				"absolute ring-1",
 				variant === "selected"
 					? "ring-2 ring-primary"
 					: "ring-primary/40",
 			)}
 			style={{
+				opacity: 0,
 				top: rect.top,
 				left: rect.left,
 				width: rect.width,
