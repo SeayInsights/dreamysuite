@@ -94,7 +94,7 @@ export function ElementsTray() {
 									key={id}
 									type="button"
 									onClick={() => addBlock(blockType)}
-									className="flex flex-col items-center justify-center gap-1.5 rounded-md border border-slate-200 bg-white px-2 py-3 text-xs text-slate-700 shadow-sm transition-all hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900 active:scale-95"
+									className="flex flex-col items-center justify-center gap-1.5 rounded-md border border-slate-200 bg-slate-100 px-2 py-3 text-xs text-slate-700 transition-all hover:border-slate-300 hover:bg-slate-200 hover:text-slate-900 active:scale-95"
 									title={`Add ${label} block`}
 								>
 									<Icon className="size-4" />
