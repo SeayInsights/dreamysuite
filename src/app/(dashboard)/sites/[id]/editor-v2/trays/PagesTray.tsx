@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import Sortable from "sortablejs";
 import {
 	FileText,
-	Home,
 	Plus,
 	File,
+	Home as HomeIcon,
 	Heart,
 	Camera,
 	Clock,
@@ -84,6 +85,10 @@ const EVENT_PAGES: Record<string, PageSuggestion[]> = {
 
 const FALLBACK_PAGES = SHARED_PAGES;
 
+const ALL_SUGGESTION_SLUGS = new Set(
+	Object.values(EVENT_PAGES).flat().map((s) => s.slug),
+);
+
 export function PagesTray() {
 	const pages = useEditorStore((s) => s.pages);
 	const currentPageId = useEditorStore((s) => s.currentPageId);
@@ -91,15 +96,94 @@ export function PagesTray() {
 	const setPages = useEditorStore((s) => s.setPages);
 	const siteId = useEditorStore((s) => s.siteId);
 	const eventType = useEditorStore((s) => s.eventType);
-
 	const setBlocks = useEditorStore((s) => s.setBlocks);
+
 	const [customName, setCustomName] = useState("");
 	const [saving, setSaving] = useState<string | null>(null);
 	const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
 	const [deleting, setDeleting] = useState(false);
+	const [editingId, setEditingId] = useState<string | null>(null);
+	const [editValue, setEditValue] = useState("");
+
+	const listRef = useRef<HTMLDivElement>(null);
+	const pagesRef = useRef(pages);
+	pagesRef.current = pages;
 
 	const suggestions = EVENT_PAGES[eventType ?? ""] ?? FALLBACK_PAGES;
 	const existingSlugs = new Set(pages.map((p) => p.slug));
+
+	const homePage = pages.find((p) => p.sortOrder === 0);
+	const otherPages = pages.filter((p) => p.sortOrder !== 0);
+
+	function isRenamable(page: { slug: string; sortOrder: number }) {
+		if (page.sortOrder === 0) return true;
+		return !ALL_SUGGESTION_SLUGS.has(page.slug);
+	}
+
+	async function saveRename(pageId: string) {
+		const trimmed = editValue.trim();
+		setEditingId(null);
+		if (!trimmed || !siteId) return;
+		try {
+			const res = await fetch(`/api/sites/${siteId}/pages/${pageId}`, {
+				method: "PUT",
+				headers: { "content-type": "application/json" },
+				body: JSON.stringify({ label: trimmed }),
+			});
+			if (res.ok) {
+				setPages(pages.map((p) => (p.id === pageId ? { ...p, label: trimmed } : p)));
+			}
+		} catch { /* ignore */ }
+	}
+
+	function startRename(page: { id: string; label: string; slug: string; sortOrder: number }) {
+		if (!isRenamable(page)) return;
+		setEditingId(page.id);
+		setEditValue(page.label);
+	}
+
+	useEffect(() => {
+		const el = listRef.current;
+		if (!el) return;
+
+		const sortable = Sortable.create(el, {
+			animation: 150,
+			ghostClass: "opacity-30",
+			onEnd: (evt) => {
+				const oldIdx = evt.oldIndex;
+				const newIdx = evt.newIndex;
+				if (oldIdx == null || newIdx == null || oldIdx === newIdx) return;
+
+				const current = pagesRef.current;
+				const others = current.filter((p) => p.sortOrder !== 0);
+				const reordered = [...others];
+				const [moved] = reordered.splice(oldIdx, 1);
+				reordered.splice(newIdx, 0, moved);
+
+				const home = current.find((p) => p.sortOrder === 0);
+				const updated = [
+					...(home ? [home] : []),
+					...reordered.map((p, i) => ({ ...p, sortOrder: i + 1 })),
+				];
+				setPages(updated);
+
+				if (siteId) {
+					const toSync = reordered.map((p, i) => ({ ...p, sortOrder: i + 1 }));
+					Promise.all(
+						toSync.map((p) =>
+							fetch(`/api/sites/${siteId}/pages/${p.id}`, {
+								method: "PUT",
+								headers: { "content-type": "application/json" },
+								body: JSON.stringify({ sortOrder: p.sortOrder }),
+							}),
+						),
+					).catch(() => {});
+				}
+			},
+		});
+
+		return () => sortable.destroy();
+	}, [siteId, setPages]);
 
 	async function createPage(slug: string, label: string) {
 		if (!siteId) return;
@@ -167,17 +251,55 @@ export function PagesTray() {
 			</div>
 
 			<div className="flex-1 overflow-y-auto">
-				{/* Active pages */}
-				{pages.length > 0 && (
-					<div className="p-2">
-						<p className="mb-1.5 px-1 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-							Active
-						</p>
-						{pages.map((page) => (
-							<div key={page.id} className="group relative">
+				<div className="p-2">
+					<p className="mb-1.5 px-1 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+						Active
+					</p>
+
+					{/* Home — always first, not draggable, not deletable, double-click to rename */}
+					{homePage && (
+						<div className="group relative">
+							{editingId === homePage.id ? (
+								<div className="flex items-center gap-2 rounded-md px-2 py-2">
+									<HomeIcon className="size-4 shrink-0 text-muted-foreground" />
+									<input
+										autoFocus
+										value={editValue}
+										onChange={(e) => setEditValue(e.target.value)}
+										onBlur={() => saveRename(homePage.id)}
+										onKeyDown={(e) => {
+											if (e.key === "Enter") saveRename(homePage.id);
+											if (e.key === "Escape") setEditingId(null);
+										}}
+										className="h-6 flex-1 rounded border border-ring bg-background px-1.5 text-sm outline-none"
+									/>
+								</div>
+							) : (
+								<button
+									type="button"
+									onClick={() => setCurrentPageId(homePage.id)}
+									onDoubleClick={() => startRename(homePage)}
+									className={
+										"flex w-full items-center gap-2 rounded-md px-2 py-2 text-left text-sm transition-colors " +
+										(currentPageId === homePage.id
+											? "bg-accent text-accent-foreground"
+											: "text-muted-foreground hover:bg-accent/50")
+									}
+								>
+									<HomeIcon className="size-4 shrink-0" />
+									<span className="flex-1 truncate">{homePage.label}</span>
+								</button>
+							)}
+						</div>
+					)}
+
+					{/* Other pages — draggable, double-click to rename custom pages */}
+					<div ref={listRef} className="flex flex-col">
+						{otherPages.map((page) => (
+							<div key={page.id} data-id={page.id} className="group relative">
 								{confirmDelete === page.id ? (
 									<div className="flex items-center gap-1 rounded-md border border-destructive/30 bg-destructive/5 px-2 py-1.5">
-										<span className="flex-1 text-xs text-destructive">Delete "{page.label}"?</span>
+										<span className="flex-1 text-xs text-destructive">Delete &ldquo;{page.label}&rdquo;?</span>
 										<button
 											type="button"
 											onClick={() => deletePage(page.id)}
@@ -194,28 +316,38 @@ export function PagesTray() {
 											No
 										</button>
 									</div>
+								) : editingId === page.id ? (
+									<div className="flex items-center gap-2 rounded-md px-2 py-2">
+										<File className="size-4 shrink-0 text-muted-foreground" />
+										<input
+											autoFocus
+											value={editValue}
+											onChange={(e) => setEditValue(e.target.value)}
+											onBlur={() => saveRename(page.id)}
+											onKeyDown={(e) => {
+												if (e.key === "Enter") saveRename(page.id);
+												if (e.key === "Escape") setEditingId(null);
+											}}
+											className="h-6 flex-1 rounded border border-ring bg-background px-1.5 text-sm outline-none"
+										/>
+									</div>
 								) : (
 									<button
 										type="button"
 										onClick={() => setCurrentPageId(page.id)}
+										onDoubleClick={() => startRename(page)}
 										className={
-											"flex w-full items-center gap-2 rounded-md px-2 py-2 text-left text-sm transition-colors " +
+											"flex w-full cursor-grab items-center gap-2 rounded-md px-2 py-2 text-left text-sm transition-colors active:cursor-grabbing " +
 											(currentPageId === page.id
 												? "bg-accent text-accent-foreground"
 												: "text-muted-foreground hover:bg-accent/50")
 										}
 									>
-										{page.sortOrder === 0 ? (
-											<Home className="size-4 shrink-0" />
-										) : (
-											<File className="size-4 shrink-0" />
-										)}
-										<span className="flex-1 truncate">
-											{page.sortOrder === 0 ? "Home" : page.label}
-										</span>
+										<File className="size-4 shrink-0" />
+										<span className="flex-1 truncate">{page.label}</span>
 									</button>
 								)}
-								{page.sortOrder !== 0 && confirmDelete !== page.id && (
+								{confirmDelete !== page.id && editingId !== page.id && (
 									<button
 										type="button"
 										onClick={(e) => {
@@ -231,7 +363,7 @@ export function PagesTray() {
 							</div>
 						))}
 					</div>
-				)}
+				</div>
 
 				{/* Suggested pages */}
 				<div className="border-t border-border p-2">

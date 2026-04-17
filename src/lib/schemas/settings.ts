@@ -53,6 +53,7 @@ export const SettingsSchema = z.object({
   cardColor: z.string().nullable().default(null),
   cardImage: z.string().nullable().default(null),
   navShape: z.string().nullable().default(null),
+  navMaterial: z.string().nullable().default(null),
   navLinkPadding: z.string().nullable().default(null),
   navUnderline: z.string().default("on"),
   popupEnabled: intBool.default(1),

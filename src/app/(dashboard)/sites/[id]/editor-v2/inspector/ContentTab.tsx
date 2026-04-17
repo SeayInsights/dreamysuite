@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useEditorStore } from "@/app/stores/editorStore";
+import { SitePhotoPicker } from "../SitePhotoPicker";
 
 function TextInput({
   label,
@@ -138,29 +139,11 @@ export function ContentTab() {
             maxLength={160}
           />
 
-          <div className="space-y-1">
-            <label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-              Social Image (OG)
-            </label>
-            <input
-              type="url"
-              value={settings.ogImage ?? ""}
-              placeholder="https://..."
-              onChange={(e) => updateSettings({ ogImage: e.target.value || null })}
-              onKeyDown={(e) => e.stopPropagation()}
-              className="h-8 w-full rounded border border-input bg-background px-2.5 text-xs focus:outline-none focus:ring-1 focus:ring-ring"
-            />
-            {settings.ogImage && (
-              <div className="mt-1.5 overflow-hidden rounded border border-border">
-                <img
-                  src={settings.ogImage}
-                  alt="OG preview"
-                  className="h-20 w-full object-cover"
-                  onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
-                />
-              </div>
-            )}
-          </div>
+          <SitePhotoPicker
+            label="Social Image (OG)"
+            value={settings.ogImage ?? null}
+            onChange={(v) => updateSettings({ ogImage: v })}
+          />
         </div>
       </div>
     </div>
