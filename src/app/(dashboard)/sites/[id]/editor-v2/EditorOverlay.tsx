@@ -13,7 +13,7 @@ interface Props {
 
 export function EditorOverlay({ children, containerRef }: Props) {
 	const frameRef = containerRef;
-	const { select, hover, clear } = useSelection();
+	const { select, hover, clear, selectedBlockId } = useSelection();
 
 	return (
 		<div
@@ -23,8 +23,12 @@ export function EditorOverlay({ children, containerRef }: Props) {
 				const id = (e.target as HTMLElement)
 					.closest<HTMLElement>("[data-block-id]")
 					?.dataset.blockId;
-				if (id) select(id);
-				else clear();
+				if (id) {
+					if (id === selectedBlockId) clear();
+					else select(id);
+				} else {
+					clear();
+				}
 			}}
 			onMouseMove={(e) => {
 				const id = (e.target as HTMLElement)
