@@ -31,15 +31,19 @@ interface PaddingValue {
 // Constants — 8-swatch background palette
 // ---------------------------------------------------------------------------
 
-const BG_SWATCHES = [
-  "#ffffff",
-  "#000000",
-  "#f1f5f9",
-  "#1e293b",
-  "#3b82f6",
-  "#22c55e",
-  "#f59e0b",
-  "#ef4444",
+const BG_SOLID_SWATCHES = [
+  "#ffffff", "#faf8f6", "#f1f5f9", "#f0fdf4",
+  "#fdf4ff", "#fff7ed", "#fef2f2", "#fffbeb",
+  "#1c1917", "#0f172a", "#1e293b", "#000000",
+] as const;
+
+const BG_GRADIENTS = [
+  { label: "Warm Ivory",   value: "linear-gradient(160deg,#fdf8f0,#f5e8d0)" },
+  { label: "Blush",        value: "linear-gradient(160deg,#fdf2f8,#fce7f3)" },
+  { label: "Sky",          value: "linear-gradient(160deg,#eff6ff,#dbeafe)" },
+  { label: "Sage",         value: "linear-gradient(160deg,#f0fdf4,#dcfce7)" },
+  { label: "Dusk",         value: "linear-gradient(160deg,#1e1b4b,#312e81)" },
+  { label: "Midnight",     value: "linear-gradient(160deg,#0f172a,#1e293b)" },
 ] as const;
 
 // ---------------------------------------------------------------------------
@@ -89,70 +93,124 @@ function FloatingPopover({ open, top, left, onClose, children }: PopoverProps) {
 // Background popover content
 // ---------------------------------------------------------------------------
 
+type BgTab = "solid" | "gradient" | "transparent";
+
 interface BgPopoverProps {
-  currentColor: string;
-  onSelect: (color: string) => void;
+  currentValue: string;
+  onSelect: (value: string) => void;
 }
 
-function BackgroundPopover({ currentColor, onSelect }: BgPopoverProps) {
-  const [hex, setHex] = useState(currentColor);
+function BackgroundPopover({ currentValue, onSelect }: BgPopoverProps) {
+  const isGradient = currentValue.startsWith("linear-gradient") || currentValue.startsWith("radial-gradient");
+  const isTransparent = currentValue === "transparent" || currentValue === "";
+  const [tab, setTab] = useState<BgTab>(isGradient ? "gradient" : isTransparent ? "transparent" : "solid");
+  const [hex, setHex] = useState(isGradient || isTransparent ? "#ffffff" : currentValue);
+  const [opacity, setOpacity] = useState(100);
+
+  function applyHexOpacity(h: string, op: number) {
+    if (op >= 100) { onSelect(h); return; }
+    // Convert to rgba
+    const r = parseInt(h.slice(1, 3), 16);
+    const g = parseInt(h.slice(3, 5), 16);
+    const b = parseInt(h.slice(5, 7), 16);
+    onSelect(`rgba(${r},${g},${b},${(op / 100).toFixed(2)})`);
+  }
+
+  const tabs: BgTab[] = ["solid", "gradient", "transparent"];
 
   return (
-    <div className="w-48 space-y-3">
-      <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-        Background
-      </p>
-      <div className="grid grid-cols-4 gap-1.5">
-        {BG_SWATCHES.map((color) => (
+    <div className="w-56 space-y-3">
+      {/* Tab row */}
+      <div className="flex rounded-md border border-border overflow-hidden text-xs">
+        {tabs.map((t) => (
           <button
-            key={color}
+            key={t}
             type="button"
-            aria-label={`Set background to ${color}`}
             onClick={() => {
-              setHex(color);
-              onSelect(color);
+              setTab(t);
+              if (t === "transparent") onSelect("transparent");
             }}
             className={cn(
-              "h-8 w-full rounded-md border transition-transform hover:scale-110",
-              currentColor === color
-                ? "border-primary ring-1 ring-primary"
-                : "border-border",
+              "flex-1 py-1 capitalize transition-colors",
+              tab === t ? "bg-primary text-primary-foreground" : "bg-background text-muted-foreground hover:bg-muted",
             )}
-            style={{ backgroundColor: color }}
-          />
+          >
+            {t}
+          </button>
         ))}
       </div>
-      <div className="flex items-center gap-2">
-        <label htmlFor="bg-hex-input" className="text-xs text-muted-foreground shrink-0">
-          Hex
-        </label>
-        <input
-          id="bg-hex-input"
-          type="text"
-          value={hex}
-          maxLength={7}
-          className={cn(
-            "h-7 w-full rounded border border-input bg-background px-2 text-xs",
-            "focus:outline-none focus:ring-1 focus:ring-ring",
-          )}
-          onChange={(e) => setHex(e.target.value)}
-          onBlur={() => {
-            const trimmed = hex.trim();
-            if (/^#[0-9a-fA-F]{3,6}$/.test(trimmed)) {
-              onSelect(trimmed);
-            }
-          }}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              const trimmed = hex.trim();
-              if (/^#[0-9a-fA-F]{3,6}$/.test(trimmed)) {
-                onSelect(trimmed);
-              }
-            }
-            e.stopPropagation();
-          }}
-        />
-      </div>
+
+      {tab === "solid" && (
+        <>
+          <div className="grid grid-cols-4 gap-1.5">
+            {BG_SOLID_SWATCHES.map((color) => (
+              <button
+                key={color}
+                type="button"
+                aria-label={`Set background to ${color}`}
+                onClick={() => { setHex(color); applyHexOpacity(color, opacity); }}
+                className={cn(
+                  "h-7 w-full rounded border transition-transform hover:scale-110",
+                  currentValue === color ? "border-primary ring-1 ring-primary" : "border-border",
+                )}
+                style={{ backgroundColor: color }}
+              />
+            ))}
+          </div>
+          <div className="flex items-center gap-2">
+            <label className="text-xs text-muted-foreground shrink-0">Hex</label>
+            <input
+              type="text"
+              value={hex}
+              maxLength={7}
+              className="h-7 w-full rounded border border-input bg-background px-2 text-xs focus:outline-none focus:ring-1 focus:ring-ring"
+              onChange={(e) => setHex(e.target.value)}
+              onBlur={() => { if (/^#[0-9a-fA-F]{6}$/.test(hex.trim())) applyHexOpacity(hex.trim(), opacity); }}
+              onKeyDown={(e) => { if (e.key === "Enter" && /^#[0-9a-fA-F]{6}$/.test(hex.trim())) applyHexOpacity(hex.trim(), opacity); e.stopPropagation(); }}
+            />
+          </div>
+          <div className="space-y-1">
+            <div className="flex items-center justify-between text-xs text-muted-foreground">
+              <span>Opacity</span>
+              <span>{opacity}%</span>
+            </div>
+            <input
+              type="range" min={0} max={100} value={opacity}
+              className="w-full accent-primary"
+              onChange={(e) => { const v = Number(e.target.value); setOpacity(v); if (/^#[0-9a-fA-F]{6}$/.test(hex)) applyHexOpacity(hex, v); }}
+            />
+          </div>
+        </>
+      )}
+
+      {tab === "gradient" && (
+        <div className="grid grid-cols-2 gap-1.5">
+          {BG_GRADIENTS.map((g) => (
+            <button
+              key={g.value}
+              type="button"
+              aria-label={g.label}
+              onClick={() => onSelect(g.value)}
+              className={cn(
+                "h-12 w-full rounded border text-xs font-medium transition-transform hover:scale-105",
+                currentValue === g.value ? "border-primary ring-1 ring-primary" : "border-border",
+              )}
+              style={{ background: g.value }}
+            >
+              <span className="sr-only">{g.label}</span>
+            </button>
+          ))}
+        </div>
+      )}
+
+      {tab === "transparent" && (
+        <div
+          className="h-14 w-full rounded border border-border flex items-center justify-center text-xs text-muted-foreground"
+          style={{ backgroundImage: "repeating-conic-gradient(#ddd 0% 25%, #fff 0% 50%)", backgroundSize: "12px 12px" }}
+        >
+          No background
+        </div>
+      )}
     </div>
   );
 }
@@ -443,14 +501,9 @@ export function SectionToolbar({
       : { top: 0, right: 0, bottom: 0, left: 0 };
 
   function openPopover(which: "bg" | "padding", btnEl: HTMLElement) {
-    const container = containerRef.current;
-    if (!container) return;
-    const containerBox = container.getBoundingClientRect();
     const btnBox = btnEl.getBoundingClientRect();
-    setPopoverPos({
-      top: btnBox.bottom - containerBox.top + (container.scrollTop ?? 0) + 4,
-      left: btnBox.left - containerBox.left,
-    });
+    // Use viewport coords — popover is position:fixed
+    setPopoverPos({ top: btnBox.bottom + 6, left: btnBox.left });
     setActivePopover((prev) => (prev === which ? null : which));
   }
 
@@ -506,10 +559,10 @@ export function SectionToolbar({
         onClose={() => setActivePopover(null)}
       >
         <BackgroundPopover
-          currentColor={currentBg}
-          onSelect={(color) => {
+          currentValue={currentBg}
+          onSelect={(value) => {
             updateBlock(selectedBlockId, {
-              config: { ...config, backgroundColor: color },
+              config: { ...config, backgroundColor: value },
             });
           }}
         />
