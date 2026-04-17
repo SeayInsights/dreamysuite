@@ -7,6 +7,9 @@ import {
 	Plus,
 	Layers,
 	Palette,
+	Image as ImageIcon,
+	Music,
+	Languages,
 	Settings as SettingsIcon,
 	type LucideIcon,
 } from "lucide-react";
@@ -22,6 +25,9 @@ const ITEMS: RailItem[] = [
 	{ id: "elements", label: "Elements", Icon: Plus },
 	{ id: "layers", label: "Layers", Icon: Layers },
 	{ id: "theme", label: "Theme", Icon: Palette },
+	{ id: "media", label: "Media", Icon: ImageIcon },
+	{ id: "music", label: "Music", Icon: Music },
+	{ id: "language", label: "Language", Icon: Languages },
 	{ id: "settings", label: "Settings", Icon: SettingsIcon },
 ];
 

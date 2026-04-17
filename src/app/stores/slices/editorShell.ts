@@ -1,4 +1,6 @@
 import type { StateCreator } from "zustand";
+import type { SettingsSlice } from "./settings";
+import type { SettingsPatch } from "@/lib/schemas/settings";
 
 export type Breakpoint = "desktop" | "tablet" | "mobile";
 export type EditorMode = "simple" | "pro";
@@ -7,6 +9,9 @@ export type Section =
 	| "elements"
 	| "layers"
 	| "theme"
+	| "media"
+	| "music"
+	| "language"
 	| "settings";
 
 // ---------------------------------------------------------------------------
@@ -77,12 +82,29 @@ const DEFAULT_THEME: ThemeTokens = {
 
 // ---------------------------------------------------------------------------
 
+export interface EditorPage {
+	id: string;
+	slug: string;
+	label: string;
+	sortOrder: number;
+}
+
 export interface EditorShellSlice {
 	siteId: string | null;
+	siteSlug: string | null;
+	siteCustomDomain: string | null;
+	eventType: string | null;
 	setSiteId: (id: string) => void;
+	setSiteMeta: (meta: { slug: string; customDomain: string | null; eventType: string | null }) => void;
+	setEventType: (eventType: string | null) => void;
 
 	selectedBlockId: string | null;
 	selectBlock: (id: string | null) => void;
+
+	pages: EditorPage[];
+	currentPageId: string | null;
+	setPages: (pages: EditorPage[]) => void;
+	setCurrentPageId: (id: string | null) => void;
 
 	breakpoint: Breakpoint;
 	mode: EditorMode;
@@ -105,14 +127,63 @@ export interface EditorShellSlice {
 	toggleFullPreview: () => void;
 }
 
-export const createEditorShellSlice: StateCreator<EditorShellSlice> = (
-	set,
+function themeToSettings(tokens: ThemeTokens): SettingsPatch {
+	return {
+		accentColor: tokens.colors.accent,
+		bgColor: tokens.colors.background,
+		headingFont: tokens.typography.headingFont,
+		bodyFont: tokens.typography.bodyFont,
+		headingColor: tokens.colors.primary,
+		siteTextColor: tokens.colors.text,
+		bodyColor: tokens.colors.secondary,
+	};
+}
+
+export function settingsToTheme(s: {
+	accentColor?: string | null;
+	bgColor?: string | null;
+	headingFont?: string | null;
+	bodyFont?: string | null;
+	headingColor?: string | null;
+	siteTextColor?: string | null;
+	bodyColor?: string | null;
+}): ThemeTokens {
+	const d = DEFAULT_THEME;
+	return {
+		colors: {
+			primary: s.headingColor ?? d.colors.primary,
+			secondary: s.bodyColor ?? d.colors.secondary,
+			accent: s.accentColor ?? d.colors.accent,
+			background: s.bgColor ?? d.colors.background,
+			text: s.siteTextColor ?? d.colors.text,
+		},
+		typography: {
+			headingFont: s.headingFont ?? d.typography.headingFont,
+			bodyFont: s.bodyFont ?? d.typography.bodyFont,
+			scale: d.typography.scale,
+		},
+	};
+}
+
+export const createEditorShellSlice: StateCreator<EditorShellSlice & SettingsSlice, [], [], EditorShellSlice> = (
+	set, get,
 ) => ({
 	siteId: null,
+	siteSlug: null,
+	siteCustomDomain: null,
+	eventType: null,
 	setSiteId: (siteId) => set({ siteId }),
+	setSiteMeta: ({ slug, customDomain, eventType }) =>
+		set({ siteSlug: slug, siteCustomDomain: customDomain, eventType }),
+	setEventType: (eventType) => set({ eventType }),
 
 	selectedBlockId: null,
 	selectBlock: (id) => set({ selectedBlockId: id }),
+
+	pages: [],
+	currentPageId: null,
+	setPages: (pages) => set({ pages }),
+	setCurrentPageId: (currentPageId) => set({ currentPageId }),
 
 	breakpoint: "desktop",
 	mode: "simple",
@@ -122,11 +193,16 @@ export const createEditorShellSlice: StateCreator<EditorShellSlice> = (
 	fullPreview: false,
 
 	themeTokens: DEFAULT_THEME,
-	setThemeTokens: (themeTokens) => set({ themeTokens }),
+	setThemeTokens: (themeTokens) => {
+		set({ themeTokens });
+		get().updateSettings(themeToSettings(themeTokens));
+	},
 	applyPresetTheme: (presetId) => {
 		const preset = PRESET_THEMES.find((p) => p.id === presetId);
 		if (!preset) return;
-		set({ themeTokens: { colors: preset.colors, typography: preset.typography } });
+		const themeTokens = { colors: preset.colors, typography: preset.typography };
+		set({ themeTokens });
+		get().updateSettings(themeToSettings(themeTokens));
 	},
 
 	setBreakpoint: (breakpoint) => set({ breakpoint }),

@@ -17,6 +17,10 @@ export function MotionTab() {
 
   return (
     <div className="space-y-4 p-4">
+      <div className="rounded border border-dashed border-border p-3 text-[10px] leading-relaxed text-muted-foreground">
+        Sets the entrance animation for all blocks by default. Override per block using the Animation button in the floating toolbar.
+      </div>
+
       <div>
         <p className="mb-2.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
           Default Entrance Animation
@@ -26,16 +30,6 @@ export function MotionTab() {
           onChange={(id) => updateSettings({ defaultAnimation: id })}
         />
       </div>
-
-      {currentPreset && (
-        <button
-          type="button"
-          onClick={() => updateSettings({ defaultAnimation: null })}
-          className="text-xs text-muted-foreground underline hover:text-foreground"
-        >
-          Remove default
-        </button>
-      )}
 
       {mode === "pro" && currentPreset && (
         <div className="space-y-3 border-t border-border pt-3">
@@ -53,10 +47,6 @@ export function MotionTab() {
           </select>
         </div>
       )}
-
-      <div className="rounded border border-dashed border-border p-3 text-[10px] leading-relaxed text-muted-foreground">
-        Sets the entrance animation for all blocks by default. Override per block using the Animation button in the floating toolbar.
-      </div>
     </div>
   );
 }

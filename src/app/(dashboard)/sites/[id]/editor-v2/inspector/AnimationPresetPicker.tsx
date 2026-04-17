@@ -131,7 +131,7 @@ const PRESETS: Preset[] = [
 
 interface Props {
   value: string | null;
-  onChange: (id: string) => void;
+  onChange: (id: string | null) => void;
 }
 
 export function AnimationPresetPicker({ value, onChange }: Props) {
@@ -145,7 +145,7 @@ export function AnimationPresetPicker({ value, onChange }: Props) {
             type="button"
             aria-label={preset.label}
             aria-pressed={active}
-            onClick={() => onChange(preset.id)}
+            onClick={() => onChange(active ? null : preset.id)}
             className={cn(
               "flex flex-col items-center gap-1.5 rounded-lg border p-2.5 text-center transition-colors",
               "hover:border-primary/50 hover:bg-accent",

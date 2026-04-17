@@ -214,6 +214,38 @@ function escHtml(str: string): string {
     .replace(/'/g, "&#39;");
 }
 
+type MusicSource =
+  | { type: "youtube"; id: string }
+  | { type: "spotify"; kind: string; id: string }
+  | { type: "soundcloud" }
+  | { type: "audio" };
+
+function parseMusicSource(url: string): MusicSource | null {
+  try {
+    const u = new URL(url);
+    if (u.hostname === "youtu.be") {
+      const id = u.pathname.slice(1).split("?")[0];
+      if (id) return { type: "youtube", id };
+    }
+    if (u.hostname.includes("youtube.com")) {
+      const id = u.searchParams.get("v");
+      if (id) return { type: "youtube", id };
+    }
+    if (u.hostname.includes("spotify.com")) {
+      const match = u.pathname.match(/\/(track|album|playlist)\/([a-zA-Z0-9]+)/);
+      if (match) return { type: "spotify", kind: match[1], id: match[2] };
+    }
+    if (u.hostname.includes("soundcloud.com")) {
+      return { type: "soundcloud" };
+    }
+    const ext = u.pathname.split(".").pop()?.toLowerCase();
+    if (ext && ["mp3", "wav", "ogg", "m4a", "aac", "flac"].includes(ext)) {
+      return { type: "audio" };
+    }
+  } catch { /* invalid URL */ }
+  return null;
+}
+
 /** Convert newlines to <br> so user-typed paragraph breaks survive HTML rendering. */
 function nl2br(text: string): string {
   return escHtml(text).replace(/\n/g, "<br>");
@@ -2838,64 +2870,57 @@ if (_introOpened) {
 </script>`
     : "";
 
-  // Music player
+  // Music player — supports YouTube, Spotify, SoundCloud, direct audio
   const musicUrl = settings?.musicUrl ?? null;
   let musicPlayerHtml = "";
   let musicScript = "";
   if (musicUrl) {
-    // Parse YouTube video ID from both youtube.com/watch?v=ID and youtu.be/ID
-    let videoId: string | null = null;
-    try {
-      const u = new URL(musicUrl);
-      if (u.hostname === "youtu.be") {
-        videoId = u.pathname.slice(1).split("?")[0] || null;
-      } else if (u.hostname.includes("youtube.com")) {
-        videoId = u.searchParams.get("v");
-      }
-    } catch {
-      // not a valid URL — skip
-    }
-    if (videoId) {
-      const vid = escHtml(videoId);
-      // Use position:fixed off-screen instead of display:none — hidden iframes fail to
-      // initialize the YouTube IFrame API in some browsers, causing postMessage commands
-      // (playVideo / pauseVideo) to be silently dropped.
-      musicPlayerHtml = `
+    const musicSource = parseMusicSource(musicUrl);
+    if (musicSource) {
+      if (musicSource.type === "youtube") {
+        const vid = escHtml(musicSource.id);
+        musicPlayerHtml = `
   <div class="music-player" id="music-player">
     <iframe id="yt-player" src="https://www.youtube.com/embed/${vid}?enablejsapi=1&autoplay=0&loop=1&playlist=${vid}&origin=${encodeURIComponent("https://dreamysuite.com")}" allow="autoplay" style="position:fixed;left:-2px;top:-2px;width:2px;height:2px;pointer-events:none;opacity:0;" title="Background music"></iframe>
     <button class="music-btn" id="music-btn" aria-label="Play background music" onclick="toggleMusic()">&#9834;</button>
   </div>`;
-      musicScript = `<script>
-var _ytReady = false;
-var _ytPendingPlay = false;
-function onYouTubeIframeAPIReady() { _ytReady = true; if (_ytPendingPlay) { _ytPendingPlay = false; _ytSendPlay(); } }
-function _ytSendPlay() {
-  var iframe = document.getElementById('yt-player');
-  if (!iframe) return;
-  iframe.contentWindow.postMessage('{"event":"command","func":"playVideo","args":""}', '*');
-}
-function toggleMusic() {
-  var iframe = document.getElementById('yt-player');
-  var btn = document.getElementById('music-btn');
-  if (!iframe || !btn) return;
-  var playing = btn.classList.contains('playing');
-  if (playing) {
-    iframe.contentWindow.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*');
-    btn.classList.remove('playing');
-    btn.setAttribute('aria-label', 'Play background music');
-  } else {
-    btn.classList.add('playing');
-    btn.setAttribute('aria-label', 'Pause background music');
-    // postMessage is reliable only after iframe has loaded; use load event as safety net
-    if (iframe.contentDocument || _ytReady) {
-      _ytSendPlay();
-    } else {
-      _ytPendingPlay = true;
-      iframe.addEventListener('load', function() { if (_ytPendingPlay) { _ytPendingPlay = false; _ytSendPlay(); } }, { once: true });
-    }
-  }
-}
+        musicScript = `<script>
+var _ytReady=false,_ytPendingPlay=false;
+function onYouTubeIframeAPIReady(){_ytReady=true;if(_ytPendingPlay){_ytPendingPlay=false;_ytSendPlay();}}
+function _ytSendPlay(){var f=document.getElementById('yt-player');if(f)f.contentWindow.postMessage('{"event":"command","func":"playVideo","args":""}','*');}
+function toggleMusic(){var f=document.getElementById('yt-player'),b=document.getElementById('music-btn');if(!f||!b)return;if(b.classList.contains('playing')){f.contentWindow.postMessage('{"event":"command","func":"pauseVideo","args":""}','*');b.classList.remove('playing');b.setAttribute('aria-label','Play background music');}else{b.classList.add('playing');b.setAttribute('aria-label','Pause background music');if(f.contentDocument||_ytReady){_ytSendPlay();}else{_ytPendingPlay=true;f.addEventListener('load',function(){if(_ytPendingPlay){_ytPendingPlay=false;_ytSendPlay();}},{once:true});}}}
 </script>`;
+      } else if (musicSource.type === "spotify") {
+        const embedUrl = escHtml(`https://open.spotify.com/embed/${musicSource.kind}/${musicSource.id}?theme=0`);
+        musicPlayerHtml = `
+  <div class="music-player" id="music-player">
+    <iframe id="spotify-player" src="${embedUrl}" allow="autoplay; encrypted-media" style="position:fixed;left:-2px;top:-2px;width:300px;height:80px;pointer-events:none;opacity:0;" title="Background music"></iframe>
+    <button class="music-btn" id="music-btn" aria-label="Play background music" onclick="toggleMusic()">&#9834;</button>
+  </div>`;
+        musicScript = `<script>
+function toggleMusic(){var b=document.getElementById('music-btn'),f=document.getElementById('spotify-player');if(!b||!f)return;if(b.classList.contains('playing')){f.style.pointerEvents='none';f.style.opacity='0';b.classList.remove('playing');b.setAttribute('aria-label','Play background music');}else{f.style.pointerEvents='auto';f.style.opacity='1';f.style.position='fixed';f.style.bottom='4.5rem';f.style.right='1.5rem';f.style.left='auto';f.style.top='auto';f.style.width='300px';f.style.height='80px';f.style.borderRadius='12px';f.style.zIndex='201';b.classList.add('playing');b.setAttribute('aria-label','Hide music player');}}
+</script>`;
+      } else if (musicSource.type === "soundcloud") {
+        const scUrl = escHtml(`https://w.soundcloud.com/player/?url=${encodeURIComponent(musicUrl)}&color=%23B8921A&auto_play=false&hide_related=true&show_comments=false&show_user=true&show_reposts=false&show_teaser=false&visual=false`);
+        musicPlayerHtml = `
+  <div class="music-player" id="music-player">
+    <iframe id="sc-player" src="${scUrl}" allow="autoplay" style="position:fixed;left:-2px;top:-2px;width:300px;height:120px;pointer-events:none;opacity:0;" title="Background music"></iframe>
+    <button class="music-btn" id="music-btn" aria-label="Play background music" onclick="toggleMusic()">&#9834;</button>
+  </div>`;
+        musicScript = `<script>
+function toggleMusic(){var b=document.getElementById('music-btn'),f=document.getElementById('sc-player');if(!b||!f)return;if(b.classList.contains('playing')){f.style.pointerEvents='none';f.style.opacity='0';b.classList.remove('playing');b.setAttribute('aria-label','Play background music');}else{f.style.pointerEvents='auto';f.style.opacity='1';f.style.position='fixed';f.style.bottom='4.5rem';f.style.right='1.5rem';f.style.left='auto';f.style.top='auto';f.style.width='300px';f.style.height='120px';f.style.borderRadius='12px';f.style.zIndex='201';b.classList.add('playing');b.setAttribute('aria-label','Hide music player');}}
+</script>`;
+      } else if (musicSource.type === "audio") {
+        const audioSrc = escHtml(musicUrl);
+        musicPlayerHtml = `
+  <div class="music-player" id="music-player">
+    <audio id="audio-player" src="${audioSrc}" loop preload="metadata"></audio>
+    <button class="music-btn" id="music-btn" aria-label="Play background music" onclick="toggleMusic()">&#9834;</button>
+  </div>`;
+        musicScript = `<script>
+function toggleMusic(){var a=document.getElementById('audio-player'),b=document.getElementById('music-btn');if(!a||!b)return;if(b.classList.contains('playing')){a.pause();b.classList.remove('playing');b.setAttribute('aria-label','Play background music');}else{a.play();b.classList.add('playing');b.setAttribute('aria-label','Pause background music');}}
+</script>`;
+      }
     }
   }
 

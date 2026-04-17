@@ -9,6 +9,9 @@ import { PagesTray } from "./trays/PagesTray";
 import { ElementsTray } from "./trays/ElementsTray";
 import { LayersTray } from "./trays/LayersTray";
 import { ThemeTray } from "./trays/ThemeTray";
+import { MediaTray } from "./trays/MediaTray";
+import { MusicTray } from "./trays/MusicTray";
+import { LanguageTray } from "./trays/LanguageTray";
 import { SettingsTray } from "./trays/SettingsTray";
 
 const TRAY_WIDTH = 288;
@@ -92,6 +95,9 @@ export function SlideTray() {
 			{openTray === "elements" && <ElementsTray />}
 			{openTray === "layers" && <LayersTray />}
 			{openTray === "theme" && <ThemeTray />}
+			{openTray === "media" && <MediaTray />}
+			{openTray === "music" && <MusicTray />}
+			{openTray === "language" && <LanguageTray />}
 			{openTray === "settings" && <SettingsTray />}
 		</div>
 	);
