@@ -96,13 +96,14 @@ export function Canvas({ siteId }: Props) {
 					<EditorOverlay containerRef={containerRef}>
 						<SiteRenderer blocks={blocks} />
 						<GridOverlay />
+						{/* Editing overlays inside containerRef so absolute coords are correct */}
+						<SectionToolbar containerRef={containerRef} />
+						<DragHandles containerRef={containerRef} />
 					</EditorOverlay>
 				</BreakpointFrame>
 
 				<TextEditor containerRef={containerRef} />
 				<ImageEditor containerRef={containerRef} />
-				<SectionToolbar containerRef={containerRef} />
-				<DragHandles containerRef={containerRef} />
 			</div>
 		</ContextMenu>
 	);
