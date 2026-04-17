@@ -1,10 +1,9 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { animate } from "motion/mini";
 
 import { useEditorStore } from "@/app/stores/editorStore";
-import { duration, EASING } from "@/lib/motion";
+import { prefersReducedMotion } from "@/lib/motion";
 
 import { PagesTray } from "./trays/PagesTray";
 import { ElementsTray } from "./trays/ElementsTray";
@@ -13,50 +12,53 @@ import { ThemeTray } from "./trays/ThemeTray";
 import { SettingsTray } from "./trays/SettingsTray";
 
 const TRAY_WIDTH = 288;
+const ANIM_MS = 200;
 
 export function SlideTray() {
 	const ref = useRef<HTMLDivElement>(null);
-	const hasOpenedOnce = useRef(false);
+	const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 	const openTray = useEditorStore((s) => s.openTray);
 	const setOpenTray = useEditorStore((s) => s.setOpenTray);
 	const railCollapsed = useEditorStore((s) => s.railCollapsed);
 
-	// Slide in / out with Motion One.
-	// On initial mount (openTray = null, hasOpenedOnce = false) just position off-screen
-	// without animation — avoids the "snap to 0px then slide away" flash that explicit
-	// from-keyframes would cause.
+	// Position off-screen before first paint, then enable CSS transition.
 	useEffect(() => {
 		const el = ref.current;
 		if (!el) return;
+		el.style.transform = `translateX(-${TRAY_WIDTH}px)`;
+		el.style.pointerEvents = "none";
+		const dur = prefersReducedMotion() ? 0 : ANIM_MS;
+		const raf = requestAnimationFrame(() => {
+			if (ref.current) {
+				ref.current.style.transition = `transform ${dur}ms ease-out`;
+			}
+		});
+		return () => cancelAnimationFrame(raf);
+	}, []);
+
+	// Slide in / out.
+	useEffect(() => {
+		const el = ref.current;
+		if (!el) return;
+		if (closeTimer.current) clearTimeout(closeTimer.current);
 
 		if (openTray) {
-			hasOpenedOnce.current = true;
 			el.style.pointerEvents = "auto";
-			animate(
-				el,
-				{ x: [`-${TRAY_WIDTH}px`, "0px"] },
-				{ duration: duration("traySlide") / 1000, ease: EASING.enter },
-			).finished.then(() => {
-				if (ref.current) ref.current.style.transform = "translateX(0px)";
-			});
-		} else if (hasOpenedOnce.current) {
-			animate(
-				el,
-				{ x: ["0px", `-${TRAY_WIDTH}px`] },
-				{ duration: duration("traySlide") / 1000, ease: EASING.exit },
-			).finished.then(() => {
-				if (ref.current) {
-					ref.current.style.transform = `translateX(-${TRAY_WIDTH}px)`;
-					ref.current.style.pointerEvents = "none";
-				}
-			});
+			el.style.transform = "translateX(0px)";
 		} else {
 			el.style.transform = `translateX(-${TRAY_WIDTH}px)`;
-			el.style.pointerEvents = "none";
+			const dur = prefersReducedMotion() ? 0 : ANIM_MS;
+			closeTimer.current = setTimeout(() => {
+				if (ref.current) ref.current.style.pointerEvents = "none";
+			}, dur);
 		}
+
+		return () => {
+			if (closeTimer.current) clearTimeout(closeTimer.current);
+		};
 	}, [openTray]);
 
-	// Close when the user clicks outside the tray.
+	// Close on outside click.
 	useEffect(() => {
 		if (!openTray) return;
 		const handler = (e: MouseEvent) => {
@@ -80,10 +82,7 @@ export function SlideTray() {
 			ref={ref}
 			role="dialog"
 			aria-hidden={!openTray}
-			// position:fixed — bypasses the parent overflow:hidden clip and all
-			// intermediate stacking contexts. top-12 clears the 48px TopBar.
-			// transform/pointerEvents managed via useEffect.
-			className="fixed top-12 bottom-0 z-[15] w-72 border-r border-border bg-white shadow-xl"
+			className="fixed top-12 bottom-0 z-[150] w-72 border-r border-border bg-white shadow-xl"
 			style={{ left: railCollapsed ? 0 : 48 }}
 		>
 			{openTray === "pages" && <PagesTray />}
