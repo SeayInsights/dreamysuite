@@ -116,12 +116,14 @@ function Outline({ rect, label, variant }: OutlineProps) {
 		if (!el) return;
 		el.style.opacity = "0";
 		const dur = prefersReducedMotion() ? 0 : MOTION.selectionFade;
-		const raf = requestAnimationFrame(() => {
+		// setTimeout(0) guarantees the browser paints the opacity:0 frame before
+		// the transition starts — a single rAF fires in the same batch and skips it.
+		const timer = setTimeout(() => {
 			if (!ref.current) return;
 			ref.current.style.transition = `opacity ${dur}ms ease`;
 			ref.current.style.opacity = "1";
-		});
-		return () => cancelAnimationFrame(raf);
+		}, 0);
+		return () => clearTimeout(timer);
 	}, []);
 
 	return (

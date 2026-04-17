@@ -21,22 +21,23 @@ export function SlideTray() {
 	const setOpenTray = useEditorStore((s) => s.setOpenTray);
 	const railCollapsed = useEditorStore((s) => s.railCollapsed);
 
-	// Position off-screen before first paint, then enable CSS transition.
+	// Set initial hidden state before first paint, then enable CSS transition.
 	useEffect(() => {
 		const el = ref.current;
 		if (!el) return;
-		el.style.transform = `translateX(-${TRAY_WIDTH}px)`;
+		el.style.opacity = "0";
+		el.style.transform = "translateX(-60px)";
 		el.style.pointerEvents = "none";
 		const dur = prefersReducedMotion() ? 0 : ANIM_MS;
 		const raf = requestAnimationFrame(() => {
 			if (ref.current) {
-				ref.current.style.transition = `transform ${dur}ms ease-out`;
+				ref.current.style.transition = `opacity ${dur}ms ease-out, transform ${dur}ms ease-out`;
 			}
 		});
 		return () => cancelAnimationFrame(raf);
 	}, []);
 
-	// Slide in / out.
+	// Fade + nudge in / out (tray stays at its target x, never sweeps over the rail).
 	useEffect(() => {
 		const el = ref.current;
 		if (!el) return;
@@ -44,9 +45,11 @@ export function SlideTray() {
 
 		if (openTray) {
 			el.style.pointerEvents = "auto";
+			el.style.opacity = "1";
 			el.style.transform = "translateX(0px)";
 		} else {
-			el.style.transform = `translateX(-${TRAY_WIDTH}px)`;
+			el.style.opacity = "0";
+			el.style.transform = "translateX(-60px)";
 			const dur = prefersReducedMotion() ? 0 : ANIM_MS;
 			closeTimer.current = setTimeout(() => {
 				if (ref.current) ref.current.style.pointerEvents = "none";
