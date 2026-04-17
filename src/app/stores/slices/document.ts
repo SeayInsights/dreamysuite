@@ -11,6 +11,8 @@ export interface DocumentSlice {
 	isDirty: boolean;
 	setBlocks: (blocks: Block[]) => void;
 	updateBlock: (id: string, updates: Partial<Block>) => void;
+	insertBlock: (block: Block, atIndex: number) => void;
+	removeBlock: (id: string) => void;
 	reorderBlocks: (fromIndex: number, toIndex: number) => void;
 	markClean: () => void;
 }
@@ -24,6 +26,18 @@ export const createDocumentSlice: StateCreator<DocumentSlice> = (set) => ({
 			blocks: state.blocks.map((b) =>
 				b.id === id ? { ...b, ...updates } : b,
 			),
+			isDirty: true,
+		})),
+	insertBlock: (block, atIndex) =>
+		set((state) => {
+			const blocks = [...state.blocks];
+			const clampedIndex = Math.max(0, Math.min(blocks.length, atIndex));
+			blocks.splice(clampedIndex, 0, block);
+			return { blocks, isDirty: true };
+		}),
+	removeBlock: (id) =>
+		set((state) => ({
+			blocks: state.blocks.filter((b) => b.id !== id),
 			isDirty: true,
 		})),
 	reorderBlocks: (from, to) =>
