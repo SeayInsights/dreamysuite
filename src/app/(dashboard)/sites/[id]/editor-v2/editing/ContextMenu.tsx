@@ -259,7 +259,7 @@ export function ContextMenu({ children }: { children: ReactNode }): React.JSX.El
 
   return (
     <div
-      className="contents"
+      className="flex h-full flex-col"
       onContextMenu={handleContextMenu}
     >
       {children}

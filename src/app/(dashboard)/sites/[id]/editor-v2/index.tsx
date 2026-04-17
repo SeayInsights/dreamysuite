@@ -1,5 +1,6 @@
 "use client";
 
+import "@/styles/site-editor.css";
 import { EditorShell, type EditorV2Site, type EditorV2User } from "./EditorShell";
 
 export { EditorShell };
