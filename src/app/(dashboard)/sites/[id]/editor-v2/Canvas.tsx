@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 
 import { useEditorStore } from "@/app/stores/editorStore";
 import { parseCfg, resolveBreakpointConfig } from "@/lib/editableField";
+import { trackEditorError } from "@/lib/telemetry/editor";
 import { SiteRenderer } from "@/app/components/SiteRenderer";
 import { BreakpointFrame } from "./BreakpointFrame";
 import { EditorOverlay } from "./EditorOverlay";
@@ -71,8 +72,11 @@ export function Canvas({ siteId }: Props) {
 				// eslint-disable-next-line @typescript-eslint/no-explicit-any
 				if (!cancelled) setBlocks(rawBlocks as any[]);
 			} catch (err) {
-				if (!cancelled)
-					setError(err instanceof Error ? err.message : "Failed to load canvas");
+				if (!cancelled) {
+					const msg = err instanceof Error ? err.message : "Failed to load canvas";
+					setError(msg);
+					trackEditorError(siteId, msg, "canvas");
+				}
 			} finally {
 				if (!cancelled) setLoading(false);
 			}

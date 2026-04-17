@@ -78,6 +78,9 @@ const DEFAULT_THEME: ThemeTokens = {
 // ---------------------------------------------------------------------------
 
 export interface EditorShellSlice {
+	siteId: string | null;
+	setSiteId: (id: string) => void;
+
 	selectedBlockId: string | null;
 	selectBlock: (id: string | null) => void;
 
@@ -105,6 +108,9 @@ export interface EditorShellSlice {
 export const createEditorShellSlice: StateCreator<EditorShellSlice> = (
 	set,
 ) => ({
+	siteId: null,
+	setSiteId: (siteId) => set({ siteId }),
+
 	selectedBlockId: null,
 	selectBlock: (id) => set({ selectedBlockId: id }),
 
