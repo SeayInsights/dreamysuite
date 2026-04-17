@@ -7,6 +7,7 @@ import React, {
   useState,
   type ReactNode,
 } from "react";
+import { createPortal } from "react-dom";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useEditorStore } from "@/app/stores/editorStore";
@@ -72,20 +73,22 @@ function FloatingPopover({ open, top, left, onClose, children }: PopoverProps) {
     return () => document.removeEventListener("mousedown", handleClick);
   }, [open, onClose]);
 
-  if (!open) return null;
+  if (!open || typeof document === "undefined") return null;
 
-  return (
+  return createPortal(
     <div
       ref={ref}
       className={cn(
-        "fixed z-[60] rounded-lg border border-border bg-popover p-3 shadow-lg",
+        "fixed z-[9999] rounded-lg border border-border bg-popover p-3 shadow-lg",
         "text-popover-foreground",
       )}
       style={{ top, left }}
       onMouseDown={(e) => e.stopPropagation()}
+      onClick={(e) => e.stopPropagation()}
     >
       {children}
-    </div>
+    </div>,
+    document.body,
   );
 }
 
@@ -519,6 +522,7 @@ export function SectionToolbar({
       )}
       style={{ top: position.top, left: position.left }}
       onMouseDown={(e) => e.stopPropagation()}
+      onClick={(e) => e.stopPropagation()}
     >
       {/* Background button */}
       <Button
