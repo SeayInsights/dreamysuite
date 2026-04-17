@@ -115,6 +115,7 @@ function Outline({ rect, label, variant }: OutlineProps) {
 	useEffect(() => {
 		const el = ref.current;
 		if (!el) return;
+		el.style.opacity = "0";
 		animate(el, { opacity: [0, 1] }, { duration: duration("selectionFade") / 1000, ease: EASING.standard });
 	}, []);
 
@@ -128,7 +129,6 @@ function Outline({ rect, label, variant }: OutlineProps) {
 					: "ring-primary/40",
 			)}
 			style={{
-				opacity: 0,
 				top: rect.top,
 				left: rect.left,
 				width: rect.width,

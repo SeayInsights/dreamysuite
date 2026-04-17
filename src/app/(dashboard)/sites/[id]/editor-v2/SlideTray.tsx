@@ -16,38 +16,38 @@ const TRAY_WIDTH = 288;
 
 export function SlideTray() {
 	const ref = useRef<HTMLDivElement>(null);
+	const hasOpenedOnce = useRef(false);
 	const openTray = useEditorStore((s) => s.openTray);
 	const setOpenTray = useEditorStore((s) => s.setOpenTray);
 	const railCollapsed = useEditorStore((s) => s.railCollapsed);
 
-	// Set initial off-screen position before first paint.
-	useEffect(() => {
-		const el = ref.current;
-		if (!el) return;
-		el.style.transform = `translateX(-${TRAY_WIDTH}px)`;
-		el.style.pointerEvents = "none";
-	}, []);
-
 	// Slide in / out with Motion One.
+	// On initial mount (openTray = null, hasOpenedOnce = false) just position off-screen
+	// without animation — avoids the "snap to 0px then slide away" flash that explicit
+	// from-keyframes would cause.
 	useEffect(() => {
 		const el = ref.current;
 		if (!el) return;
 
 		if (openTray) {
+			hasOpenedOnce.current = true;
 			el.style.pointerEvents = "auto";
 			animate(
 				el,
 				{ x: [`-${TRAY_WIDTH}px`, "0px"] },
 				{ duration: duration("traySlide") / 1000, ease: EASING.enter },
 			);
-		} else {
+		} else if (hasOpenedOnce.current) {
 			animate(
 				el,
-				{ x: ["0px", `-${TRAY_WIDTH}px`] },
+				{ x: `-${TRAY_WIDTH}px` },
 				{ duration: duration("traySlide") / 1000, ease: EASING.exit },
 			).finished.then(() => {
 				if (ref.current) ref.current.style.pointerEvents = "none";
 			});
+		} else {
+			el.style.transform = `translateX(-${TRAY_WIDTH}px)`;
+			el.style.pointerEvents = "none";
 		}
 	}, [openTray]);
 
