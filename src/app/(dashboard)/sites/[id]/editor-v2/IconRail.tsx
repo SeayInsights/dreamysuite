@@ -10,6 +10,7 @@ import {
 	PanelTop,
 	Image as ImageIcon,
 	Music,
+	Sparkles,
 	Languages,
 	Settings as SettingsIcon,
 	type LucideIcon,
@@ -29,6 +30,7 @@ const ITEMS: RailItem[] = [
 	{ id: "navigation", label: "Nav", Icon: PanelTop },
 	{ id: "media", label: "Media", Icon: ImageIcon },
 	{ id: "music", label: "Music", Icon: Music },
+	{ id: "effects", label: "Effects", Icon: Sparkles },
 	{ id: "language", label: "Language", Icon: Languages },
 	{ id: "settings", label: "Settings", Icon: SettingsIcon },
 ];

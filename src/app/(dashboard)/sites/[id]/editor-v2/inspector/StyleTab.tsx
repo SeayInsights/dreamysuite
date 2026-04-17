@@ -3,12 +3,15 @@
 import { useEditorStore } from "@/app/stores/editorStore";
 import { ColorInput } from "./ColorInput";
 import { SitePhotoPicker } from "../SitePhotoPicker";
+import { EffectPicker } from "../EffectPicker";
+import type { EventType } from "@/lib/effects/types";
 
 export function StyleTab() {
   const settings = useEditorStore((s) => s.settings);
   const updateSettings = useEditorStore((s) => s.updateSettings);
   const themeTokens = useEditorStore((s) => s.themeTokens);
   const setOpenTray = useEditorStore((s) => s.setOpenTray);
+  const eventType = useEditorStore((s) => s.eventType) as EventType | null;
 
   return (
     <div className="space-y-4 p-4">
@@ -70,6 +73,16 @@ export function StyleTab() {
             </div>
           </>
         )}
+      </div>
+
+      <div className="space-y-2 border-t border-border pt-4">
+        <EffectPicker
+          category="background"
+          value={settings.effectBg}
+          onChange={(id) => updateSettings({ effectBg: id, effectPreset: null })}
+          eventType={eventType}
+          label="Background Effect"
+        />
       </div>
 
       <div className="space-y-2 border-t border-border pt-4">

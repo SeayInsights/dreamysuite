@@ -12,6 +12,7 @@ import { ThemeTray } from "./trays/ThemeTray";
 import { MediaTray } from "./trays/MediaTray";
 import { MusicTray } from "./trays/MusicTray";
 import { NavigationTray } from "./trays/NavigationTray";
+import { EffectsTray } from "./trays/EffectsTray";
 import { LanguageTray } from "./trays/LanguageTray";
 import { SettingsTray } from "./trays/SettingsTray";
 
@@ -99,6 +100,7 @@ export function SlideTray() {
 			{openTray === "navigation" && <NavigationTray />}
 			{openTray === "media" && <MediaTray />}
 			{openTray === "music" && <MusicTray />}
+			{openTray === "effects" && <EffectsTray />}
 			{openTray === "language" && <LanguageTray />}
 			{openTray === "settings" && <SettingsTray />}
 		</div>
