@@ -231,7 +231,16 @@ export function TextEditor({
     if (!editState) return;
     const el = editState.element;
 
-    function handleBlur() {
+    function handleBlur(e: FocusEvent) {
+      const rt = e.relatedTarget as HTMLElement | null;
+      if (rt?.closest("[data-format-toolbar]")) {
+        // Focus moved to the format toolbar — don't commit; restore focus after interaction
+        setTimeout(() => {
+          const state = editStateRef.current;
+          if (state) state.element.focus();
+        }, 0);
+        return;
+      }
       const state = editStateRef.current;
       if (state) commit(state);
     }
@@ -302,7 +311,12 @@ export function TextEditor({
   const handleFormat = useCallback(
     (cmd: FormatCommand) => {
       const state = editStateRef.current;
-      if (state) handleFormatForState(state, cmd);
+      if (!state) return;
+      handleFormatForState(state, cmd);
+      // Restore focus to the editable element after toolbar interaction
+      requestAnimationFrame(() => {
+        editStateRef.current?.element.focus();
+      });
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [updateBlock],
