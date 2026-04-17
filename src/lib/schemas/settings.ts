@@ -73,7 +73,7 @@ export const SettingsSchema = z.object({
   seoTitle: z.string().nullable().default(null),
   seoDescription: z.string().nullable().default(null),
   ogImage: z.string().nullable().default(null),
-  animationsDisabled: intBool.default(0),
+  pageBgDisabled: intBool.default(0),
   defaultAnimation: z.string().nullable().default(null),
 });
 

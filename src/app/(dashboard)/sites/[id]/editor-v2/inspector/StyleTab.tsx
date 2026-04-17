@@ -113,23 +113,23 @@ export function StyleTab() {
 
       <div className="flex items-center justify-between border-t border-border pt-4">
         <div>
-          <p className="text-xs font-medium">Disable all animations</p>
+          <p className="text-xs font-medium">Disable page background</p>
           <p className="text-[10px] text-muted-foreground">
-            Turns off animations for visitors
+            Removes page-level background so per-block colors show through
           </p>
         </div>
         <button
           type="button"
           role="switch"
-          aria-checked={!!settings.animationsDisabled}
-          onClick={() => updateSettings({ animationsDisabled: settings.animationsDisabled ? 0 : 1 })}
+          aria-checked={!!settings.pageBgDisabled}
+          onClick={() => updateSettings({ pageBgDisabled: settings.pageBgDisabled ? 0 : 1 })}
           className={`relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors ${
-            settings.animationsDisabled ? "bg-primary" : "bg-muted"
+            settings.pageBgDisabled ? "bg-primary" : "bg-muted"
           }`}
         >
           <span
             className={`inline-block h-3.5 w-3.5 rounded-full bg-white shadow-sm transition-transform ${
-              settings.animationsDisabled ? "translate-x-4" : "translate-x-0.5"
+              settings.pageBgDisabled ? "translate-x-4" : "translate-x-0.5"
             }`}
           />
         </button>
