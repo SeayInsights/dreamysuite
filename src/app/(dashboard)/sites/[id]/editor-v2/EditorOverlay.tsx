@@ -14,14 +14,13 @@ interface Props {
 
 export function EditorOverlay({ children, containerRef }: Props) {
 	const frameRef = containerRef;
-	const { select, hover, clear, selectedBlockId } = useSelection();
+	const { select, hover, clear } = useSelection();
 
 	return (
 		<div
 			ref={containerRef}
 			className="relative h-full w-full overflow-y-auto"
 			onClick={(e) => {
-				// Use getState() for always-fresh selection — avoids stale closure
 				const currentId = useEditorStore.getState().selectedBlockId;
 				const id = (e.target as HTMLElement)
 					.closest<HTMLElement>("[data-block-id]")
