@@ -122,6 +122,25 @@ export function blockSectionStyle(cfg: Record<string, unknown>): CSSProperties {
   return style;
 }
 
+/**
+ * Resolve breakpoint-scoped config for preview. For non-desktop breakpoints,
+ * any key ending in `_tablet` or `_mobile` overrides the corresponding base key.
+ */
+export function resolveBreakpointConfig(
+	cfg: Record<string, unknown>,
+	breakpoint: "desktop" | "tablet" | "mobile",
+): Record<string, unknown> {
+	if (breakpoint === "desktop") return cfg;
+	const suffix = `_${breakpoint}`;
+	const resolved = { ...cfg };
+	for (const key of Object.keys(cfg)) {
+		if (key.endsWith(suffix)) {
+			resolved[key.slice(0, -suffix.length)] = cfg[key];
+		}
+	}
+	return resolved;
+}
+
 /** Clip-path derived from a cfg.cropDelta = { top, left, right, bottom } (px). */
 export function cropClipPath(cfg: Record<string, unknown>): string | undefined {
   const d = cfg.cropDelta as
