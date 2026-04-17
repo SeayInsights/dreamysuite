@@ -2,6 +2,8 @@
 
 import { useEditorStore } from "@/app/stores/editorStore";
 import { NavPreview } from "../NavPreview";
+import { EffectPicker } from "../EffectPicker";
+import type { EventType } from "@/lib/effects/types";
 
 export function NavigationTray() {
 	const settings = useEditorStore((s) => s.settings);
@@ -11,6 +13,7 @@ export function NavigationTray() {
 	const navShape = (settings.navShape as string) ?? "bar";
 	const navMaterial = (settings.navMaterial as string) ?? "solid";
 	const navPosition = (settings.navPosition as string) ?? "fixed";
+	const eventType = useEditorStore((s) => s.eventType) as EventType | null;
 
 	return (
 		<div className="flex h-full flex-col">
@@ -87,6 +90,15 @@ export function NavigationTray() {
 							))}
 						</div>
 					</div>
+
+					{/* Nav Effect */}
+					<EffectPicker
+						category="nav"
+						value={settings.effectNav}
+						onChange={(id) => updateSettings({ effectNav: id, effectPreset: null })}
+						eventType={eventType}
+						label="Nav Effect"
+					/>
 
 					{/* Position */}
 					<div className="flex flex-col gap-1">
