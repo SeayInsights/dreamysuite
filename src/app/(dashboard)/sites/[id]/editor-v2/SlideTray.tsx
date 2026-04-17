@@ -11,6 +11,7 @@ import { LayersTray } from "./trays/LayersTray";
 import { ThemeTray } from "./trays/ThemeTray";
 import { MediaTray } from "./trays/MediaTray";
 import { MusicTray } from "./trays/MusicTray";
+import { NavigationTray } from "./trays/NavigationTray";
 import { LanguageTray } from "./trays/LanguageTray";
 import { SettingsTray } from "./trays/SettingsTray";
 
@@ -95,6 +96,7 @@ export function SlideTray() {
 			{openTray === "elements" && <ElementsTray />}
 			{openTray === "layers" && <LayersTray />}
 			{openTray === "theme" && <ThemeTray />}
+			{openTray === "navigation" && <NavigationTray />}
 			{openTray === "media" && <MediaTray />}
 			{openTray === "music" && <MusicTray />}
 			{openTray === "language" && <LanguageTray />}

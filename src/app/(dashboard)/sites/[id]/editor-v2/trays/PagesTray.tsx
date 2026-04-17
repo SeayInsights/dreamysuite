@@ -19,6 +19,7 @@ import {
 	HelpCircle,
 	PartyPopper,
 	BookOpen,
+	Trash2,
 	type LucideIcon,
 } from "lucide-react";
 
@@ -31,7 +32,6 @@ interface PageSuggestion {
 }
 
 const SHARED_PAGES: PageSuggestion[] = [
-	{ slug: "home", label: "Home", icon: Home },
 	{ slug: "our-story", label: "Our Story", icon: Heart },
 	{ slug: "gallery", label: "Gallery", icon: Camera },
 	{ slug: "rsvp", label: "RSVP", icon: FileText },
@@ -92,8 +92,11 @@ export function PagesTray() {
 	const siteId = useEditorStore((s) => s.siteId);
 	const eventType = useEditorStore((s) => s.eventType);
 
+	const setBlocks = useEditorStore((s) => s.setBlocks);
 	const [customName, setCustomName] = useState("");
 	const [saving, setSaving] = useState<string | null>(null);
+	const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
+	const [deleting, setDeleting] = useState(false);
 
 	const suggestions = EVENT_PAGES[eventType ?? ""] ?? FALLBACK_PAGES;
 	const existingSlugs = new Set(pages.map((p) => p.slug));
@@ -113,9 +116,9 @@ export function PagesTray() {
 				return;
 			}
 			const { page } = (await res.json()) as {
-				page: { id: string; slug: string; label: string; sortOrder: number };
+				page: { id: string; slug: string; label: string; sortOrder: number; isVisible?: number };
 			};
-			setPages([...pages, page]);
+			setPages([...pages, { ...page, isVisible: page.isVisible ?? 1 }]);
 			setCurrentPageId(page.id);
 		} finally {
 			setSaving(null);
@@ -131,6 +134,27 @@ export function PagesTray() {
 			.replace(/^-|-$/g, "");
 		await createPage(slug, customName.trim());
 		setCustomName("");
+	}
+
+	async function deletePage(pageId: string) {
+		if (!siteId) return;
+		setDeleting(true);
+		try {
+			const res = await fetch(`/api/sites/${siteId}/pages/${pageId}`, {
+				method: "DELETE",
+			});
+			if (!res.ok) return;
+			const remaining = pages.filter((p) => p.id !== pageId);
+			setPages(remaining);
+			if (currentPageId === pageId) {
+				const next = remaining[0] ?? null;
+				setCurrentPageId(next?.id ?? null);
+				setBlocks([]);
+			}
+		} finally {
+			setDeleting(false);
+			setConfirmDelete(null);
+		}
 	}
 
 	return (
@@ -150,24 +174,61 @@ export function PagesTray() {
 							Active
 						</p>
 						{pages.map((page) => (
-							<button
-								key={page.id}
-								type="button"
-								onClick={() => setCurrentPageId(page.id)}
-								className={
-									"flex w-full items-center gap-2 rounded-md px-2 py-2 text-left text-sm transition-colors " +
-									(currentPageId === page.id
-										? "bg-accent text-accent-foreground"
-										: "text-muted-foreground hover:bg-accent/50")
-								}
-							>
-								{page.sortOrder === 0 ? (
-									<Home className="size-4 shrink-0" />
+							<div key={page.id} className="group relative">
+								{confirmDelete === page.id ? (
+									<div className="flex items-center gap-1 rounded-md border border-destructive/30 bg-destructive/5 px-2 py-1.5">
+										<span className="flex-1 text-xs text-destructive">Delete "{page.label}"?</span>
+										<button
+											type="button"
+											onClick={() => deletePage(page.id)}
+											disabled={deleting}
+											className="rounded px-1.5 py-0.5 text-[11px] font-medium text-destructive hover:bg-destructive/10 disabled:opacity-50"
+										>
+											{deleting ? "..." : "Yes"}
+										</button>
+										<button
+											type="button"
+											onClick={() => setConfirmDelete(null)}
+											className="rounded px-1.5 py-0.5 text-[11px] text-muted-foreground hover:bg-accent/50"
+										>
+											No
+										</button>
+									</div>
 								) : (
-									<File className="size-4 shrink-0" />
+									<button
+										type="button"
+										onClick={() => setCurrentPageId(page.id)}
+										className={
+											"flex w-full items-center gap-2 rounded-md px-2 py-2 text-left text-sm transition-colors " +
+											(currentPageId === page.id
+												? "bg-accent text-accent-foreground"
+												: "text-muted-foreground hover:bg-accent/50")
+										}
+									>
+										{page.sortOrder === 0 ? (
+											<Home className="size-4 shrink-0" />
+										) : (
+											<File className="size-4 shrink-0" />
+										)}
+										<span className="flex-1 truncate">
+											{page.sortOrder === 0 ? "Home" : page.label}
+										</span>
+									</button>
 								)}
-								<span className="flex-1 truncate">{page.label}</span>
-							</button>
+								{page.sortOrder !== 0 && confirmDelete !== page.id && (
+									<button
+										type="button"
+										onClick={(e) => {
+											e.stopPropagation();
+											setConfirmDelete(page.id);
+										}}
+										className="absolute right-1.5 top-1/2 -translate-y-1/2 rounded p-1 text-muted-foreground opacity-0 transition-opacity hover:text-destructive group-hover:opacity-100"
+										title={`Delete ${page.label}`}
+									>
+										<Trash2 className="size-3.5" />
+									</button>
+								)}
+							</div>
 						))}
 					</div>
 				)}
