@@ -2,6 +2,7 @@
 
 import { useEditorStore } from "@/app/stores/editorStore";
 import { useStyledValue } from "../hooks/useStyledValue";
+import { CustomCssPanel } from "./CustomCssPanel";
 
 function InheritBadge({ isInheriting, onClear }: { isInheriting: boolean; onClear: () => void }) {
 	const mode = useEditorStore((s) => s.mode);
@@ -49,6 +50,7 @@ export function StyleTab() {
 				</div>
 			)}
 			<BackgroundColorControl blockId={selectedBlockId} />
+			{mode === "pro" && <CustomCssPanel blockId={selectedBlockId} />}
 		</div>
 	);
 }
