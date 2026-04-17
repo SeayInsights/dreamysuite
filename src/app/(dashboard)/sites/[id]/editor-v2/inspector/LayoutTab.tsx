@@ -2,176 +2,119 @@
 
 import { useState, useEffect } from "react";
 import { useEditorStore } from "@/app/stores/editorStore";
-import { useStyledValue } from "../hooks/useStyledValue";
 
-interface Padding {
-	top: number;
-	right: number;
-	bottom: number;
-	left: number;
-}
-
-const DEFAULT_PADDING: Padding = { top: 56, right: 16, bottom: 56, left: 16 };
-
-function InheritBadge({ isInheriting, onClear }: { isInheriting: boolean; onClear: () => void }) {
-	const mode = useEditorStore((s) => s.mode);
-	const breakpoint = useEditorStore((s) => s.breakpoint);
-
-	if (breakpoint === "desktop") return null;
-
-	if (isInheriting) {
-		return <span className="text-[10px] italic text-muted-foreground">inheriting</span>;
-	}
-
-	if (mode === "pro") {
-		return (
-			<button
-				type="button"
-				onClick={onClear}
-				className="text-[10px] text-muted-foreground underline hover:text-foreground"
-			>
-				clear override
-			</button>
-		);
-	}
-
-	return null;
-}
-
-function NumberInput({
-	label,
-	value,
-	onChange,
-	min = 0,
-	max = 999,
-	unit = "px",
+function SettingsInput({
+  label,
+  value,
+  onChange,
+  placeholder,
+  unit = "px",
 }: {
-	label: string;
-	value: number;
-	onChange: (v: number) => void;
-	min?: number;
-	max?: number;
-	unit?: string;
+  label: string;
+  value: string | null;
+  onChange: (v: string | null) => void;
+  placeholder?: string;
+  unit?: string;
 }) {
-	const [draft, setDraft] = useState(String(value));
+  const [draft, setDraft] = useState(value ?? "");
 
-	useEffect(() => {
-		setDraft(String(value));
-	}, [value]);
+  useEffect(() => {
+    setDraft(value ?? "");
+  }, [value]);
 
-	function commit() {
-		const n = Math.max(min, Math.min(max, parseInt(draft) || 0));
-		onChange(n);
-		setDraft(String(n));
-	}
+  function commit() {
+    const trimmed = draft.trim();
+    onChange(trimmed === "" ? null : trimmed);
+  }
 
-	return (
-		<div className="flex items-center gap-2">
-			<label className="w-10 shrink-0 text-[10px] uppercase text-muted-foreground">{label}</label>
-			<input
-				type="text"
-				inputMode="numeric"
-				value={draft}
-				onChange={(e) => {
-					const raw = e.target.value.replace(/[^0-9]/g, "");
-					setDraft(raw);
-					const n = parseInt(raw);
-					if (!isNaN(n)) onChange(Math.max(min, Math.min(max, n)));
-				}}
-				onBlur={commit}
-				onKeyDown={(e) => { if (e.key === "Enter") commit(); }}
-				className="h-7 w-full rounded border border-input bg-background px-2 text-xs tabular-nums focus:outline-none focus:ring-1 focus:ring-ring"
-			/>
-			<span className="shrink-0 text-[10px] text-muted-foreground">{unit}</span>
-		</div>
-	);
+  return (
+    <div className="flex items-center gap-2">
+      <label className="w-14 shrink-0 text-[10px] uppercase text-muted-foreground">{label}</label>
+      <input
+        type="text"
+        inputMode="numeric"
+        value={draft}
+        placeholder={placeholder ?? "auto"}
+        onChange={(e) => setDraft(e.target.value)}
+        onBlur={commit}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") commit();
+          e.stopPropagation();
+        }}
+        className="h-7 w-full rounded border border-input bg-background px-2 text-xs tabular-nums focus:outline-none focus:ring-1 focus:ring-ring"
+      />
+      <span className="shrink-0 text-[10px] text-muted-foreground">{unit}</span>
+    </div>
+  );
 }
 
 export function LayoutTab() {
-	const selectedBlockId = useEditorStore((s) => s.selectedBlockId);
-	const mode = useEditorStore((s) => s.mode);
-	const breakpoint = useEditorStore((s) => s.breakpoint);
+  const settings = useEditorStore((s) => s.settings);
+  const updateSettings = useEditorStore((s) => s.updateSettings);
 
-	if (!selectedBlockId) {
-		return (
-			<div className="p-4 text-sm text-muted-foreground">
-				Select a block to edit layout.
-			</div>
-		);
-	}
+  return (
+    <div className="space-y-4 p-4">
+      <div className="space-y-2">
+        <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+          Page Width
+        </p>
+        <SettingsInput
+          label="Max width"
+          value={settings.siteMaxWidth}
+          onChange={(v) => updateSettings({ siteMaxWidth: v })}
+          placeholder="none"
+        />
+      </div>
 
-	return (
-		<div className="space-y-4 p-4">
-			{breakpoint !== "desktop" && mode === "pro" && (
-				<div className="rounded bg-accent/50 px-2.5 py-1.5 text-[10px] text-muted-foreground">
-					Editing <span className="font-semibold">{breakpoint}</span> overrides
-				</div>
-			)}
-			<PaddingControls blockId={selectedBlockId} />
-			<HeightControl blockId={selectedBlockId} />
-		</div>
-	);
-}
+      <div className="space-y-2 border-t border-border pt-4">
+        <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+          Page Margins
+        </p>
+        <div className="grid grid-cols-2 gap-2">
+          <SettingsInput
+            label="Top"
+            value={settings.marginTop}
+            onChange={(v) => updateSettings({ marginTop: v })}
+          />
+          <SettingsInput
+            label="Right"
+            value={settings.marginRight}
+            onChange={(v) => updateSettings({ marginRight: v })}
+          />
+          <SettingsInput
+            label="Bottom"
+            value={settings.marginBottom}
+            onChange={(v) => updateSettings({ marginBottom: v })}
+          />
+          <SettingsInput
+            label="Left"
+            value={settings.marginLeft}
+            onChange={(v) => updateSettings({ marginLeft: v })}
+          />
+        </div>
+      </div>
 
-function PaddingControls({ blockId }: { blockId: string }) {
-	const [padding, setPadding, isInheriting, clearPadding] = useStyledValue<Padding>(
-		blockId,
-		"padding",
-		DEFAULT_PADDING,
-	);
+      <div className="space-y-2 border-t border-border pt-4">
+        <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+          Section Spacing
+        </p>
+        <SettingsInput
+          label="Gap"
+          value={settings.sectionSpacing}
+          onChange={(v) => updateSettings({ sectionSpacing: v })}
+          placeholder="0"
+        />
+      </div>
 
-	function updateSide(side: keyof Padding, v: number) {
-		setPadding({ ...padding, [side]: v });
-	}
-
-	return (
-		<div className="space-y-2">
-			<div className="flex items-center justify-between">
-				<p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-					Padding
-				</p>
-				<InheritBadge isInheriting={isInheriting} onClear={clearPadding} />
-			</div>
-			<div className="grid grid-cols-2 gap-2">
-				<NumberInput label="Top" value={padding.top} onChange={(v) => updateSide("top", v)} />
-				<NumberInput label="Right" value={padding.right} onChange={(v) => updateSide("right", v)} />
-				<NumberInput label="Bottom" value={padding.bottom} onChange={(v) => updateSide("bottom", v)} />
-				<NumberInput label="Left" value={padding.left} onChange={(v) => updateSide("left", v)} />
-			</div>
-		</div>
-	);
-}
-
-function HeightControl({ blockId }: { blockId: string }) {
-	const [height, setHeight, isInheriting, clearHeight] = useStyledValue<number>(
-		blockId,
-		"blockHeight",
-		0,
-	);
-
-	return (
-		<div className="space-y-2 border-t border-border pt-4">
-			<div className="flex items-center justify-between">
-				<p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-					Height
-				</p>
-				<InheritBadge isInheriting={isInheriting} onClear={clearHeight} />
-			</div>
-			<div className="flex items-center gap-2">
-				<input
-					type="number"
-					min={0}
-					max={2000}
-					value={height}
-					onChange={(e) => setHeight(Math.max(0, Number(e.target.value) || 0))}
-					placeholder={height === 0 ? "auto" : undefined}
-					className="h-7 w-full rounded border border-input bg-background px-2 text-xs tabular-nums focus:outline-none focus:ring-1 focus:ring-ring"
-				/>
-				<span className="shrink-0 text-[10px] text-muted-foreground">px</span>
-			</div>
-			{height === 0 && (
-				<p className="text-[10px] text-muted-foreground">0 = auto height</p>
-			)}
-		</div>
-	);
+      <div className="border-t border-border pt-4">
+        <button
+          type="button"
+          disabled
+          className="flex h-9 w-full items-center justify-center rounded-md border border-dashed border-border text-xs text-muted-foreground"
+        >
+          Templates — coming soon
+        </button>
+      </div>
+    </div>
+  );
 }

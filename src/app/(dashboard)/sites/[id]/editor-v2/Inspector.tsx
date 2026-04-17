@@ -42,8 +42,8 @@ export function Inspector() {
 	}, []);
 	const inspectorOpen = useEditorStore((s) => s.inspectorOpen);
 	const setInspectorOpen = useEditorStore((s) => s.setInspectorOpen);
-	const selectedBlockId = useEditorStore((s) => s.selectedBlockId);
 	const mode = useEditorStore((s) => s.mode);
+	const settingsLoaded = useEditorStore((s) => s.settingsLoaded);
 	const [tab, setTab] = useState<TabId>("layout");
 
 	const visibleTabs = mode === "simple"
@@ -102,7 +102,7 @@ export function Inspector() {
 		>
 			<div className="flex h-10 items-center justify-between border-b border-border px-3">
 				<div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-					{selectedBlockId ? "Block" : "Inspector"}
+					Page Settings
 				</div>
 				<button
 					type="button"
@@ -145,9 +145,9 @@ export function Inspector() {
 				role="tabpanel"
 				className="h-[calc(100%-5.25rem)] overflow-y-auto"
 			>
-				{!selectedBlockId ? (
-					<div className="p-4 text-sm text-muted-foreground">
-						Select a block on the canvas to edit its properties.
+				{!settingsLoaded ? (
+					<div className="flex items-center justify-center p-8">
+						<div className="h-5 w-5 animate-spin rounded-full border-2 border-muted-foreground border-t-foreground" />
 					</div>
 				) : tab === "layout" ? (
 					<LayoutTab />
