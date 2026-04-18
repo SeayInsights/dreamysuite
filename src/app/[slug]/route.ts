@@ -8,8 +8,9 @@ import { NextRequest } from "next/server";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { createAuth, type Env } from "@/app/lib/auth.server";
 import { safeBlockConfig } from "@/lib/schemas/blocks";
+import { getEffectById } from "@/lib/effects/registry";
 
-const R3F_EFFECTS = new Set(["silk", "beams", "dither"]);
+const R3F_EFFECTS = new Set(["silk", "beams", "dither", "antigravity"]);
 
 export async function GET(
   req: NextRequest,
@@ -48,6 +49,14 @@ export async function GET(
   }
 
   const settings = await db.prepare("SELECT * FROM site_setting WHERE siteId = ?").bind(site.id).first<SiteSettingRow>();
+
+  if (settings) {
+    const effectKeys = ["effectBg", "effectText", "effectCard", "effectTransition", "effectCursor", "effectDecoration", "effectNavStyle"] as const;
+    for (const key of effectKeys) {
+      const id = settings[key];
+      if (id && getEffectById(id)?.disabled) (settings as unknown as Record<string, unknown>)[key] = null;
+    }
+  }
 
   if (!isOwner && !settings?.isLive) {
     return new Response(comingSoonHtml(site.name), { status: 200, headers: { "content-type": "text/html; charset=utf-8" } });
@@ -181,6 +190,7 @@ interface SiteSettingRow {
   bgImageLayer: string | null;
   bgImageOpacity: number | null;
   siteMaxWidth: number | null;
+  sectionSpacing: string | null;
   passwordPages: string | null;
   effectPreset: string | null;
   effectBg: string | null;
@@ -366,10 +376,13 @@ function buildStyles(settings: SiteSettingRow | null): BuiltStyles {
       --nav-link-padding: ${escHtml(navLinkPadding)};
       --music-btn-bg: ${escHtml(settings?.musicBtnBg || "var(--accent)")};
       --music-btn-color: ${escHtml(settings?.musicBtnColor || "#ffffff")};
+      --section-spacing: ${Number(settings?.sectionSpacing ?? 0) || 0}px;
     }
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    html { scroll-behavior: smooth; scrollbar-gutter: stable; }
+    html { scroll-behavior: smooth; }
+    body { scrollbar-width: none; }
+    body::-webkit-scrollbar { display: none; }
     body {
       background: var(--bg);
       ${escapedBgImageUrl && settings?.bgImageLayer !== "overlay" ? `background-image: url('${escapedBgImageUrl}'); background-size: cover; background-position: center; background-attachment: fixed;` : ""}
@@ -395,14 +408,13 @@ function buildStyles(settings: SiteSettingRow | null): BuiltStyles {
       const mLeft   = Number(settings?.marginLeft   ?? 0) || 0;
       const mRight  = Number(settings?.marginRight  ?? 0) || 0;
       if (!mTop && !mBottom && !mLeft && !mRight) return "";
-      // All four curtains use injected divs so postMessage can update them live.
-      // z-index 9990: above content (0) and nav (~100) but below overlays (9999).
       const bgVal = escHtml(bg);
       const lines: string[] = [];
       if (mTop > 0)    lines.push(`.margin-curtain-t { height:${mTop}px; background:${bgVal}; }`);
       if (mBottom > 0) lines.push(`.margin-curtain-b { height:${mBottom}px; background:${bgVal}; }`);
       if (mLeft > 0)   lines.push(`.margin-curtain-l { width:${mLeft}px; background:${bgVal}; }`);
       if (mRight > 0)  lines.push(`.margin-curtain-r { width:${mRight}px; background:${bgVal}; }`);
+      lines.push(`.site-nav.site-nav, .site-nav-row.site-nav-row { z-index:9991; }`);
       return lines.join("\n    ");
     })()}
 
@@ -1296,7 +1308,7 @@ function buildStyles(settings: SiteSettingRow | null): BuiltStyles {
 
     /* ── Page sections ── */
     .page-section { display: none; }
-    .page-section.active { display: block; }
+    .page-section.active { display: flex; flex-direction: column; gap: var(--section-spacing, 0px); }
 
     /* ── Music player ── */
     .music-player {
@@ -1393,7 +1405,9 @@ function renderBlock(
   // Compute inline style for block container (background color + text color from tile settings)
   const _bsParts: string[] = [];
   const _bgCfg = cfg.background as { type?: string; value?: string } | null | undefined;
-  if (_bgCfg?.type === 'color' && _bgCfg?.value) _bsParts.push(`background-color:${escHtml(String(_bgCfg.value))}`);
+  const _bgColor = cfg.backgroundColor as string | undefined;
+  if (_bgColor) _bsParts.push(`background:${escHtml(_bgColor)}`);
+  else if (_bgCfg?.type === 'color' && _bgCfg?.value) _bsParts.push(`background:${escHtml(String(_bgCfg.value))}`);
   const _tcCfg = cfg.textColor as string | undefined;
   if (_tcCfg) _bsParts.push(`color:${escHtml(_tcCfg)}`, `--block-text:${escHtml(_tcCfg)}`);
   const _bcCfg = cfg.borderColor as string | undefined;
@@ -2130,7 +2144,15 @@ function buildMessageListenerScript(): string {
         if (cB) { cB.style.height = mb + 'px'; if (mb) cB.style.background = siteBg; }
         if (cL) { cL.style.width = ml + 'px'; if (ml) cL.style.background = siteBg; }
         if (cR) { cR.style.width = mr + 'px'; if (mr) cR.style.background = siteBg; }
+        var hasAny = mt || mr || mb || ml;
+        var navEls = document.querySelectorAll('.site-nav, .site-nav-row');
+        navEls.forEach(function(n) {
+          n.style.zIndex = hasAny ? '9991' : '';
+        });
       }
+    }
+    if ('sectionSpacing' in delta) {
+      root.style.setProperty('--section-spacing', (Number(delta.sectionSpacing) || 0) + 'px');
     }
     if ('siteMaxWidth' in delta) {
       var sc = document.getElementById('site-content');
@@ -2518,7 +2540,7 @@ function buildHtml(
 
   // Build nav bar (only if there are multiple pages, all visible)
   const visiblePages = pages.filter((p) => p.isVisible !== 0);
-  const hasMultiplePages = visiblePages.length >= 1;
+  const hasMultiplePages = visiblePages.length > 1;
 
   // Nav labels: use page label, fall back to slug with initial cap
   function pageLabel(p: PageRow): string {
@@ -2639,7 +2661,8 @@ function buildHtml(
     contentStyles.push(`overflow-x:hidden`);
   }
   if (mMaxWidth) contentStyles.push(`max-width:${mMaxWidth}px`, `margin-left:auto`, `margin-right:auto`);
-  const contentPadStyle = contentStyles.length ? ` style="${contentStyles.join(';')}"` : '';
+  contentStyles.push(`position:relative`, `z-index:2`);
+  const contentPadStyle = ` style="${contentStyles.join(';')}"`;
 
   // No-pages fallback — site exists but has no pages yet
   const fallbackHtml = visiblePages.length === 0
@@ -3069,10 +3092,11 @@ function toggleMusic(){var a=document.getElementById('audio-player'),b=document.
   ${fontsTag}
   ${gsapCdn}
   ${(() => {
-    const allEffects = [settings?.effectBg, settings?.effectText, settings?.effectCard, settings?.effectTransition, settings?.effectCursor, settings?.effectDecoration, settings?.effectNav, settings?.effectNavStyle].filter(Boolean) as string[];
+    const allEffects = [settings?.effectBg, settings?.effectText, settings?.effectCard, settings?.effectTransition, settings?.effectCursor, settings?.effectDecoration, settings?.effectNavStyle].filter(Boolean) as string[];
     if (!allEffects.length) return "";
     const needsR3F = allEffects.some(id => R3F_EFFECTS.has(id));
-    return `<script type="importmap">${needsR3F ? '{"imports":{"react":"https://esm.sh/react@19.1.5","react/":"https://esm.sh/react@19.1.5/","react-dom":"https://esm.sh/react-dom@19.1.5","react-dom/":"https://esm.sh/react-dom@19.1.5/","motion/react":"https://esm.sh/motion@12.38.0/react?external=react,react-dom","motion":"https://esm.sh/motion@12.38.0?external=react,react-dom","@react-three/fiber":"https://esm.sh/@react-three/fiber@9.6.0?external=react,react-dom,three","@react-three/drei":"https://esm.sh/@react-three/drei@10.7.7?external=react,react-dom,three,@react-three/fiber","@react-three/postprocessing":"https://esm.sh/@react-three/postprocessing@3.0.4?external=react,react-dom,three,@react-three/fiber,postprocessing","three":"https://esm.sh/three@0.184.0","three/":"https://esm.sh/three@0.184.0/","postprocessing":"https://esm.sh/postprocessing@6.39.1?external=three","ogl":"https://esm.sh/ogl@1.0.11","gsap":"https://esm.sh/gsap@3.15.0"}}' : '{"imports":{"react":"/effects/_rt.js","react/jsx-runtime":"/effects/_jsx.js","react-dom":"/effects/_rt.js","react-dom/client":"/effects/_rt-client.js","motion/react":"https://esm.sh/motion@12.38.0/react?external=react,react-dom","motion":"https://esm.sh/motion@12.38.0?external=react,react-dom","ogl":"https://esm.sh/ogl@1.0.11","three":"https://esm.sh/three@0.184.0","three/":"https://esm.sh/three@0.184.0/","gsap":"https://esm.sh/gsap@3.15.0","postprocessing":"https://esm.sh/postprocessing@6.39.1?external=three"}}'}</script>`;
+    const r3fImports = needsR3F ? ',"@react-three/fiber":"https://esm.sh/@react-three/fiber@9.6.0?external=react,react-dom,three","@react-three/drei":"https://esm.sh/@react-three/drei@10.7.7?external=react,react-dom,three,@react-three/fiber","@react-three/postprocessing":"https://esm.sh/@react-three/postprocessing@3.0.4?external=react,react-dom,three,@react-three/fiber,postprocessing"' : "";
+    return `<script type="importmap">{"imports":{"react":"https://esm.sh/react@19.1.5","react/":"https://esm.sh/react@19.1.5/","react-dom":"https://esm.sh/react-dom@19.1.5","react-dom/":"https://esm.sh/react-dom@19.1.5/","motion/react":"https://esm.sh/motion@12.38.0/react?external=react,react-dom","motion":"https://esm.sh/motion@12.38.0?external=react,react-dom"${r3fImports},"three":"https://esm.sh/three@0.184.0","three/":"https://esm.sh/three@0.184.0/","postprocessing":"https://esm.sh/postprocessing@6.39.1?external=three","ogl":"https://esm.sh/ogl@1.0.11","gsap":"https://esm.sh/gsap@3.15.0"}}</script>`;
   })()}
   <style>${siteCss}
   .lang-select{appearance:none;border:1px solid var(--border,#e7e5e4);border-radius:6px;padding:0.375rem 1.75rem 0.375rem 0.625rem;font-family:inherit;font-size:0.8125rem;background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23666' d='M3 4.5L6 7.5L9 4.5'/%3E%3C/svg%3E") no-repeat right 0.5rem center;cursor:pointer;outline:none;color:var(--text,#292524)}</style>
@@ -3175,8 +3199,8 @@ function submitRsvp(event, slug, formId, msgId) {
       });
     }
     var[{default:E},{createElement:h},{createRoot:cr}]=await p;
-    var c1=${JSON.stringify(settings.effectColor1 ?? settings.accentColor ?? "#B8921A")};
-    var c2=${JSON.stringify(settings.effectColor2 ?? settings.accentColor ?? "#B8921A")};
+    var c1=${JSON.stringify(settings.effectColor1 ?? settings.headingColor ?? settings.accentColor ?? "#B8921A")};
+    var c2=${JSON.stringify(settings.effectColor2 ?? settings.bodyColor ?? settings.accentColor ?? "#B8921A")};
     var c3=${JSON.stringify(settings.effectColor3 ?? settings.accentColor ?? "#B8921A")};
     cr(el).render(h(E,{color:c1,colors:[c1,c2,c3],lineColor:c1,backgroundColor:"transparent",particleColors:[c1,c2,c3]}));
   }catch(e){console.warn('Effect unavailable:',e)}
@@ -3203,8 +3227,8 @@ function submitRsvp(event, slug, formId, msgId) {
   var el=document.getElementById('effect-decoration');
   if(!el) return;
   try{
-    var c1=${JSON.stringify(settings.effectColor1 ?? settings.accentColor ?? "#B8921A")};
-    var c2=${JSON.stringify(settings.effectColor2 ?? settings.accentColor ?? "#B8921A")};
+    var c1=${JSON.stringify(settings.effectColor1 ?? settings.headingColor ?? settings.accentColor ?? "#B8921A")};
+    var c2=${JSON.stringify(settings.effectColor2 ?? settings.bodyColor ?? settings.accentColor ?? "#B8921A")};
     var c3=${JSON.stringify(settings.effectColor3 ?? settings.accentColor ?? "#B8921A")};
     var[{default:E},{createElement:h},{createRoot:cr}]=await Promise.all([
       import('/effects/${escHtml(settings.effectDecoration)}.js'),
@@ -3248,6 +3272,9 @@ function submitRsvp(event, slug, formId, msgId) {
       import('react'),
       import('react-dom/client')
     ]);
+    var c1=${JSON.stringify(settings.effectColor1 ?? settings.headingColor ?? settings.accentColor ?? "#B8921A")};
+    var c2=${JSON.stringify(settings.effectColor2 ?? settings.bodyColor ?? settings.accentColor ?? "#B8921A")};
+    var c3=${JSON.stringify(settings.effectColor3 ?? settings.accentColor ?? "#B8921A")};
     var headings=document.querySelectorAll('.block h1,.block h2,.block h3,.block .heading-text');
     headings.forEach(function(el){
       var wrap=document.createElement('span');
@@ -3255,7 +3282,7 @@ function submitRsvp(event, slug, formId, msgId) {
       var text=el.textContent||'';
       el.textContent='';
       el.appendChild(wrap);
-      cr(wrap).render(h(E,{children:text}));
+      cr(wrap).render(h(E,{children:text,color:c1,colors:[c1,c2,c3]}));
     });
   }catch(e){console.warn('Text effect unavailable:',e)}
 })();
@@ -3264,7 +3291,7 @@ function submitRsvp(event, slug, formId, msgId) {
 (async()=>{
   if(window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
   try{
-    var c1=${JSON.stringify(settings.effectColor1 ?? settings.accentColor ?? "#B8921A")};
+    var c1=${JSON.stringify(settings.effectColor1 ?? settings.headingColor ?? settings.accentColor ?? "#B8921A")};
     var[{default:E},{createElement:h},{createRoot:cr}]=await Promise.all([
       import('/effects/${escHtml(settings.effectCard)}.js'),
       import('react'),
@@ -3276,35 +3303,27 @@ function submitRsvp(event, slug, formId, msgId) {
       wrap.style.cssText='position:absolute;inset:0;pointer-events:none;overflow:hidden;border-radius:inherit';
       el.style.position='relative';
       el.prepend(wrap);
-      cr(wrap).render(h(E,{color:c1}));
+      try{cr(wrap).render(h(E,{color:c1}))}catch(_){wrap.remove()}
+      setTimeout(function(){var cv=wrap.querySelector('canvas');if(cv&&cv.parentNode){try{var gl=cv.getContext('webgl2')||cv.getContext('webgl');if(!gl||gl.isContextLost())wrap.remove()}catch(_){wrap.remove()}}},3000);
     });
   }catch(e){console.warn('Card effect unavailable:',e)}
 })();
 </script>` : ""}
-  ${settings?.effectNav ? `<script type="module">
+  ${settings?.effectNavStyle ? (() => {
+    const nsAccent = escHtml(settings.navHighlightColor ?? settings.accentColor ?? "#B8921A");
+    const nsBg = escHtml(settings.navBg ?? "#ffffff");
+    const nsText = escHtml(settings.navLinkColor ?? "#6B6560");
+    const nsBrand = escHtml(settings.navBrandColor ?? "#1C1917");
+    const nsHFont = escHtml(settings.headingFont ?? "Georgia, serif");
+    const nsBFont = escHtml(settings.bodyFont ?? "system-ui, sans-serif");
+    const nsBrandName = escHtml(settings.eventName ?? "");
+    const nsInitials = (settings.eventName ?? "").split(/[\s&+]+/).map((w: string) => w.charAt(0)).filter(Boolean).join("").toUpperCase().slice(0, 3);
+    const nsLogoSvg = `data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 80 80"><circle cx="40" cy="40" r="38" fill="${nsAccent}"/><text x="40" y="40" text-anchor="middle" dominant-baseline="central" font-family="Georgia,serif" font-size="24" font-weight="bold" fill="#fff">${nsInitials}</text></svg>`)}`;
+    return `<script type="module">
 (async()=>{
   if(window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
   try{
-    var nav=document.querySelector('nav');
-    if(!nav) return;
-    var[{default:E},{createElement:h},{createRoot:cr}]=await Promise.all([
-      import('/effects/${escHtml(settings.effectNav)}.js'),
-      import('react'),
-      import('react-dom/client')
-    ]);
-    var wrap=document.createElement('div');
-    wrap.style.cssText='position:absolute;inset:0;pointer-events:none;overflow:hidden;border-radius:inherit;z-index:0';
-    nav.style.position='relative';
-    nav.prepend(wrap);
-    cr(wrap).render(h(E,null));
-  }catch(e){console.warn('Nav effect unavailable:',e)}
-})();
-</script>` : ""}
-  ${settings?.effectNavStyle ? `<script type="module">
-(async()=>{
-  if(window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-  try{
-    var nav=document.querySelector('nav');
+    var nav=document.querySelector('nav,.site-nav-row');
     if(!nav) return;
     var[{default:E},{createElement:h},{createRoot:cr}]=await Promise.all([
       import('/effects/${escHtml(settings.effectNavStyle)}.js'),
@@ -3312,18 +3331,36 @@ function submitRsvp(event, slug, formId, msgId) {
       import('react-dom/client')
     ]);
     var links=nav.querySelectorAll('a[href],button');
+    var accent=${JSON.stringify(nsAccent)};
     var items=[];
     links.forEach(function(a){
-      items.push({label:a.textContent||'',href:a.getAttribute('href')||'#',isActive:a.classList.contains('active')||a.getAttribute('aria-current')==='page'});
+      if(a.classList.contains('site-nav-brand')||a.classList.contains('site-nav-brand-outside')) return;
+      var label=a.textContent||'';
+      if(!label.trim()) return;
+      items.push({label:label,href:a.getAttribute('href')||'#',icon:label.charAt(0).toUpperCase(),color:accent,isActive:a.classList.contains('active')||a.getAttribute('aria-current')==='page'});
     });
+    if(!items.length) return;
     var wrap=document.createElement('div');
     wrap.style.cssText='width:100%';
     nav.innerHTML='';
     nav.appendChild(wrap);
-    cr(wrap).render(h(E,{items:items}));
+    cr(wrap).render(h(E,{
+      items:items,
+      logo:${JSON.stringify(nsLogoSvg)},
+      logoAlt:${JSON.stringify(nsInitials)},
+      accent:accent,
+      bg:${JSON.stringify(nsBg)},
+      textColor:${JSON.stringify(nsText)},
+      brandColor:${JSON.stringify(nsBrand)},
+      headingFont:${JSON.stringify(nsHFont)},
+      bodyFont:${JSON.stringify(nsBFont)},
+      brandName:${JSON.stringify(nsBrandName)},
+      compact:window.innerWidth<768
+    }));
   }catch(e){console.warn('Nav style unavailable:',e)}
 })();
-</script>` : ""}
+</script>`;
+  })() : ""}
 </body>
 </html>`;
 }

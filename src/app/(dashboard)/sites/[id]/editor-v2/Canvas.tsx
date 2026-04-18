@@ -132,8 +132,7 @@ export function Canvas({ siteId }: Props) {
 	return (
 		<ContextMenu>
 			<div className="relative h-full w-full">
-				<BreakpointFrame>
-					<NavPreview />
+				<BreakpointFrame nav={<NavPreview />}>
 					<EditorOverlay containerRef={containerRef}>
 						<SiteRenderer blocks={blocks} ordered />
 						<GridOverlay />
