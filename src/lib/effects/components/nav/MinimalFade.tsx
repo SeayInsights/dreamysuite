@@ -14,14 +14,15 @@ export default function MinimalFade({
   headingFont,
   bodyFont,
   brandName,
+  compact,
 }: NavStyleProps) {
   return (
     <nav
       style={{
         display: "flex",
         alignItems: "center",
-        padding: "0 1.5rem",
-        height: 56,
+        padding: compact ? "0 0.5rem" : "0 1.5rem",
+        height: compact ? 44 : 56,
         fontFamily: bodyFont,
         background: "transparent",
         borderBottom: "1px solid rgba(255,255,255,0.08)",
@@ -32,32 +33,34 @@ export default function MinimalFade({
         style={{
           display: "flex",
           alignItems: "center",
-          gap: 10,
-          marginRight: 40,
+          gap: compact ? 6 : 10,
+          marginRight: compact ? 12 : 40,
           flexShrink: 0,
         }}
       >
         <img
           src={logo}
           alt={logoAlt}
-          style={{ width: 28, height: 28, borderRadius: "50%" }}
+          style={{ width: compact ? 20 : 28, height: compact ? 20 : 28, borderRadius: "50%" }}
         />
-        <span
-          style={{
-            fontFamily: headingFont,
-            fontSize: "0.9rem",
-            fontWeight: 400,
-            fontStyle: "italic",
-            color: brandColor,
-            whiteSpace: "nowrap",
-          }}
-        >
-          {brandName}
-        </span>
+        {!compact && (
+          <span
+            style={{
+              fontFamily: headingFont,
+              fontSize: "0.9rem",
+              fontWeight: 400,
+              fontStyle: "italic",
+              color: brandColor,
+              whiteSpace: "nowrap",
+            }}
+          >
+            {brandName}
+          </span>
+        )}
       </div>
 
       {/* Items */}
-      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: compact ? 2 : 6 }}>
         {items.map((item, i) => (
           <motion.button
             key={item.label}
@@ -67,12 +70,12 @@ export default function MinimalFade({
             animate={{ opacity: 1 }}
             transition={{ delay: i * 0.05, duration: 0.3 }}
             style={{
-              padding: "8px 14px",
+              padding: compact ? "6px 8px" : "8px 14px",
               background: "none",
               border: "none",
               cursor: "pointer",
               fontFamily: bodyFont,
-              fontSize: "0.83rem",
+              fontSize: compact ? "0.72rem" : "0.83rem",
               letterSpacing: "0.03em",
               whiteSpace: "nowrap",
               color: item.isActive ? accent : textColor,

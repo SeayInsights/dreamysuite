@@ -51,6 +51,7 @@ export function NavPreview() {
 	const currentPageId = useEditorStore((s) => s.currentPageId);
 	const setCurrentPageId = useEditorStore((s) => s.setCurrentPageId);
 	const themeTokens = useEditorStore((s) => s.themeTokens);
+	const breakpoint = useEditorStore((s) => s.breakpoint);
 
 	const NavStyleEffect = useMemo(
 		() => (settings.effectNavStyle ? getEffectComponent(settings.effectNavStyle) : null),
@@ -94,6 +95,7 @@ export function NavPreview() {
 					headingFont={headingFont}
 					bodyFont={bodyFont}
 					brandName={eventName}
+					compact={breakpoint === "mobile"}
 				/>
 			</div>
 		);

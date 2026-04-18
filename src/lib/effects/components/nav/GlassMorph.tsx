@@ -21,6 +21,7 @@ export default function GlassMorph({
   headingFont,
   bodyFont,
   brandName,
+  compact,
 }: NavStyleProps) {
   return (
     <>
@@ -29,7 +30,7 @@ export default function GlassMorph({
         style={{
           display: "flex",
           justifyContent: "center",
-          padding: "8px 1.25rem",
+          padding: compact ? "4px 0.5rem" : "8px 1.25rem",
           fontFamily: bodyFont,
           background: "transparent",
         }}
@@ -52,7 +53,7 @@ export default function GlassMorph({
               alignItems: "center",
               gap: 0,
               borderRadius: 999,
-              padding: "0 6px",
+              padding: compact ? "0 4px" : "0 6px",
               background: "rgba(255,255,255,0.1)",
               backdropFilter: "blur(16px) saturate(1.6)",
               WebkitBackdropFilter: "blur(16px) saturate(1.6)",
@@ -65,8 +66,8 @@ export default function GlassMorph({
               style={{
                 display: "flex",
                 alignItems: "center",
-                gap: 8,
-                padding: "8px 12px 8px 8px",
+                gap: compact ? 4 : 8,
+                padding: compact ? "6px 8px" : "8px 12px 8px 8px",
                 borderRight: "1px solid rgba(255,255,255,0.12)",
                 marginRight: 4,
                 flexShrink: 0,
@@ -75,19 +76,21 @@ export default function GlassMorph({
               <img
                 src={logo}
                 alt={logoAlt}
-                style={{ width: 26, height: 26, borderRadius: "50%" }}
+                style={{ width: compact ? 20 : 26, height: compact ? 20 : 26, borderRadius: "50%" }}
               />
-              <span
-                style={{
-                  fontFamily: headingFont,
-                  fontSize: "0.85rem",
-                  fontWeight: 500,
-                  color: brandColor,
-                  whiteSpace: "nowrap",
-                }}
-              >
-                {brandName}
-              </span>
+              {!compact && (
+                <span
+                  style={{
+                    fontFamily: headingFont,
+                    fontSize: "0.85rem",
+                    fontWeight: 500,
+                    color: brandColor,
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {brandName}
+                </span>
+              )}
             </div>
 
             {/* Items */}
@@ -97,12 +100,12 @@ export default function GlassMorph({
                 type="button"
                 onClick={item.onClick}
                 style={{
-                  padding: "10px 14px",
+                  padding: compact ? "8px 8px" : "10px 14px",
                   background: "none",
                   border: "none",
                   cursor: "pointer",
                   fontFamily: bodyFont,
-                  fontSize: "0.82rem",
+                  fontSize: compact ? "0.72rem" : "0.82rem",
                   letterSpacing: "0.03em",
                   whiteSpace: "nowrap",
                   color: item.isActive ? accent : textColor,
