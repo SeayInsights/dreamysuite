@@ -15,6 +15,7 @@ export default function GlassSlide({
   headingFont,
   bodyFont,
   brandName,
+  compact,
 }: NavStyleProps) {
   const activeIndex = items.findIndex((it) => it.isActive);
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
@@ -26,8 +27,8 @@ export default function GlassSlide({
         style={{
           display: "flex",
           alignItems: "center",
-          padding: "0 1.25rem",
-          height: 56,
+          padding: compact ? "0 0.5rem" : "0 1.25rem",
+          height: compact ? 44 : 56,
           fontFamily: bodyFont,
           background: "rgba(255,255,255,0.08)",
           backdropFilter: "blur(12px) saturate(1.3)",
@@ -41,27 +42,29 @@ export default function GlassSlide({
           style={{
             display: "flex",
             alignItems: "center",
-            gap: 10,
-            marginRight: 32,
+            gap: compact ? 6 : 10,
+            marginRight: compact ? 12 : 32,
             flexShrink: 0,
           }}
         >
           <img
             src={logo}
             alt={logoAlt}
-            style={{ width: 30, height: 30, borderRadius: "50%" }}
+            style={{ width: compact ? 22 : 30, height: compact ? 22 : 30, borderRadius: "50%" }}
           />
-          <span
-            style={{
-              fontFamily: headingFont,
-              fontSize: "0.95rem",
-              fontWeight: 500,
-              color: brandColor,
-              whiteSpace: "nowrap",
-            }}
-          >
-            {brandName}
-          </span>
+          {!compact && (
+            <span
+              style={{
+                fontFamily: headingFont,
+                fontSize: "0.95rem",
+                fontWeight: 500,
+                color: brandColor,
+                whiteSpace: "nowrap",
+              }}
+            >
+              {brandName}
+            </span>
+          )}
         </div>
 
         {/* Items */}
@@ -69,8 +72,9 @@ export default function GlassSlide({
           style={{
             display: "flex",
             alignItems: "center",
-            gap: 2,
+            gap: 0,
             position: "relative",
+            overflow: compact ? "auto" : undefined,
           }}
           onMouseLeave={() => setHoveredIndex(null)}
         >
@@ -82,12 +86,12 @@ export default function GlassSlide({
               onMouseEnter={() => setHoveredIndex(i)}
               style={{
                 position: "relative",
-                padding: "8px 14px",
+                padding: compact ? "6px 8px" : "8px 14px",
                 background: "none",
                 border: "none",
                 cursor: "pointer",
                 fontFamily: bodyFont,
-                fontSize: "0.83rem",
+                fontSize: compact ? "0.72rem" : "0.83rem",
                 letterSpacing: "0.03em",
                 color: item.isActive ? accent : textColor,
                 fontWeight: item.isActive ? 600 : 400,
@@ -102,7 +106,7 @@ export default function GlassSlide({
                   style={{
                     position: "absolute",
                     inset: 0,
-                    borderRadius: 8,
+                    borderRadius: compact ? 6 : 8,
                     background: "rgba(255,255,255,0.12)",
                     backdropFilter: "blur(8px)",
                     WebkitBackdropFilter: "blur(8px)",
