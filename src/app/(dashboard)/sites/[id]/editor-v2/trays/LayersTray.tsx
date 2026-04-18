@@ -1,6 +1,7 @@
 "use client";
 
-import { Eye, EyeOff, Layers } from "lucide-react";
+import { useRef, useState } from "react";
+import { Eye, EyeOff, GripVertical, Layers } from "lucide-react";
 
 import { useEditorStore } from "@/app/stores/editorStore";
 
@@ -31,6 +32,41 @@ export function LayersTray() {
 	const selectedBlockId = useEditorStore((s) => s.selectedBlockId);
 	const selectBlock = useEditorStore((s) => s.selectBlock);
 	const updateBlock = useEditorStore((s) => s.updateBlock);
+	const reorderBlocks = useEditorStore((s) => s.reorderBlocks);
+
+	const [dragIdx, setDragIdx] = useState<number | null>(null);
+	const [overIdx, setOverIdx] = useState<number | null>(null);
+	const dragRef = useRef<number | null>(null);
+
+	function handleDragStart(e: React.DragEvent, idx: number) {
+		dragRef.current = idx;
+		setDragIdx(idx);
+		e.dataTransfer.effectAllowed = "move";
+		e.dataTransfer.setData("text/plain", String(idx));
+	}
+
+	function handleDragOver(e: React.DragEvent, idx: number) {
+		e.preventDefault();
+		e.dataTransfer.dropEffect = "move";
+		setOverIdx(idx);
+	}
+
+	function handleDrop(e: React.DragEvent, toIdx: number) {
+		e.preventDefault();
+		const fromIdx = dragRef.current;
+		if (fromIdx !== null && fromIdx !== toIdx) {
+			reorderBlocks(fromIdx, toIdx);
+		}
+		setDragIdx(null);
+		setOverIdx(null);
+		dragRef.current = null;
+	}
+
+	function handleDragEnd() {
+		setDragIdx(null);
+		setOverIdx(null);
+		dragRef.current = null;
+	}
 
 	return (
 		<div className="flex h-full flex-col">
@@ -48,8 +84,21 @@ export function LayersTray() {
 					</p>
 				) : (
 					<ul className="space-y-0.5">
-						{blocks.map((block) => (
-							<li key={block.id}>
+						{blocks.map((block, idx) => (
+							<li
+								key={block.id}
+								draggable
+								onDragStart={(e) => handleDragStart(e, idx)}
+								onDragOver={(e) => handleDragOver(e, idx)}
+								onDrop={(e) => handleDrop(e, idx)}
+								onDragEnd={handleDragEnd}
+								className={
+									(dragIdx === idx ? "opacity-40 " : "") +
+									(overIdx === idx && dragIdx !== idx
+										? "border-t-2 border-primary "
+										: "")
+								}
+							>
 								<button
 									type="button"
 									onClick={() =>
@@ -58,13 +107,13 @@ export function LayersTray() {
 										)
 									}
 									className={
-										"group flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm transition-colors " +
+										"group flex w-full items-center gap-1.5 rounded-md px-1.5 py-1.5 text-left text-sm transition-colors " +
 										(selectedBlockId === block.id
 											? "bg-accent text-accent-foreground"
 											: "text-muted-foreground hover:bg-accent/50")
 									}
 								>
-									<span className="size-1.5 shrink-0 rounded-full bg-current opacity-40" />
+									<GripVertical className="size-3.5 shrink-0 cursor-grab opacity-30 group-hover:opacity-70" />
 									<span className="flex-1 truncate">
 										{BLOCK_LABELS[block.type] ?? block.type}
 									</span>
@@ -109,7 +158,7 @@ export function LayersTray() {
 			<div className="border-t border-border px-4 py-3">
 				<p className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
 					<Layers className="size-3" />
-					Click to select · eye to toggle visibility
+					Drag to reorder · click to select · eye to toggle
 				</p>
 			</div>
 		</div>

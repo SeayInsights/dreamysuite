@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import { BLOCK_COMPONENTS } from "@/app/components/blocks";
 import { useEditorStore } from "@/app/stores/editorStore";
 import { TRANSLATABLE_FIELDS } from "@/lib/translations";
+import { BlockTransitionWrapper } from "@/app/components/BlockTransitionWrapper";
 
 export interface SiteBlock {
 	id: string;
@@ -75,7 +76,11 @@ export function SiteRenderer({ blocks, ordered = false }: Props) {
 						</div>
 					);
 				}
-				return <Component key={block.id} block={block} />;
+				return (
+					<BlockTransitionWrapper key={block.id}>
+						<Component block={block} />
+					</BlockTransitionWrapper>
+				);
 			})}
 		</div>
 	);

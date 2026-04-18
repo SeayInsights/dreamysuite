@@ -1204,7 +1204,7 @@ function buildStyles(settings: SiteSettingRow | null): BuiltStyles {
     }
     .site-nav-lang-outside {
       display: flex;
-      justify-content: flex-end;
+      justify-content: center;
       align-items: center;
     }
     .site-nav-lang-outside .lang-toggle { display: contents; }
@@ -2615,9 +2615,10 @@ function buildHtml(
   const navHtml = hasMultiplePages
     ? isPillOrFloating
       ? `<div class="site-nav-row${navMaterial === "glass" ? " nav-glass-row" : navMaterial === "frosted" ? " nav-frosted-row" : ""}" role="navigation" aria-label="Site navigation">
-          ${showNavBrand ? `<a class="site-nav-brand-outside" href="#" onclick="return false;">${escHtml(eventTitle)}</a>` : `<div></div>`}
+          <div></div>
           <nav class="site-nav${navShapeClass}">
             <div class="site-nav-inner">
+              ${showNavBrand ? `<a class="site-nav-brand" href="#" onclick="return false;">${escHtml(eventTitle)}</a>` : ""}
               <ul class="site-nav-links" role="list">
                 ${navLinksHtml}
               </ul>
@@ -3209,12 +3210,15 @@ function submitRsvp(event, slug, formId, msgId) {
       import('react-dom/client')
     ]);
     var intro=document.getElementById('intro-overlay');
-    if(intro&&intro.style.display!=='none'){
-      await new Promise(function(ok){
-        new MutationObserver(function(_,o){
-          if(intro.style.display==='none'){o.disconnect();ok()}
-        }).observe(intro,{attributes:true,attributeFilter:['style']});
-      });
+    if(intro&&intro.style.display!=='none'&&!intro.hidden){
+      await Promise.race([
+        new Promise(function(ok){
+          new MutationObserver(function(_,o){
+            if(intro.style.display==='none'||intro.hidden){o.disconnect();ok()}
+          }).observe(intro,{attributes:true,attributeFilter:['style','hidden','class']});
+        }),
+        new Promise(function(ok){setTimeout(ok,8000)})
+      ]);
     }
     var[{default:E},{createElement:h},{createRoot:cr}]=await p;
     var c1=${JSON.stringify(settings.effectColor1 ?? settings.headingColor ?? settings.accentColor ?? "#B8921A")};
@@ -3235,7 +3239,10 @@ function submitRsvp(event, slug, formId, msgId) {
       import('react'),
       import('react-dom/client')
     ]);
-    cr(el).render(h(E,null));
+    var c1=${JSON.stringify(settings.effectColor1 ?? settings.accentColor ?? "#B8921A")};
+    var c2=${JSON.stringify(settings.effectColor2 ?? settings.accentColor ?? "#B8921A")};
+    var c3=${JSON.stringify(settings.effectColor3 ?? settings.accentColor ?? "#B8921A")};
+    cr(el).render(h(E,{color:c1,colors:[c1,c2,c3]}));
   }catch(e){console.warn('Cursor effect unavailable:',e)}
 })();
 </script>` : ""}
@@ -3266,15 +3273,29 @@ function submitRsvp(event, slug, formId, msgId) {
       import('react'),
       import('react-dom/client')
     ]);
+    var isWrapper=${JSON.stringify(["animated-content", "fade-content"].includes(settings.effectTransition ?? ""))};
     var blocks=document.querySelectorAll('.block');
     var obs=new IntersectionObserver(function(entries){
       entries.forEach(function(entry){
         if(!entry.isIntersecting) return;
         obs.unobserve(entry.target);
-        var wrap=document.createElement('div');
-        wrap.style.cssText='width:100%;height:100%';
-        entry.target.prepend(wrap);
-        cr(wrap).render(h(E,{children:null}));
+        if(isWrapper){
+          var frag=document.createDocumentFragment();
+          while(entry.target.firstChild) frag.appendChild(entry.target.firstChild);
+          var mount=document.createElement('div');
+          mount.style.cssText='width:100%';
+          entry.target.appendChild(mount);
+          var done=false;
+          cr(mount).render(h(E,{},h('div',{ref:function(el){
+            if(el&&!done){done=true;el.appendChild(frag)}
+          }})));
+        }else{
+          entry.target.style.position='relative';
+          var wrap=document.createElement('div');
+          wrap.style.cssText='position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:1';
+          entry.target.appendChild(wrap);
+          cr(wrap).render(h(E,{}));
+        }
       });
     },{threshold:0.1});
     blocks.forEach(function(b){obs.observe(b)});
@@ -3365,9 +3386,11 @@ function submitRsvp(event, slug, formId, msgId) {
     var wrap=document.createElement('div');
     wrap.style.cssText='width:100%';
     if(navRow&&navEl){
+      navEl.style.cssText='background:none;border:none;box-shadow:none;padding:0;border-radius:0;backdrop-filter:none;-webkit-backdrop-filter:none;';
       navEl.innerHTML='';
       navEl.appendChild(wrap);
     }else{
+      target.style.cssText='background:none;border:none;box-shadow:none;padding:0;border-radius:0;backdrop-filter:none;-webkit-backdrop-filter:none;border-bottom:none;';
       target.innerHTML='';
       target.appendChild(wrap);
     }

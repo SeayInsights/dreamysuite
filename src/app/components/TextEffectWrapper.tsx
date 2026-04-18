@@ -1,6 +1,13 @@
 "use client";
 
-import { useMemo, createElement, type ReactNode } from "react";
+import {
+  useMemo,
+  useRef,
+  useState,
+  useEffect,
+  createElement,
+  type ReactNode,
+} from "react";
 import { useEditorStore } from "@/app/stores/editorStore";
 import { getEffectComponent } from "@/lib/effects/loader";
 
@@ -38,6 +45,36 @@ export function TextEffectWrapper({ as: Tag, children, className, style, ...rest
   );
 
   const textContent = useMemo(() => extractText(children), [children]);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [layoutReady, setLayoutReady] = useState(false);
+
+  useEffect(() => {
+    if (!TextEffect) return;
+    const el = containerRef.current;
+    if (!el) return;
+
+    setLayoutReady(false);
+
+    const check = () => {
+      const { width, height } = el.getBoundingClientRect();
+      if (width > 0 && height > 0) {
+        setLayoutReady(true);
+        return true;
+      }
+      return false;
+    };
+
+    if (check()) return;
+
+    const ro = new ResizeObserver(() => {
+      if (check()) ro.disconnect();
+    });
+    ro.observe(el);
+
+    document.fonts?.ready?.then(() => check());
+
+    return () => ro.disconnect();
+  }, [TextEffect, effectText]);
 
   const effectProps = useMemo(() => {
     const color1 = c1 ?? headingColor ?? accentColor ?? "#B8921A";
@@ -63,14 +100,15 @@ export function TextEffectWrapper({ as: Tag, children, className, style, ...rest
 
   return (
     <div
+      ref={containerRef}
       role="heading"
       aria-level={HEADING_LEVEL[Tag]}
       className={className}
-      style={style}
+      style={{ minHeight: "1em", ...style }}
       {...rest}
       data-ds-effect={effectText}
     >
-      <TextEffect {...effectProps} />
+      {layoutReady ? <TextEffect key={effectText} {...effectProps} /> : null}
     </div>
   );
 }
