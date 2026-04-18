@@ -3066,6 +3066,7 @@ function toggleMusic(){var a=document.getElementById('audio-player'),b=document.
   ${hreflangTags}
   ${fontsTag}
   ${gsapCdn}
+  ${settings?.effectBg ? `<script type="importmap">{"imports":{"react":"/effects/_rt.js","react/jsx-runtime":"/effects/_jsx.js","react-dom":"/effects/_rt.js","ogl":"https://esm.sh/ogl@1.0.11","three":"https://esm.sh/three@0.184.0","gsap":"https://esm.sh/gsap@3.15.0"}}</script>` : ""}
   <style>${siteCss}
   .lang-select{appearance:none;border:1px solid var(--border,#e7e5e4);border-radius:6px;padding:0.375rem 1.75rem 0.375rem 0.625rem;font-family:inherit;font-size:0.8125rem;background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23666' d='M3 4.5L6 7.5L9 4.5'/%3E%3C/svg%3E") no-repeat right 0.5rem center;cursor:pointer;outline:none;color:var(--text,#292524)}</style>
 </head>
@@ -3143,14 +3144,21 @@ function submitRsvp(event, slug, formId, msgId) {
   });
 }
   </script>
-  ${settings?.effectBg ? `<script>
-(function(){
+  ${settings?.effectBg ? `<script type="module">
+(async()=>{
   if(window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
   var c=navigator.hardwareConcurrency||4,m=navigator.deviceMemory||4;
   if(c<=2||m<=2) return;
   var el=document.getElementById('effect-bg');
   if(!el) return;
-  el.dataset.effect='${escHtml(settings.effectBg)}';
+  try{
+    var[{default:E},{createElement:h},{render:r}]=await Promise.all([
+      import('/effects/${escHtml(settings.effectBg)}.js'),
+      import('react'),
+      import('react-dom')
+    ]);
+    r(h(E,null),el);
+  }catch(e){console.warn('Effect unavailable:',e)}
 })();
 </script>` : ""}
 </body>
