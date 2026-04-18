@@ -17,7 +17,7 @@ const DotField = memo(({
   gradientFrom = 'rgba(168, 85, 247, 0.35)',
   gradientTo = 'rgba(180, 151, 207, 0.25)',
   glowColor = '#120F17',
-  ...rest
+  ..._ // discard extra props from effect system
 }) => {
   const canvasRef = useRef(null);
   const svgRef = useRef(null);
@@ -232,7 +232,6 @@ const DotField = memo(({
   return (
     <div
       style={{ position: 'relative', width: '100%', height: '100%', overflow: 'hidden' }}
-      {...rest}
     >
       <canvas
         ref={canvasRef}

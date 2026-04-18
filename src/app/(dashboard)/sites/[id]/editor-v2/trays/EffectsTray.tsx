@@ -58,15 +58,6 @@ export function EffectsTray() {
 
           <div className="h-px bg-border" />
 
-          <EffectPicker
-            category="background"
-            value={settings.effectBg}
-            onChange={(id) =>
-              updateSettings({ effectBg: id, effectPreset: null })
-            }
-            label="Background"
-          />
-
           {mode === "pro" && (
             <>
               <EffectPicker

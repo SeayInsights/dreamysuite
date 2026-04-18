@@ -19,6 +19,7 @@ interface Props {
 export function TopBar({ site }: Props) {
 	return (
 		<header
+			data-topbar
 			className="relative z-20 flex h-12 shrink-0 items-center gap-3 border-b border-border bg-white px-3"
 			aria-label="Editor top bar"
 		>

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { ChevronDown, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useEditorStore } from "@/app/stores/editorStore";
 import { EFFECT_PRESETS, getPresetsForEventType } from "@/lib/effects/presets";
 import type { EventType, EffectPreset, Mood } from "@/lib/effects/types";
 
@@ -74,6 +75,7 @@ export function EffectPresetPicker({
   onClear,
 }: Props) {
   const [expanded, setExpanded] = useState(false);
+  const isPro = useEditorStore((s) => s.mode) === "pro";
 
   const recommended = eventType
     ? getPresetsForEventType(eventType)
@@ -113,7 +115,7 @@ export function EffectPresetPicker({
         ))}
       </div>
 
-      {remaining.length > 0 && (
+      {isPro && remaining.length > 0 && (
         <>
           <button
             type="button"
