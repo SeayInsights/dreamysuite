@@ -59,9 +59,10 @@ export function BreakpointFrame({ children, nav }: Props) {
 		() => (effectsEnabled.animations && settings.effectDecoration ? getEffectComponent(settings.effectDecoration) : null),
 		[effectsEnabled.animations, settings.effectDecoration],
 	);
+	const WRAPPER_TRANSITIONS = useMemo(() => new Set(["animated-content", "fade-content"]), []);
 	const TransitionEffect = useMemo(
-		() => (effectsEnabled.transitions && settings.effectTransition ? getEffectComponent(settings.effectTransition) : null),
-		[effectsEnabled.transitions, settings.effectTransition],
+		() => (effectsEnabled.transitions && settings.effectTransition && !WRAPPER_TRANSITIONS.has(settings.effectTransition) ? getEffectComponent(settings.effectTransition) : null),
+		[effectsEnabled.transitions, settings.effectTransition, WRAPPER_TRANSITIONS],
 	);
 
 	const effectColors = useMemo(() => ({

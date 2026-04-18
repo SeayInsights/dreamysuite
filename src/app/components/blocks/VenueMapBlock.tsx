@@ -7,17 +7,21 @@ interface Block { id: string; type: string; [key: string]: unknown }
 export function VenueMapBlock({ block }: { block: Block }) {
   const cfg = parseCfg(block.config);
   const embedUrl = String(cfg.embedUrl ?? cfg.mapUrl ?? "");
-  const venueName = String(cfg.name || cfg.venueName || "Venue");
+  const venueName = String(cfg.name || cfg.venueName || "");
 
   return (
     <section className="block block-venue-map" data-block-id={block.id} data-block-type={block.type} style={blockSectionStyle(cfg)}>
+      <TextEffectWrapper as="h2" className="section-heading" style={{ textAlign: "center" }}>Venue</TextEffectWrapper>
+      <div className="section-rule" aria-hidden="true" />
       <CardEffectWrapper>
-        <TextEffectWrapper as="h3" style={{ textAlign: "center", marginBottom: "0.75rem" }}>{venueName}</TextEffectWrapper>
+        {venueName && (
+          <p className="venue-name">{venueName}</p>
+        )}
         {embedUrl ? (
           <div style={{ borderRadius: "8px", overflow: "hidden" }}>
             <iframe
               src={embedUrl}
-              title={`Map of ${venueName}`}
+              title={`Map of ${venueName || "Venue"}`}
               width="100%"
               height="300"
               style={{ border: 0 }}
