@@ -61,6 +61,7 @@ export interface NavStyleProps {
   headingFont: string;
   bodyFont: string;
   brandName: string;
+  compact?: boolean;
 }
 
 export interface EffectPreset {

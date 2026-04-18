@@ -15,6 +15,7 @@ export default function GlassDropdown({
   headingFont,
   bodyFont,
   brandName,
+  compact,
 }: NavStyleProps) {
   const [open, setOpen] = useState(false);
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -34,31 +35,33 @@ export default function GlassDropdown({
         display: "flex",
         alignItems: "center",
         justifyContent: "space-between",
-        padding: "0 1.25rem",
-        height: 56,
+        padding: compact ? "0 0.75rem" : "0 1.25rem",
+        height: compact ? 44 : 56,
         fontFamily: bodyFont,
         position: "relative",
         background: "transparent",
       }}
     >
       {/* Brand */}
-      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: compact ? 6 : 10 }}>
         <img
           src={logo}
           alt={logoAlt}
-          style={{ width: 32, height: 32, borderRadius: "50%" }}
+          style={{ width: compact ? 24 : 32, height: compact ? 24 : 32, borderRadius: "50%" }}
         />
-        <span
-          style={{
-            fontFamily: headingFont,
-            fontSize: "0.95rem",
-            fontWeight: 500,
-            color: brandColor,
-            letterSpacing: "0.01em",
-          }}
-        >
-          {brandName}
-        </span>
+        {!compact && (
+          <span
+            style={{
+              fontFamily: headingFont,
+              fontSize: "0.95rem",
+              fontWeight: 500,
+              color: brandColor,
+              letterSpacing: "0.01em",
+            }}
+          >
+            {brandName}
+          </span>
+        )}
       </div>
 
       {/* Hamburger + Dropdown zone */}
@@ -160,7 +163,7 @@ export default function GlassDropdown({
                     cursor: "pointer",
                     textAlign: "left",
                     fontFamily: bodyFont,
-                    fontSize: "0.85rem",
+                    fontSize: compact ? "0.78rem" : "0.85rem",
                     letterSpacing: "0.02em",
                     color: item.isActive ? accent : textColor,
                     fontWeight: item.isActive ? 600 : 400,
