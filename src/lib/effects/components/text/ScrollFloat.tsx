@@ -85,9 +85,9 @@ const ScrollFloat = ({
   display: inline-block;
 }
 `}</style>
-      <h2 ref={containerRef} className={`scroll-float ${containerClassName}`}>
+      <div ref={containerRef} className={`scroll-float ${containerClassName}`}>
       <span className={`scroll-float-text ${textClassName}`}>{splitText}</span>
-    </h2>
+    </div>
     </>
 );
 

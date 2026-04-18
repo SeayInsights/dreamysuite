@@ -3,6 +3,20 @@ import type { Settings, SettingsPatch } from "@/lib/schemas/settings";
 import { DEFAULTS } from "@/lib/schemas/settings";
 import { settingsToTheme, type EditorShellSlice } from "./editorShell";
 
+const NUMBER_FIELDS = new Set([
+  "isLive", "showNavBrand", "popupEnabled", "popupTicker",
+  "popupAfterAnimation", "popupBundle", "pageBgDisabled",
+  "bgImageOpacity", "defaultAnimDuration", "defaultAnimDelay",
+]);
+
+function coerceDbRow(row: Record<string, unknown>): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(row)) {
+    out[k] = typeof v === "number" && !NUMBER_FIELDS.has(k) ? String(v) : v;
+  }
+  return out;
+}
+
 export interface SettingsSlice {
   settings: Settings;
   settingsLoaded: boolean;
@@ -21,12 +35,16 @@ export const createSettingsSlice: StateCreator<SettingsSlice & EditorShellSlice,
   loadSettings: async (siteId) => {
     try {
       const res = await fetch(`/api/sites/${siteId}/settings`);
-      if (!res.ok) return;
-      const { settings } = (await res.json()) as { settings: Settings };
+      if (!res.ok) {
+        console.error("[settings:load] GET failed", res.status);
+        return;
+      }
+      const { settings: raw } = (await res.json()) as { settings: Record<string, unknown> };
+      const settings = coerceDbRow(raw) as Settings;
       const merged = { ...DEFAULTS, ...settings };
       set({ settings: merged, settingsLoaded: true, settingsDirty: false, themeTokens: settingsToTheme(merged) });
-    } catch {
-      // Silently fail — editor still works with defaults
+    } catch (e) {
+      console.error("[settings:load] error:", e);
     }
   },
 
@@ -44,7 +62,11 @@ export const createSettingsSlice: StateCreator<SettingsSlice & EditorShellSlice,
         headers: { "content-type": "application/json" },
         body: JSON.stringify(settings),
       });
-      if (!res.ok) return;
+      if (!res.ok) {
+        const text = await res.text().catch(() => "");
+        console.error("[settings:save] PUT failed", res.status, text);
+        return;
+      }
       set({ settingsDirty: false });
     } catch (e) {
       console.error("[settings:save] network error:", e);
