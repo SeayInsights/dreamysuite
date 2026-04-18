@@ -21,6 +21,7 @@ export async function POST(
   if ("error" in check) return apiOwnershipError(check);
 
   const parsed = await parseJsonBody<{
+    id?: string;
     pageId?: string;
     type?: string;
     config?: unknown;
@@ -28,7 +29,7 @@ export async function POST(
   }>(req);
   if ("error" in parsed) return parsed.error;
 
-  const { pageId, type, config, sortOrder } = parsed.body;
+  const { id: clientId, pageId, type, config, sortOrder } = parsed.body;
   if (!pageId || !type) {
     return apiError("BAD_REQUEST", "pageId and type are required", 400);
   }
@@ -42,7 +43,7 @@ export async function POST(
     return apiError("NOT_FOUND", "Page not found in this site", 404);
   }
 
-  const id = crypto.randomUUID();
+  const id = clientId || crypto.randomUUID();
   const now = Date.now();
 
   const configParse = parseBlockConfig(type, config);

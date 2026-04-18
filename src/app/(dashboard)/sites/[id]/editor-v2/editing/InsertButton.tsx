@@ -115,6 +115,8 @@ export function InsertButton({ containerRef }: Props) {
     }
   }
 
+  const clampedTop = Math.max(12, slot.top);
+
   return (
     <>
       {/* + button */}
@@ -124,7 +126,7 @@ export function InsertButton({ containerRef }: Props) {
         onClick={() => setPaletteOpen(true)}
         style={{
           position: "absolute",
-          top: slot.top - 12,
+          top: clampedTop - 12,
           left: "50%",
           transform: "translateX(-50%)",
           zIndex: 40,
@@ -152,7 +154,7 @@ export function InsertButton({ containerRef }: Props) {
         aria-hidden
         style={{
           position: "absolute",
-          top: slot.top,
+          top: clampedTop,
           left: 0,
           right: 0,
           height: 1,

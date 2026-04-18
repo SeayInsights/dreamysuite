@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useRef, type ReactNode } from "react";
 import { animate } from "motion/mini";
 
 import { useEditorStore, type Breakpoint } from "@/app/stores/editorStore";
@@ -45,10 +45,31 @@ export function BreakpointFrame({ children }: Props) {
 	const settings = useEditorStore((s) => s.settings);
 	const pageBgDisabled = !!settings.pageBgDisabled;
 	const effectsEnabled = useEffectsEnabled();
+	const handleDeselect = useCallback((e: React.MouseEvent) => {
+		const target = e.target as HTMLElement;
+		if (!target.closest("[data-block-id]") && !target.closest("[data-toolbar]")) {
+			useEditorStore.getState().selectBlock(null);
+		}
+	}, []);
 	const BgEffect = useMemo(
 		() => (effectsEnabled.backgrounds && settings.effectBg ? getEffectComponent(settings.effectBg) : null),
 		[effectsEnabled.backgrounds, settings.effectBg],
 	);
+	const effectColors = useMemo(() => ({
+		color: settings.effectColor1 ?? themeTokens.colors.primary,
+		colors: [
+			settings.effectColor1 ?? themeTokens.colors.primary,
+			settings.effectColor2 ?? themeTokens.colors.secondary,
+			settings.effectColor3 ?? themeTokens.colors.accent,
+		],
+		lineColor: settings.effectColor1 ?? themeTokens.colors.primary,
+		backgroundColor: "transparent",
+		particleColors: [
+			settings.effectColor1 ?? themeTokens.colors.primary,
+			settings.effectColor2 ?? themeTokens.colors.secondary,
+			settings.effectColor3 ?? themeTokens.colors.accent,
+		],
+	}), [settings.effectColor1, settings.effectColor2, settings.effectColor3, themeTokens.colors]);
 
 	useEffect(() => {
 		const el = ref.current;
@@ -63,11 +84,11 @@ export function BreakpointFrame({ children }: Props) {
 	const isDesktop = breakpoint === "desktop";
 
 	return (
-		<div className={`flex h-full w-full overflow-auto ${isDesktop ? "bg-background" : "justify-center bg-muted/40 p-6"}`}>
+		<div className={`editor-canvas-scroll flex h-full w-full overflow-x-hidden overflow-y-auto ${isDesktop ? "bg-background" : "justify-center bg-muted/40 p-6"}`} onClick={handleDeselect}>
 			<div
 				ref={ref}
 				data-breakpoint={breakpoint}
-				className={`relative min-h-full max-w-full ${isDesktop ? "w-full" : "rounded-lg border border-border shadow-sm"}`}
+				className={`relative min-h-full max-w-full overflow-hidden ${isDesktop ? "w-full" : "rounded-lg border border-border shadow-sm"}`}
 				style={{
 					...(isDesktop ? {} : { width: WIDTHS[breakpoint] }),
 					...themeVars(themeTokens.colors, themeTokens.typography),
@@ -75,8 +96,8 @@ export function BreakpointFrame({ children }: Props) {
 				}}
 			>
 				{BgEffect && (
-					<div className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
-						<BgEffect />
+					<div className="pointer-events-none absolute inset-0 z-0 overflow-hidden" style={{ width: "100%", height: "100%" }}>
+						<BgEffect {...effectColors} />
 					</div>
 				)}
 				<div className="relative z-10">{children}</div>

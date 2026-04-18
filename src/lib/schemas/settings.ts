@@ -81,11 +81,15 @@ export const SettingsSchema = z.object({
   effectPreset: z.string().nullable().default(null),
   effectBg: z.string().nullable().default(null),
   effectNav: z.string().nullable().default(null),
+  effectNavStyle: z.string().nullable().default(null),
   effectText: z.string().nullable().default(null),
   effectCard: z.string().nullable().default(null),
   effectTransition: z.string().nullable().default(null),
   effectCursor: z.string().nullable().default(null),
   effectDecoration: z.string().nullable().default(null),
+  effectColor1: z.string().nullable().default(null),
+  effectColor2: z.string().nullable().default(null),
+  effectColor3: z.string().nullable().default(null),
 });
 
 /** All settings with defaults applied. Single source — no duplicate object. */

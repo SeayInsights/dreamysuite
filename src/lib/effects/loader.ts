@@ -10,6 +10,7 @@ const CATEGORY_DIR: Record<EffectCategory, string> = {
   decoration: "decorations",
   card: "cards",
   nav: "nav",
+  "nav-style": "nav",
 };
 
 const componentCache = new Map<string, ComponentType<any>>();

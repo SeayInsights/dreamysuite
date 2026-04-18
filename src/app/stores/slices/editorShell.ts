@@ -198,14 +198,24 @@ export const createEditorShellSlice: StateCreator<EditorShellSlice & SettingsSli
 	themeTokens: DEFAULT_THEME,
 	setThemeTokens: (themeTokens) => {
 		set({ themeTokens });
-		get().updateSettings(themeToSettings(themeTokens));
+		get().updateSettings({
+			...themeToSettings(themeTokens),
+			effectColor1: null,
+			effectColor2: null,
+			effectColor3: null,
+		});
 	},
 	applyPresetTheme: (presetId) => {
 		const preset = PRESET_THEMES.find((p) => p.id === presetId);
 		if (!preset) return;
 		const themeTokens = { colors: preset.colors, typography: preset.typography };
 		set({ themeTokens });
-		get().updateSettings(themeToSettings(themeTokens));
+		get().updateSettings({
+			...themeToSettings(themeTokens),
+			effectColor1: null,
+			effectColor2: null,
+			effectColor3: null,
+		});
 	},
 
 	setBreakpoint: (breakpoint) => set({ breakpoint }),
