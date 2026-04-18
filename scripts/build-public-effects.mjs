@@ -66,6 +66,18 @@ await build({
   minify: true,
 });
 
+await build({
+  stdin: {
+    contents: `export { createRoot } from "preact/compat/client";`,
+    resolveDir: ROOT,
+    loader: "js",
+  },
+  bundle: true,
+  format: "esm",
+  outfile: join(OUT_DIR, "_rt-client.js"),
+  minify: true,
+});
+
 console.log("Runtime built");
 
 // ── Effect components ────────────────────────────────────────────────────────

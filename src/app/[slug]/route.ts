@@ -3068,7 +3068,7 @@ function toggleMusic(){var a=document.getElementById('audio-player'),b=document.
   ${hreflangTags}
   ${fontsTag}
   ${gsapCdn}
-  ${settings?.effectBg ? `<script type="importmap">${R3F_EFFECTS.has(settings.effectBg) ? '{"imports":{"react":"https://esm.sh/react@19.1.5","react/":"https://esm.sh/react@19.1.5/","react-dom":"https://esm.sh/react-dom@19.1.5","react-dom/":"https://esm.sh/react-dom@19.1.5/","@react-three/fiber":"https://esm.sh/@react-three/fiber@9.6.0?external=react,react-dom,three","@react-three/drei":"https://esm.sh/@react-three/drei@10.7.7?external=react,react-dom,three,@react-three/fiber","@react-three/postprocessing":"https://esm.sh/@react-three/postprocessing@3.0.4?external=react,react-dom,three,@react-three/fiber,postprocessing","three":"https://esm.sh/three@0.184.0","three/":"https://esm.sh/three@0.184.0/","postprocessing":"https://esm.sh/postprocessing@6.39.1?external=three","ogl":"https://esm.sh/ogl@1.0.11","gsap":"https://esm.sh/gsap@3.15.0"}}' : '{"imports":{"react":"/effects/_rt.js","react/jsx-runtime":"/effects/_jsx.js","react-dom":"/effects/_rt.js","ogl":"https://esm.sh/ogl@1.0.11","three":"https://esm.sh/three@0.184.0","three/":"https://esm.sh/three@0.184.0/","gsap":"https://esm.sh/gsap@3.15.0","postprocessing":"https://esm.sh/postprocessing@6.39.1?external=three"}}'}</script>` : ""}
+  ${settings?.effectBg ? `<script type="importmap">${R3F_EFFECTS.has(settings.effectBg) ? '{"imports":{"react":"https://esm.sh/react@19.1.5","react/":"https://esm.sh/react@19.1.5/","react-dom":"https://esm.sh/react-dom@19.1.5","react-dom/":"https://esm.sh/react-dom@19.1.5/","@react-three/fiber":"https://esm.sh/@react-three/fiber@9.6.0?external=react,react-dom,three","@react-three/drei":"https://esm.sh/@react-three/drei@10.7.7?external=react,react-dom,three,@react-three/fiber","@react-three/postprocessing":"https://esm.sh/@react-three/postprocessing@3.0.4?external=react,react-dom,three,@react-three/fiber,postprocessing","three":"https://esm.sh/three@0.184.0","three/":"https://esm.sh/three@0.184.0/","postprocessing":"https://esm.sh/postprocessing@6.39.1?external=three","ogl":"https://esm.sh/ogl@1.0.11","gsap":"https://esm.sh/gsap@3.15.0"}}' : '{"imports":{"react":"/effects/_rt.js","react/jsx-runtime":"/effects/_jsx.js","react-dom":"/effects/_rt.js","react-dom/client":"/effects/_rt-client.js","ogl":"https://esm.sh/ogl@1.0.11","three":"https://esm.sh/three@0.184.0","three/":"https://esm.sh/three@0.184.0/","gsap":"https://esm.sh/gsap@3.15.0","postprocessing":"https://esm.sh/postprocessing@6.39.1?external=three"}}'}</script>` : ""}
   <style>${siteCss}
   .lang-select{appearance:none;border:1px solid var(--border,#e7e5e4);border-radius:6px;padding:0.375rem 1.75rem 0.375rem 0.625rem;font-family:inherit;font-size:0.8125rem;background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23666' d='M3 4.5L6 7.5L9 4.5'/%3E%3C/svg%3E") no-repeat right 0.5rem center;cursor:pointer;outline:none;color:var(--text,#292524)}</style>
 </head>
@@ -3157,7 +3157,7 @@ function submitRsvp(event, slug, formId, msgId) {
     var p=Promise.all([
       import('/effects/${escHtml(settings.effectBg)}.js'),
       import('react'),
-      import('react-dom')
+      import('react-dom/client')
     ]);
     var intro=document.getElementById('intro-overlay');
     if(intro&&intro.style.display!=='none'){
@@ -3167,8 +3167,8 @@ function submitRsvp(event, slug, formId, msgId) {
         }).observe(intro,{attributes:true,attributeFilter:['style']});
       });
     }
-    var[{default:E},{createElement:h},{render:r}]=await p;
-    r(h(E,null),el);
+    var[{default:E},{createElement:h},{createRoot:cr}]=await p;
+    cr(el).render(h(E,null));
   }catch(e){console.warn('Effect unavailable:',e)}
 })();
 </script>` : ""}
