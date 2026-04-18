@@ -74,44 +74,42 @@ export function StyleTab() {
         )}
       </div>
 
-      {isPro && (
-        <div className="space-y-2 border-t border-border pt-4">
-          <EffectPicker
-            category="background"
-            value={settings.effectBg}
-            onChange={(id) => updateSettings({ effectBg: id, effectPreset: null })}
-            label="Background Effect"
-          />
+      <div className="space-y-2 border-t border-border pt-4">
+        <EffectPicker
+          category="background"
+          value={settings.effectBg}
+          onChange={(id) => updateSettings({ effectBg: id, effectPreset: null })}
+          label="Background Effect"
+        />
 
-          {settings.effectBg && (
-            <div className="space-y-1.5 pt-2">
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                Effect Colors
-              </p>
-              <div className="flex flex-col gap-1.5">
-                <EffectColorRow
-                  label="Primary"
-                  value={settings.effectColor1 ?? themeTokens.colors.primary}
-                  onChange={(v) => updateSettings({ effectColor1: v })}
-                  onReset={() => updateSettings({ effectColor1: null })}
-                />
-                <EffectColorRow
-                  label="Secondary"
-                  value={settings.effectColor2 ?? themeTokens.colors.secondary}
-                  onChange={(v) => updateSettings({ effectColor2: v })}
-                  onReset={() => updateSettings({ effectColor2: null })}
-                />
-                <EffectColorRow
-                  label="Accent"
-                  value={settings.effectColor3 ?? themeTokens.colors.accent}
-                  onChange={(v) => updateSettings({ effectColor3: v })}
-                  onReset={() => updateSettings({ effectColor3: null })}
-                />
-              </div>
+        {isPro && settings.effectBg && (
+          <div className="space-y-1.5 pt-2">
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+              Effect Colors
+            </p>
+            <div className="flex flex-col gap-1.5">
+              <EffectColorRow
+                label="Primary"
+                value={settings.effectColor1 ?? themeTokens.colors.primary}
+                onChange={(v) => updateSettings({ effectColor1: v })}
+                onReset={() => updateSettings({ effectColor1: null })}
+              />
+              <EffectColorRow
+                label="Secondary"
+                value={settings.effectColor2 ?? themeTokens.colors.secondary}
+                onChange={(v) => updateSettings({ effectColor2: v })}
+                onReset={() => updateSettings({ effectColor2: null })}
+              />
+              <EffectColorRow
+                label="Accent"
+                value={settings.effectColor3 ?? themeTokens.colors.accent}
+                onChange={(v) => updateSettings({ effectColor3: v })}
+                onReset={() => updateSettings({ effectColor3: null })}
+              />
             </div>
-          )}
-        </div>
-      )}
+          </div>
+        )}
+      </div>
 
       <div className="space-y-2 border-t border-border pt-4">
         <div className="flex items-center justify-between">
