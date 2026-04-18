@@ -12,6 +12,8 @@ interface Props {
 
 export function CardEffectWrapper({ children, className }: Props) {
   const effectCard = useEditorStore((s) => s.settings.effectCard);
+  const c1 = useEditorStore((s) => s.settings.effectColor1);
+  const accentColor = useEditorStore((s) => s.settings.accentColor);
   const effectsEnabled = useEffectsEnabled();
 
   const CardEffect = useMemo(
@@ -21,9 +23,22 @@ export function CardEffectWrapper({ children, className }: Props) {
 
   if (!CardEffect) return <>{children}</>;
 
+  const color = c1 ?? accentColor ?? "#B8921A";
+
   return (
-    <CardEffect className={className}>
+    <div style={{ position: "relative" }} className={className}>
       {children}
-    </CardEffect>
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          pointerEvents: "none",
+          overflow: "hidden",
+          borderRadius: "inherit",
+        }}
+      >
+        <CardEffect color={color} />
+      </div>
+    </div>
   );
 }

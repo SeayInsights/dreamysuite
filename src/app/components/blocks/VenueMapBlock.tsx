@@ -7,7 +7,7 @@ interface Block { id: string; type: string; [key: string]: unknown }
 export function VenueMapBlock({ block }: { block: Block }) {
   const cfg = parseCfg(block.config);
   const embedUrl = String(cfg.embedUrl ?? cfg.mapUrl ?? "");
-  const venueName = String(cfg.name ?? cfg.venueName ?? "Venue");
+  const venueName = String(cfg.name || cfg.venueName || "Venue");
 
   return (
     <section className="block block-venue-map" data-block-id={block.id} data-block-type={block.type} style={blockSectionStyle(cfg)}>
