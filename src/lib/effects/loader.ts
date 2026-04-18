@@ -17,26 +17,6 @@ const categoryImporter: Record<EffectCategory, Importer> = {
 
 const componentCache = new Map<string, ComponentType<any>>();
 
-export async function loadEffect(
-  id: string,
-): Promise<ComponentType<any> | null> {
-  const cached = componentCache.get(id);
-  if (cached) return cached;
-
-  const entry = getEffectById(id);
-  if (!entry) return null;
-
-  const importer = categoryImporter[entry.category];
-  try {
-    const mod = await importer(entry.name);
-    const component = mod.default;
-    componentCache.set(id, component);
-    return component;
-  } catch {
-    return null;
-  }
-}
-
 export function getEffectComponent(id: string): ComponentType<any> | null {
   const cached = componentCache.get(id);
   if (cached) return cached;
@@ -62,8 +42,4 @@ export function getEffectComponent(id: string): ComponentType<any> | null {
 
   componentCache.set(id, Wrapper);
   return Wrapper;
-}
-
-export function isEffectAvailable(id: string): boolean {
-  return !!getEffectById(id);
 }

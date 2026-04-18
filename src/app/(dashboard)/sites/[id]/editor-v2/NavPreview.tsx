@@ -6,6 +6,23 @@ import { getEffectComponent } from "@/lib/effects/loader";
 
 type Material = "solid" | "glass" | "frosted";
 
+const LANG_NAMES: Record<string, string> = {
+	en: "English", vi: "Tiếng Việt", es: "Español", fr: "Français",
+	"zh-CN": "中文 (简体)", "zh-TW": "中文 (繁體)", ko: "한국어", ja: "日本語",
+	de: "Deutsch", pt: "Português", it: "Italiano", th: "ภาษาไทย",
+	tl: "Filipino", hi: "हिन्दी", ar: "العربية",
+};
+
+function parseSiteLanguages(raw: string | null): string[] {
+	if (!raw) return [];
+	try {
+		const arr = JSON.parse(raw);
+		return Array.isArray(arr) ? arr.filter((c: unknown) => typeof c === "string") : [];
+	} catch {
+		return [];
+	}
+}
+
 function materialStyles(material: Material, bg: string): React.CSSProperties {
 	if (material === "glass") {
 		return {
@@ -35,6 +52,40 @@ function materialBorder(material: Material, bg: string, shape: string): string {
 	return `1px solid color-mix(in srgb, ${bg} 85%, #000)`;
 }
 
+function LangToggle({ mainLang, langs, font, color, highlight }: { mainLang: string; langs: string[]; font: string; color: string; highlight: string }) {
+	const displayLang = useEditorStore((s) => s.displayLang);
+	const setDisplayLang = useEditorStore((s) => s.setDisplayLang);
+	if (langs.length === 0) return null;
+
+	const allLangs = [mainLang, ...langs];
+	const active = displayLang ?? mainLang;
+
+	function cycle(e: React.MouseEvent) {
+		e.stopPropagation();
+		const idx = allLangs.indexOf(active);
+		const next = allLangs[(idx + 1) % allLangs.length];
+		setDisplayLang(next === mainLang ? null : next);
+	}
+
+	const label = displayLang ? (LANG_NAMES[mainLang] ?? mainLang) : (LANG_NAMES[langs[0]] ?? langs[0]);
+
+	return (
+		<button
+			type="button"
+			onClick={cycle}
+			style={{
+				fontFamily: font, fontSize: "0.85rem",
+				color: displayLang ? highlight : color,
+				background: "none", border: "none", cursor: "pointer",
+				whiteSpace: "nowrap", padding: "0.5rem 0",
+				letterSpacing: "0.03em",
+			}}
+		>
+			{label}
+		</button>
+	);
+}
+
 function materialShadow(material: Material, shape: string): string | undefined {
 	if (material === "glass" && (shape === "pill" || shape === "floating"))
 		return "0 2px 16px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.3)";
@@ -57,6 +108,8 @@ export function NavPreview() {
 		() => (settings.effectNavStyle ? getEffectComponent(settings.effectNavStyle) : null),
 		[settings.effectNavStyle],
 	);
+
+	const additionalLangs = useMemo(() => parseSiteLanguages(settings.siteLanguages ?? null), [settings.siteLanguages]);
 
 	const visiblePages = pages.filter((p) => p.isVisible !== 0);
 	if (visiblePages.length < 1) return null;
@@ -97,6 +150,11 @@ export function NavPreview() {
 					brandName={eventName}
 					compact={breakpoint === "mobile"}
 				/>
+				{additionalLangs.length > 0 && (
+					<div style={{ position: "absolute", left: "75%", top: "50%", transform: "translate(-50%, -50%)", zIndex: 25 }}>
+						<LangToggle mainLang={settings.mainLanguage || "en"} langs={additionalLangs} font={bodyFont} color={linkColor} highlight={accent} />
+					</div>
+				)}
 			</div>
 		);
 	}
@@ -191,7 +249,9 @@ export function NavPreview() {
 						</ul>
 					</div>
 				</nav>
-				<div />
+				<div style={{ display: "flex", justifyContent: "center" }}>
+					<LangToggle mainLang={settings.mainLanguage || "en"} langs={additionalLangs} font={bodyFont} color={linkColor} highlight={highlight} />
+				</div>
 			</div>
 		);
 	}
@@ -248,6 +308,11 @@ export function NavPreview() {
 					})}
 				</ul>
 			</div>
+			{additionalLangs.length > 0 && (
+				<div style={{ position: "absolute", left: "75%", top: "50%", transform: "translate(-50%, -50%)" }}>
+					<LangToggle mainLang={settings.mainLanguage || "en"} langs={additionalLangs} font={bodyFont} color={linkColor} highlight={highlight} />
+				</div>
+			)}
 		</nav>
 	);
 }

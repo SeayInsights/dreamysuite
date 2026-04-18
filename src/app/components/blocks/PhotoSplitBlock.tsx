@@ -1,4 +1,5 @@
 import { blockSectionStyle, parseCfg, cropClipPath } from "@/lib/editableField";
+import { TextEffectWrapper } from "@/app/components/TextEffectWrapper";
 
 interface Block { id: string; type: string; [key: string]: unknown }
 
@@ -32,7 +33,7 @@ export function PhotoSplitBlock({ block }: { block: Block }) {
           )}
         </div>
         <div style={{ flex: 1 }}>
-          {heading && <h3>{heading}</h3>}
+          {heading && <TextEffectWrapper as="h3">{heading}</TextEffectWrapper>}
           {body ? <p>{body}</p> : <p style={{ color: "#9b8e85", fontStyle: "italic" }}>Content will appear here.</p>}
         </div>
       </div>

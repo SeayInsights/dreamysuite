@@ -1,4 +1,5 @@
 import { blockSectionStyle, editableProps, parseCfg } from "@/lib/editableField";
+import { TextEffectWrapper } from "@/app/components/TextEffectWrapper";
 
 interface Block { id: string; type: string; [key: string]: unknown }
 
@@ -12,7 +13,7 @@ export function HomeHeroBlock({ block }: { block: Block }) {
     <section className="block block-home-hero" data-block-id={block.id} data-block-type={block.type} style={blockSectionStyle(cfg)}>
       <div className="hero-inner">
         <p className="hero-eyebrow">We&apos;re getting married</p>
-        <h1 className="hero-title" {...editableProps(cfg, "coupleNames")}>{title}</h1>
+        <TextEffectWrapper as="h1" className="hero-title" {...editableProps(cfg, "coupleNames")}>{title}</TextEffectWrapper>
         <p className="hero-date" {...editableProps(cfg, "dateText")}>
           {date || <span style={{ opacity: 0.4, fontStyle: "italic" }}>Add wedding date</span>}
         </p>

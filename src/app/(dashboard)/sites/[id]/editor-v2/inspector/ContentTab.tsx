@@ -105,6 +105,58 @@ function TextArea({
   );
 }
 
+function DateTimeInput({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: string | null;
+  onChange: (v: string | null) => void;
+}) {
+  const dateVal = value?.slice(0, 10) ?? "";
+  const timeVal = value?.slice(11, 16) ?? "";
+
+  function update(date: string, time: string) {
+    if (!date) { onChange(null); return; }
+    onChange(time ? `${date}T${time}` : date);
+  }
+
+  return (
+    <div className="space-y-1">
+      <label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+        {label}
+      </label>
+      <div className="flex gap-1.5">
+        <input
+          type="date"
+          value={dateVal}
+          onChange={(e) => update(e.target.value, timeVal)}
+          onKeyDown={(e) => e.stopPropagation()}
+          className="h-8 flex-1 rounded border border-input bg-background px-2 text-xs focus:outline-none focus:ring-1 focus:ring-ring"
+        />
+        <input
+          type="time"
+          value={timeVal}
+          onChange={(e) => update(dateVal, e.target.value)}
+          onKeyDown={(e) => e.stopPropagation()}
+          className="h-8 w-24 rounded border border-input bg-background px-2 text-xs focus:outline-none focus:ring-1 focus:ring-ring"
+          placeholder="Time"
+        />
+      </div>
+      {dateVal && (
+        <button
+          type="button"
+          onClick={() => onChange(null)}
+          className="text-[10px] text-muted-foreground hover:text-destructive"
+        >
+          Clear date
+        </button>
+      )}
+    </div>
+  );
+}
+
 export function ContentTab() {
   const settings = useEditorStore((s) => s.settings);
   const updateSettings = useEditorStore((s) => s.updateSettings);
@@ -116,6 +168,19 @@ export function ContentTab() {
         value={settings.eventName}
         onChange={(v) => updateSettings({ eventName: v })}
         placeholder="Our Wedding"
+      />
+
+      <DateTimeInput
+        label="Event Date & Time"
+        value={settings.eventDate}
+        onChange={(v) => updateSettings({ eventDate: v })}
+      />
+
+      <TextInput
+        label="Location"
+        value={settings.eventLocation}
+        onChange={(v) => updateSettings({ eventLocation: v })}
+        placeholder="Grand Ballroom, New York"
       />
 
       <div className="border-t border-border pt-4">

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { blockSectionStyle, parseCfg } from "@/lib/editableField";
+import { TextEffectWrapper } from "@/app/components/TextEffectWrapper";
 
 interface GuestEntry {
   name: string;
@@ -36,7 +37,7 @@ export function GuestBookBlock({ block }: { block: Block }) {
   return (
     <section className="block block-guest-book" data-block-id={block.id} data-block-type={block.type}
       style={{ padding: "2rem 1rem", maxWidth: "600px", margin: "0 auto", ...blockSectionStyle(cfg) }}>
-      {heading && <h2 style={{ textAlign: "center", marginBottom: "1.5rem" }}>{heading}</h2>}
+      {heading && <TextEffectWrapper as="h2" style={{ textAlign: "center", marginBottom: "1.5rem" }}>{heading}</TextEffectWrapper>}
 
       <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "0.6rem", marginBottom: "2rem" }}>
         <input style={inputStyle} placeholder="Your name" value={name}

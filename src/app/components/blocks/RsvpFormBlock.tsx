@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { blockSectionStyle, parseCfg } from "@/lib/editableField";
+import { TextEffectWrapper } from "@/app/components/TextEffectWrapper";
 
 interface Block { id: string; type: string; [key: string]: unknown }
 
@@ -48,7 +49,7 @@ export function RsvpFormBlock({ block }: { block: Block }) {
   return (
     <section className="block block-rsvp-form" data-block-id={block.id} data-block-type={block.type}
       style={{ padding: "2rem", maxWidth: "480px", margin: "0 auto", ...blockSectionStyle(cfg) }}>
-      <h2 style={{ textAlign: "center", marginBottom: "0.25rem" }}>{heading}</h2>
+      <TextEffectWrapper as="h2" style={{ textAlign: "center", marginBottom: "0.25rem" }}>{heading}</TextEffectWrapper>
       {subheading && <p style={{ textAlign: "center", color: "#9b8e85", marginBottom: "1.5rem" }}>{subheading}</p>}
 
       {status === "success" ? (

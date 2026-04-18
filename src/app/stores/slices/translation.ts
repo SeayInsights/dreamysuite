@@ -11,18 +11,21 @@ export interface TranslationSlice {
   translations: Record<string, Record<string, Record<string, string>>>;
   translationsLoaded: boolean;
   translationsDirty: Set<string>;
+  displayLang: string | null;
 
   loadTranslations: (siteId: string) => Promise<void>;
   getTranslation: (blockId: string, lang: string, field: string) => string;
   setTranslation: (blockId: string, lang: string, field: string, value: string) => void;
   saveTranslations: (siteId: string) => Promise<void>;
   clearBlockTranslations: (blockId: string) => void;
+  setDisplayLang: (lang: string | null) => void;
 }
 
 export const createTranslationSlice: StateCreator<TranslationSlice, [], [], TranslationSlice> = (set, get) => ({
   translations: {},
   translationsLoaded: false,
   translationsDirty: new Set(),
+  displayLang: null,
 
   loadTranslations: async (siteId) => {
     try {
@@ -75,6 +78,8 @@ export const createTranslationSlice: StateCreator<TranslationSlice, [], [], Tran
       console.error("[translations:save] network error");
     }
   },
+
+  setDisplayLang: (lang) => set({ displayLang: lang }),
 
   clearBlockTranslations: (blockId) => {
     const prev = get().translations;

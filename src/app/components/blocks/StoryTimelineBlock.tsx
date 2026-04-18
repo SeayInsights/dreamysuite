@@ -1,4 +1,5 @@
 import { blockSectionStyle, parseCfg } from "@/lib/editableField";
+import { TextEffectWrapper } from "@/app/components/TextEffectWrapper";
 
 interface TimelineEvent {
   date?: string;
@@ -25,7 +26,7 @@ export function StoryTimelineBlock({ block }: { block: Block }) {
   return (
     <section className="block block-story-timeline" data-block-id={block.id} data-block-type={block.type}
       style={{ padding: "2rem 1rem", ...blockSectionStyle(cfg) }}>
-      {heading && <h2 style={{ textAlign: "center", marginBottom: "2rem" }}>{heading}</h2>}
+      {heading && <TextEffectWrapper as="h2" style={{ textAlign: "center", marginBottom: "2rem" }}>{heading}</TextEffectWrapper>}
       <div style={{ position: "relative", maxWidth: "600px", margin: "0 auto" }}>
         {/* Vertical line */}
         <div style={{
