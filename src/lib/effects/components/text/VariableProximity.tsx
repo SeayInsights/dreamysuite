@@ -154,7 +154,7 @@ const VariableProximity = forwardRef((props, ref) => {
   font-family: 'Roboto Flex', sans-serif;
 }
 
-.sr-only {
+.vp-sr-only {
   position: absolute;
   width: 1px;
   height: 1px;
@@ -196,7 +196,7 @@ const VariableProximity = forwardRef((props, ref) => {
           {wordIndex < words.length - 1 && <span style={{ display: 'inline-block' }}>&nbsp;</span>}
         </span>
       ))}
-      <span className="sr-only">{label}</span>
+      <span className="vp-sr-only">{label}</span>
     </span>
   </>
   );

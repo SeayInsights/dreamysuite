@@ -212,7 +212,7 @@ export function ContextMenu({ children }: { children: ReactNode }): React.JSX.El
   );
 
   const handleSaveAsTemplate = useCallback(() => {
-    console.log("Template saving coming soon", contextBlockId);
+    void contextBlockId;
     closeMenu();
   }, [contextBlockId, closeMenu]);
 
