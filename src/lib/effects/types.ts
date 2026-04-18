@@ -41,6 +41,28 @@ export interface EffectEntry {
   props?: Record<string, unknown>;
 }
 
+export interface NavStyleItem {
+  label: string;
+  href: string;
+  icon: string;
+  onClick?: (e?: React.MouseEvent) => void;
+  color: string;
+  isActive?: boolean;
+}
+
+export interface NavStyleProps {
+  items: NavStyleItem[];
+  logo: string;
+  logoAlt: string;
+  accent: string;
+  bg: string;
+  textColor: string;
+  brandColor: string;
+  headingFont: string;
+  bodyFont: string;
+  brandName: string;
+}
+
 export interface EffectPreset {
   id: string;
   name: string;

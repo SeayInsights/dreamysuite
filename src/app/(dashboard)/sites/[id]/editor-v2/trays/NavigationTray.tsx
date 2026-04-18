@@ -36,14 +36,6 @@ export function NavigationTray() {
 						label="Style"
 					/>
 
-					{/* Nav Effect */}
-					<EffectPicker
-						category="nav"
-						value={settings.effectNav}
-						onChange={(id) => updateSettings({ effectNav: id })}
-						label="Effect"
-					/>
-
 					{/* Position */}
 					<div className="flex flex-col gap-1">
 						<label className="text-[11px] font-medium uppercase leading-none tracking-wider text-muted-foreground">

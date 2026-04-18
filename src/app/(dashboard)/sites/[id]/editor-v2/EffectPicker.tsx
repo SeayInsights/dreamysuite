@@ -109,7 +109,7 @@ export function EffectPicker({ category, value, onChange, label }: Props) {
             type="button"
             onClick={() => handleSelect(null)}
             className={cn(
-              "px-2.5 py-1.5 text-left text-xs transition-colors hover:bg-accent",
+              "w-full px-2.5 py-1.5 text-left text-xs transition-colors hover:bg-accent",
               !value && "bg-accent/50 font-medium",
             )}
           >
@@ -145,7 +145,7 @@ export function EffectPicker({ category, value, onChange, label }: Props) {
                           onClick={() => handleSelect(effect.id)}
                           title={effect.description}
                           className={cn(
-                            "flex items-center gap-2 px-4 py-1.5 text-left text-xs transition-colors hover:bg-accent",
+                            "flex w-full items-center gap-2 px-4 py-1.5 text-left text-xs transition-colors hover:bg-accent",
                             value === effect.id && "bg-primary/10 font-medium text-primary",
                           )}
                         >
@@ -167,7 +167,7 @@ export function EffectPicker({ category, value, onChange, label }: Props) {
                   onClick={() => handleSelect(effect.id)}
                   title={effect.description}
                   className={cn(
-                    "flex items-center gap-2 px-2.5 py-1.5 text-left text-xs transition-colors hover:bg-accent",
+                    "flex w-full items-center gap-2 px-2.5 py-1.5 text-left text-xs transition-colors hover:bg-accent",
                     value === effect.id && "bg-primary/10 font-medium text-primary",
                   )}
                 >

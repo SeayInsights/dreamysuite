@@ -250,7 +250,7 @@ Branch: `feat/editor-overhaul` (continue) or `feat/effect-system` (new branch fr
 - Files: effect wrapper files
 - Depends on: 17
 - Complexity: high (volume)
-- Work: Ballpit, Beams, ColorBends, DarkVeil, Dither, DotField, DotGrid, FloatingLines, GradientBlinds, GridDistortion, GridMotion, Hyperspeed, LetterGlitch, LightRays, Lightning, LiquidChrome, Orb, Particles, PixelBlast, PixelSnow, Plasma, PlasmaWave, Prism, PrismaticBurst, RippleGrid, ShapeGrid, Silk
+- Work: Ballpit, Beams, ColorBends, DarkVeil, Dither, DotField, FloatingLines, GradientBlinds, GridDistortion, GridMotion, Hyperspeed, LetterGlitch, LightRays, Lightning, LiquidChrome, Orb, Particles, PixelBlast, PixelSnow, Plasma, PlasmaWave, Prism, PrismaticBurst, RippleGrid, ShapeGrid, Silk
 - Acceptance: all render correctly in canvas
 
 ### Task 24. Install remaining text effects (batch 2 — 15 components)

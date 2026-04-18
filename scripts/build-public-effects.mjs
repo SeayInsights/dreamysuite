@@ -9,10 +9,17 @@ const COMPONENTS_DIR = join(ROOT, "src/lib/effects/components");
 const OUT_DIR = join(ROOT, "public/effects");
 
 const SKIP = new Set([
-  "DotGrid", // gsap/InertiaPlugin (paid plugin — no license)
+  "FallingText",  // matter-js (physics engine — too large for CDN)
+  "Shuffle",      // @gsap/react (not available as ESM CDN)
+  "SplitText",    // @gsap/react
+  "Carousel",     // react-icons (icon pack — too large)
+  "ScrollStack",  // lenis (scroll library)
+  "CardNav",      // react-icons
+  "InfiniteMenu", // gl-matrix (math lib)
+  "GradualBlur",  // mathjs (math lib — too large for CDN)
 ]);
 
-const CATEGORIES = ["backgrounds"];
+const CATEGORIES = ["backgrounds", "text", "cards", "cursors", "decorations", "nav", "transitions"];
 
 function toKebab(str) {
   return str.replace(/([a-z0-9])([A-Z])/g, "$1-$2").toLowerCase();
