@@ -493,10 +493,20 @@ function AnimationPopoverContent({ blockId, anim, isPro, onUpdate }: AnimationPo
     if (presetId) {
       const el = document.querySelector<Element>(`[data-block-id="${blockId}"]`);
       if (el) {
-        const savedHTML = el.innerHTML;
+        const clone = el.cloneNode(true) as HTMLElement;
+        clone.removeAttribute("data-block-id");
+        clone.style.position = "absolute";
+        clone.style.inset = "0";
+        clone.style.zIndex = "50";
+        clone.style.pointerEvents = "none";
+        el.parentElement?.appendChild(clone);
+        (el as HTMLElement).style.opacity = "0";
         getPreset(presetId)?.().then((fn) => {
-          fn(el);
-          setTimeout(() => { el.innerHTML = savedHTML; }, 1500);
+          fn(clone);
+          setTimeout(() => {
+            (el as HTMLElement).style.opacity = "";
+            clone.remove();
+          }, 1500);
         });
       }
     }

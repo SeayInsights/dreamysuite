@@ -160,7 +160,6 @@ export const LiquidChrome = ({
     <div
       ref={containerRef}
       style={{ width: '100%', height: '100%' }}
-      {...props}
     />
   );
 };

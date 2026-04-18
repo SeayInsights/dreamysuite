@@ -74,6 +74,7 @@ export function SlideTray() {
 			if (!target) return;
 			if (ref.current?.contains(target)) return;
 			if (target.closest("[data-tray-trigger]")) return;
+			if (target.closest("[data-topbar]")) return;
 			setOpenTray(null);
 		};
 		const t = window.setTimeout(() => {
