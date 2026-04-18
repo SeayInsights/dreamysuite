@@ -357,11 +357,11 @@ function buildStyles(settings: SiteSettingRow | null): BuiltStyles {
   const css = `
     :root {
       --accent: ${escHtml(accent)};
-      --heading-font: ${escHtml(headingFont)}, Georgia, serif;
-      --body-font: ${escHtml(bodyFont)}, system-ui, sans-serif;
+      --heading-font: ${escHtml(headingFont)}${/(?:^|,)\s*(?:serif|sans-serif|monospace|cursive|fantasy|system-ui)\s*$/i.test(headingFont) ? "" : ", Georgia, serif"};
+      --body-font: ${escHtml(bodyFont)}${/(?:^|,)\s*(?:serif|sans-serif|monospace|cursive|fantasy|system-ui)\s*$/i.test(bodyFont) ? "" : ", system-ui, sans-serif"};
       --bg: ${escHtml(bg)};
-      --text: #292524;
-      --muted: #78716c;
+      --text: ${escHtml(settings?.siteTextColor ?? "#292524")};
+      --muted: ${escHtml(settings?.bodyColor ?? "#78716c")};
       --border: #e7e5e4;
       --radius: 12px;
       --max-width: 820px;
@@ -1402,7 +1402,7 @@ function renderBlock(
     return String(pageContent?.[contentKey] ?? (cfgKey ? cfg[cfgKey] : undefined) ?? fallback);
   };
 
-  // Compute inline style for block container (background color + text color from tile settings)
+  // Compute inline style for block container — mirrors blockSectionStyle() in the editor
   const _bsParts: string[] = [];
   const _bgCfg = cfg.background as { type?: string; value?: string } | null | undefined;
   const _bgColor = cfg.backgroundColor as string | undefined;
@@ -1412,6 +1412,16 @@ function renderBlock(
   if (_tcCfg) _bsParts.push(`color:${escHtml(_tcCfg)}`, `--block-text:${escHtml(_tcCfg)}`);
   const _bcCfg = cfg.borderColor as string | undefined;
   if (_bcCfg && !cfg.hideBorder) _bsParts.push(`border:1px solid ${escHtml(_bcCfg)}`);
+  const _bh = typeof cfg.blockHeight === "number" && cfg.blockHeight > 0 ? cfg.blockHeight : 0;
+  if (_bh) _bsParts.push(`height:${_bh}px`, `padding-top:0`, `padding-bottom:0`, `overflow-y:hidden`);
+  const _pad = cfg.padding as Record<string, unknown> | null | undefined;
+  if (_pad && typeof _pad === "object" && !Array.isArray(_pad)) {
+    _bsParts.push(`padding:0`);
+    if (typeof _pad.top === "number") _bsParts.push(`padding-top:${_pad.top}px`);
+    if (typeof _pad.right === "number") _bsParts.push(`padding-right:${_pad.right}px`);
+    if (typeof _pad.bottom === "number") _bsParts.push(`padding-bottom:${_pad.bottom}px`);
+    if (typeof _pad.left === "number") _bsParts.push(`padding-left:${_pad.left}px`);
+  }
   const bsAttr = _bsParts.length ? ` style="${_bsParts.join(';')}"` : '';
 
   switch (block.type) {
@@ -2126,6 +2136,10 @@ function buildMessageListenerScript(): string {
     Object.keys(delta).forEach(function(k) {
       if (map[k]) root.style.setProperty(map[k], String(delta[k]));
     });
+    if ('siteTextColor' in delta) root.style.setProperty('--text', String(delta.siteTextColor || '#292524'));
+    if ('bodyColor' in delta) root.style.setProperty('--muted', String(delta.bodyColor || '#78716c'));
+    if ('headingFont' in delta) root.style.setProperty('--heading-font', String(delta.headingFont || 'Georgia, serif'));
+    if ('bodyFont' in delta) root.style.setProperty('--body-font', String(delta.bodyFont || 'system-ui, sans-serif'));
     if ('marginTop' in delta || 'marginRight' in delta || 'marginBottom' in delta || 'marginLeft' in delta) {
       var siteContent = document.getElementById('site-content');
       if (siteContent) {

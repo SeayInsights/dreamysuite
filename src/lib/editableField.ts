@@ -95,6 +95,9 @@ export function blockSectionStyle(cfg: Record<string, unknown>): CSSProperties {
 
   if (typeof cfg.backgroundColor === "string" && cfg.backgroundColor) {
     style.background = cfg.backgroundColor;
+  } else {
+    const bg = cfg.background as { type?: string; value?: string } | null | undefined;
+    if (bg?.type === "color" && bg?.value) style.background = bg.value;
   }
 
   if (typeof cfg.blockHeight === "number" && cfg.blockHeight > 0) {
