@@ -9,13 +9,7 @@ const COMPONENTS_DIR = join(ROOT, "src/lib/effects/components");
 const OUT_DIR = join(ROOT, "public/effects");
 
 const SKIP = new Set([
-  "Beams", // @react-three/fiber
-  "Dither", // @react-three/fiber + postprocessing
-  "Silk", // @react-three/fiber
-  "DotGrid", // gsap/InertiaPlugin (paid plugin)
-  "GridScan", // postprocessing
-  "Hyperspeed", // postprocessing
-  "Ballpit", // three sub-path import
+  "DotGrid", // gsap/InertiaPlugin (paid plugin — no license)
 ]);
 
 const CATEGORIES = ["backgrounds"];
