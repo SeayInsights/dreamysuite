@@ -3068,12 +3068,19 @@ function toggleMusic(){var a=document.getElementById('audio-player'),b=document.
   ${hreflangTags}
   ${fontsTag}
   ${gsapCdn}
-  ${settings?.effectBg ? `<script type="importmap">${R3F_EFFECTS.has(settings.effectBg) ? '{"imports":{"react":"https://esm.sh/react@19.1.5","react/":"https://esm.sh/react@19.1.5/","react-dom":"https://esm.sh/react-dom@19.1.5","react-dom/":"https://esm.sh/react-dom@19.1.5/","@react-three/fiber":"https://esm.sh/@react-three/fiber@9.6.0?external=react,react-dom,three","@react-three/drei":"https://esm.sh/@react-three/drei@10.7.7?external=react,react-dom,three,@react-three/fiber","@react-three/postprocessing":"https://esm.sh/@react-three/postprocessing@3.0.4?external=react,react-dom,three,@react-three/fiber,postprocessing","three":"https://esm.sh/three@0.184.0","three/":"https://esm.sh/three@0.184.0/","postprocessing":"https://esm.sh/postprocessing@6.39.1?external=three","ogl":"https://esm.sh/ogl@1.0.11","gsap":"https://esm.sh/gsap@3.15.0"}}' : '{"imports":{"react":"/effects/_rt.js","react/jsx-runtime":"/effects/_jsx.js","react-dom":"/effects/_rt.js","react-dom/client":"/effects/_rt-client.js","ogl":"https://esm.sh/ogl@1.0.11","three":"https://esm.sh/three@0.184.0","three/":"https://esm.sh/three@0.184.0/","gsap":"https://esm.sh/gsap@3.15.0","postprocessing":"https://esm.sh/postprocessing@6.39.1?external=three"}}'}</script>` : ""}
+  ${(() => {
+    const allEffects = [settings?.effectBg, settings?.effectText, settings?.effectCard, settings?.effectTransition, settings?.effectCursor, settings?.effectDecoration, settings?.effectNav, settings?.effectNavStyle].filter(Boolean) as string[];
+    if (!allEffects.length) return "";
+    const needsR3F = allEffects.some(id => R3F_EFFECTS.has(id));
+    return `<script type="importmap">${needsR3F ? '{"imports":{"react":"https://esm.sh/react@19.1.5","react/":"https://esm.sh/react@19.1.5/","react-dom":"https://esm.sh/react-dom@19.1.5","react-dom/":"https://esm.sh/react-dom@19.1.5/","@react-three/fiber":"https://esm.sh/@react-three/fiber@9.6.0?external=react,react-dom,three","@react-three/drei":"https://esm.sh/@react-three/drei@10.7.7?external=react,react-dom,three,@react-three/fiber","@react-three/postprocessing":"https://esm.sh/@react-three/postprocessing@3.0.4?external=react,react-dom,three,@react-three/fiber,postprocessing","three":"https://esm.sh/three@0.184.0","three/":"https://esm.sh/three@0.184.0/","postprocessing":"https://esm.sh/postprocessing@6.39.1?external=three","ogl":"https://esm.sh/ogl@1.0.11","gsap":"https://esm.sh/gsap@3.15.0"}}' : '{"imports":{"react":"/effects/_rt.js","react/jsx-runtime":"/effects/_jsx.js","react-dom":"/effects/_rt.js","react-dom/client":"/effects/_rt-client.js","ogl":"https://esm.sh/ogl@1.0.11","three":"https://esm.sh/three@0.184.0","three/":"https://esm.sh/three@0.184.0/","gsap":"https://esm.sh/gsap@3.15.0","postprocessing":"https://esm.sh/postprocessing@6.39.1?external=three"}}'}</script>`;
+  })()}
   <style>${siteCss}
   .lang-select{appearance:none;border:1px solid var(--border,#e7e5e4);border-radius:6px;padding:0.375rem 1.75rem 0.375rem 0.625rem;font-family:inherit;font-size:0.8125rem;background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23666' d='M3 4.5L6 7.5L9 4.5'/%3E%3C/svg%3E") no-repeat right 0.5rem center;cursor:pointer;outline:none;color:var(--text,#292524)}</style>
 </head>
 <body>
   ${settings?.effectBg ? `<div id="effect-bg" style="position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;" aria-hidden="true"></div>` : ""}
+  ${settings?.effectCursor ? `<div id="effect-cursor" style="position:fixed;inset:0;z-index:9999;pointer-events:none;overflow:hidden;" aria-hidden="true"></div>` : ""}
+  ${settings?.effectDecoration ? `<div id="effect-decoration" style="position:fixed;inset:0;z-index:1;pointer-events:none;overflow:hidden;" aria-hidden="true"></div>` : ""}
   ${escapedBgImageUrl ? `<div id="bg-overlay" style="position:fixed;inset:0;z-index:0;pointer-events:none;background-image:url('${escapedBgImageUrl}');background-size:cover;background-position:center;background-attachment:fixed;opacity:${settings?.bgImageOpacity ?? 1};display:${settings?.bgImageLayer === 'overlay' ? '' : 'none'};"></div>` : ""}
   <div class="margin-curtain-t"></div>
   <div class="margin-curtain-b"></div>
@@ -3168,8 +3175,153 @@ function submitRsvp(event, slug, formId, msgId) {
       });
     }
     var[{default:E},{createElement:h},{createRoot:cr}]=await p;
-    cr(el).render(h(E,null));
+    var c1=${JSON.stringify(settings.effectColor1 ?? settings.accentColor ?? "#B8921A")};
+    var c2=${JSON.stringify(settings.effectColor2 ?? settings.accentColor ?? "#B8921A")};
+    var c3=${JSON.stringify(settings.effectColor3 ?? settings.accentColor ?? "#B8921A")};
+    cr(el).render(h(E,{color:c1,colors:[c1,c2,c3],lineColor:c1,backgroundColor:"transparent",particleColors:[c1,c2,c3]}));
   }catch(e){console.warn('Effect unavailable:',e)}
+})();
+</script>` : ""}
+  ${settings?.effectCursor ? `<script type="module">
+(async()=>{
+  if(window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  var el=document.getElementById('effect-cursor');
+  if(!el) return;
+  try{
+    var[{default:E},{createElement:h},{createRoot:cr}]=await Promise.all([
+      import('/effects/${escHtml(settings.effectCursor)}.js'),
+      import('react'),
+      import('react-dom/client')
+    ]);
+    cr(el).render(h(E,null));
+  }catch(e){console.warn('Cursor effect unavailable:',e)}
+})();
+</script>` : ""}
+  ${settings?.effectDecoration ? `<script type="module">
+(async()=>{
+  if(window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  var el=document.getElementById('effect-decoration');
+  if(!el) return;
+  try{
+    var c1=${JSON.stringify(settings.effectColor1 ?? settings.accentColor ?? "#B8921A")};
+    var c2=${JSON.stringify(settings.effectColor2 ?? settings.accentColor ?? "#B8921A")};
+    var c3=${JSON.stringify(settings.effectColor3 ?? settings.accentColor ?? "#B8921A")};
+    var[{default:E},{createElement:h},{createRoot:cr}]=await Promise.all([
+      import('/effects/${escHtml(settings.effectDecoration)}.js'),
+      import('react'),
+      import('react-dom/client')
+    ]);
+    cr(el).render(h(E,{color:c1,colors:[c1,c2,c3]}));
+  }catch(e){console.warn('Decoration effect unavailable:',e)}
+})();
+</script>` : ""}
+  ${settings?.effectTransition ? `<script type="module">
+(async()=>{
+  if(window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  try{
+    var[{default:E},{createElement:h},{createRoot:cr}]=await Promise.all([
+      import('/effects/${escHtml(settings.effectTransition)}.js'),
+      import('react'),
+      import('react-dom/client')
+    ]);
+    var blocks=document.querySelectorAll('.block');
+    var obs=new IntersectionObserver(function(entries){
+      entries.forEach(function(entry){
+        if(!entry.isIntersecting) return;
+        obs.unobserve(entry.target);
+        var wrap=document.createElement('div');
+        wrap.style.cssText='width:100%;height:100%';
+        entry.target.prepend(wrap);
+        cr(wrap).render(h(E,{children:null}));
+      });
+    },{threshold:0.1});
+    blocks.forEach(function(b){obs.observe(b)});
+  }catch(e){console.warn('Transition effect unavailable:',e)}
+})();
+</script>` : ""}
+  ${settings?.effectText ? `<script type="module">
+(async()=>{
+  if(window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  try{
+    var[{default:E},{createElement:h},{createRoot:cr}]=await Promise.all([
+      import('/effects/${escHtml(settings.effectText)}.js'),
+      import('react'),
+      import('react-dom/client')
+    ]);
+    var headings=document.querySelectorAll('.block h1,.block h2,.block h3,.block .heading-text');
+    headings.forEach(function(el){
+      var wrap=document.createElement('span');
+      wrap.style.display='inline';
+      var text=el.textContent||'';
+      el.textContent='';
+      el.appendChild(wrap);
+      cr(wrap).render(h(E,{children:text}));
+    });
+  }catch(e){console.warn('Text effect unavailable:',e)}
+})();
+</script>` : ""}
+  ${settings?.effectCard ? `<script type="module">
+(async()=>{
+  if(window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  try{
+    var c1=${JSON.stringify(settings.effectColor1 ?? settings.accentColor ?? "#B8921A")};
+    var[{default:E},{createElement:h},{createRoot:cr}]=await Promise.all([
+      import('/effects/${escHtml(settings.effectCard)}.js'),
+      import('react'),
+      import('react-dom/client')
+    ]);
+    var cards=document.querySelectorAll('.block-registry-card,.block-hotel-card,.block-venue-map,.block-faq');
+    cards.forEach(function(el){
+      var wrap=document.createElement('div');
+      wrap.style.cssText='position:absolute;inset:0;pointer-events:none;overflow:hidden;border-radius:inherit';
+      el.style.position='relative';
+      el.prepend(wrap);
+      cr(wrap).render(h(E,{color:c1}));
+    });
+  }catch(e){console.warn('Card effect unavailable:',e)}
+})();
+</script>` : ""}
+  ${settings?.effectNav ? `<script type="module">
+(async()=>{
+  if(window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  try{
+    var nav=document.querySelector('nav');
+    if(!nav) return;
+    var[{default:E},{createElement:h},{createRoot:cr}]=await Promise.all([
+      import('/effects/${escHtml(settings.effectNav)}.js'),
+      import('react'),
+      import('react-dom/client')
+    ]);
+    var wrap=document.createElement('div');
+    wrap.style.cssText='position:absolute;inset:0;pointer-events:none;overflow:hidden;border-radius:inherit;z-index:0';
+    nav.style.position='relative';
+    nav.prepend(wrap);
+    cr(wrap).render(h(E,null));
+  }catch(e){console.warn('Nav effect unavailable:',e)}
+})();
+</script>` : ""}
+  ${settings?.effectNavStyle ? `<script type="module">
+(async()=>{
+  if(window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  try{
+    var nav=document.querySelector('nav');
+    if(!nav) return;
+    var[{default:E},{createElement:h},{createRoot:cr}]=await Promise.all([
+      import('/effects/${escHtml(settings.effectNavStyle)}.js'),
+      import('react'),
+      import('react-dom/client')
+    ]);
+    var links=nav.querySelectorAll('a[href],button');
+    var items=[];
+    links.forEach(function(a){
+      items.push({label:a.textContent||'',href:a.getAttribute('href')||'#',isActive:a.classList.contains('active')||a.getAttribute('aria-current')==='page'});
+    });
+    var wrap=document.createElement('div');
+    wrap.style.cssText='width:100%';
+    nav.innerHTML='';
+    nav.appendChild(wrap);
+    cr(wrap).render(h(E,{items:items}));
+  }catch(e){console.warn('Nav style unavailable:',e)}
 })();
 </script>` : ""}
 </body>
