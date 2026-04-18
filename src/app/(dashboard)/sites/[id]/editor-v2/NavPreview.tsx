@@ -1,6 +1,8 @@
 "use client";
 
+import { useMemo } from "react";
 import { useEditorStore } from "@/app/stores/editorStore";
+import { getEffectComponent } from "@/lib/effects/loader";
 
 type Material = "solid" | "glass" | "frosted";
 
@@ -50,8 +52,52 @@ export function NavPreview() {
 	const setCurrentPageId = useEditorStore((s) => s.setCurrentPageId);
 	const themeTokens = useEditorStore((s) => s.themeTokens);
 
+	const NavStyleEffect = useMemo(
+		() => (settings.effectNavStyle ? getEffectComponent(settings.effectNavStyle) : null),
+		[settings.effectNavStyle],
+	);
+
 	const visiblePages = pages.filter((p) => p.isVisible !== 0);
 	if (visiblePages.length < 1) return null;
+
+	if (NavStyleEffect) {
+		const eventName = settings.eventName ?? "My Site";
+		const initials = eventName.split(/[\s&+]+/).map((w: string) => w.charAt(0)).filter(Boolean).join("").toUpperCase().slice(0, 3);
+		const accent = settings.navHighlightColor ?? themeTokens.colors.primary ?? "#B8921A";
+		const logoSvg = `data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 80 80"><circle cx="40" cy="40" r="38" fill="${accent}"/><text x="40" y="40" text-anchor="middle" dominant-baseline="central" font-family="Georgia,serif" font-size="24" font-weight="bold" fill="#fff">${initials}</text></svg>`)}`;
+		const bg = settings.navBg ?? "#ffffff";
+		const brandColor = settings.navBrandColor ?? "#1C1917";
+		const linkColor = settings.navLinkColor ?? "#6B6560";
+		const headingFont = themeTokens.typography.headingFont || "system-ui, sans-serif";
+		const bodyFont = themeTokens.typography.bodyFont || "system-ui, sans-serif";
+		const navItems = visiblePages.map((p) => {
+			const label = p.label || p.slug;
+			return {
+				label,
+				href: `#${p.slug}`,
+				icon: label.charAt(0).toUpperCase(),
+				onClick: (e?: React.MouseEvent) => { e?.preventDefault(); setCurrentPageId(p.id); },
+				color: accent,
+				isActive: p.id === currentPageId,
+			};
+		});
+		return (
+			<div style={{ flexShrink: 0, position: "relative", zIndex: 20, minHeight: 56, width: "100%" }}>
+				<NavStyleEffect
+					items={navItems}
+					logo={logoSvg}
+					logoAlt={initials}
+					accent={accent}
+					bg={bg}
+					textColor={linkColor}
+					brandColor={brandColor}
+					headingFont={headingFont}
+					bodyFont={bodyFont}
+					brandName={eventName}
+				/>
+			</div>
+		);
+	}
 
 	const showBrand = (settings.showNavBrand ?? 1) === 1;
 	const eventName = settings.eventName ?? "My Site";
@@ -98,6 +144,8 @@ export function NavPreview() {
 					alignItems: "center",
 					padding: "6px 1.5rem",
 					flexShrink: 0,
+					position: "relative" as const,
+					zIndex: 20,
 				}}
 			>
 				{showBrand ? (
@@ -153,6 +201,8 @@ export function NavPreview() {
 				borderBottom: materialBorder(material, bg, shape),
 				padding: 0,
 				flexShrink: 0,
+				position: "relative",
+				zIndex: 20,
 			}}
 		>
 			<div

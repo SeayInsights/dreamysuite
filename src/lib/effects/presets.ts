@@ -212,11 +212,11 @@ export const EFFECT_PRESETS: EffectPreset[] = [
   {
     id: "minimal-motion",
     name: "Minimal Motion",
-    description: "Clean dot grid with type animation and stacked cards",
+    description: "Clean dot field with type animation and stacked cards",
     mood: "modern",
     eventTypes: "*",
     effects: {
-      background: "dot-grid",
+      background: "dot-field",
       text: "text-type",
       card: "stack",
       transition: "animated-content",

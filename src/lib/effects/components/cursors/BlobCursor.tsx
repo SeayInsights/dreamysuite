@@ -1,6 +1,9 @@
 // @ts-nocheck
 "use client";
 
+import { useRef, useEffect, useCallback } from 'react';
+import gsap from 'gsap';
+
 const _inject_BlobCursor_Styles = () => {
   if (typeof document === 'undefined') return;
   const id = 'BlobCursor-styles';
@@ -39,10 +42,6 @@ const _inject_BlobCursor_Styles = () => {
   document.head.appendChild(el);
 };
 if (typeof document !== 'undefined') _inject_BlobCursor_Styles();
-'use client';
-
-import { useRef, useEffect, useCallback } from 'react';
-import gsap from 'gsap';
 
 
 export default function BlobCursor({
