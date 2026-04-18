@@ -61,12 +61,30 @@ export function EffectsTray() {
           {mode === "pro" && (
             <>
               <EffectPicker
+                category="background"
+                value={settings.effectBg}
+                onChange={(id) =>
+                  updateSettings({ effectBg: id, effectPreset: null })
+                }
+                label="Background"
+              />
+
+              <EffectPicker
                 category="text"
                 value={settings.effectText}
                 onChange={(id) =>
                   updateSettings({ effectText: id, effectPreset: null })
                 }
                 label="Text Animation"
+              />
+
+              <EffectPicker
+                category="nav-style"
+                value={settings.effectNavStyle}
+                onChange={(id) =>
+                  updateSettings({ effectNavStyle: id, effectPreset: null })
+                }
+                label="Nav Style"
               />
 
               <EffectPicker
