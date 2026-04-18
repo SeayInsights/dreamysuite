@@ -47,9 +47,7 @@ function duplicateBlock(blocks: Block[], targetId: string): Block[] {
   return next;
 }
 
-function deleteBlock(blocks: Block[], targetId: string): Block[] {
-  return blocks.filter((b) => b.id !== targetId);
-}
+
 
 // ---------------------------------------------------------------------------
 // Menu item sub-component
@@ -154,6 +152,7 @@ export function ContextMenu({ children }: { children: ReactNode }): React.JSX.El
   const blocks = useEditorStore((s) => s.blocks);
   const selectedBlockId = useEditorStore((s) => s.selectedBlockId);
   const setBlocks = useEditorStore((s) => s.setBlocks);
+  const removeBlock = useEditorStore((s) => s.removeBlock);
   const selectBlock = useEditorStore((s) => s.selectBlock);
 
   const [menuOpen, setMenuOpen] = useState(false);
@@ -204,11 +203,11 @@ export function ContextMenu({ children }: { children: ReactNode }): React.JSX.El
   const handleDelete = useCallback(
     (id: string | null) => {
       if (!id) return;
-      setBlocks(deleteBlock(blocks, id));
+      removeBlock(id);
       if (selectedBlockId === id) selectBlock(null);
       closeMenu();
     },
-    [blocks, selectedBlockId, setBlocks, selectBlock, closeMenu],
+    [selectedBlockId, removeBlock, selectBlock, closeMenu],
   );
 
   const handleSaveAsTemplate = useCallback(() => {
@@ -235,7 +234,7 @@ export function ContextMenu({ children }: { children: ReactNode }): React.JSX.El
       ) {
         if (!selectedBlockId) return;
         e.preventDefault();
-        setBlocks(deleteBlock(blocks, selectedBlockId));
+        removeBlock(selectedBlockId);
         selectBlock(null);
         return;
       }

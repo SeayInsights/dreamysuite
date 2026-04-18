@@ -909,6 +909,10 @@ function buildStyles(settings: SiteSettingRow | null): BuiltStyles {
       text-align: center;
       padding: 5rem 1.25rem 4rem;
     }
+    ${isFixed ? `.page-section.active > .block-home-hero:first-child {
+      margin-top: -4rem;
+      padding-top: 8rem;
+    }` : ""}
     .hero-inner { max-width: 640px; margin: 0 auto; }
     .hero-eyebrow {
       font-family: var(--body-font);
@@ -3110,7 +3114,7 @@ function toggleMusic(){var a=document.getElementById('audio-player'),b=document.
     if (!allEffects.length) return "";
     const needsR3F = allEffects.some(id => R3F_EFFECTS.has(id));
     const r3fImports = needsR3F ? ',"@react-three/fiber":"https://esm.sh/@react-three/fiber@9.6.0?external=react,react-dom,three","@react-three/drei":"https://esm.sh/@react-three/drei@10.7.7?external=react,react-dom,three,@react-three/fiber","@react-three/postprocessing":"https://esm.sh/@react-three/postprocessing@3.0.4?external=react,react-dom,three,@react-three/fiber,postprocessing"' : "";
-    return `<script type="importmap">{"imports":{"react":"https://esm.sh/react@19.1.5","react/":"https://esm.sh/react@19.1.5/","react-dom":"https://esm.sh/react-dom@19.1.5","react-dom/":"https://esm.sh/react-dom@19.1.5/","motion/react":"https://esm.sh/motion@12.38.0/react?external=react,react-dom","motion":"https://esm.sh/motion@12.38.0?external=react,react-dom"${r3fImports},"three":"https://esm.sh/three@0.184.0","three/":"https://esm.sh/three@0.184.0/","postprocessing":"https://esm.sh/postprocessing@6.39.1?external=three","ogl":"https://esm.sh/ogl@1.0.11","gsap":"https://esm.sh/gsap@3.15.0"}}</script>`;
+    return `<script type="importmap">{"imports":{"react":"https://esm.sh/react@19.1.5","react/":"https://esm.sh/react@19.1.5/","react-dom":"https://esm.sh/react-dom@19.1.5","react-dom/":"https://esm.sh/react-dom@19.1.5/","motion/react":"https://esm.sh/motion@12.38.0/react?external=react,react-dom","motion":"https://esm.sh/motion@12.38.0?external=react,react-dom"${r3fImports},"three":"https://esm.sh/three@0.184.0","three/":"https://esm.sh/three@0.184.0/","postprocessing":"https://esm.sh/postprocessing@6.39.1?external=three","ogl":"https://esm.sh/ogl@1.0.11","gsap":"https://esm.sh/gsap@3.15.0","gsap/":"https://esm.sh/gsap@3.15.0/"}}</script>`;
   })()}
   <style>${siteCss}
   .lang-select{appearance:none;border:1px solid var(--border,#e7e5e4);border-radius:6px;padding:0.375rem 1.75rem 0.375rem 0.625rem;font-family:inherit;font-size:0.8125rem;background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23666' d='M3 4.5L6 7.5L9 4.5'/%3E%3C/svg%3E") no-repeat right 0.5rem center;cursor:pointer;outline:none;color:var(--text,#292524)}</style>
@@ -3330,24 +3334,28 @@ function submitRsvp(event, slug, formId, msgId) {
     const nsBrand = escHtml(settings.navBrandColor ?? "#1C1917");
     const nsHFont = escHtml(settings.headingFont ?? "Georgia, serif");
     const nsBFont = escHtml(settings.bodyFont ?? "system-ui, sans-serif");
-    const nsBrandName = escHtml(settings.eventName ?? "");
+    const nsBrandName = settings.eventName ?? "";
     const nsInitials = (settings.eventName ?? "").split(/[\s&+]+/).map((w: string) => w.charAt(0)).filter(Boolean).join("").toUpperCase().slice(0, 3);
     const nsLogoSvg = `data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 80 80"><circle cx="40" cy="40" r="38" fill="${nsAccent}"/><text x="40" y="40" text-anchor="middle" dominant-baseline="central" font-family="Georgia,serif" font-size="24" font-weight="bold" fill="#fff">${nsInitials}</text></svg>`)}`;
     return `<script type="module">
 (async()=>{
   if(window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
   try{
-    var nav=document.querySelector('nav,.site-nav-row');
-    if(!nav) return;
+    var navEl=document.querySelector('nav.site-nav');
+    var navRow=document.querySelector('.site-nav-row');
+    var target=navEl||navRow;
+    if(!target) return;
     var[{default:E},{createElement:h},{createRoot:cr}]=await Promise.all([
       import('/effects/${escHtml(settings.effectNavStyle)}.js'),
       import('react'),
       import('react-dom/client')
     ]);
-    var links=nav.querySelectorAll('a[href],button');
+    var linkSource=navEl||target;
+    var links=linkSource.querySelectorAll('.site-nav-links button,.site-nav-links a');
     var accent=${JSON.stringify(nsAccent)};
     var items=[];
     links.forEach(function(a){
+      if(a.closest('.lang-toggle')||a.classList.contains('lang-btn')||a.classList.contains('lang-select')) return;
       if(a.classList.contains('site-nav-brand')||a.classList.contains('site-nav-brand-outside')) return;
       var label=a.textContent||'';
       if(!label.trim()) return;
@@ -3356,8 +3364,13 @@ function submitRsvp(event, slug, formId, msgId) {
     if(!items.length) return;
     var wrap=document.createElement('div');
     wrap.style.cssText='width:100%';
-    nav.innerHTML='';
-    nav.appendChild(wrap);
+    if(navRow&&navEl){
+      navEl.innerHTML='';
+      navEl.appendChild(wrap);
+    }else{
+      target.innerHTML='';
+      target.appendChild(wrap);
+    }
     cr(wrap).render(h(E,{
       items:items,
       logo:${JSON.stringify(nsLogoSvg)},
