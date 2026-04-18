@@ -39,6 +39,7 @@ export interface EffectEntry {
   description: string;
   thumbnail?: string;
   props?: Record<string, unknown>;
+  disabled?: boolean;
 }
 
 export interface NavStyleItem {

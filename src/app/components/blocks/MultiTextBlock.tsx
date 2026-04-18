@@ -1,4 +1,5 @@
 import { blockSectionStyle, editableProps, parseCfg } from "@/lib/editableField";
+import { TextEffectWrapper } from "@/app/components/TextEffectWrapper";
 
 interface Block { id: string; type: string; [key: string]: unknown }
 
@@ -15,12 +16,13 @@ export function MultiTextBlock({ block }: { block: Block }) {
 
   return (
     <section className="block block-text" data-block-id={block.id} data-block-type={block.type} style={blockSectionStyle(cfg)}>
-      <h2
+      <TextEffectWrapper
+        as="h2"
         className="section-heading"
         {...editableProps(cfg, "heading")}
       >
         {heading || <span style={{ opacity: 0.4, fontStyle: "italic" }}>Add heading</span>}
-      </h2>
+      </TextEffectWrapper>
       <div className="section-rule" aria-hidden="true" />
       <div className="text-body">
         <p {...editableProps(cfg, "body")}>

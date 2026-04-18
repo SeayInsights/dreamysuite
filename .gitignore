@@ -71,3 +71,10 @@ cloudflare-env.d.ts
 /test-results
 /blob-report
 /e2e/.auth
+.playwright-auth.json
+
+# Session artifacts
+.sessions/
+
+# Stray directories (browser profiles, etc.)
+UsersDannis*

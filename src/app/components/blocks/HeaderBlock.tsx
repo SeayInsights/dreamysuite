@@ -1,4 +1,5 @@
 import { blockSectionStyle, editableProps, parseCfg, styleFromField } from "@/lib/editableField";
+import { TextEffectWrapper } from "@/app/components/TextEffectWrapper";
 
 interface Block { id: string; type: string; [key: string]: unknown }
 
@@ -21,13 +22,14 @@ export function HeaderBlock({ block }: { block: Block }) {
 
   return (
     <section className="block block-header" data-block-id={block.id} data-block-type={block.type} style={blockSectionStyle(cfg)}>
-      <h2
+      <TextEffectWrapper
+        as="h2"
         className="section-heading"
         data-editable-field="title"
         style={fieldStyle}
       >
         {text}
-      </h2>
+      </TextEffectWrapper>
       <div className="section-rule" aria-hidden="true" />
     </section>
   );

@@ -1003,6 +1003,7 @@ export const EFFECT_REGISTRY: EffectEntry[] = [
     eventTypes: ["wedding", "engagement"],
     intensity: "medium",
     description: "Glass card with fluid distortion effect",
+    disabled: true,
   },
   {
     id: "flying-posters",
@@ -1217,6 +1218,7 @@ export const EFFECT_REGISTRY: EffectEntry[] = [
     eventTypes: ["celebration", "engagement"],
     intensity: "medium",
     description: "Dangling lanyard badge with physics",
+    disabled: true,
   },
   {
     id: "stepper",
@@ -1237,11 +1239,12 @@ export const EFFECT_REGISTRY: EffectEntry[] = [
     eventTypes: ["celebration"],
     intensity: "dramatic",
     description: "Interactive 3D model viewer component",
+    disabled: true,
   },
 ];
 
 export function getEffectsByCategory(category: EffectCategory): EffectEntry[] {
-  return EFFECT_REGISTRY.filter((e) => e.category === category);
+  return EFFECT_REGISTRY.filter((e) => e.category === category && !e.disabled);
 }
 
 export function getRecommended(
@@ -1251,6 +1254,7 @@ export function getRecommended(
   return EFFECT_REGISTRY.filter(
     (e) =>
       e.category === category &&
+      !e.disabled &&
       (e.eventTypes === "*" || e.eventTypes.includes(eventType)),
   );
 }

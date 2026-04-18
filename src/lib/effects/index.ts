@@ -21,9 +21,7 @@ export {
 } from "./presets";
 
 export {
-  loadEffect,
   getEffectComponent,
-  isEffectAvailable,
 } from "./loader";
 
 export {

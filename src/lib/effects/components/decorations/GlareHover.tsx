@@ -67,13 +67,14 @@ if (typeof document !== 'undefined') _inject_GlareHover_Styles();
 
 
 const GlareHover = ({
-  width = '500px',
-  height = '500px',
-  background = '#000',
-  borderRadius = '10px',
-  borderColor = '#333',
+  width = '100%',
+  height = '100%',
+  background = 'transparent',
+  borderRadius = 'inherit',
+  borderColor = 'transparent',
   children,
-  glareColor = '#ffffff',
+  color,
+  glareColor,
   glareOpacity = 0.5,
   glareAngle = -45,
   glareSize = 250,
@@ -82,8 +83,9 @@ const GlareHover = ({
   className = '',
   style = {}
 }) => {
-  const hex = glareColor.replace('#', '');
-  let rgba = glareColor;
+  const resolvedGlareColor = glareColor ?? color ?? '#ffffff';
+  const hex = resolvedGlareColor.replace('#', '');
+  let rgba = resolvedGlareColor;
   if (/^[0-9A-Fa-f]{6}$/.test(hex)) {
     const r = parseInt(hex.slice(0, 2), 16);
     const g = parseInt(hex.slice(2, 4), 16);

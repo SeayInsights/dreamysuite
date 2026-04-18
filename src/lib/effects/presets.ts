@@ -242,14 +242,13 @@ export const EFFECT_PRESETS: EffectPreset[] = [
   {
     id: "glass-luxe",
     name: "Glass Luxe",
-    description: "Ripple grid with gradient text and fluid glass cards",
+    description: "Ripple grid with gradient text and glowing cards",
     mood: "elegant",
     eventTypes: "*",
     effects: {
       background: "ripple-grid",
       text: "gradient-text",
-      card: "fluid-glass",
-      transition: "gradual-blur",
+      card: "border-glow",
       cursor: "crosshair",
       decoration: "glare-hover",
     },
