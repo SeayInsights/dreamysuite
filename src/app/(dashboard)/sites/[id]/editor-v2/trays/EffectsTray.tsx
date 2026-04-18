@@ -9,12 +9,14 @@ export function EffectsTray() {
   const settings = useEditorStore((s) => s.settings);
   const updateSettings = useEditorStore((s) => s.updateSettings);
   const eventType = useEditorStore((s) => s.eventType) as EventType | null;
+  const mode = useEditorStore((s) => s.mode);
 
   const handleApplyPreset = (effects: EffectPreset["effects"], presetId: string) => {
     updateSettings({
       effectPreset: presetId,
       effectBg: effects.background ?? null,
       effectNav: effects.nav ?? null,
+      effectNavStyle: effects.navStyle ?? null,
       effectText: effects.text ?? null,
       effectCard: effects.card ?? null,
       effectTransition: effects.transition ?? null,
@@ -28,6 +30,7 @@ export function EffectsTray() {
       effectPreset: null,
       effectBg: null,
       effectNav: null,
+      effectNavStyle: null,
       effectText: null,
       effectCard: null,
       effectTransition: null,
@@ -61,69 +64,57 @@ export function EffectsTray() {
             onChange={(id) =>
               updateSettings({ effectBg: id, effectPreset: null })
             }
-            eventType={eventType}
             label="Background"
           />
 
-          <EffectPicker
-            category="text"
-            value={settings.effectText}
-            onChange={(id) =>
-              updateSettings({ effectText: id, effectPreset: null })
-            }
-            eventType={eventType}
-            label="Text Animation"
-          />
+          {mode === "pro" && (
+            <>
+              <EffectPicker
+                category="text"
+                value={settings.effectText}
+                onChange={(id) =>
+                  updateSettings({ effectText: id, effectPreset: null })
+                }
+                label="Text Animation"
+              />
 
-          <EffectPicker
-            category="card"
-            value={settings.effectCard}
-            onChange={(id) =>
-              updateSettings({ effectCard: id, effectPreset: null })
-            }
-            eventType={eventType}
-            label="Card Style"
-          />
+              <EffectPicker
+                category="card"
+                value={settings.effectCard}
+                onChange={(id) =>
+                  updateSettings({ effectCard: id, effectPreset: null })
+                }
+                label="Card Style"
+              />
 
-          <EffectPicker
-            category="transition"
-            value={settings.effectTransition}
-            onChange={(id) =>
-              updateSettings({ effectTransition: id, effectPreset: null })
-            }
-            eventType={eventType}
-            label="Transitions"
-          />
+              <EffectPicker
+                category="transition"
+                value={settings.effectTransition}
+                onChange={(id) =>
+                  updateSettings({ effectTransition: id, effectPreset: null })
+                }
+                label="Transitions"
+              />
 
-          <EffectPicker
-            category="decoration"
-            value={settings.effectDecoration}
-            onChange={(id) =>
-              updateSettings({ effectDecoration: id, effectPreset: null })
-            }
-            eventType={eventType}
-            label="Decorations"
-          />
+              <EffectPicker
+                category="decoration"
+                value={settings.effectDecoration}
+                onChange={(id) =>
+                  updateSettings({ effectDecoration: id, effectPreset: null })
+                }
+                label="Decorations"
+              />
 
-          <EffectPicker
-            category="cursor"
-            value={settings.effectCursor}
-            onChange={(id) =>
-              updateSettings({ effectCursor: id, effectPreset: null })
-            }
-            eventType={eventType}
-            label="Cursor"
-          />
-
-          <EffectPicker
-            category="nav"
-            value={settings.effectNav}
-            onChange={(id) =>
-              updateSettings({ effectNav: id, effectPreset: null })
-            }
-            eventType={eventType}
-            label="Navigation"
-          />
+              <EffectPicker
+                category="cursor"
+                value={settings.effectCursor}
+                onChange={(id) =>
+                  updateSettings({ effectCursor: id, effectPreset: null })
+                }
+                label="Cursor"
+              />
+            </>
+          )}
         </div>
       </div>
     </div>

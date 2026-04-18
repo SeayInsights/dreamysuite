@@ -183,11 +183,15 @@ interface SiteSettingRow {
   effectPreset: string | null;
   effectBg: string | null;
   effectNav: string | null;
+  effectNavStyle: string | null;
   effectText: string | null;
   effectCard: string | null;
   effectTransition: string | null;
   effectCursor: string | null;
   effectDecoration: string | null;
+  effectColor1: string | null;
+  effectColor2: string | null;
+  effectColor3: string | null;
 }
 
 interface PageRow {

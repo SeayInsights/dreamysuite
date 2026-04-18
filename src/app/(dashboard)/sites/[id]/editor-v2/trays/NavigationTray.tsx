@@ -1,19 +1,14 @@
 "use client";
 
 import { useEditorStore } from "@/app/stores/editorStore";
-import { NavPreview } from "../NavPreview";
 import { EffectPicker } from "../EffectPicker";
-import type { EventType } from "@/lib/effects/types";
 
 export function NavigationTray() {
 	const settings = useEditorStore((s) => s.settings);
 	const updateSettings = useEditorStore((s) => s.updateSettings);
 
 	const showBrand = (settings.showNavBrand ?? 1) === 1;
-	const navShape = (settings.navShape as string) ?? "bar";
-	const navMaterial = (settings.navMaterial as string) ?? "solid";
 	const navPosition = (settings.navPosition as string) ?? "fixed";
-	const eventType = useEditorStore((s) => s.eventType) as EventType | null;
 
 	return (
 		<div className="flex h-full flex-col">
@@ -21,16 +16,6 @@ export function NavigationTray() {
 				<h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
 					Navigation
 				</h2>
-			</div>
-
-			{/* Live preview */}
-			<div className="border-b border-border bg-muted/30">
-				<label className="block px-3 pt-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-					Preview
-				</label>
-				<div className="overflow-x-auto px-3 py-2">
-					<NavPreview />
-				</div>
 			</div>
 
 			<div className="flex-1 overflow-y-auto px-3 py-2">
@@ -43,61 +28,20 @@ export function NavigationTray() {
 						<Toggle on={showBrand} onToggle={() => updateSettings({ showNavBrand: showBrand ? 0 : 1 })} />
 					</div>
 
-					{/* Shape */}
-					<div className="flex flex-col gap-1">
-						<label className="text-[11px] font-medium uppercase leading-none tracking-wider text-muted-foreground">
-							Style
-						</label>
-						<div className="flex gap-1">
-							{(["bar", "pill", "floating"] as const).map((s) => (
-								<button
-									key={s}
-									type="button"
-									onClick={() => updateSettings({ navShape: s === "bar" ? null : s })}
-									className={
-										"flex-1 rounded-md border px-2 py-1.5 text-xs font-medium capitalize transition-colors " +
-										(navShape === s || (s === "bar" && !settings.navShape)
-											? "border-ring bg-accent text-accent-foreground"
-											: "border-border text-muted-foreground hover:border-ring/50")
-									}
-								>
-									{s}
-								</button>
-							))}
-						</div>
-					</div>
-
-					{/* Material */}
-					<div className="flex flex-col gap-1">
-						<label className="text-[11px] font-medium uppercase leading-none tracking-wider text-muted-foreground">
-							Material
-						</label>
-						<div className="flex gap-1">
-							{(["solid", "glass", "frosted"] as const).map((m) => (
-								<button
-									key={m}
-									type="button"
-									onClick={() => updateSettings({ navMaterial: m === "solid" ? null : m })}
-									className={
-										"flex-1 rounded-md border px-2 py-1.5 text-xs font-medium capitalize transition-colors " +
-										(navMaterial === m || (m === "solid" && !settings.navMaterial)
-											? "border-ring bg-accent text-accent-foreground"
-											: "border-border text-muted-foreground hover:border-ring/50")
-									}
-								>
-									{m}
-								</button>
-							))}
-						</div>
-					</div>
+					{/* Nav Style */}
+					<EffectPicker
+						category="nav-style"
+						value={settings.effectNavStyle}
+						onChange={(id) => updateSettings({ effectNavStyle: id })}
+						label="Style"
+					/>
 
 					{/* Nav Effect */}
 					<EffectPicker
 						category="nav"
 						value={settings.effectNav}
-						onChange={(id) => updateSettings({ effectNav: id, effectPreset: null })}
-						eventType={eventType}
-						label="Nav Effect"
+						onChange={(id) => updateSettings({ effectNav: id })}
+						label="Effect"
 					/>
 
 					{/* Position */}

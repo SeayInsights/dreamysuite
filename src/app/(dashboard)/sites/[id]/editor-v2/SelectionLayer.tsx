@@ -86,7 +86,7 @@ export function SelectionLayer({ frameRef }: Props) {
 
 	return (
 		<div
-			className="pointer-events-none absolute inset-0 z-10"
+			className="pointer-events-none absolute inset-0 z-10 overflow-hidden"
 			aria-hidden
 		>
 			{hoverVisible && (

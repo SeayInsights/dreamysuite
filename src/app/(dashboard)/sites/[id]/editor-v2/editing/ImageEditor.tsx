@@ -84,7 +84,7 @@ function findImageElement(blockRoot: HTMLElement): HTMLElement | null {
     if (bg && bg !== "none") return el;
     node = walker.nextNode();
   }
-  return blockRoot;
+  return null;
 }
 
 // ─── Tooltip ─────────────────────────────────────────────────────────────────
@@ -289,7 +289,8 @@ export function ImageEditor({ containerRef }: Props) {
       e.preventDefault();
       e.stopPropagation();
 
-      const imageEl = findImageElement(blockRoot) ?? blockRoot;
+      const imageEl = findImageElement(blockRoot);
+      if (!imageEl) return;
       const blockRect = getRelativeRect(blockRoot, container);
       const imageRect = getRelativeRect(imageEl, container);
 
@@ -316,7 +317,8 @@ export function ImageEditor({ containerRef }: Props) {
         );
         if (!blockRoot) return;
 
-        const imageEl = findImageElement(blockRoot) ?? blockRoot;
+        const imageEl = findImageElement(blockRoot);
+        if (!imageEl) return;
         const blockRect = getRelativeRect(blockRoot, container);
         const imageRect = getRelativeRect(imageEl, container);
 

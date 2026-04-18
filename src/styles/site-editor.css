@@ -32,6 +32,11 @@ body { background:#fff !important; }
 ::-webkit-scrollbar-thumb:hover { background:#b0a99f; }
 * { scrollbar-width:thin; scrollbar-color:#d4cec8 transparent; }
 
+/* Editor canvas: hide scrollbars — overlay UI (insert button, handles)
+   extends scroll area; users scroll via mousewheel/touchpad */
+.editor-canvas-scroll::-webkit-scrollbar { display:none; }
+.editor-canvas-scroll { scrollbar-width:none; }
+
 /* ── Reduced motion ───────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {

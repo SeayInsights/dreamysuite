@@ -4,13 +4,6 @@ import { Check, CircleDashed } from "lucide-react";
 
 import { useEditorStore } from "@/app/stores/editorStore";
 
-/**
- * Reflects document dirty state.
- *
- * Autosave wiring (debounced flush → markClean) lands with the canvas
- * integration in Phase 3. Until then this display-only indicator mirrors
- * `isDirty` so the shell can be verified end-to-end.
- */
 export function SaveStatus() {
 	const isDirty = useEditorStore((s) => s.isDirty);
 

@@ -1,6 +1,7 @@
 export type EffectCategory =
   | "background"
   | "nav"
+  | "nav-style"
   | "text"
   | "card"
   | "transition"
@@ -49,6 +50,7 @@ export interface EffectPreset {
   effects: {
     background?: string;
     nav?: string;
+    navStyle?: string;
     text?: string;
     card?: string;
     transition?: string;

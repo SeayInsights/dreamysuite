@@ -111,6 +111,28 @@ export function FloatingFormatToolbar({
   const [fontMenuOpen, setFontMenuOpen] = useState(false);
   const [fontMenuPos, setFontMenuPos] = useState({ top: 0, left: 0 });
   const [activeFont, setActiveFont] = useState<string | null>(null);
+  const [selectionColor, setSelectionColor] = useState<string | null>(null);
+
+  useEffect(() => {
+    function readColor() {
+      try {
+        const raw = document.queryCommandValue("foreColor");
+        if (!raw) return;
+        const m = raw.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/);
+        if (m) {
+          const hex = `#${[m[1], m[2], m[3]].map((v) => Number(v).toString(16).padStart(2, "0")).join("")}`;
+          setSelectionColor(hex);
+          if (colorRef.current) colorRef.current.value = hex;
+        } else if (raw.startsWith("#")) {
+          setSelectionColor(raw);
+          if (colorRef.current) colorRef.current.value = raw;
+        }
+      } catch { /* no selection */ }
+    }
+    readColor();
+    document.addEventListener("selectionchange", readColor);
+    return () => document.removeEventListener("selectionchange", readColor);
+  }, []);
 
   useEffect(() => {
     const el = toolbarRef.current;
@@ -275,7 +297,10 @@ export function FloatingFormatToolbar({
           {/* A-with-color-bar icon */}
           <span className="flex flex-col items-center leading-none">
             <span className="text-xs font-semibold">A</span>
-            <span className="mt-0.5 h-1 w-4 rounded-sm bg-current" />
+            <span
+              className="mt-0.5 h-1 w-4 rounded-sm"
+              style={{ backgroundColor: selectionColor || "currentColor" }}
+            />
           </span>
         </ToolbarButton>
         {/* pointer-events-none so user clicks fall through to the button above;
