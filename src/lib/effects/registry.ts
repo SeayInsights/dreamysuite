@@ -1136,7 +1136,7 @@ export const EFFECT_REGISTRY: EffectEntry[] = [
   },
 
   // ═══════════════════════════════════════════
-  // NAV COMPONENTS (14 — from Components)
+  // NAV — styles (7, category "nav-style") + effects (7, category "nav")
   // ═══════════════════════════════════════════
   {
     id: "bubble-menu",
@@ -1152,7 +1152,7 @@ export const EFFECT_REGISTRY: EffectEntry[] = [
     id: "card-nav",
     name: "CardNav",
     source: "reactbits",
-    category: "nav",
+    category: "nav-style",
     mood: ["modern", "elegant"],
     eventTypes: "*",
     intensity: "subtle",
@@ -1162,7 +1162,7 @@ export const EFFECT_REGISTRY: EffectEntry[] = [
     id: "counter",
     name: "Counter",
     source: "reactbits",
-    category: "nav",
+    category: "nav-style",
     mood: ["modern", "elegant"],
     eventTypes: ["anniversary", "celebration"],
     intensity: "subtle",
@@ -1172,7 +1172,7 @@ export const EFFECT_REGISTRY: EffectEntry[] = [
     id: "dock",
     name: "Dock",
     source: "reactbits",
-    category: "nav",
+    category: "nav-style",
     mood: ["modern"],
     eventTypes: ["celebration", "engagement"],
     intensity: "subtle",
@@ -1202,7 +1202,7 @@ export const EFFECT_REGISTRY: EffectEntry[] = [
     id: "glass-icons",
     name: "GlassIcons",
     source: "reactbits",
-    category: "nav",
+    category: "nav-style",
     mood: ["elegant", "modern"],
     eventTypes: ["wedding", "anniversary"],
     intensity: "subtle",
@@ -1222,7 +1222,7 @@ export const EFFECT_REGISTRY: EffectEntry[] = [
     id: "infinite-menu",
     name: "InfiniteMenu",
     source: "reactbits",
-    category: "nav",
+    category: "nav-style",
     mood: ["modern", "dramatic"],
     eventTypes: ["celebration"],
     intensity: "medium",
@@ -1242,7 +1242,7 @@ export const EFFECT_REGISTRY: EffectEntry[] = [
     id: "pill-nav",
     name: "PillNav",
     source: "reactbits",
-    category: "nav",
+    category: "nav-style",
     mood: ["elegant", "modern"],
     eventTypes: ["wedding", "vow-renewal", "anniversary"],
     intensity: "subtle",
@@ -1262,7 +1262,7 @@ export const EFFECT_REGISTRY: EffectEntry[] = [
     id: "stepper",
     name: "Stepper",
     source: "reactbits",
-    category: "nav",
+    category: "nav-style",
     mood: ["modern"],
     eventTypes: "*",
     intensity: "subtle",

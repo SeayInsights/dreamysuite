@@ -492,7 +492,13 @@ function AnimationPopoverContent({ blockId, anim, isPro, onUpdate }: AnimationPo
     const presetId = patch.presetId ?? anim.presetId;
     if (presetId) {
       const el = document.querySelector<Element>(`[data-block-id="${blockId}"]`);
-      if (el) getPreset(presetId)?.().then((fn) => fn(el));
+      if (el) {
+        const savedHTML = el.innerHTML;
+        getPreset(presetId)?.().then((fn) => {
+          fn(el);
+          setTimeout(() => { el.innerHTML = savedHTML; }, 1500);
+        });
+      }
     }
   }
 
@@ -735,9 +741,20 @@ export function SectionToolbar({
 
     const spaceAbove = box.top - frameBox.top;
     const fitsAbove = spaceAbove >= TOOLBAR_HEIGHT + TOOLBAR_MARGIN;
-    const top = fitsAbove
-      ? relTop - TOOLBAR_HEIGHT - TOOLBAR_MARGIN
-      : relTop + box.height + TOOLBAR_MARGIN;
+    const scrollTop = container.scrollTop ?? 0;
+    const viewportBottom = scrollTop + container.clientHeight;
+
+    let top: number;
+    if (fitsAbove) {
+      top = relTop - TOOLBAR_HEIGHT - TOOLBAR_MARGIN;
+    } else {
+      const belowPos = relTop + box.height + TOOLBAR_MARGIN;
+      if (belowPos + TOOLBAR_HEIGHT <= viewportBottom) {
+        top = belowPos;
+      } else {
+        top = scrollTop + TOOLBAR_MARGIN;
+      }
+    }
 
     setPosition({ top, left: clampedLeft });
   }, [containerRef, selectedBlockId]);

@@ -11,6 +11,7 @@ import { Canvas } from "./Canvas";
 import { EditorErrorBoundary } from "./EditorErrorBoundary";
 import { useShortcuts } from "./hooks/useShortcuts";
 import { useSettingsSync } from "./hooks/useSettingsSync";
+import { useBlockSync } from "./hooks/useBlockSync";
 import { useEditorStore } from "@/app/stores/editorStore";
 import {
   trackEditorMount,
@@ -43,6 +44,7 @@ interface Props {
 export function EditorShell({ site, user: _user, children }: Props) {
 	useShortcuts();
 	useSettingsSync(site.id);
+	useBlockSync(site.id);
 	const setSiteId = useEditorStore((s) => s.setSiteId);
 	const setSiteMeta = useEditorStore((s) => s.setSiteMeta);
 

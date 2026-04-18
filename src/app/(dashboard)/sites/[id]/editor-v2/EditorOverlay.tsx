@@ -19,7 +19,7 @@ export function EditorOverlay({ children, containerRef }: Props) {
 	return (
 		<div
 			ref={containerRef}
-			className="relative h-full w-full overflow-y-auto"
+			className="editor-canvas-scroll relative h-full w-full overflow-x-hidden overflow-y-auto pb-8"
 			onClick={(e) => {
 				const currentId = useEditorStore.getState().selectedBlockId;
 				const id = (e.target as HTMLElement)
