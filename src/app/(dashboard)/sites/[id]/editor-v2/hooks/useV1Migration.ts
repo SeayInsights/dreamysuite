@@ -95,7 +95,7 @@ export function useV1Migration(siteId: string) {
             ? mapping.transform(legacy)
             : legacy.map((raw) => ({ id: crypto.randomUUID(), ...(raw as Record<string, unknown>) }));
 
-          const newConfig = JSON.stringify({ ...cfg, [mapping.configKey]: items });
+          const newConfig = { ...cfg, [mapping.configKey]: items };
           updateBlock(block.id, { config: newConfig });
           migrated++;
           console.log(`[V1 Migration] Copied ${legacy.length} ${mapping.contentKey} → ${block.type} block ${block.id}`);
