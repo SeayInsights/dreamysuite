@@ -84,10 +84,7 @@ export function useDrag(
 		container: HTMLElement,
 	): { widthPct: number; marginLeftPct: number; heightPx: number } {
 		const block = blocks.find((b) => b.id === blockId);
-		const config =
-			block && typeof block.config === "object" && block.config !== null
-				? (block.config as Record<string, unknown>)
-				: {};
+		const config = block?.config ?? {};
 
 		const rawWidth = config.blockWidth;
 		const rawHeight = config.blockHeight;
@@ -141,10 +138,7 @@ export function useDrag(
 			if (session.kind === "move") {
 				const block = blocks.find((b) => b.id === session.blockId);
 				if (!block) return;
-				const config =
-					typeof block.config === "object" && block.config !== null
-						? (block.config as Record<string, unknown>)
-						: {};
+				const config = block.config;
 				updateBlock(session.blockId, {
 					config: {
 						...config,
@@ -189,10 +183,7 @@ export function useDrag(
 
 				if (Object.keys(patch).length > 0) {
 					const block = blocks.find((b) => b.id === session.blockId);
-					const config =
-						block && typeof block.config === "object" && block.config !== null
-							? (block.config as Record<string, unknown>)
-							: {};
+					const config = block?.config ?? {};
 
 					updateBlock(session.blockId, {
 						config: { ...config, ...patch },
@@ -249,10 +240,7 @@ export function useDrag(
 			e.stopPropagation();
 
 			const block = blocks.find((b) => b.id === blockId);
-			const config =
-				block && typeof block.config === "object" && block.config !== null
-					? (block.config as Record<string, unknown>)
-					: {};
+			const config = block?.config ?? {};
 
 			sessionRef.current = {
 				kind: "move",

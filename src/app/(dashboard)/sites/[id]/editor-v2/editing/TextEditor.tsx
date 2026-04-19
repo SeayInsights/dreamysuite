@@ -38,9 +38,9 @@ interface EditState {
 // ---------------------------------------------------------------------------
 
 function parseCfgFromBlock(
-  block: { config?: unknown } & Record<string, unknown>,
+  block: { config: Record<string, unknown> },
 ): Record<string, unknown> {
-  return parseCfg(block.config);
+  return block.config;
 }
 
 function applyStyleKeyToCfg(

@@ -83,13 +83,13 @@ export function InsertPalette({ insertIndex, onClose, anchorRef }: Props) {
     if (!entry) return;
     const id = `block_${crypto.randomUUID().replace(/-/g, "").slice(0, 16)}`;
     insertBlock(
-      { id, type, config: JSON.stringify(entry.defaultData), sortOrder: insertIndex, isVisible: 1 },
+      { id, type, config: entry.defaultData, sortOrder: insertIndex, isVisible: 1 },
       insertIndex,
     );
     // Patch sortOrder on subsequent blocks
     const updated = useEditorStore.getState().blocks;
     updated.forEach((b, i) => {
-      if (b.id !== id && (b.sortOrder as number) >= insertIndex) {
+      if (b.id !== id && (b.sortOrder ?? 0) >= insertIndex) {
         useEditorStore.getState().updateBlock(b.id, { sortOrder: i });
       }
     });
