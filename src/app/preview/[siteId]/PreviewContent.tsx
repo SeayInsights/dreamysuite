@@ -58,17 +58,17 @@ export function PreviewContent({ blocks, settings, theme }: Props) {
         <div
           aria-hidden
           style={{
-            position: "fixed",
+            position: "absolute",
             inset: 0,
             backgroundImage: `url(${settings.bgImage})`,
             backgroundSize: "cover",
             backgroundPosition: "center",
             opacity: settings.bgImageOpacity ?? 1,
-            zIndex: -1,
+            zIndex: 1,
           }}
         />
       )}
-      <div className="site-renderer" style={gap ? { display: "flex", flexDirection: "column", gap } : undefined}>
+      <div className="site-renderer" style={{ position: "relative", zIndex: 2, ...(gap ? { display: "flex", flexDirection: "column", gap } : {}) }}>
         {visible.map((block) => {
           const Component = BLOCK_COMPONENTS[block.type];
           if (!Component) return null;
