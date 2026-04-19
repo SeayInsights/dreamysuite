@@ -51,7 +51,7 @@ function isDark(hex: string): boolean {
 export function themeSwatches(colors: ThemeColors): string[] {
   return [
     colors.background,
-    lighten(colors.background, 5),
+    "#ffffff",
     lighten(colors.primary, 40),
     lighten(colors.accent, 35),
     colors.accent,
