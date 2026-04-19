@@ -477,6 +477,7 @@ export function SectionToolbar({
         left: (renderPos?.left ?? 0) + dragOffset.left,
       }}
       onMouseDown={(e) => e.stopPropagation()}
+      onClick={(e) => e.stopPropagation()}
     >
       {/* Grab handle */}
       <div

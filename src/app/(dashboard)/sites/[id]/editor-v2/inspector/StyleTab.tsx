@@ -1,5 +1,6 @@
 "use client";
 
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useEditorStore } from "@/app/stores/editorStore";
 import { ColorInput } from "./ColorInput";
 import { SitePhotoPicker } from "../SitePhotoPicker";
@@ -9,6 +10,20 @@ export function StyleTab() {
   const updateSettings = useEditorStore((s) => s.updateSettings);
   const themeTokens = useEditorStore((s) => s.themeTokens);
   const setOpenTray = useEditorStore((s) => s.setOpenTray);
+
+  // Local buffer prevents re-render interference with browser range input drag tracking.
+  const storeOpacity = settings.bgImageOpacity ?? 1;
+  const [localOpacity, setLocalOpacity] = useState(storeOpacity);
+  const isDraggingOpacity = useRef(false);
+  useEffect(() => {
+    if (!isDraggingOpacity.current) setLocalOpacity(storeOpacity);
+  }, [storeOpacity]);
+
+  const onOpacityChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const v = parseFloat(e.target.value);
+    setLocalOpacity(v);
+    updateSettings({ bgImageOpacity: v });
+  }, [updateSettings]);
 
   return (
     <div className="space-y-4 p-4">
@@ -59,15 +74,17 @@ export function StyleTab() {
             <div className="space-y-1">
               <div className="flex items-center justify-between text-[10px] text-muted-foreground">
                 <span>Opacity</span>
-                <span className="tabular-nums">{Math.round((settings.bgImageOpacity ?? 1) * 100)}%</span>
+                <span className="tabular-nums">{Math.round(localOpacity * 100)}%</span>
               </div>
               <input
                 type="range"
                 min={0}
                 max={1}
                 step={0.01}
-                value={settings.bgImageOpacity ?? 1}
-                onChange={(e) => updateSettings({ bgImageOpacity: parseFloat(e.target.value) })}
+                value={localOpacity}
+                onPointerDown={() => { isDraggingOpacity.current = true; }}
+                onPointerUp={() => { isDraggingOpacity.current = false; }}
+                onChange={onOpacityChange}
                 className="w-full accent-primary"
               />
             </div>
