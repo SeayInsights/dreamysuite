@@ -122,6 +122,10 @@ export function blockSectionStyle(cfg: Record<string, unknown>): CSSProperties {
     style.zIndex = cfg.blockZIndex;
   }
 
+  if (typeof cfg.blockRotation === "number" && cfg.blockRotation !== 0) {
+    style.transform = `rotate(${cfg.blockRotation}deg)`;
+  }
+
   if (typeof cfg.blockHeight === "number" && cfg.blockHeight > 0) {
     style.height = `${cfg.blockHeight}px`;
     style.paddingTop = "0";
