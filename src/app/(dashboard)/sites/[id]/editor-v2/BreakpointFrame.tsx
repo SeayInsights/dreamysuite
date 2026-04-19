@@ -209,7 +209,7 @@ export function BreakpointFrame({ children, nav }: Props) {
 						<TransitionEffect {...effectColors} />
 					</div>
 				)}
-				{hasMargins && (
+				{hasMargins && (!bgImage || bgImageLayer === "overlay" || !bgImageBleed) && (
 					<>
 						{mT > 0 && <div className="pointer-events-none absolute left-0 right-0 top-0" style={{ height: mT, background: curtainBg, zIndex: 20 }} />}
 						{mB > 0 && <div className="pointer-events-none absolute bottom-0 left-0 right-0" style={{ height: mB, background: curtainBg, zIndex: 20 }} />}

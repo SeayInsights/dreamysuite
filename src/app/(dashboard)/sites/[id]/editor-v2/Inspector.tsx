@@ -44,7 +44,18 @@ export function Inspector() {
 	const setInspectorOpen = useEditorStore((s) => s.setInspectorOpen);
 	const mode = useEditorStore((s) => s.mode);
 	const settingsLoaded = useEditorStore((s) => s.settingsLoaded);
+	const selectedBlockId = useEditorStore((s) => s.selectedBlockId);
+	const blocks = useEditorStore((s) => s.blocks);
 	const [tab, setTab] = useState<TabId>("layout");
+
+	const CONTENT_BLOCK_TYPES = new Set(["faq", "schedule", "fun-facts", "travel"]);
+	useEffect(() => {
+		if (!selectedBlockId) return;
+		const block = blocks.find((b) => b.id === selectedBlockId);
+		if (block && CONTENT_BLOCK_TYPES.has(block.type)) {
+			setTab("content");
+		}
+	}, [selectedBlockId]); // eslint-disable-line react-hooks/exhaustive-deps
 
 	const visibleTabs = TABS.filter((t) => {
 		if (mode === "simple" && t.id === "assistant") return false;
