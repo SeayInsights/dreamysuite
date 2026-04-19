@@ -1,9 +1,10 @@
 "use client";
 
-import { useMemo, type ReactNode } from "react";
+import { Suspense, useMemo, type ReactNode } from "react";
 import { useEditorStore } from "@/app/stores/editorStore";
 import { getEffectComponent } from "@/lib/effects/loader";
 import { useEffectsEnabled } from "@/lib/effects/performance";
+import { EffectErrorBoundary } from "./EffectErrorBoundary";
 
 interface Props {
   children: ReactNode;
@@ -27,7 +28,6 @@ export function CardEffectWrapper({ children, className }: Props) {
 
   return (
     <div style={{ position: "relative" }} className={className}>
-      {children}
       <div
         style={{
           position: "absolute",
@@ -37,8 +37,13 @@ export function CardEffectWrapper({ children, className }: Props) {
           borderRadius: "inherit",
         }}
       >
-        <CardEffect color={color} />
+        <EffectErrorBoundary>
+          <Suspense fallback={null}>
+            <CardEffect color={color} />
+          </Suspense>
+        </EffectErrorBoundary>
       </div>
+      {children}
     </div>
   );
 }

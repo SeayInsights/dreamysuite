@@ -1,4 +1,4 @@
-import { lazy, Suspense, createElement, type ComponentType } from "react";
+import { lazy, type ComponentType } from "react";
 import { getEffectById } from "./registry";
 import type { EffectCategory } from "./types";
 
@@ -28,18 +28,11 @@ export function getEffectComponent(id: string): ComponentType<any> | null {
   const LazyComponent = lazy(
     () => importer(entry.name).catch((err) => {
       console.warn(`[effects] Failed to load ${id}:`, err);
-      return { default: () => null } as { default: ComponentType<any> };
+      componentCache.delete(id);
+      return { default: (() => null) as unknown as ComponentType<any> };
     }),
   );
 
-  const Wrapper = (props: any) =>
-    createElement(
-      Suspense,
-      { fallback: null },
-      createElement(LazyComponent, props),
-    );
-  Wrapper.displayName = `Effect(${id})`;
-
-  componentCache.set(id, Wrapper);
-  return Wrapper;
+  componentCache.set(id, LazyComponent);
+  return LazyComponent;
 }
