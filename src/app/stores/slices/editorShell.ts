@@ -78,8 +78,8 @@ export const PRESET_THEMES: Array<{
 ];
 
 const DEFAULT_THEME: ThemeTokens = {
-	colors: PRESET_THEMES[0].colors,
-	typography: PRESET_THEMES[0].typography,
+	colors: { primary: "#292524", secondary: "#78716c", accent: "#B8921A", background: "#ffffff", text: "#292524" },
+	typography: { headingFont: "Georgia, serif", bodyFont: "Inter, system-ui, sans-serif", scale: 1 },
 };
 
 // ---------------------------------------------------------------------------

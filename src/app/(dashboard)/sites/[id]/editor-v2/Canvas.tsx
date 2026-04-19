@@ -23,6 +23,7 @@ interface Props {
 export function Canvas({ siteId }: Props) {
 	const containerRef = useRef<HTMLDivElement>(null);
 	const [loading, setLoading] = useState(true);
+	const [blocksLoading, setBlocksLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
 	const rawBlocks = useEditorStore((s) => s.blocks);
 	const setBlocks = useEditorStore((s) => s.setBlocks);
@@ -31,6 +32,7 @@ export function Canvas({ siteId }: Props) {
 	const setPages = useEditorStore((s) => s.setPages);
 	const setCurrentPageId = useEditorStore((s) => s.setCurrentPageId);
 	const loadTranslations = useEditorStore((s) => s.loadTranslations);
+	const settingsLoaded = useEditorStore((s) => s.settingsLoaded);
 
 	const blocks = useMemo(
 		() =>
@@ -43,10 +45,12 @@ export function Canvas({ siteId }: Props) {
 
 	useEffect(() => {
 		let cancelled = false;
+		setCurrentPageId(null);
 
 		async function loadPages() {
 			try {
 				setLoading(true);
+				setBlocksLoading(true);
 				setError(null);
 
 				const pagesRes = await fetch(`/api/sites/${siteId}/pages`);
@@ -55,21 +59,24 @@ export function Canvas({ siteId }: Props) {
 
 				if (!cancelled) {
 					setPages(pages);
-					if (pages.length && !currentPageId) {
+					if (pages.length) {
 						setCurrentPageId(pages[0].id);
 					}
 					loadTranslations(siteId);
 				}
 
 				if (!pages.length) {
-					if (!cancelled) setBlocks([]);
-					return;
+					if (!cancelled) {
+						setBlocks([]);
+						setBlocksLoading(false);
+					}
 				}
 			} catch (err) {
 				if (!cancelled) {
 					const msg = err instanceof Error ? err.message : "Failed to load canvas";
 					setError(msg);
 					trackEditorError(siteId, msg, "canvas");
+					setBlocksLoading(false);
 				}
 			} finally {
 				if (!cancelled) setLoading(false);
@@ -85,6 +92,7 @@ export function Canvas({ siteId }: Props) {
 	useEffect(() => {
 		if (!currentPageId) return;
 		let cancelled = false;
+		setBlocksLoading(true);
 
 		async function loadBlocks() {
 			try {
@@ -104,6 +112,8 @@ export function Canvas({ siteId }: Props) {
 					setError(msg);
 					trackEditorError(siteId, msg, "canvas");
 				}
+			} finally {
+				if (!cancelled) setBlocksLoading(false);
 			}
 		}
 
@@ -113,7 +123,7 @@ export function Canvas({ siteId }: Props) {
 		};
 	}, [siteId, currentPageId, setBlocks]);
 
-	if (loading) {
+	if (loading || blocksLoading || !settingsLoaded) {
 		return (
 			<div className="flex h-full w-full items-center justify-center">
 				<div className="h-5 w-5 animate-spin rounded-full border-2 border-muted-foreground border-t-foreground" />
