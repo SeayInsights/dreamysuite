@@ -6,7 +6,7 @@ import type { ThemeSlice } from "./theme";
 
 const NUMBER_FIELDS = new Set([
   "isLive", "showNavBrand", "popupEnabled", "popupTicker",
-  "popupAfterAnimation", "popupBundle", "pageBgDisabled", "bgImageBleed",
+  "popupAfterAnimation", "popupBundle", "pageBgDisabled", "bgImageBleed", "effectBleed",
   "bgImageOpacity", "defaultAnimDuration", "defaultAnimDelay",
 ]);
 
