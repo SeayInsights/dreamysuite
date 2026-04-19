@@ -38,21 +38,21 @@ export async function GET(
   let isOwner = false;
 
   if (viewerUserId) {
-    site = await db.prepare("SELECT * FROM site WHERE slug = ? AND userId = ?").bind(slug, viewerUserId).first<SiteRow>();
+    site = await db.prepare("SELECT id, name, slug FROM site WHERE slug = ? AND userId = ?").bind(slug, viewerUserId).first<SiteRow>();
     if (site) isOwner = true;
   }
   if (!site && viewerEmail) {
-    const invited = await db.prepare("SELECT s.* FROM site s JOIN site_invite i ON i.siteId = s.id WHERE s.slug = ? AND i.email = ?").bind(slug, viewerEmail.toLowerCase()).first<SiteRow>();
+    const invited = await db.prepare("SELECT s.id, s.name, s.slug FROM site s JOIN site_invite i ON i.siteId = s.id WHERE s.slug = ? AND i.email = ?").bind(slug, viewerEmail.toLowerCase()).first<SiteRow>();
     if (invited) { site = invited; isOwner = true; }
   }
   if (!site) {
-    site = await db.prepare("SELECT * FROM site WHERE slug = ? AND status = 'published'").bind(slug).first<SiteRow>();
+    site = await db.prepare("SELECT id, name, slug FROM site WHERE slug = ? AND status = 'published'").bind(slug).first<SiteRow>();
   }
   if (!site) {
     return new Response(notFoundHtml(), { status: 404, headers: { "content-type": "text/html; charset=utf-8" } });
   }
 
-  const settings = await db.prepare("SELECT * FROM site_setting WHERE siteId = ?").bind(site.id).first<SiteSettingRow>();
+  const settings = await db.prepare("SELECT siteId, accentColor, animation, bgColor, bgImage, bgImageBleed, bgImageLayer, bgImageOpacity, bodyColor, bodyFont, cardColor, cardImage, effectBg, effectCard, effectColor1, effectColor2, effectColor3, effectCursor, effectDecoration, effectNavStyle, effectText, effectTransition, envelopeColor, eventDate, eventLocation, eventName, greeting, guestPassword, headingColor, headingFont, isLive, mainLanguage, marginBottom, marginLeft, marginRight, marginTop, musicBtnBg, musicBtnColor, musicUrl, navBg, navBrandColor, navHighlightColor, navLinkColor, navLinkPadding, navMaterial, navPosition, navShape, navUnderline, ogImage, passwordPages, popupBundle, popupEnabled, popupTitle, popupTicker, sealInitials, sectionSpacing, seoDescription, seoTitle, secondLanguage, showNavBrand, siteBorderColor, siteLanguages, siteMaxWidth, siteTextColor FROM site_setting WHERE siteId = ?").bind(site.id).first<SiteSettingRow>();
 
   if (settings) {
     const effectKeys = ["effectBg", "effectText", "effectCard", "effectTransition", "effectCursor", "effectDecoration", "effectNavStyle"] as const;
@@ -88,8 +88,8 @@ export async function GET(
   }
   const lockedPageIds = new Set(!isOwner && hasPerPagePassword && !pwUnlocked ? passwordPages : []);
 
-  const pagesResult = await db.prepare("SELECT * FROM page WHERE siteId = ? AND isVisible = 1 ORDER BY sortOrder ASC").bind(site.id).all<PageRow>();
-  const blocksResult = await db.prepare("SELECT * FROM block WHERE siteId = ? AND isVisible = 1 ORDER BY sortOrder ASC").bind(site.id).all<BlockRow>();
+  const pagesResult = await db.prepare("SELECT id, slug, isVisible, label FROM page WHERE siteId = ? AND isVisible = 1 ORDER BY sortOrder ASC").bind(site.id).all<PageRow>();
+  const blocksResult = await db.prepare("SELECT id, pageId, siteId, type, config FROM block WHERE siteId = ? AND isVisible = 1 ORDER BY sortOrder ASC").bind(site.id).all<BlockRow>();
 
   const blocksByPage = new Map<string, ParsedBlock[]>();
   for (const block of blocksResult.results) {
@@ -138,12 +138,12 @@ export async function POST(
   const env = await getEnv();
   const db = env.DB;
 
-  const site = await db.prepare("SELECT * FROM site WHERE slug = ? AND status = 'published'").bind(slug).first<SiteRow>();
+  const site = await db.prepare("SELECT id FROM site WHERE slug = ? AND status = 'published'").bind(slug).first<SiteRow>();
   if (!site) {
     return new Response(notFoundHtml(), { status: 404, headers: { "content-type": "text/html; charset=utf-8" } });
   }
 
-  const settings = await db.prepare("SELECT * FROM site_setting WHERE siteId = ?").bind(site.id).first<SiteSettingRow>();
+  const settings = await db.prepare("SELECT guestPassword FROM site_setting WHERE siteId = ?").bind(site.id).first<{ guestPassword: string | null }>();
   const formData = await req.formData();
   const pw = formData.get("pw") as string | null;
 
