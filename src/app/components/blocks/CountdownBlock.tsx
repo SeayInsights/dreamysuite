@@ -31,18 +31,22 @@ function useCountdown(target: string | null) {
 export function CountdownBlock({ block }: { block: Block }) {
   const cfg = parseCfg(block.config);
   const label = String(cfg.label ?? "Until we say I do");
+  const daysLabel = String(cfg.daysLabel ?? "Days");
+  const hoursLabel = String(cfg.hoursLabel ?? "Hours");
+  const minsLabel = String(cfg.minsLabel ?? "Minutes");
+  const secsLabel = String(cfg.secsLabel ?? "Seconds");
   const eventDate = useEditorStore((s) => s.settings.eventDate);
   const { days, hours, mins, secs } = useCountdown(eventDate);
   const hasDate = !!eventDate;
 
   return (
     <section className="block block-countdown" data-block-id={block.id} data-block-type={block.type} style={blockSectionStyle(cfg)}>
-      <p className="countdown-label">{label}</p>
+      <p className="countdown-label" data-editable-field="label">{label}</p>
       <div className="countdown-units">
-        <div className="countdown-unit"><span className="countdown-num">{hasDate ? days : "--"}</span><span className="countdown-unit-label">Days</span></div>
-        <div className="countdown-unit"><span className="countdown-num">{hasDate ? hours : "--"}</span><span className="countdown-unit-label">Hours</span></div>
-        <div className="countdown-unit"><span className="countdown-num">{hasDate ? mins : "--"}</span><span className="countdown-unit-label">Minutes</span></div>
-        <div className="countdown-unit"><span className="countdown-num">{hasDate ? secs : "--"}</span><span className="countdown-unit-label">Seconds</span></div>
+        <div className="countdown-unit"><span className="countdown-num">{hasDate ? days : "--"}</span><span className="countdown-unit-label" data-editable-field="daysLabel">{daysLabel}</span></div>
+        <div className="countdown-unit"><span className="countdown-num">{hasDate ? hours : "--"}</span><span className="countdown-unit-label" data-editable-field="hoursLabel">{hoursLabel}</span></div>
+        <div className="countdown-unit"><span className="countdown-num">{hasDate ? mins : "--"}</span><span className="countdown-unit-label" data-editable-field="minsLabel">{minsLabel}</span></div>
+        <div className="countdown-unit"><span className="countdown-num">{hasDate ? secs : "--"}</span><span className="countdown-unit-label" data-editable-field="secsLabel">{secsLabel}</span></div>
       </div>
       {!hasDate && (
         <p style={{ fontSize: "0.75rem", color: "#9a8c7c", marginTop: "0.75rem", textAlign: "center" }}>
