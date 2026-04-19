@@ -1,6 +1,6 @@
 // @ts-nocheck
 "use client";
-/* eslint-disable react/no-unknown-property */
+ 
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { useMemo, useRef } from 'react';
 import * as THREE from 'three';
@@ -115,7 +115,7 @@ const AntigravityInner = ({
       const dy = my - projectedTargetY;
       const dist = Math.sqrt(dx * dx + dy * dy);
 
-      let targetPos = { x: mx, y: my, z: mz * depthFactor };
+      const targetPos = { x: mx, y: my, z: mz * depthFactor };
 
       if (dist < magnetRadius) {
         const angle = Math.atan2(dy, dx) + globalRotation;

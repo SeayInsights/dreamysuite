@@ -200,7 +200,7 @@ export function useDrag(
 				}
 			}
 		},
-		// eslint-disable-next-line react-hooks/exhaustive-deps
+		 
 		[blocks, containerRef, updateBlock],
 	);
 

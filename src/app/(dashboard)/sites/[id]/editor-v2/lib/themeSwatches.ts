@@ -3,9 +3,9 @@ import type { ThemeColors } from "@/app/stores/slices/editorShell";
 function hexToHsl(hex: string): [number, number, number] {
   const m = /^#?([0-9a-f]{6})$/i.exec(hex);
   if (!m) return [0, 0, 100];
-  let r = parseInt(m[1].slice(0, 2), 16) / 255;
-  let g = parseInt(m[1].slice(2, 4), 16) / 255;
-  let b = parseInt(m[1].slice(4, 6), 16) / 255;
+  const r = parseInt(m[1].slice(0, 2), 16) / 255;
+  const g = parseInt(m[1].slice(2, 4), 16) / 255;
+  const b = parseInt(m[1].slice(4, 6), 16) / 255;
   const max = Math.max(r, g, b);
   const min = Math.min(r, g, b);
   const l = (max + min) / 2;

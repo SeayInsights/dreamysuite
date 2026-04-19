@@ -22,7 +22,7 @@ export default function LiquidEther({
     if (!mountRef.current) return;
 
     function makePaletteTexture(stops: string[]) {
-      let arr = (!Array.isArray(stops) || stops.length === 0) ? ["#ffffff", "#ffffff"] : stops.length === 1 ? [stops[0], stops[0]] : stops;
+      const arr = (!Array.isArray(stops) || stops.length === 0) ? ["#ffffff", "#ffffff"] : stops.length === 1 ? [stops[0], stops[0]] : stops;
       const w = arr.length;
       const data = new Uint8Array(w * 4);
       for (let i = 0; i < w; i++) {
