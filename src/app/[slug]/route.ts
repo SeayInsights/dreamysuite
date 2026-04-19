@@ -54,7 +54,9 @@ export async function GET(
     const effectKeys = ["effectBg", "effectText", "effectCard", "effectTransition", "effectCursor", "effectDecoration", "effectNavStyle"] as const;
     for (const key of effectKeys) {
       const id = settings[key];
-      if (id && getEffectById(id)?.disabled) (settings as unknown as Record<string, unknown>)[key] = null;
+      if (!id) continue;
+      const entry = getEffectById(id);
+      if (!entry || entry.disabled) (settings as unknown as Record<string, unknown>)[key] = null;
     }
   }
 
@@ -70,14 +72,13 @@ export async function GET(
 
   let pwUnlocked = false;
   if (!isOwner && settings?.guestPassword) {
-    const url = new URL(req.url);
-    const pw = url.searchParams.get("pw");
+    const pw = req.cookies.get(`ds_pw_${slug}`)?.value ?? null;
     if (pw === settings.guestPassword) {
       pwUnlocked = true;
     } else if (!hasPerPagePassword) {
       const accent = settings.accentColor ?? "#B8921A";
       const siteName = settings.eventName ?? site.name;
-      const gateHtml = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/><title>${escHtml(siteName)}</title><style>*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}body{font-family:Georgia,serif;background:#faf8f5;color:#292524;display:flex;align-items:center;justify-content:center;min-height:100dvh;padding:1.5rem}.gate-wrap{text-align:center;max-width:360px;width:100%}h1{font-size:1.75rem;font-weight:normal;margin-bottom:.5rem}p{color:#78716c;margin-bottom:1.75rem;font-size:.9375rem}.gate-form{display:flex;flex-direction:column;gap:.875rem}.gate-input{width:100%;border:1px solid #e7e5e4;border-radius:6px;padding:.625rem .875rem;font-family:inherit;font-size:1rem;color:#292524;outline:none;transition:border-color .15s}.gate-input:focus{border-color:${escHtml(accent)}}.gate-btn{padding:.75rem 2rem;border:none;border-radius:6px;background:${escHtml(accent)};color:#fff;font-family:inherit;font-size:.9375rem;cursor:pointer;transition:opacity .15s}.gate-btn:hover{opacity:.88}</style></head><body><div class="gate-wrap"><h1>${escHtml(siteName)}</h1><p>This site is password protected. Please enter the password to continue.</p><form class="gate-form" method="get"><input class="gate-input" type="password" name="pw" placeholder="Enter password" aria-label="Site password" required/><button class="gate-btn" type="submit">Enter</button></form></div></body></html>`;
+      const gateHtml = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/><title>${escHtml(siteName)}</title><style>*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}body{font-family:Georgia,serif;background:#faf8f5;color:#292524;display:flex;align-items:center;justify-content:center;min-height:100dvh;padding:1.5rem}.gate-wrap{text-align:center;max-width:360px;width:100%}h1{font-size:1.75rem;font-weight:normal;margin-bottom:.5rem}p{color:#78716c;margin-bottom:1.75rem;font-size:.9375rem}.gate-form{display:flex;flex-direction:column;gap:.875rem}.gate-input{width:100%;border:1px solid #e7e5e4;border-radius:6px;padding:.625rem .875rem;font-family:inherit;font-size:1rem;color:#292524;outline:none;transition:border-color .15s}.gate-input:focus{border-color:${escHtml(accent)}}.gate-btn{padding:.75rem 2rem;border:none;border-radius:6px;background:${escHtml(accent)};color:#fff;font-family:inherit;font-size:.9375rem;cursor:pointer;transition:opacity .15s}.gate-btn:hover{opacity:.88}</style></head><body><div class="gate-wrap"><h1>${escHtml(siteName)}</h1><p>This site is password protected. Please enter the password to continue.</p><form class="gate-form" method="post"><input class="gate-input" type="password" name="pw" placeholder="Enter password" aria-label="Site password" required/><button class="gate-btn" type="submit">Enter</button></form></div></body></html>`;
       return new Response(gateHtml, { status: 401, headers: { "content-type": "text/html; charset=utf-8" } });
     }
   }
@@ -117,8 +118,40 @@ export async function GET(
   const activeLang = new URL(req.url).searchParams.get("_lang") ?? null;
   return new Response(buildHtml(site, settings ?? null, pages, contentMap, blockTransMap, site.slug, activeLang, lockedPageIds), {
     status: 200,
-    headers: { "content-type": "text/html; charset=utf-8", "cache-control": "public, max-age=10, stale-while-revalidate=30" },
+    headers: { "content-type": "text/html; charset=utf-8", "cache-control": "public, max-age=300, stale-while-revalidate=600" },
   });
+}
+
+export async function POST(
+  req: NextRequest,
+  { params }: { params: Promise<{ slug: string }> }
+) {
+  const { slug } = await params;
+  const { env: rawEnv } = await getCloudflareContext({ async: true });
+  const env = rawEnv as unknown as Env;
+  const db = env.DB;
+
+  const site = await db.prepare("SELECT * FROM site WHERE slug = ? AND status = 'published'").bind(slug).first<SiteRow>();
+  if (!site) {
+    return new Response(notFoundHtml(), { status: 404, headers: { "content-type": "text/html; charset=utf-8" } });
+  }
+
+  const settings = await db.prepare("SELECT * FROM site_setting WHERE siteId = ?").bind(site.id).first<SiteSettingRow>();
+  const formData = await req.formData();
+  const pw = formData.get("pw") as string | null;
+
+  const redirectUrl = new URL(`/${slug}`, req.url);
+  if (pw && settings?.guestPassword && pw === settings.guestPassword) {
+    return new Response(null, {
+      status: 303,
+      headers: {
+        Location: redirectUrl.toString(),
+        "Set-Cookie": `ds_pw_${slug}=${encodeURIComponent(pw)}; Path=/; HttpOnly; SameSite=Strict; Max-Age=86400`,
+      },
+    });
+  }
+
+  return Response.redirect(redirectUrl, 303);
 }
 
 // ── Domain types ──────────────────────────────────────────────────────────────
@@ -164,9 +197,6 @@ interface SiteSettingRow {
   navBrandColor: string | null;
   navLinkColor: string | null;
   navHighlightColor: string | null;
-  navItemsConfig: string | null;    // JSON string
-  buttonStyle: string | null;
-  buttonBorderWidth: string | null;
   animation: string | null;
   bgImage: string | null;
   envelopeColor: string | null;
@@ -179,7 +209,6 @@ interface SiteSettingRow {
   popupEnabled: number | null;
   popupTitle: string | null;
   popupTicker: number | null;
-  popupAfterAnimation: number | null;
   popupBundle: number | null;
   musicBtnBg: string | null;
   musicBtnColor: string | null;
@@ -194,7 +223,6 @@ interface SiteSettingRow {
   passwordPages: string | null;
   effectPreset: string | null;
   effectBg: string | null;
-  effectNav: string | null;
   effectNavStyle: string | null;
   effectText: string | null;
   effectCard: string | null;
@@ -204,6 +232,9 @@ interface SiteSettingRow {
   effectColor1: string | null;
   effectColor2: string | null;
   effectColor3: string | null;
+  seoTitle: string | null;
+  seoDescription: string | null;
+  ogImage: string | null;
 }
 
 interface PageRow {
@@ -342,7 +373,6 @@ function buildStyles(settings: SiteSettingRow | null): BuiltStyles {
   const bg = settings?.bgColor ?? "#ffffff";
   const navPosition = settings?.navPosition ?? "fixed";
   const isFixed = navPosition === "fixed" || navPosition === "hide-on-scroll";
-  const isHideOnScroll = navPosition === "hide-on-scroll";
   const isScrollAway = navPosition === "scroll-away" || navPosition === "static";
   const navLinkPadding = settings?.navLinkPadding ?? "0.875rem";
   const bgImage = settings?.bgImage ?? null;
@@ -1669,7 +1699,7 @@ function renderBlock(
           ${
             urls && urls.length > 0
               ? `<div class="image-grid"${wrapperStyle ? ` style="${wrapperStyle}"` : ""}>
-                   ${urls.map((u, i) => `<img src="${escHtml(u)}" alt="Wedding photo ${i + 1}" loading="lazy" class="gallery-img" style="${imgStyle}${getImgExtraStyle(i)}" />`).join("")}
+                   ${urls.map((u, i) => `<img src="${escHtml(u)}" alt="Wedding photo ${i + 1}" loading="lazy" width="800" height="600" class="gallery-img" style="${imgStyle}${getImgExtraStyle(i)}" />`).join("")}
                  </div>`
               : placeholder(imageSlot ? `Photos for "${escHtml(imageSlot)}" will appear here.` : "Photos will appear here once uploaded.")
           }
@@ -2838,7 +2868,7 @@ function buildHtml(
 
       if (lockedPageIds.has(page.id)) {
         const accent = settings?.accentColor ?? "#B8921A";
-        return `<div class="${sectionClass}" id="page-${escHtml(page.id)}"><div style="display:flex;align-items:center;justify-content:center;min-height:40vh;padding:2rem"><div style="text-align:center;max-width:320px"><p style="color:#78716c;margin-bottom:1.25rem;font-size:.9375rem">This page is password protected.</p><form method="get" style="display:flex;flex-direction:column;gap:.75rem"><input type="password" name="pw" placeholder="Enter password" required style="border:1px solid #e7e5e4;border-radius:6px;padding:.625rem .875rem;font-family:inherit;font-size:1rem;outline:none" aria-label="Page password"/><button type="submit" style="padding:.625rem 1.5rem;border:none;border-radius:6px;background:${escHtml(accent)};color:#fff;font-family:inherit;font-size:.875rem;cursor:pointer">Unlock</button></form></div></div></div>`;
+        return `<div class="${sectionClass}" id="page-${escHtml(page.id)}"><div style="display:flex;align-items:center;justify-content:center;min-height:40vh;padding:2rem"><div style="text-align:center;max-width:320px"><p style="color:#78716c;margin-bottom:1.25rem;font-size:.9375rem">This page is password protected.</p><form method="post" style="display:flex;flex-direction:column;gap:.75rem"><input type="password" name="pw" placeholder="Enter password" required style="border:1px solid #e7e5e4;border-radius:6px;padding:.625rem .875rem;font-family:inherit;font-size:1rem;outline:none" aria-label="Page password"/><button type="submit" style="padding:.625rem 1.5rem;border:none;border-radius:6px;background:${escHtml(accent)};color:#fff;font-family:inherit;font-size:.875rem;cursor:pointer">Unlock</button></form></div></div></div>`;
       }
 
       const pageContentByLang = contentMap.get(page.slug);
@@ -2923,7 +2953,6 @@ ${hideOnScrollScript}
   const popupEnabled = settings?.popupEnabled ?? 1;
   const popupTitle = settings?.popupTitle ?? null;
   const popupTicker = settings?.popupTicker ?? 0;
-  const popupAfterAnimation = settings?.popupAfterAnimation ?? 0;
   const showPopup = greeting && popupEnabled !== 0;
   const tickerText = popupTicker ? escHtml(eventTitle + (eventDate ? "  ·  " + eventDate : "")) : null;
   // Suppress the separate greeting-overlay when the popup is bundled inside the animation —
@@ -3001,10 +3030,13 @@ function switchLang() {
       })()
     : null;
 
-  const pageTitle = `${escHtml(eventTitle)}${eventDate ? ` &middot; ${escHtml(eventDate)}` : ""}`;
-  const metaDesc = [eventTitle, eventDate, eventLocation]
-    .filter(Boolean)
-    .join(" \u00b7 ");
+  const pageTitle = settings?.seoTitle
+    ? escHtml(settings.seoTitle)
+    : `${escHtml(eventTitle)}${eventDate ? ` &middot; ${escHtml(eventDate)}` : ""}`;
+  const metaDesc = settings?.seoDescription
+    ?? [eventTitle, eventDate, eventLocation].filter(Boolean).join(" \u00b7 ");
+  const ogImageUrl = settings?.ogImage ?? null;
+  const canonicalUrl = `https://dreamysuite.com/${escHtml(siteSlug)}`;
 
   const { fonts: fontsTag, css: siteCss } = buildStyles(settings);
 
@@ -3023,11 +3055,9 @@ function switchLang() {
     greeting
   );
   const gsapCdn = (introHtml || usedBlockPresets.size > 0)
-    ? `<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.15.0/gsap.min.js"></script>\n  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.15.0/CustomEase.min.js"></script>${blockPresetNeedsScrollTrigger ? "\n  <script src=\"https://cdnjs.cloudflare.com/ajax/libs/gsap/3.15.0/ScrollTrigger.min.js\"></script>" : ""}`
+    ? `<script defer src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.15.0/gsap.min.js"></script>\n  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.15.0/CustomEase.min.js"></script>${blockPresetNeedsScrollTrigger ? "\n  <script defer src=\"https://cdnjs.cloudflare.com/ajax/libs/gsap/3.15.0/ScrollTrigger.min.js\"></script>" : ""}`
     : "";
 
-  // Show greeting after animation whenever animation is active and popup isn't bundled.
-  // popupAfterAnimation flag is moot when animation is running — always show after, never during.
   const triggerPopupAfterAnim = showPopup && !!animation && !popupBundleActive;
   const introScript = introHtml
     ? `<script>
@@ -3299,6 +3329,16 @@ function toggleMusic(){var a=document.getElementById('audio-player'),b=document.
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>${pageTitle}</title>
   <meta name="description" content="${escHtml(metaDesc)}" />
+  <meta property="og:title" content="${pageTitle}" />
+  <meta property="og:description" content="${escHtml(metaDesc)}" />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="${canonicalUrl}" />
+  ${ogImageUrl ? `<meta property="og:image" content="${escHtml(ogImageUrl)}" />` : ""}
+  <meta name="twitter:card" content="${ogImageUrl ? "summary_large_image" : "summary"}" />
+  <meta name="twitter:title" content="${pageTitle}" />
+  <meta name="twitter:description" content="${escHtml(metaDesc)}" />
+  ${ogImageUrl ? `<meta name="twitter:image" content="${escHtml(ogImageUrl)}" />` : ""}
+  <link rel="canonical" href="${canonicalUrl}" />
   ${hreflangTags}
   ${fontsTag}
   ${gsapCdn}
@@ -3565,7 +3605,7 @@ window.__dsTextDone=(async()=>{
   }catch(e){console.warn('Card effect unavailable:',e)}
 })();
 </script>` : ""}
-  ${settings?.effectNavStyle ? (() => {
+  ${settings?.effectNavStyle && hasMultiplePages ? (() => {
     const nsAccent = escHtml(settings.navHighlightColor ?? settings.accentColor ?? "#B8921A");
     const nsBg = escHtml(settings.navBg ?? "#ffffff");
     const nsText = escHtml(settings.navLinkColor ?? "#6B6560");
