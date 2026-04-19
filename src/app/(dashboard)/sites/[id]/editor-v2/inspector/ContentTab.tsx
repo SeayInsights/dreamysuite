@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useEditorStore } from "@/app/stores/editorStore";
 import { SitePhotoPicker } from "../SitePhotoPicker";
+import { BlockContentPanel } from "./BlockContentPanel";
 
 function TextInput({
   label,
@@ -157,9 +158,37 @@ function DateTimeInput({
   );
 }
 
+const CONTENT_BLOCK_TYPES = new Set(["faq", "schedule", "fun-facts", "travel"]);
+
 export function ContentTab() {
   const settings = useEditorStore((s) => s.settings);
   const updateSettings = useEditorStore((s) => s.updateSettings);
+  const selectedBlockId = useEditorStore((s) => s.selectedBlockId);
+  const blocks = useEditorStore((s) => s.blocks);
+  const updateBlock = useEditorStore((s) => s.updateBlock);
+  const selectBlock = useEditorStore((s) => s.selectBlock);
+
+  const selectedBlock = selectedBlockId
+    ? blocks.find((b) => b.id === selectedBlockId) ?? null
+    : null;
+  const showBlockPanel = selectedBlock !== null && CONTENT_BLOCK_TYPES.has(selectedBlock.type);
+
+  if (showBlockPanel) {
+    return (
+      <div>
+        <div className="border-b border-border px-4 py-2">
+          <button
+            type="button"
+            onClick={() => selectBlock(null)}
+            className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors"
+          >
+            ← Page settings
+          </button>
+        </div>
+        <BlockContentPanel block={selectedBlock} updateBlock={updateBlock} />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4 p-4">

@@ -5,7 +5,7 @@ import { settingsToTheme, type EditorShellSlice } from "./editorShell";
 
 const NUMBER_FIELDS = new Set([
   "isLive", "showNavBrand", "popupEnabled", "popupTicker",
-  "popupAfterAnimation", "popupBundle", "pageBgDisabled",
+  "popupAfterAnimation", "popupBundle", "pageBgDisabled", "bgImageBleed",
   "bgImageOpacity", "defaultAnimDuration", "defaultAnimDelay",
 ]);
 
