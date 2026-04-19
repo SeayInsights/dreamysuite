@@ -99,6 +99,15 @@ function migrateRsvp(block: RawBlock): RawBlock {
   };
 }
 
+function migrateTidbits(block: RawBlock): RawBlock {
+  const cfg = parseConfig(block.config);
+  return {
+    ...block,
+    type: "fun-facts",
+    config: serializeConfig(cfg),
+  };
+}
+
 const MIGRATORS: Record<string, (b: RawBlock) => RawBlock> = {
   video: migrateVideo,
   youtube: migrateYoutube,
@@ -107,6 +116,7 @@ const MIGRATORS: Record<string, (b: RawBlock) => RawBlock> = {
   "registry-card": migrateRegistryCard,
   "hotel-card": migrateHotelCard,
   rsvp: migrateRsvp,
+  tidbits: migrateTidbits,
 };
 
 // ── Public API ────────────────────────────────────────────────────────────────
