@@ -40,6 +40,7 @@ export const BLOCK_COMPONENTS: Record<string, React.ComponentType<{ block: Block
   'hotel-card':    HotelCardBlock,
   'venue-map':     VenueMapBlock,
   'photo-split':   PhotoSplitBlock,
+  'rsvp':          RsvpFormBlock,
   // Consolidated
   'media-video':   MediaVideoBlock,
   'gallery':       GalleryBlock,

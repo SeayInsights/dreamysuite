@@ -90,6 +90,15 @@ function migrateHotelCard(block: RawBlock): RawBlock {
   };
 }
 
+function migrateRsvp(block: RawBlock): RawBlock {
+  const cfg = parseConfig(block.config);
+  return {
+    ...block,
+    type: "rsvp-form",
+    config: serializeConfig(cfg),
+  };
+}
+
 const MIGRATORS: Record<string, (b: RawBlock) => RawBlock> = {
   video: migrateVideo,
   youtube: migrateYoutube,
@@ -97,6 +106,7 @@ const MIGRATORS: Record<string, (b: RawBlock) => RawBlock> = {
   "photo-split": migratePhotoSplit,
   "registry-card": migrateRegistryCard,
   "hotel-card": migrateHotelCard,
+  rsvp: migrateRsvp,
 };
 
 // ── Public API ────────────────────────────────────────────────────────────────
