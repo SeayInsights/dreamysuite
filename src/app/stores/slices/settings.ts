@@ -1,7 +1,8 @@
 import type { StateCreator } from "zustand";
 import type { Settings, SettingsPatch } from "@/lib/schemas/settings";
 import { DEFAULTS } from "@/lib/schemas/settings";
-import { settingsToTheme, type EditorShellSlice } from "./editorShell";
+import { settingsToTheme } from "./theme";
+import type { ThemeSlice } from "./theme";
 
 const NUMBER_FIELDS = new Set([
   "isLive", "showNavBrand", "popupEnabled", "popupTicker",
@@ -27,7 +28,7 @@ export interface SettingsSlice {
   markSettingsClean: () => void;
 }
 
-export const createSettingsSlice: StateCreator<SettingsSlice & EditorShellSlice, [], [], SettingsSlice> = (set, get) => ({
+export const createSettingsSlice: StateCreator<SettingsSlice & ThemeSlice, [], [], SettingsSlice> = (set, get) => ({
   settings: { ...DEFAULTS },
   settingsLoaded: false,
   settingsDirty: false,

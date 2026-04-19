@@ -1,7 +1,7 @@
 "use client";
 
 import { useEditorStore } from "@/app/stores/editorStore";
-import { PRESET_THEMES } from "@/app/stores/slices/editorShell";
+import { PRESET_THEMES } from "@/app/stores/slices/theme";
 import { EffectPicker } from "../EffectPicker";
 
 export function ThemeTray() {

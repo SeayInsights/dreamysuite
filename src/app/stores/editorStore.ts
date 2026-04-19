@@ -7,7 +7,6 @@ import {
 } from "./slices/document";
 import {
 	createEditorShellSlice,
-	settingsToTheme,
 	type EditorShellSlice,
 	type Breakpoint,
 	type EditorMode,
@@ -26,15 +25,24 @@ import {
 	createTranslationSlice,
 	type TranslationSlice,
 } from "./slices/translation";
+import {
+	createThemeSlice,
+	settingsToTheme,
+	type ThemeSlice,
+	type ThemeTokens,
+	type ThemeColors,
+	type ThemeTypography,
+} from "./slices/theme";
 
-export type { Block, Breakpoint, EditorMode, Section, DragState };
+export type { Block, Breakpoint, EditorMode, Section, DragState, ThemeTokens, ThemeColors, ThemeTypography };
 
-export type EditorState = DocumentSlice & EditorShellSlice & TransientSlice & SettingsSlice & TranslationSlice;
+export type EditorState = DocumentSlice & EditorShellSlice & TransientSlice & SettingsSlice & TranslationSlice & ThemeSlice;
 
 /**
- * Unified editor store composed of three slices:
+ * Unified editor store composed of slices:
  *   - document: blocks + dirty flag (tracked by Zundo for undo/redo)
  *   - settings: site settings (tracked by Zundo for undo/redo)
+ *   - theme: themeTokens + setThemeTokens + applyPresetTheme (NOT tracked)
  *   - editorShell: UI state — selection, breakpoint, mode, panels (NOT tracked)
  *   - transient: drag/hover ephemera (NOT tracked)
  *
@@ -50,6 +58,7 @@ export const useEditorStore = create<EditorState>()(
 			...createTransientSlice(...a),
 			...createSettingsSlice(...a),
 			...createTranslationSlice(...a),
+			...createThemeSlice(...a),
 		}),
 		{
 			partialize: (state) => ({ blocks: state.blocks, settings: state.settings }),
