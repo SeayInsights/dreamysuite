@@ -1460,7 +1460,7 @@ function renderBlock(
   }
   const _ox = typeof cfg.blockOffsetX === "number" && cfg.blockOffsetX !== 0 ? cfg.blockOffsetX : 0;
   const _oy = typeof cfg.blockOffsetY === "number" && cfg.blockOffsetY !== 0 ? cfg.blockOffsetY : 0;
-  if (_ox || _oy) _bsParts.push(`position:relative`, `left:${_ox}px`, `margin-top:${_oy}px`);
+  if (_ox || _oy) _bsParts.push(`position:relative`, `left:${_ox}px`, `top:${_oy}px`);
   const _zi = typeof cfg.blockZIndex === "number" ? cfg.blockZIndex : 0;
   if (_zi) _bsParts.push(`position:relative`, `z-index:${_zi}`);
   const _bh = typeof cfg.blockHeight === "number" && cfg.blockHeight > 0 ? cfg.blockHeight : 0;
