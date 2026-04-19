@@ -1199,7 +1199,7 @@ export function SiteEditor({ site: initialSite, user }: { site: any; user: any }
     }
     window.addEventListener("message", handleMessage);
     return () => window.removeEventListener("message", handleMessage);
-  }, [pages]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [pages]);  
 
   // SortableJS — drag-to-reorder blocks
   // Depends on blocks.length so it re-initializes after blocks are added/removed,
@@ -3615,7 +3615,7 @@ export function SiteEditor({ site: initialSite, user }: { site: any; user: any }
                   <div style={{ marginBottom: '1.25rem' }}>
                     <div style={{ fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: '#9b8e85', marginBottom: '0.5rem' }}>Collaborators</div>
                     <p style={{ fontSize: '0.78rem', color: '#6b5e56', lineHeight: 1.5, marginBottom: '0.75rem' }}>
-                      Invite someone by email — they'll get a link to this editor.
+                      Invite someone by email — they&apos;ll get a link to this editor.
                     </p>
                     <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '0.5rem' }}>
                       <input

@@ -444,7 +444,7 @@ function FaqEditor({
 
         {faq.items.length === 0 && (
           <p className="rounded border border-dashed border-border px-3 py-4 text-center text-[10px] text-muted-foreground italic">
-            No questions yet. Click "Add Question" to get started.
+            No questions yet. Click &quot;Add Question&quot; to get started.
           </p>
         )}
 
@@ -639,7 +639,7 @@ function ScheduleEditor({
 
         {schedule.events.length === 0 && (
           <p className="rounded border border-dashed border-border px-3 py-4 text-center text-[10px] text-muted-foreground italic">
-            No events yet. Click "Add Event" to get started.
+            No events yet. Click &quot;Add Event&quot; to get started.
           </p>
         )}
 
@@ -861,7 +861,7 @@ function FunFactsEditor({
 
         {facts.items.length === 0 && (
           <p className="rounded border border-dashed border-border px-3 py-4 text-center text-[10px] text-muted-foreground italic">
-            No facts yet. Click "Add Fact" to get started.
+            No facts yet. Click &quot;Add Fact&quot; to get started.
           </p>
         )}
 
@@ -1004,7 +1004,7 @@ function TravelEditor({
 
         {travel.items.length === 0 && (
           <p className="rounded border border-dashed border-border px-3 py-4 text-center text-[10px] text-muted-foreground italic">
-            No items yet. Click "Add Item" to get started.
+            No items yet. Click &quot;Add Item&quot; to get started.
           </p>
         )}
 
