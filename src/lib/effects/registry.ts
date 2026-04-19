@@ -33,7 +33,6 @@ export const EFFECT_REGISTRY: EffectEntry[] = [
     eventTypes: ["engagement", "celebration"],
     intensity: "dramatic",
     description: "Interactive 3D ball physics simulation",
-    disabled: true,
   },
   {
     id: "beams",
@@ -44,7 +43,6 @@ export const EFFECT_REGISTRY: EffectEntry[] = [
     eventTypes: ["wedding", "elopement", "celebration"],
     intensity: "medium",
     description: "Converging light beams from above",
-    disabled: true,
   },
   {
     id: "color-bends",
@@ -55,7 +53,6 @@ export const EFFECT_REGISTRY: EffectEntry[] = [
     eventTypes: ["engagement", "celebration"],
     intensity: "medium",
     description: "Bending color gradients that shift on scroll",
-    disabled: true,
   },
   {
     id: "dark-veil",
@@ -76,7 +73,6 @@ export const EFFECT_REGISTRY: EffectEntry[] = [
     eventTypes: ["engagement", "elopement"],
     intensity: "subtle",
     description: "Retro dithering pattern with gradient",
-    disabled: true,
   },
   {
     id: "dot-field",
@@ -117,7 +113,6 @@ export const EFFECT_REGISTRY: EffectEntry[] = [
     eventTypes: ["wedding", "vow-renewal", "anniversary"],
     intensity: "subtle",
     description: "Gently drifting minimal line patterns",
-    disabled: true,
   },
   {
     id: "galaxy",
@@ -158,7 +153,6 @@ export const EFFECT_REGISTRY: EffectEntry[] = [
     eventTypes: ["engagement", "celebration"],
     intensity: "medium",
     description: "Grid that warps and distorts on interaction",
-    disabled: true,
   },
   {
     id: "grid-motion",
@@ -179,7 +173,6 @@ export const EFFECT_REGISTRY: EffectEntry[] = [
     eventTypes: ["celebration", "engagement"],
     intensity: "medium",
     description: "Scanning beam sweeps over a grid pattern",
-    disabled: true,
   },
   {
     id: "hyperspeed",
@@ -190,7 +183,6 @@ export const EFFECT_REGISTRY: EffectEntry[] = [
     eventTypes: ["celebration", "engagement"],
     intensity: "dramatic",
     description: "Star-field warp speed tunnel effect",
-    disabled: true,
   },
   {
     id: "iridescence",
@@ -221,7 +213,6 @@ export const EFFECT_REGISTRY: EffectEntry[] = [
     eventTypes: ["elopement", "wedding", "anniversary"],
     intensity: "medium",
     description: "Vertical pillars of light rising upward",
-    disabled: true,
   },
   {
     id: "light-rays",
@@ -272,7 +263,6 @@ export const EFFECT_REGISTRY: EffectEntry[] = [
     eventTypes: ["anniversary", "wedding", "vow-renewal"],
     intensity: "medium",
     description: "Slow-moving ethereal liquid color blending",
-    disabled: true,
   },
   {
     id: "orb",
@@ -303,7 +293,6 @@ export const EFFECT_REGISTRY: EffectEntry[] = [
     eventTypes: ["celebration", "engagement"],
     intensity: "dramatic",
     description: "Exploding pixel burst animation",
-    disabled: true,
   },
   {
     id: "pixel-snow",
@@ -314,7 +303,6 @@ export const EFFECT_REGISTRY: EffectEntry[] = [
     eventTypes: ["wedding", "celebration"],
     intensity: "subtle",
     description: "Gentle falling pixel snowflakes",
-    disabled: true,
   },
   {
     id: "plasma",
@@ -395,7 +383,6 @@ export const EFFECT_REGISTRY: EffectEntry[] = [
     eventTypes: ["wedding", "vow-renewal", "anniversary"],
     intensity: "subtle",
     description: "Flowing silk fabric in gentle motion",
-    disabled: true,
   },
   {
     id: "soft-aurora",
