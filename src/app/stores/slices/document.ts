@@ -3,7 +3,9 @@ import type { StateCreator } from "zustand";
 export interface Block {
 	id: string;
 	type: string;
-	[key: string]: unknown;
+	config: Record<string, unknown>;
+	sortOrder?: number;
+	isVisible?: number;
 }
 
 export interface PendingOps {
