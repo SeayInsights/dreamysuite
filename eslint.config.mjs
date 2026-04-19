@@ -12,19 +12,14 @@ const compat = new FlatCompat({
 const eslintConfig = [
 	...compat.extends("next/core-web-vitals", "next/typescript"),
 	{
-		rules: {
-			// Downgrade to warn — @ts-nocheck is used intentionally during active dev
-			"@typescript-eslint/ban-ts-comment": "warn",
-			// Downgrade to warn — `any` is acceptable until types are fully locked down
-			"@typescript-eslint/no-explicit-any": "warn",
-		},
-	},
-	{
-		// WebGL effect files use split let/assignment patterns that can't safely
-		// be converted to const by the linter (reference before assignment in closures)
+		// WebGL effect files are adapted third-party code using @ts-nocheck,
+		// split let/assignment patterns, and untyped shader variables.
+		// These rules are intentionally off for this directory only.
 		files: ["src/lib/effects/**"],
 		rules: {
 			"prefer-const": "off",
+			"@typescript-eslint/ban-ts-comment": "off",
+			"@typescript-eslint/no-explicit-any": "off",
 		},
 	},
 ];

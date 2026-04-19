@@ -59,7 +59,7 @@ export default async function SiteEditorPage({ params }: { params: Promise<{ id:
   }
 
   if (!flags.editorV2) {
-    return <SiteEditor site={result} user={session.user} />;
+    return <SiteEditor site={result} />;
   }
   return <SiteEditorV2 site={result} user={session.user} />;
 }

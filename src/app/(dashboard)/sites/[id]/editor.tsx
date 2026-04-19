@@ -8,6 +8,7 @@ import { useStore } from "zustand";
 import Sortable from "sortablejs";
 import { useDebouncedCallback } from "use-debounce";
 import { useEditorStore } from "@/app/stores/editorStore";
+import type { Block as StoreBlock } from "@/app/stores/slices/document";
 import { BLOCK_COMPONENTS } from "@/app/components/blocks";
 import { safeBlockConfig } from "@/lib/schemas/blocks";
 import "@/styles/site-editor.css";
@@ -477,7 +478,7 @@ function ColorSwatch({
 
 // ── Main component ────────────────────────────────────────────────────────────
 
-export function SiteEditor({ site: initialSite, user }: { site: any; user: any }) {
+export function SiteEditor({ site: initialSite }: { site: Site }) {
   const site = initialSite;
   const router = useRouter();
   const { show: toast, Toast } = useToast();
@@ -840,13 +841,13 @@ export function SiteEditor({ site: initialSite, user }: { site: any; user: any }
       setBlocks(data.blocks);
       if (isUndoableMutation.current) {
         // Post-mutation fetch: record new state (temporal tracks the transition)
-        useEditorStore.getState().setBlocks(data.blocks as any[]);
+        useEditorStore.getState().setBlocks(data.blocks as unknown as StoreBlock[]);
         isUndoableMutation.current = false;
       } else {
         // Initial load or page switch: sync silently (no undo entry)
         const { pause, resume } = useEditorStore.temporal.getState();
         pause();
-        useEditorStore.getState().setBlocks(data.blocks as any[]);
+        useEditorStore.getState().setBlocks(data.blocks as unknown as StoreBlock[]);
         resume();
       }
     } catch (err) {
@@ -1227,7 +1228,7 @@ export function SiteEditor({ site: initialSite, user }: { site: any; user: any }
             const [moved] = reordered.splice(oldIndex, 1);
             reordered.splice(newIndex, 0, moved);
             // Record post-reorder state for undo/redo
-            useEditorStore.getState().setBlocks(reordered as any[]);
+            useEditorStore.getState().setBlocks(reordered as unknown as StoreBlock[]);
             isUndoableMutation.current = false;
             Promise.all(
               reordered.map((b, i) =>
@@ -1255,7 +1256,7 @@ export function SiteEditor({ site: initialSite, user }: { site: any; user: any }
 
   function pushHistory(prev: Block[]) {
     // Record pre-mutation state in the store; temporal tracks the transition
-    useEditorStore.getState().setBlocks(prev as any[]);
+    useEditorStore.getState().setBlocks(prev as unknown as StoreBlock[]);
     isUndoableMutation.current = true;
   }
 
