@@ -73,8 +73,18 @@ cloudflare-env.d.ts
 /e2e/.auth
 .playwright-auth.json
 
-# Session artifacts
+# Planning & session artifacts
+.planning/
 .sessions/
+
+# Migrations (managed in Cloudflare D1 dashboard)
+/migrations
+
+# Dev scripts & seed data
+/scripts
+
+# E2E tests (not needed for launch)
+/e2e
 
 # Stray directories (browser profiles, etc.)
 UsersDannis*
