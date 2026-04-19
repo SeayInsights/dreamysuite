@@ -31,6 +31,16 @@ interface EditState {
   element: HTMLElement;
   /** Non-null when editing a translated language instead of primary */
   translatingLang: string | null;
+  /**
+   * When editing an item inside an array field (e.g. fun-facts, faq, schedule,
+   * travel) these two fields are set.  `arrayKey` is the cfg key holding the
+   * array (e.g. "items", "events") and `itemIndex` is the 0-based position of
+   * the item being edited.  When set, `field` carries the per-item field name
+   * (e.g. "title", "body", "question") and the top-level `[field]: text`
+   * commit path is bypassed in favour of an immutable array update.
+   */
+  arrayKey?: string;
+  itemIndex?: number;
 }
 
 // ---------------------------------------------------------------------------
@@ -124,6 +134,7 @@ export function TextEditor({
       const text = el.innerText.trim();
 
       if (state.translatingLang) {
+        // Array-item fields are not routed through the translation system.
         setTranslation(state.blockId, state.translatingLang, state.field, text);
       } else {
         const currentBlock = useEditorStore
@@ -132,9 +143,28 @@ export function TextEditor({
         if (!currentBlock) return;
 
         const currentCfg = parseCfgFromBlock(currentBlock);
-        updateBlock(state.blockId, {
-          config: { ...currentCfg, [state.field]: text },
-        });
+
+        if (
+          state.arrayKey !== undefined &&
+          state.itemIndex !== undefined
+        ) {
+          // Array-item edit: immutably update the one field of the one item.
+          const arr = Array.isArray(currentCfg[state.arrayKey])
+            ? (currentCfg[state.arrayKey] as Record<string, unknown>[])
+            : [];
+          const nextArr = arr.map((item, i) =>
+            i === state.itemIndex
+              ? { ...item, [state.field]: text }
+              : item,
+          );
+          updateBlock(state.blockId, {
+            config: { ...currentCfg, [state.arrayKey]: nextArr },
+          });
+        } else {
+          updateBlock(state.blockId, {
+            config: { ...currentCfg, [state.field]: text },
+          });
+        }
       }
 
       el.removeAttribute("contenteditable");
@@ -173,6 +203,74 @@ export function TextEditor({
 
     function handleDblClick(e: MouseEvent) {
       const target = e.target as HTMLElement;
+
+      // -----------------------------------------------------------------------
+      // Path 1: array-item field  (data-editable-item-index / item-field / array-key)
+      // -----------------------------------------------------------------------
+      const itemEl = target.closest<HTMLElement>("[data-editable-item-index]");
+      if (itemEl) {
+        const rawIndex = itemEl.dataset.editableItemIndex;
+        const itemField = itemEl.dataset.editableItemField;
+        const arrayKey = itemEl.dataset.editableArrayKey;
+        if (rawIndex === undefined || !itemField || !arrayKey) return;
+
+        const itemIndex = parseInt(rawIndex, 10);
+        if (!Number.isFinite(itemIndex)) return;
+
+        const blockEl = itemEl.closest<HTMLElement>("[data-block-id]");
+        const blockId = blockEl?.dataset.blockId;
+        if (!blockId) return;
+
+        e.preventDefault();
+        e.stopPropagation();
+
+        const store = useEditorStore.getState();
+        const block = store.blocks.find((b) => b.id === blockId);
+        if (!block) return;
+
+        const cfg = parseCfgFromBlock(block);
+        const blockRect = blockEl!.getBoundingClientRect();
+
+        itemEl.setAttribute("contenteditable", "true");
+        itemEl.setAttribute("spellcheck", "true");
+        itemEl.style.outline = "2px solid var(--primary, #6366f1)";
+        itemEl.style.outlineOffset = "2px";
+        itemEl.style.borderRadius = "2px";
+
+        const originalText = itemEl.innerText;
+
+        const state: EditState = {
+          blockId,
+          field: itemField,
+          originalText,
+          originalCfg: cfg,
+          blockRect,
+          element: itemEl,
+          translatingLang: null,
+          arrayKey,
+          itemIndex,
+        };
+        setEditState(state);
+        setIsTextEditing(true);
+
+        requestAnimationFrame(() => {
+          itemEl.focus();
+          const sel = window.getSelection();
+          if (sel && sel.rangeCount === 0) {
+            const range = document.createRange();
+            range.selectNodeContents(itemEl);
+            range.collapse(false);
+            sel.removeAllRanges();
+            sel.addRange(range);
+          }
+          toolbar.show(blockRect);
+        });
+        return;
+      }
+
+      // -----------------------------------------------------------------------
+      // Path 2: top-level field  (data-editable-field)
+      // -----------------------------------------------------------------------
       // Walk up to find an editable field element
       const fieldEl = target.closest<HTMLElement>("[data-editable-field]");
       if (!fieldEl) return;

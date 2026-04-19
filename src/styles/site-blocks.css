@@ -233,7 +233,8 @@
 
 /* ── Nav bar ── */
 .site-nav {
-  position: absolute; top: 0; width: 100%; z-index: 100;
+  position: absolute; top: 0; width: 100%; z-index: 1000;
+  transform: translateZ(0); /* compositor layer promotion — keeps nav above video iframes */
   background: var(--nav-bg);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);

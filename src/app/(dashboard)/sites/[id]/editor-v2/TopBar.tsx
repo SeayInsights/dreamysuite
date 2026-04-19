@@ -10,7 +10,6 @@ import { UndoRedo } from "./topbar/UndoRedo";
 import { PreviewButton } from "./topbar/PreviewButton";
 import { SaveStatus } from "./topbar/SaveStatus";
 import { PublishButton } from "./topbar/PublishButton";
-import { InspectorToggle } from "./topbar/InspectorToggle";
 
 interface Props {
 	site: EditorV2Site;
@@ -48,8 +47,6 @@ export function TopBar({ site }: Props) {
 				<ModeToggle />
 				<div className="h-6 w-px bg-border" aria-hidden />
 				<UndoRedo />
-				<div className="h-6 w-px bg-border" aria-hidden />
-				<InspectorToggle />
 				<PreviewButton siteId={site.id} />
 				<PublishButton siteId={site.id} />
 			</div>

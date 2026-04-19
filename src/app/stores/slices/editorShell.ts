@@ -60,6 +60,14 @@ export interface EditorShellSlice {
 	toggleInspector: () => void;
 	setInspectorOpen: (v: boolean) => void;
 	toggleFullPreview: () => void;
+
+	/** True when the floating section toolbar should be visible (set on double-click). */
+	blockToolbarVisible: boolean;
+	setBlockToolbarVisible: (v: boolean) => void;
+
+	/** Block ID whose editing panel (image picker, video editor, etc.) is open. */
+	editingPanelBlockId: string | null;
+	setEditingPanel: (blockId: string | null) => void;
 }
 
 // EditorShellSlice no longer owns theme state — ThemeSlice does.
@@ -81,7 +89,7 @@ export const createEditorShellSlice: StateCreator<EditorShellSlice & ThemeSlice,
 	setSaveError: (saveError) => set({ saveError }),
 
 	selectedBlockId: null,
-	selectBlock: (id) => set({ selectedBlockId: id }),
+	selectBlock: (id) => set({ selectedBlockId: id, blockToolbarVisible: false, editingPanelBlockId: null }),
 
 	pages: [],
 	currentPageId: null,
@@ -103,4 +111,10 @@ export const createEditorShellSlice: StateCreator<EditorShellSlice & ThemeSlice,
 	toggleInspector: () => set((s) => ({ inspectorOpen: !s.inspectorOpen })),
 	setInspectorOpen: (inspectorOpen) => set({ inspectorOpen }),
 	toggleFullPreview: () => set((s) => ({ fullPreview: !s.fullPreview })),
+
+	blockToolbarVisible: false,
+	setBlockToolbarVisible: (blockToolbarVisible) => set({ blockToolbarVisible }),
+
+	editingPanelBlockId: null,
+	setEditingPanel: (editingPanelBlockId) => set({ editingPanelBlockId }),
 });

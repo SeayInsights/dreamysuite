@@ -49,6 +49,10 @@ export type EditorState = DocumentSlice & EditorShellSlice & TransientSlice & Se
  * Zundo's partialize+equality restrict history to blocks + settings.
  * UI state changes (opening a tray, switching breakpoint) never create a history
  * entry, so undo/redo only rolls back document and settings edits.
+ *
+ * Undo history is scoped per page. Switching currentPageId swaps in/out the
+ * temporal store's pastStates/futureStates for that page so history never
+ * bleeds across pages.
  */
 export const useEditorStore = create<EditorState>()(
 	temporal(
@@ -66,6 +70,43 @@ export const useEditorStore = create<EditorState>()(
 		},
 	),
 );
+
+// ── Page-scoped undo history ───────────────────────────────────────────────
+// Each page gets its own pastStates/futureStates. When currentPageId changes
+// we snapshot the current temporal state for the outgoing page and restore
+// (or initialise) the incoming page's stack.
+
+type PageHistory = {
+	pastStates: ReturnType<typeof useEditorStore.temporal.getState>["pastStates"];
+	futureStates: ReturnType<typeof useEditorStore.temporal.getState>["futureStates"];
+};
+
+const pageHistoryCache = new Map<string, PageHistory>();
+
+let prevPageId = useEditorStore.getState().currentPageId;
+useEditorStore.subscribe((state) => {
+	const nextPageId = state.currentPageId;
+	if (nextPageId === prevPageId) return;
+
+	const history = useEditorStore.temporal.getState();
+
+	// Save the outgoing page's history.
+	if (prevPageId !== null) {
+		pageHistoryCache.set(prevPageId, {
+			pastStates: history.pastStates,
+			futureStates: history.futureStates,
+		});
+	}
+
+	// Restore the incoming page's history (or start empty).
+	const saved = nextPageId !== null ? pageHistoryCache.get(nextPageId) : undefined;
+	useEditorStore.temporal.setState({
+		pastStates: saved?.pastStates ?? [],
+		futureStates: saved?.futureStates ?? [],
+	});
+
+	prevPageId = nextPageId;
+});
 
 // Keep themeTokens in sync when settings change (e.g. via undo/redo)
 let prevSettings = useEditorStore.getState().settings;
