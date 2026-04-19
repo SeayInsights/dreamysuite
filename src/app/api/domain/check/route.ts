@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { createAuth, type Env } from "@/app/lib/auth.server";
+import { requireSiteOwnership } from "@/lib/api/site-auth";
 
 // Cloudflare at-cost registrar pricing (USD/yr) for common TLDs
 const TLD_PRICES: Record<string, number> = {
@@ -36,6 +37,15 @@ export async function GET(req: NextRequest) {
 
   const url = new URL(req.url);
   const domain = url.searchParams.get("domain") ?? "";
+  const siteId = url.searchParams.get("siteId");
+
+  if (siteId) {
+    const ownership = await requireSiteOwnership(req, env, siteId);
+    if ("error" in ownership) {
+      return NextResponse.json({ error: ownership.error }, { status: ownership.status });
+    }
+  }
+
   const parsed = parseDomain(domain);
 
   if (!parsed) {

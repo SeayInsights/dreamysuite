@@ -61,7 +61,8 @@ export async function POST(
   }
 
   const id = crypto.randomUUID();
-  const r2Key = `sites/${siteId}/${id}/${file.name}`;
+  const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_").slice(0, 128);
+  const r2Key = `sites/${siteId}/${id}/${safeName}`;
   const now = Date.now();
 
   try {

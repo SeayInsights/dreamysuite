@@ -44,6 +44,9 @@ export async function POST(
   if (!slug || !label) {
     return NextResponse.json({ error: { code: "BAD_REQUEST", message: "slug and label are required" } }, { status: 400 });
   }
+  if (!/^[a-z0-9-]+$/.test(slug.trim())) {
+    return NextResponse.json({ error: { code: "VALIDATION_ERROR", message: "Page slug must contain only lowercase letters, numbers, and hyphens." } }, { status: 400 });
+  }
 
   const id = crypto.randomUUID();
   const now = Date.now();
