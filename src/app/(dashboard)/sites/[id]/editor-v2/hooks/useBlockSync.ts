@@ -91,7 +91,8 @@ export function useBlockSync(siteId: string) {
     const pageId = state.currentPageId;
     if (!state.isDirty || !pageId) return;
     flushOps(siteIdRef.current, pageId, state.pendingOps, state.blocks);
-    state.markClean();
+    // markClean intentionally omitted — keepalive fetch continues after unload;
+    // debounce path awaits before marking clean on normal navigation.
   }, []);
 
   useEffect(() => {

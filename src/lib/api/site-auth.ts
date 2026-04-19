@@ -90,6 +90,10 @@ export function apiOwnershipError(
 export async function parseJsonBody<T = unknown>(
   req: NextRequest,
 ): Promise<{ body: T } | { error: NextResponse }> {
+  const contentLength = parseInt(req.headers.get("content-length") ?? "0", 10);
+  if (contentLength > 1_048_576) {
+    return { error: apiError("PAYLOAD_TOO_LARGE", "Request body must be 1 MB or less.", 413) };
+  }
   try {
     const body = (await req.json()) as T;
     return { body };

@@ -12,6 +12,9 @@ export async function GET(
   const env = rawEnv as unknown as Env;
   const { id: siteId } = await params;
 
+  const site = await env.DB.prepare("SELECT id FROM site WHERE id = ? AND status = 'published'").bind(siteId).first();
+  if (!site) return NextResponse.json({ error: { code: "NOT_FOUND", message: "Site not found" } }, { status: 404 });
+
   const result = await env.DB
     .prepare(
       "SELECT id, name, message, createdAt FROM guest_book_entry WHERE siteId = ? ORDER BY createdAt DESC LIMIT 100",
@@ -32,7 +35,7 @@ export async function POST(
 
   // Verify site exists
   const site = await env.DB
-    .prepare("SELECT id FROM site WHERE id = ?")
+    .prepare("SELECT id FROM site WHERE id = ? AND status = 'published'")
     .bind(siteId)
     .first();
   if (!site) {
@@ -65,6 +68,8 @@ export async function POST(
       { status: 400 },
     );
   }
+  if (name.trim().length > 100) return NextResponse.json({ error: { code: "BAD_REQUEST", message: "name must be 100 characters or less" } }, { status: 400 });
+  if (message.trim().length > 2000) return NextResponse.json({ error: { code: "BAD_REQUEST", message: "message must be 2000 characters or less" } }, { status: 400 });
 
   const id = crypto.randomUUID();
   const now = Date.now();

@@ -19,7 +19,9 @@
     "cf-typegen": "wrangler types --env-interface CloudflareEnv ./cloudflare-env.d.ts",
     "test:e2e": "node ../../node_modules/@playwright/test/cli.js test",
     "test:e2e:ui": "node ../../node_modules/@playwright/test/cli.js test --ui",
-    "test:e2e:report": "node ../../node_modules/@playwright/test/cli.js show-report"
+    "test:e2e:report": "node ../../node_modules/@playwright/test/cli.js show-report",
+    "audit": "npm audit --audit-level=high",
+    "format": "prettier --write ."
   },
   "dependencies": {
     "@cloudflare/d1": "^1.4.1",
@@ -71,6 +73,7 @@
     "eslint-config-next": "15.4.6",
     "tailwindcss": "^4",
     "typescript": "^5.7.4",
+    "prettier": "^3.0.0",
     "vitest": "^4.1.4",
     "wrangler": "^4.83.0"
   }

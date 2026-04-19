@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
-import type { Env } from "@/app/lib/auth.server";
+import { createAuth, type Env } from "@/app/lib/auth.server";
 
 interface TelemetryEvent {
   name: string;
@@ -12,6 +12,12 @@ interface TelemetryEvent {
 export async function POST(req: NextRequest) {
   const { env: rawEnv } = await getCloudflareContext({ async: true });
   const env = rawEnv as unknown as Env;
+
+  const auth = createAuth(env);
+  const session = await auth.api.getSession({ headers: req.headers });
+  if (!session) {
+    return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  }
 
   let body: { events?: unknown };
   try {

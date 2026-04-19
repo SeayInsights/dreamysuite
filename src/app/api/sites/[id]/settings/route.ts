@@ -13,27 +13,34 @@ import {
   upsertSiteSettings,
 } from "@/lib/schemas/settings";
 
+async function hashGuestPassword(pw: string): Promise<string> {
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(pw));
+  const hex = Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, "0")).join("");
+  return `$sha256$${hex}`;
+}
+
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const { env: rawEnv } = await getCloudflareContext({ async: true });
-  const env = rawEnv as unknown as Env;
-  const { id: siteId } = await params;
+  try {
+    const { env: rawEnv } = await getCloudflareContext({ async: true });
+    const env = rawEnv as unknown as Env;
+    const { id: siteId } = await params;
 
-  const check = await requireSiteOwnership(req, env, siteId);
-  if ("error" in check) return apiOwnershipError(check);
+    const check = await requireSiteOwnership(req, env, siteId);
+    if ("error" in check) return apiOwnershipError(check);
 
-  const row = await env.DB
-    .prepare("SELECT * FROM site_setting WHERE siteId = ?")
-    .bind(siteId)
-    .first();
+    const row = await env.DB
+      .prepare("SELECT * FROM site_setting WHERE siteId = ?")
+      .bind(siteId)
+      .first();
 
-  if (!row) {
-    return NextResponse.json({ settings: { siteId, ...DEFAULTS } });
+    return NextResponse.json({ settings: row ?? { siteId, ...DEFAULTS } });
+  } catch (e) {
+    console.error("[settings GET] db error:", e instanceof Error ? e.message : String(e));
+    return apiError("DB_ERROR", "An internal error occurred. Please try again.", 500);
   }
-
-  return NextResponse.json({ settings: row });
 }
 
 export async function PUT(
@@ -60,6 +67,9 @@ export async function PUT(
       );
     }
     const body = validated.data;
+    if (body.guestPassword) {
+      body.guestPassword = await hashGuestPassword(body.guestPassword);
+    }
     const now = Date.now();
 
     await upsertSiteSettings(env.DB, siteId, body, now);
@@ -79,7 +89,7 @@ export async function PUT(
 
     return NextResponse.json({ settings: updated });
   } catch (e) {
-    const msg = e instanceof Error ? e.message : String(e);
-    return apiError("DB_ERROR", msg, 500);
+    console.error("[settings PUT] db error:", e instanceof Error ? e.message : String(e));
+    return apiError("DB_ERROR", "An internal error occurred. Please try again.", 500);
   }
 }
