@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getCloudflareContext } from "@opennextjs/cloudflare";
-import type { Env } from "@/app/lib/auth.server";
+import { getEnv } from "@/lib/cloudflare";
 import { safeBlockConfig } from "@/lib/schemas/blocks";
 import { isRateLimited } from "@/lib/rateLimit";
 
@@ -75,8 +74,7 @@ export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ siteSlug: string }> }
 ) {
-  const { env: rawEnv } = await getCloudflareContext({ async: true });
-  const env = rawEnv as unknown as Env;
+  const env = await getEnv();
   const { siteSlug } = await params;
   const db = env.DB;
 
@@ -102,7 +100,7 @@ export async function GET(
     .prepare("INSERT INTO page_view (siteId, pageSlug, viewedAt) VALUES (?, ?, ?)")
     .bind(site.id, "__home__", Date.now())
     .run()
-    .catch(() => undefined);
+    .catch((err) => console.error("[analytics] page_view insert failed:", err));
 
   // Fetch visible pages ordered by sortOrder
   const pagesResult = await db
@@ -201,8 +199,7 @@ export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ siteSlug: string }> }
 ) {
-  const { env: rawEnv } = await getCloudflareContext({ async: true });
-  const env = rawEnv as unknown as Env;
+  const env = await getEnv();
 
   // Rate limit: 5 requests per 600 s per IP on RSVP
   const ip = req.headers.get("cf-connecting-ip") ?? "unknown";

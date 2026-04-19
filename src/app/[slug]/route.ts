@@ -5,7 +5,7 @@
  * Returns raw HTML — does not use React rendering.
  */
 import { NextRequest } from "next/server";
-import { getCloudflareContext } from "@opennextjs/cloudflare";
+import { getEnv } from "@/lib/cloudflare";
 import { createAuth, type Env } from "@/app/lib/auth.server";
 import { safeBlockConfig } from "@/lib/schemas/blocks";
 import { getEffectById } from "@/lib/effects/registry";
@@ -22,8 +22,7 @@ export async function GET(
   { params }: { params: Promise<{ slug: string }> }
 ) {
   const { slug } = await params;
-  const { env: rawEnv } = await getCloudflareContext({ async: true });
-  const env = rawEnv as unknown as Env;
+  const env = await getEnv();
   const db = env.DB;
 
   let viewerUserId: string | null = null;
@@ -132,8 +131,7 @@ export async function POST(
   { params }: { params: Promise<{ slug: string }> }
 ) {
   const { slug } = await params;
-  const { env: rawEnv } = await getCloudflareContext({ async: true });
-  const env = rawEnv as unknown as Env;
+  const env = await getEnv();
   const db = env.DB;
 
   const site = await db.prepare("SELECT * FROM site WHERE slug = ? AND status = 'published'").bind(slug).first<SiteRow>();

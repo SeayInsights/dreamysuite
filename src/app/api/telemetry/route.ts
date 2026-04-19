@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getCloudflareContext } from "@opennextjs/cloudflare";
+import { getEnv } from "@/lib/cloudflare";
 import { createAuth, type Env } from "@/app/lib/auth.server";
 
 // Client must supply siteId per event so the server can verify ownership.
@@ -15,8 +15,7 @@ interface TelemetryEvent {
 }
 
 export async function POST(req: NextRequest) {
-  const { env: rawEnv } = await getCloudflareContext({ async: true });
-  const env = rawEnv as unknown as Env;
+  const env = await getEnv();
 
   const auth = createAuth(env);
   const session = await auth.api.getSession({ headers: req.headers });
@@ -84,7 +83,8 @@ export async function POST(req: NextRequest) {
 
   try {
     await db.batch(batch);
-  } catch {
+  } catch (err) {
+    console.error("[telemetry] db.batch failed:", err);
     return NextResponse.json({ error: "db write failed" }, { status: 500 });
   }
 
