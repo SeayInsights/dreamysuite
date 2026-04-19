@@ -80,8 +80,9 @@ cloudflare-env.d.ts
 # Migrations (managed in Cloudflare D1 dashboard)
 /migrations
 
-# Dev scripts & seed data
+# Dev scripts & seed data (except build-public-effects which CI needs)
 /scripts
+!/scripts/build-public-effects.mjs
 
 # E2E tests (not needed for launch)
 /e2e
