@@ -3,6 +3,7 @@
 import { useState, useCallback, useMemo } from "react";
 import { useEditorStore } from "@/app/stores/editorStore";
 import { themeSwatches, themeGradients } from "../lib/themeSwatches";
+import { hexToRgb, rgbToHex } from "@/lib/color";
 
 type ColorMode = "hex" | "rgb";
 type BgTab = "solid" | "gradient" | "transparent";
@@ -13,21 +14,6 @@ const DIRECTIONS: { label: string; angle: string; icon: string }[] = [
 	{ label: "Bottom → Top", angle: "0deg", icon: "↑" },
 	{ label: "Right → Left", angle: "270deg", icon: "←" },
 ];
-
-function hexToRgb(hex: string): [number, number, number] {
-	const m = /^#?([0-9a-f]{6})$/i.exec(hex);
-	if (!m) return [255, 255, 255];
-	return [
-		parseInt(m[1].slice(0, 2), 16),
-		parseInt(m[1].slice(2, 4), 16),
-		parseInt(m[1].slice(4, 6), 16),
-	];
-}
-
-function rgbToHex(r: number, g: number, b: number): string {
-	const c = (v: number) => Math.max(0, Math.min(255, Math.round(v))).toString(16).padStart(2, "0");
-	return `#${c(r)}${c(g)}${c(b)}`;
-}
 
 function applyOpacity(hex: string, opacity: number): string {
 	if (opacity >= 100) return hex;
