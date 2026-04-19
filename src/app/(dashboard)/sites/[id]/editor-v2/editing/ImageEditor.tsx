@@ -482,7 +482,7 @@ export function ImageEditor({ containerRef }: Props) {
       </div>
 
       {active && cropMode && (
-        <CropHandles blockId={active.blockId} rect={active.imageRect} />
+        <CropHandles blockId={active.blockId} rect={active.imageRect} containerRef={containerRef} />
       )}
     </div>
   );
