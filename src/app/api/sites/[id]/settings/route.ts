@@ -39,7 +39,11 @@ export async function GET(
       .bind(siteId)
       .first();
 
-    return NextResponse.json({ settings: row ?? { siteId, ...DEFAULTS } });
+    if (row) {
+      const { guestPassword: _, ...safeSettings } = row as Record<string, unknown> & { guestPassword?: unknown };
+      return NextResponse.json({ settings: safeSettings });
+    }
+    return NextResponse.json({ settings: { siteId, ...DEFAULTS } });
   } catch (e) {
     console.error("[settings GET] db error:", e instanceof Error ? e.message : String(e));
     return apiError("DB_ERROR", "An internal error occurred. Please try again.", 500);
@@ -90,7 +94,8 @@ export async function PUT(
       .bind(siteId)
       .first();
 
-    return NextResponse.json({ settings: updated });
+    const { guestPassword: _, ...safeUpdated } = (updated ?? {}) as Record<string, unknown> & { guestPassword?: unknown };
+    return NextResponse.json({ settings: safeUpdated });
   } catch (e) {
     console.error("[settings PUT] db error:", e instanceof Error ? e.message : String(e));
     return apiError("DB_ERROR", "An internal error occurred. Please try again.", 500);
