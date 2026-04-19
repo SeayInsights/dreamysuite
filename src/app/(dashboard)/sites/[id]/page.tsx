@@ -58,8 +58,8 @@ export default async function SiteEditorPage({ params }: { params: Promise<{ id:
     redirect("/");
   }
 
-  if (flags.editorV2) {
-    return <SiteEditorV2 site={result} user={session.user} />;
+  if (!flags.editorV2) {
+    return <SiteEditor site={result} user={session.user} />;
   }
-  return <SiteEditor site={result} user={session.user} />;
+  return <SiteEditorV2 site={result} user={session.user} />;
 }
