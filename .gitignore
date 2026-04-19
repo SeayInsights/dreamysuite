@@ -93,5 +93,8 @@ ARCHITECTURE.md
 playwright.config.ts
 vitest.config.ts
 
+# IDE settings
+.vscode/
+
 # Stray directories (browser profiles, etc.)
 UsersDannis*
