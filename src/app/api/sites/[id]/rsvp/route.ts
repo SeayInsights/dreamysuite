@@ -42,6 +42,15 @@ export async function POST(
       { status: 400 },
     );
   }
+  if (firstName.trim().length > 100) {
+    return NextResponse.json({ error: { code: "BAD_REQUEST", message: "firstName must be 100 characters or less" } }, { status: 400 });
+  }
+  if (lastName && lastName.trim().length > 100) {
+    return NextResponse.json({ error: { code: "BAD_REQUEST", message: "lastName must be 100 characters or less" } }, { status: 400 });
+  }
+  if (email && email.trim().length > 254) {
+    return NextResponse.json({ error: { code: "BAD_REQUEST", message: "email must be 254 characters or less" } }, { status: 400 });
+  }
 
   const VALID_STATUSES = ["pending", "yes", "no"];
   const status = VALID_STATUSES.includes(rsvpStatus ?? "") ? rsvpStatus! : "pending";

@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 
-// Paths under /api/sites/* that are intentionally public (no auth required)
-// These are handled per-route; middleware skips them.
-const PUBLIC_SITE_PATHS = [
-  /^\/api\/public\//,
+// /api/sites/* sub-paths that must remain public (no session required).
+const PUBLIC_SITE_API_PATHS = [
+  /^\/api\/sites\/[^/]+\/guestbook(\/.*)?$/,
 ];
 
 export function middleware(req: NextRequest) {
@@ -11,6 +10,11 @@ export function middleware(req: NextRequest) {
 
   // Only gate /api/sites/* routes
   if (!pathname.startsWith("/api/sites/")) {
+    return NextResponse.next();
+  }
+
+  // Allow explicitly public sub-paths before checking auth
+  if (PUBLIC_SITE_API_PATHS.some((re) => re.test(pathname))) {
     return NextResponse.next();
   }
 
