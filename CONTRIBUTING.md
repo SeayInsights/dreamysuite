@@ -37,3 +37,21 @@ npm run test:e2e   # Playwright end-to-end
 ## Security Issues
 
 See [SECURITY.md](SECURITY.md).
+
+## Database Migrations
+
+Migrations live in `migrations/` as numbered `.sql` files (`0001_*.sql`, `0002_*.sql`, …).
+
+**Apply to production:**
+```bash
+make migrate
+# or: wrangler d1 migrations apply dreamysuite-db --remote
+```
+
+**Apply locally (dev):**
+```bash
+make migrate-local
+# or: wrangler d1 migrations apply dreamysuite-db --local
+```
+
+**Create a new migration:** add the next numbered file in `migrations/`, e.g. `0036_my_change.sql`.
