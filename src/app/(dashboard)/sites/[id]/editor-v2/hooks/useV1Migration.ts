@@ -50,6 +50,8 @@ export function useV1Migration(siteId: string) {
       const mapping = MIGRATION_MAP[b.type];
       if (!mapping) return false;
       const cfg = parseCfg(b.config);
+      // Skip blocks already migrated in a previous session (persisted flag)
+      if (cfg._v2migrated === true) return false;
       const existing = cfg[mapping.configKey];
       return !Array.isArray(existing) || existing.length === 0;
     });
@@ -87,15 +89,20 @@ export function useV1Migration(siteId: string) {
           const mapping = MIGRATION_MAP[block.type];
           if (!mapping) continue;
 
-          const legacy = pc[mapping.contentKey];
-          if (!Array.isArray(legacy) || legacy.length === 0) continue;
-
           const cfg = parseCfg(block.config);
+          const legacy = pc[mapping.contentKey];
+          if (!Array.isArray(legacy) || legacy.length === 0) {
+            // No legacy data — stamp the block so we skip it on future reloads
+            updateBlock(block.id, { config: { ...cfg, _v2migrated: true } });
+            continue;
+          }
+
           const items = mapping.transform
             ? mapping.transform(legacy)
             : legacy.map((raw) => ({ id: crypto.randomUUID(), ...(raw as Record<string, unknown>) }));
 
-          const newConfig = { ...cfg, [mapping.configKey]: items };
+          // _v2migrated persists to DB via normal block sync — prevents re-run on reload
+          const newConfig = { ...cfg, [mapping.configKey]: items, _v2migrated: true };
           updateBlock(block.id, { config: newConfig });
           migrated++;
           console.log(`[V1 Migration] Copied ${legacy.length} ${mapping.contentKey} → ${block.type} block ${block.id}`);

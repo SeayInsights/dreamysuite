@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getCloudflareContext } from "@opennextjs/cloudflare";
-import type { Env } from "@/app/lib/auth.server";
+import { getEnv } from "@/lib/cloudflare";
 import { requireSiteOwnership, apiOwnershipError } from "@/lib/api/site-auth";
 
 interface PageRow {
@@ -31,8 +30,7 @@ export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const { env: rawEnv } = await getCloudflareContext({ async: true });
-  const env = rawEnv as unknown as Env;
+  const env = await getEnv();
   const { id: siteId } = await params;
 
   const check = await requireSiteOwnership(req, env, siteId);
@@ -50,8 +48,7 @@ export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const { env: rawEnv } = await getCloudflareContext({ async: true });
-  const env = rawEnv as unknown as Env;
+  const env = await getEnv();
   const { id: siteId } = await params;
 
   const check = await requireSiteOwnership(req, env, siteId);

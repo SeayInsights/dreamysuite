@@ -1,13 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getCloudflareContext } from "@opennextjs/cloudflare";
+import { getEnv } from "@/lib/cloudflare";
 import { createAuth, type Env } from "@/app/lib/auth.server";
 
 export async function DELETE(
   req: NextRequest,
   { params }: { params: Promise<{ id: string; mediaId: string }> }
 ) {
-  const { env: rawEnv } = await getCloudflareContext({ async: true });
-  const env = rawEnv as unknown as Env;
+  const env = await getEnv();
   const { id: siteId, mediaId } = await params;
 
   const auth = createAuth(env);

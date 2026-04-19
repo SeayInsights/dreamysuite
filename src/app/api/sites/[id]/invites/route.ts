@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getCloudflareContext } from "@opennextjs/cloudflare";
+import { getEnv } from "@/lib/cloudflare";
 import { z } from "zod";
-import type { Env } from "@/app/lib/auth.server";
 import { requireSiteOwner, apiOwnershipError, parseJsonBody } from "@/lib/api/site-auth";
 
 const InviteCreateSchema = z.object({
@@ -17,8 +16,7 @@ export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const { env: rawEnv } = await getCloudflareContext({ async: true });
-  const env = rawEnv as unknown as Env;
+const env = await getEnv();
   const { id: siteId } = await params;
 
   const check = await requireSiteOwner(req, env, siteId);
@@ -37,8 +35,7 @@ export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const { env: rawEnv } = await getCloudflareContext({ async: true });
-  const env = rawEnv as unknown as Env;
+const env = await getEnv();
   const { id: siteId } = await params;
 
   const check = await requireSiteOwner(req, env, siteId);
@@ -119,8 +116,7 @@ export async function DELETE(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const { env: rawEnv } = await getCloudflareContext({ async: true });
-  const env = rawEnv as unknown as Env;
+const env = await getEnv();
   const { id: siteId } = await params;
 
   const check = await requireSiteOwner(req, env, siteId);

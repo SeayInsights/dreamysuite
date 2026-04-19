@@ -1,17 +1,16 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
-import { getCloudflareContext } from "@opennextjs/cloudflare";
-import { createAuth, type Env } from "@/app/lib/auth.server";
+import { getEnv } from "@/lib/cloudflare";
+import { createAuth } from "@/app/lib/auth.server";
 import { NewSiteForm } from "./new-site-form";
 
 export const metadata = { title: "New Site — DreamySuite" };
 
 async function createSite(prevState: { error?: string } | null, formData: FormData): Promise<{ error?: string }> {
   "use server";
-  const { env } = await getCloudflareContext({ async: true });
-  const typedEnv = env as unknown as Env;
+  const env = await getEnv();
 
-  const auth = createAuth(typedEnv);
+  const auth = createAuth(env);
   const requestHeaders = await headers();
   const session = await auth.api.getSession({ headers: requestHeaders });
   if (!session) {
@@ -33,7 +32,7 @@ async function createSite(prevState: { error?: string } | null, formData: FormDa
   const now = Date.now();
 
   try {
-    await typedEnv.DB
+    await env.DB
       .prepare(
         "INSERT INTO site (id, userId, name, slug, eventType, previewColor, status, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
       )
@@ -49,10 +48,9 @@ async function createSite(prevState: { error?: string } | null, formData: FormDa
 }
 
 export default async function NewSitePage() {
-  const { env } = await getCloudflareContext({ async: true });
-  const typedEnv = env as unknown as Env;
+  const env = await getEnv();
 
-  const auth = createAuth(typedEnv);
+  const auth = createAuth(env);
   const requestHeaders = await headers();
   const session = await auth.api.getSession({ headers: requestHeaders });
   if (!session) {
