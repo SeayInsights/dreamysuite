@@ -4,24 +4,8 @@ import { useState, useCallback, useRef } from "react";
 import { Languages, RefreshCw, Check, AlertTriangle } from "lucide-react";
 import { useEditorStore } from "@/app/stores/editorStore";
 import { TRANSLATABLE_FIELDS } from "@/lib/translations";
-
-const LANG_LABELS: Record<string, string> = {
-	en: "English",
-	vi: "Tiếng Việt",
-	es: "Español",
-	fr: "Français",
-	"zh-CN": "中文 (简体)",
-	"zh-TW": "中文 (繁體)",
-	ko: "한국어",
-	ja: "日本語",
-	de: "Deutsch",
-	pt: "Português",
-	it: "Italiano",
-	th: "ภาษาไทย",
-	tl: "Filipino",
-	hi: "हिन्दी",
-	ar: "العربية",
-};
+import { parseCfg } from "@/lib/editableField";
+import { LANG_NATIVE } from "@/lib/languages";
 
 function parseSiteLanguages(raw: string | null): string[] {
 	if (!raw) return [];
@@ -31,14 +15,6 @@ function parseSiteLanguages(raw: string | null): string[] {
 	} catch {
 		return [];
 	}
-}
-
-function parseCfg(config: unknown): Record<string, unknown> {
-	if (!config) return {};
-	if (typeof config === "string") {
-		try { return JSON.parse(config); } catch { return {}; }
-	}
-	return config as Record<string, unknown>;
 }
 
 export function TranslateTab() {
@@ -89,7 +65,7 @@ export function TranslateTab() {
 			{/* Original text (read-only) */}
 			<div className="flex flex-col gap-1.5 rounded-md border border-border bg-muted/30 p-2.5">
 				<span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-					Original ({LANG_LABELS[mainLang] ?? mainLang})
+					Original ({LANG_NATIVE[mainLang] ?? mainLang})
 				</span>
 				{fields.map((f) => (
 					<div key={f.key} className="flex flex-col gap-0.5">
@@ -200,7 +176,7 @@ function LanguageSection({
 	return (
 		<div className="flex flex-col gap-1.5 rounded-md border border-border p-2.5">
 			<span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-				{LANG_LABELS[lang] ?? lang}
+				{LANG_NATIVE[lang] ?? lang}
 			</span>
 			{error && (
 				<div className="rounded-md bg-destructive/10 px-2 py-1.5 text-[11px] text-destructive">
@@ -436,7 +412,7 @@ function PageTranslationSummary({
 					<div key={s.lang} className="flex flex-col gap-1">
 						<div className="flex items-center justify-between">
 							<span className="text-xs font-medium">
-								{LANG_LABELS[s.lang] ?? s.lang}
+								{LANG_NATIVE[s.lang] ?? s.lang}
 							</span>
 							<span className="text-[10px] text-muted-foreground">
 								{s.filled}/{s.total} fields

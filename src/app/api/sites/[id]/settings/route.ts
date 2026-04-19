@@ -12,15 +12,7 @@ import {
   SettingsPatchSchema,
   upsertSiteSettings,
 } from "@/lib/schemas/settings";
-
-async function hashGuestPassword(pw: string): Promise<string> {
-  const salt = crypto.getRandomValues(new Uint8Array(16));
-  const saltHex = Array.from(salt).map(b => b.toString(16).padStart(2, "0")).join("");
-  const key = await crypto.subtle.importKey("raw", new TextEncoder().encode(pw), "PBKDF2", false, ["deriveBits"]);
-  const bits = await crypto.subtle.deriveBits({ name: "PBKDF2", salt, iterations: 100_000, hash: "SHA-256" }, key, 256);
-  const hashHex = Array.from(new Uint8Array(bits)).map(b => b.toString(16).padStart(2, "0")).join("");
-  return `$pbkdf2$${saltHex}$${hashHex}`;
-}
+import { hashGuestPassword } from "@/lib/crypto/guestPassword";
 
 export async function GET(
   req: NextRequest,

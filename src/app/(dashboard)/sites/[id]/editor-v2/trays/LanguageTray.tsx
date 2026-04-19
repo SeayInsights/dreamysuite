@@ -6,26 +6,10 @@ import { cn } from "@/lib/utils";
 
 import { useEditorStore } from "@/app/stores/editorStore";
 import { TRANSLATABLE_FIELDS } from "@/lib/translations";
+import { parseCfg } from "@/lib/editableField";
+import { LANGUAGES } from "@/lib/languages";
 
 const MAX_LANGUAGES = 5;
-
-const LANGUAGES: { code: string; native: string; english: string }[] = [
-	{ code: "en", native: "English", english: "English" },
-	{ code: "vi", native: "Tiếng Việt", english: "Vietnamese" },
-	{ code: "es", native: "Español", english: "Spanish" },
-	{ code: "fr", native: "Français", english: "French" },
-	{ code: "zh-CN", native: "中文 (简体)", english: "Chinese (Simplified)" },
-	{ code: "zh-TW", native: "中文 (繁體)", english: "Chinese (Traditional)" },
-	{ code: "ko", native: "한국어", english: "Korean" },
-	{ code: "ja", native: "日本語", english: "Japanese" },
-	{ code: "de", native: "Deutsch", english: "German" },
-	{ code: "pt", native: "Português", english: "Portuguese" },
-	{ code: "it", native: "Italiano", english: "Italian" },
-	{ code: "th", native: "ภาษาไทย", english: "Thai" },
-	{ code: "tl", native: "Filipino", english: "Filipino" },
-	{ code: "hi", native: "हिन्दी", english: "Hindi" },
-	{ code: "ar", native: "العربية", english: "Arabic" },
-];
 
 function parseSiteLanguages(raw: string | null): string[] {
 	if (!raw) return [];
@@ -35,14 +19,6 @@ function parseSiteLanguages(raw: string | null): string[] {
 	} catch {
 		return [];
 	}
-}
-
-function parseCfg(config: unknown): Record<string, unknown> {
-	if (!config) return {};
-	if (typeof config === "string") {
-		try { return JSON.parse(config); } catch { return {}; }
-	}
-	return config as Record<string, unknown>;
 }
 
 export function LanguageTray() {
@@ -162,7 +138,7 @@ export function LanguageTray() {
 						>
 							{LANGUAGES.filter((l) => !langs.includes(l.code)).map((l) => (
 								<option key={l.code} value={l.code}>
-									{l.native} — {l.english}
+									{l.nativeLabel} — {l.label}
 								</option>
 							))}
 						</select>
@@ -185,16 +161,16 @@ export function LanguageTray() {
 										>
 											<div className="flex items-center gap-2">
 												<Check className="size-3.5 text-emerald-500" />
-												<span className="text-sm">{info?.native ?? code}</span>
+												<span className="text-sm">{info?.nativeLabel ?? code}</span>
 												<span className="text-xs text-muted-foreground">
-													{info?.english}
+													{info?.label}
 												</span>
 											</div>
 											<button
 												type="button"
 												onClick={() => removeLanguage(code)}
 												className="rounded p-0.5 text-muted-foreground hover:text-destructive"
-												title={`Remove ${info?.english ?? code}`}
+												title={`Remove ${info?.label ?? code}`}
 											>
 												<X className="size-3.5" />
 											</button>
@@ -224,9 +200,9 @@ export function LanguageTray() {
 										onClick={() => addLanguage(l.code)}
 										className="flex items-center gap-2 rounded px-2 py-1.5 text-left text-sm transition-colors hover:bg-accent/30"
 									>
-										<span className="min-w-0 flex-1">{l.native}</span>
+										<span className="min-w-0 flex-1">{l.nativeLabel}</span>
 										<span className="shrink-0 text-xs text-muted-foreground">
-											{l.english}
+											{l.label}
 										</span>
 									</button>
 								))}
@@ -264,7 +240,7 @@ export function LanguageTray() {
 											: "border-border text-muted-foreground hover:border-ring hover:text-foreground",
 									)}
 								>
-									{LANGUAGES.find((l) => l.code === mainLang)?.native ?? mainLang}
+									{LANGUAGES.find((l) => l.code === mainLang)?.nativeLabel ?? mainLang}
 								</button>
 								{langs.map((code) => {
 									const active = displayLang === code;
@@ -281,14 +257,14 @@ export function LanguageTray() {
 													: "border-border text-muted-foreground hover:border-ring hover:text-foreground",
 											)}
 										>
-											{info?.native ?? code}
+											{info?.nativeLabel ?? code}
 										</button>
 									);
 								})}
 							</div>
 							{displayLang && displayLang !== mainLang && (
 								<p className="text-[10px] text-amber-700">
-									Double-click any text block to edit in {LANGUAGES.find((l) => l.code === displayLang)?.english ?? displayLang}. Changes save as translations.
+									Double-click any text block to edit in {LANGUAGES.find((l) => l.code === displayLang)?.label ?? displayLang}. Changes save as translations.
 								</p>
 							)}
 						</div>

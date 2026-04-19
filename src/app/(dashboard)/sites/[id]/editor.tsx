@@ -11,6 +11,8 @@ import { useEditorStore } from "@/app/stores/editorStore";
 import type { Block as StoreBlock } from "@/app/stores/slices/document";
 import { BLOCK_COMPONENTS } from "@/app/components/blocks";
 import { safeBlockConfig } from "@/lib/schemas/blocks";
+import { hexToRgb, rgbToHex } from "@/lib/color";
+import { LANGUAGES, LANG_FLAGS } from "@/lib/languages";
 import "@/styles/site-editor.css";
 import "@/styles/site-blocks.css";
 
@@ -197,31 +199,8 @@ const BLOCK_TYPES = [
   { type: "travel-section",label: "Travel Card",      color: "#06b6d4" },
 ];
 
-const LANG_FLAGS: Record<string, string> = {
-  en: "🇺🇸", vi: "🇻🇳", es: "🇪🇸", fr: "🇫🇷",
-  "zh-CN": "🇨🇳", "zh-TW": "🇹🇼", ko: "🇰🇷", ja: "🇯🇵",
-  de: "🇩🇪", pt: "🇧🇷", it: "🇮🇹", th: "🇹🇭", tl: "🇵🇭", hi: "🇮🇳", ar: "🇸🇦",
-};
-
 const HEADING_FONTS = ["Georgia", "Playfair Display", "Inter", "Lato", "Merriweather", "Cormorant Garamond"];
 const BODY_FONTS    = ["Inter", "Lato", "Georgia", "Source Sans 3", "Open Sans"];
-const LANGUAGES     = [
-  { code: "en",    label: "English" },
-  { code: "vi",    label: "Vietnamese (Tiếng Việt)" },
-  { code: "es",    label: "Spanish (Español)" },
-  { code: "fr",    label: "French (Français)" },
-  { code: "zh-CN", label: "Chinese Simplified (简体中文)" },
-  { code: "zh-TW", label: "Chinese Traditional (繁體中文)" },
-  { code: "ko",    label: "Korean (한국어)" },
-  { code: "ja",    label: "Japanese (日本語)" },
-  { code: "de",    label: "German (Deutsch)" },
-  { code: "pt",    label: "Portuguese (Português)" },
-  { code: "it",    label: "Italian (Italiano)" },
-  { code: "th",    label: "Thai (ภาษาไทย)" },
-  { code: "tl",    label: "Tagalog (Filipino)" },
-  { code: "hi",    label: "Hindi (हिन्दी)" },
-  { code: "ar",    label: "Arabic (العربية)" },
-];
 
 // ── Toast hook ────────────────────────────────────────────────────────────────
 
@@ -256,13 +235,6 @@ function useToast() {
 
 const COLOR_PRESETS = ["#ffffff","#000000","#9b8e85","#B8921A","#e75850","#f59e0b","#6366f1","#ec4899"];
 
-function hexToRgb(hex: string): [number, number, number] {
-  const h = hex.replace('#', '').padEnd(6, '0');
-  return [parseInt(h.slice(0,2),16)||0, parseInt(h.slice(2,4),16)||0, parseInt(h.slice(4,6),16)||0];
-}
-function rgbToHex(r: number, g: number, b: number): string {
-  return '#' + [r,g,b].map(v => Math.min(255,Math.max(0,Math.round(v))).toString(16).padStart(2,'0')).join('');
-}
 function parseColorValue(v: string): { hex: string; opacity: number } {
   if (typeof v === 'string' && v.startsWith('rgba(')) {
     const m = v.match(/rgba\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*([\d.]+)\s*\)/);
