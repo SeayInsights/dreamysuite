@@ -60,14 +60,15 @@ async function flushOps(
   }
 
   if (ops.reordered) {
-    for (let i = 0; i < blocks.length; i++) {
-      const b = blocks[i];
-      if (ops.inserted.has(b.id)) continue;
+    const reorderPayload = blocks
+      .filter((b) => !ops.inserted.has(b.id))
+      .map((b, i) => ({ id: b.id, sortOrder: i }));
+    if (reorderPayload.length > 0) {
       promises.push(
-        fetch(`/api/sites/${siteId}/blocks/${b.id}`, {
-          method: "PUT",
+        fetch(`/api/sites/${siteId}/blocks/reorder`, {
+          method: "PATCH",
           headers: { "content-type": "application/json" },
-          body: JSON.stringify({ sortOrder: i }),
+          body: JSON.stringify({ blocks: reorderPayload }),
           keepalive: true,
         }),
       );
