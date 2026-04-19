@@ -782,11 +782,15 @@ export function SectionToolbar({
       cancelAnimationFrame(raf.id);
       raf.id = requestAnimationFrame(measurePosition);
     };
+    const onScroll = () => {
+      setActivePopover(null);
+      onUpdate();
+    };
     window.addEventListener("resize", onUpdate);
-    container.addEventListener("scroll", onUpdate);
+    container.addEventListener("scroll", onScroll);
     return () => {
       window.removeEventListener("resize", onUpdate);
-      container.removeEventListener("scroll", onUpdate);
+      container.removeEventListener("scroll", onScroll);
       cancelAnimationFrame(raf.id);
     };
   }, [containerRef, measurePosition]);
@@ -1068,6 +1072,7 @@ export function SectionToolbar({
           }}
         />
       </FloatingPopover>
+
     </div>
   );
 }
