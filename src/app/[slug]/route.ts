@@ -376,7 +376,7 @@ function buildStyles(settings: SiteSettingRow | null): BuiltStyles {
   const navLinkPadding = settings?.navLinkPadding ?? "0.875rem";
   const bgImage = settings?.bgImage ?? null;
   // Escape a URL for safe use inside CSS url('...')
-  const escapedBgImageUrl = bgImage ? bgImage.replace(/\\/g, "\\\\").replace(/'/g, "\\'") : null;
+  const escapedBgImageUrl = bgImage ? safeUrl(bgImage).replace(/\\/g, "\\\\").replace(/'/g, "\\'") : null;
 
   // Google Fonts link tag
   const fontsNeeded = [headingFont, bodyFont]
@@ -1757,7 +1757,7 @@ function renderBlock(
       }
       return `
         <section class="block block-video" aria-label="Video" data-block-id="${escHtml(block.id)}" data-block-type="${escHtml(block.type)}" style="position:relative;">
-          ${url ? `<video src="${escHtml(url)}" controls class="media-element" aria-label="Wedding video"></video>` : mediaPlaceholder("Video")}
+          ${url ? `<video src="${escHtml(safeUrl(url))}" controls class="media-element" aria-label="Wedding video"></video>` : mediaPlaceholder("Video")}
           ${overlayHtml}
         </section>`;
     }
@@ -1832,7 +1832,7 @@ function renderBlock(
       const name = (cfg.name as string | undefined) ?? (cfg.venueName as string | undefined);
       const note = cfg.note as string | undefined;
       const mapSrc = embedUrl
-        ? embedUrl
+        ? safeUrl(embedUrl)
         : address
         ? `https://maps.google.com/maps?q=${encodeURIComponent(address)}&output=embed`
         : null;
@@ -2195,7 +2195,7 @@ function renderBlock(
       return `
         <section class="block block-media-video"${bsAttr} aria-label="Video" data-block-id="${escHtml(block.id)}" data-block-type="${escHtml(block.type)}" style="position:relative;${url ? `height:${escHtml(height)}` : ""}">
           ${url
-            ? `<video src="${escHtml(url)}" autoplay muted loop playsinline style="width:100%;height:100%;object-fit:cover;"></video>`
+            ? `<video src="${escHtml(safeUrl(url))}" autoplay muted loop playsinline style="width:100%;height:100%;object-fit:cover;"></video>`
             : mediaPlaceholder("Video")}
         </section>`;
     }
@@ -2822,7 +2822,7 @@ function buildHtml(
   const accent = settings?.accentColor ?? "#B8921A";
 
   const bgImageRaw = settings?.bgImage ?? null;
-  const escapedBgImageUrl = bgImageRaw ? bgImageRaw.replace(/\\/g, "\\\\").replace(/'/g, "\\'") : null;
+  const escapedBgImageUrl = bgImageRaw ? safeUrl(bgImageRaw).replace(/\\/g, "\\\\").replace(/'/g, "\\'") : null;
 
   const allBlocks = pages.flatMap((p) => p.blocks);
   const hasCountdown = allBlocks.some((b) => b.type === "countdown")

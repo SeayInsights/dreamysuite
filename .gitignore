@@ -83,6 +83,7 @@ cloudflare-env.d.ts
 # Dev scripts & seed data (except build-public-effects which CI needs)
 /scripts
 !/scripts/build-public-effects.mjs
+!/scripts/rehash-passwords.mjs
 
 # E2E tests (not needed for launch)
 /e2e
