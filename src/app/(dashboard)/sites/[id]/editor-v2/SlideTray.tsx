@@ -1,20 +1,21 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import dynamic from "next/dynamic";
 
 import { useEditorStore } from "@/app/stores/editorStore";
 import { prefersReducedMotion } from "@/lib/motion";
 
-import { PagesTray } from "./trays/PagesTray";
-import { ElementsTray } from "./trays/ElementsTray";
-import { LayersTray } from "./trays/LayersTray";
-import { ThemeTray } from "./trays/ThemeTray";
-import { MediaTray } from "./trays/MediaTray";
-import { MusicTray } from "./trays/MusicTray";
-import { NavigationTray } from "./trays/NavigationTray";
-import { EffectsTray } from "./trays/EffectsTray";
-import { LanguageTray } from "./trays/LanguageTray";
-import { SettingsTray } from "./trays/SettingsTray";
+const PagesTray = dynamic(() => import("./trays/PagesTray").then((m) => ({ default: m.PagesTray })));
+const ElementsTray = dynamic(() => import("./trays/ElementsTray").then((m) => ({ default: m.ElementsTray })));
+const LayersTray = dynamic(() => import("./trays/LayersTray").then((m) => ({ default: m.LayersTray })));
+const ThemeTray = dynamic(() => import("./trays/ThemeTray").then((m) => ({ default: m.ThemeTray })));
+const MediaTray = dynamic(() => import("./trays/MediaTray").then((m) => ({ default: m.MediaTray })));
+const MusicTray = dynamic(() => import("./trays/MusicTray").then((m) => ({ default: m.MusicTray })));
+const NavigationTray = dynamic(() => import("./trays/NavigationTray").then((m) => ({ default: m.NavigationTray })));
+const EffectsTray = dynamic(() => import("./trays/EffectsTray").then((m) => ({ default: m.EffectsTray })));
+const LanguageTray = dynamic(() => import("./trays/LanguageTray").then((m) => ({ default: m.LanguageTray })));
+const SettingsTray = dynamic(() => import("./trays/SettingsTray").then((m) => ({ default: m.SettingsTray })));
 
 const TRAY_WIDTH = 288;
 const ANIM_MS = 200;
