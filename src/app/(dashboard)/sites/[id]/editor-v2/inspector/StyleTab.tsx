@@ -3,14 +3,12 @@
 import { useEditorStore } from "@/app/stores/editorStore";
 import { ColorInput } from "./ColorInput";
 import { SitePhotoPicker } from "../SitePhotoPicker";
-import { EffectPicker } from "../EffectPicker";
 
 export function StyleTab() {
   const settings = useEditorStore((s) => s.settings);
   const updateSettings = useEditorStore((s) => s.updateSettings);
   const themeTokens = useEditorStore((s) => s.themeTokens);
   const setOpenTray = useEditorStore((s) => s.setOpenTray);
-  const isPro = useEditorStore((s) => s.mode) === "pro";
 
   return (
     <div className="space-y-4 p-4">
@@ -75,43 +73,6 @@ export function StyleTab() {
       </div>
 
       <div className="space-y-2 border-t border-border pt-4">
-        <EffectPicker
-          category="background"
-          value={settings.effectBg}
-          onChange={(id) => updateSettings({ effectBg: id, effectPreset: null })}
-          label="Background Effect"
-        />
-
-        {isPro && settings.effectBg && (
-          <div className="space-y-1.5 pt-2">
-            <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-              Effect Colors
-            </p>
-            <div className="flex flex-col gap-1.5">
-              <EffectColorRow
-                label="Primary"
-                value={settings.effectColor1 ?? themeTokens.colors.primary}
-                onChange={(v) => updateSettings({ effectColor1: v })}
-                onReset={() => updateSettings({ effectColor1: null })}
-              />
-              <EffectColorRow
-                label="Secondary"
-                value={settings.effectColor2 ?? themeTokens.colors.secondary}
-                onChange={(v) => updateSettings({ effectColor2: v })}
-                onReset={() => updateSettings({ effectColor2: null })}
-              />
-              <EffectColorRow
-                label="Accent"
-                value={settings.effectColor3 ?? themeTokens.colors.accent}
-                onChange={(v) => updateSettings({ effectColor3: v })}
-                onReset={() => updateSettings({ effectColor3: null })}
-              />
-            </div>
-          </div>
-        )}
-      </div>
-
-      <div className="space-y-2 border-t border-border pt-4">
         <div className="flex items-center justify-between">
           <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
             Theme Colors
@@ -161,44 +122,6 @@ export function StyleTab() {
           />
         </button>
       </div>
-    </div>
-  );
-}
-
-function EffectColorRow({
-  label,
-  value,
-  onChange,
-  onReset,
-}: {
-  label: string;
-  value: string;
-  onChange: (v: string) => void;
-  onReset: () => void;
-}) {
-  return (
-    <div className="flex items-center gap-2">
-      <span className="w-16 shrink-0 text-[11px] text-muted-foreground">{label}</span>
-      <input
-        type="color"
-        value={value.startsWith("#") ? value : "#ffffff"}
-        onChange={(e) => onChange(e.target.value)}
-        className="size-6 shrink-0 cursor-pointer rounded border border-border"
-      />
-      <input
-        type="text"
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="h-7 flex-1 rounded-md border border-border bg-background px-2 text-xs outline-none focus:border-ring"
-      />
-      <button
-        type="button"
-        onClick={onReset}
-        className="text-[9px] text-muted-foreground hover:text-foreground"
-        title="Reset to theme color"
-      >
-        Reset
-      </button>
     </div>
   );
 }
