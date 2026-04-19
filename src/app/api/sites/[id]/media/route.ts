@@ -5,7 +5,10 @@ import type { Env } from "@/app/lib/auth.server";
 import { requireSiteOwnership, apiOwnershipError, parseJsonBody } from "@/lib/api/site-auth";
 
 const MediaCreateSchema = z.object({
-  url: z.string().url().max(2048),
+  url: z.string().url().max(2048).refine(
+    (u) => new URL(u).protocol === "https:",
+    { message: "URL must use HTTPS" }
+  ),
   title: z.string().max(200).optional(),
   mediaType: z.enum(["video", "music"]).optional(),
 });
