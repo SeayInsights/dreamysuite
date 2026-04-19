@@ -1113,6 +1113,71 @@ function TravelEditor({
 }
 
 // ---------------------------------------------------------------------------
+// VideoEditor
+// ---------------------------------------------------------------------------
+
+function VideoEditor({
+  cfg,
+  updateConfig,
+}: {
+  cfg: Record<string, unknown>;
+  updateConfig: (patch: Record<string, unknown>) => void;
+}) {
+  const isMediaVideo = cfg._type === "media-video";
+  const url = String(cfg.url ?? "");
+  const height = String(cfg.height ?? "100dvh");
+  const provider = String(cfg.provider ?? "auto");
+
+  return (
+    <div className="space-y-4 p-4">
+      <PanelTextInput
+        label="Video URL"
+        value={url}
+        onChange={(v) => updateConfig({ url: v })}
+        placeholder="https://… or YouTube URL"
+      />
+
+      {isMediaVideo && (
+        <div className="space-y-1">
+          <label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+            Provider
+          </label>
+          <div className="flex overflow-hidden rounded border border-input text-[10px] font-medium">
+            {(["auto", "youtube", "direct"] as const).map((p) => (
+              <button
+                key={p}
+                type="button"
+                onClick={() => updateConfig({ provider: p })}
+                className={`flex-1 py-1 capitalize transition-colors ${
+                  provider === p
+                    ? "bg-accent text-accent-foreground"
+                    : "bg-background text-muted-foreground hover:bg-accent/50"
+                }`}
+              >
+                {p === "auto" ? "Auto" : p === "youtube" ? "YouTube" : "Direct"}
+              </button>
+            ))}
+          </div>
+          <p className="text-[10px] text-muted-foreground">
+            Auto detects YouTube links automatically.
+          </p>
+        </div>
+      )}
+
+      <PanelTextInput
+        label="Height"
+        value={height}
+        onChange={(v) => updateConfig({ height: v })}
+        placeholder="100dvh"
+      />
+      <p className="text-[10px] text-muted-foreground -mt-2">
+        CSS value — e.g. 100dvh, 600px, 80vh
+      </p>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // BlockContentPanel — public export, switch-dispatches to per-type editors
 // ---------------------------------------------------------------------------
 
@@ -1137,6 +1202,10 @@ export function BlockContentPanel({ block, updateBlock }: Props) {
       return <FunFactsEditor cfg={cfg} updateConfig={updateConfig} />;
     case "travel":
       return <TravelEditor cfg={cfg} updateConfig={updateConfig} />;
+    case "video":
+      return <VideoEditor cfg={{ ...cfg, _type: "video" }} updateConfig={updateConfig} />;
+    case "media-video":
+      return <VideoEditor cfg={{ ...cfg, _type: "media-video" }} updateConfig={updateConfig} />;
     default:
       return (
         <p className="p-4 text-xs text-muted-foreground italic">

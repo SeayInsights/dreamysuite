@@ -290,9 +290,9 @@ export function ImageEditor({ containerRef }: Props) {
       e.stopPropagation();
 
       const imageEl = findImageElement(blockRoot);
-      if (!imageEl) return;
       const blockRect = getRelativeRect(blockRoot, container);
-      const imageRect = getRelativeRect(imageEl, container);
+      // Fall back to block rect when no image element exists yet (empty block)
+      const imageRect = imageEl ? getRelativeRect(imageEl, container) : blockRect;
 
       setActive({ blockId, imageRect, blockRect });
       setCropMode(false);
@@ -318,9 +318,8 @@ export function ImageEditor({ containerRef }: Props) {
         if (!blockRoot) return;
 
         const imageEl = findImageElement(blockRoot);
-        if (!imageEl) return;
         const blockRect = getRelativeRect(blockRoot, container);
-        const imageRect = getRelativeRect(imageEl, container);
+        const imageRect = imageEl ? getRelativeRect(imageEl, container) : blockRect;
 
         setActive((prev) =>
           prev ? { ...prev, imageRect, blockRect } : prev,
