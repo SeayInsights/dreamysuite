@@ -1,7 +1,7 @@
 // @ts-nocheck
 "use client";
 
-/* eslint-disable react/no-unknown-property */
+ 
 import * as THREE from 'three';
 import { useRef, useState, useEffect, memo } from 'react';
 import { Canvas, createPortal, useFrame, useThree } from '@react-three/fiber';

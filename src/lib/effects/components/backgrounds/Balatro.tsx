@@ -4,7 +4,7 @@ import { Renderer, Program, Mesh, Triangle } from 'ogl';
 import { useEffect, useRef } from 'react';
 
 function hexToVec4(hex) {
-  let hexStr = hex.replace('#', '');
+  const hexStr = hex.replace('#', '');
   let r = 0,
     g = 0,
     b = 0,
