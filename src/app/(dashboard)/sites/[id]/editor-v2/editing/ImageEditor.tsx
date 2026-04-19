@@ -456,28 +456,30 @@ export function ImageEditor({ containerRef }: Props) {
       className="pointer-events-none absolute inset-0 z-20"
       aria-hidden
     >
-      <AnimatePresence>
-        {active && (
-          <FloatingToolbar
-            key="toolbar"
-            imageRect={active.imageRect}
-            cropActive={cropMode}
-            replaceActive={photoPanel}
-            onReplace={() => setPhotoPanel((v) => !v)}
-            onCropToggle={() => setCropMode((v) => !v)}
-            onDismiss={dismiss}
-          />
-        )}
-        {active && photoPanel && panelStyle && (
-          <InlinePhotoPanel
-            key="photo-panel"
-            blockId={active.blockId}
-            blockType={activeBlockType}
-            style={panelStyle}
-            onDismiss={() => setPhotoPanel(false)}
-          />
-        )}
-      </AnimatePresence>
+      <div className="pointer-events-auto">
+        <AnimatePresence>
+          {active && (
+            <FloatingToolbar
+              key="toolbar"
+              imageRect={active.imageRect}
+              cropActive={cropMode}
+              replaceActive={photoPanel}
+              onReplace={() => setPhotoPanel((v) => !v)}
+              onCropToggle={() => setCropMode((v) => !v)}
+              onDismiss={dismiss}
+            />
+          )}
+          {active && photoPanel && panelStyle && (
+            <InlinePhotoPanel
+              key="photo-panel"
+              blockId={active.blockId}
+              blockType={activeBlockType}
+              style={panelStyle}
+              onDismiss={() => setPhotoPanel(false)}
+            />
+          )}
+        </AnimatePresence>
+      </div>
 
       {active && cropMode && (
         <CropHandles blockId={active.blockId} rect={active.imageRect} />
