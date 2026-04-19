@@ -144,7 +144,6 @@ export function BreakpointFrame({ children, nav }: Props) {
 	const hasMargins = mT > 0 || mR > 0 || mB > 0 || mL > 0;
 	const curtainBg = settings.bgColor ?? themeTokens.colors.background;
 	const bgImage = settings.bgImage as string | null;
-	const bgImageLayer = (settings.bgImageLayer as string) ?? "behind";
 	const bgImageOpacity = Number(settings.bgImageOpacity ?? 1);
 	const bgImageBleed = settings.bgImageBleed !== 0; // default true (1)
 
@@ -161,12 +160,6 @@ export function BreakpointFrame({ children, nav }: Props) {
 					...(isDesktop ? {} : { width: WIDTHS[breakpoint] }),
 					...themeVars(themeTokens.colors, themeTokens.typography),
 					background: pageBgDisabled ? "transparent" : curtainBg,
-					...(bgImage && bgImageLayer !== "overlay" && !pageBgDisabled && bgImageBleed ? {
-						backgroundImage: `url('${bgImage}')`,
-						backgroundSize: "cover",
-						backgroundPosition: "center",
-						backgroundAttachment: "fixed",
-					} : {}),
 				}}
 			>
 				{BgEffect && frameReady && (
@@ -174,11 +167,15 @@ export function BreakpointFrame({ children, nav }: Props) {
 						<BgEffect {...effectColors} />
 					</div>
 				)}
-				{bgImage && bgImageLayer === "overlay" && !pageBgDisabled && (
+				{bgImage && !pageBgDisabled && (
 					<div
-						className="pointer-events-none absolute inset-0"
+						className="pointer-events-none absolute"
 						style={{
 							zIndex: 1,
+							top: bgImageBleed ? 0 : mT,
+							right: bgImageBleed ? 0 : mR,
+							bottom: bgImageBleed ? 0 : mB,
+							left: bgImageBleed ? 0 : mL,
 							backgroundImage: `url('${bgImage}')`,
 							backgroundSize: "cover",
 							backgroundPosition: "center",
@@ -187,15 +184,7 @@ export function BreakpointFrame({ children, nav }: Props) {
 					/>
 				)}
 				<div className="editor-canvas-scroll relative h-full overflow-x-hidden overflow-y-auto" style={{ zIndex: 10 }}>
-					<div style={{
-						padding: `${mT}px ${mR}px ${mB}px ${mL}px`,
-						...(bgImage && bgImageLayer !== "overlay" && !pageBgDisabled && !bgImageBleed ? {
-							backgroundImage: `url('${bgImage}')`,
-							backgroundSize: "cover",
-							backgroundPosition: "center",
-							backgroundAttachment: "fixed",
-						} : {}),
-					}}>
+					<div style={{ padding: `${mT}px ${mR}px ${mB}px ${mL}px` }}>
 						{children}
 					</div>
 				</div>
@@ -209,7 +198,7 @@ export function BreakpointFrame({ children, nav }: Props) {
 						<TransitionEffect {...effectColors} />
 					</div>
 				)}
-				{hasMargins && (!bgImage || bgImageLayer === "overlay" || !bgImageBleed) && (
+				{hasMargins && (!bgImage || !bgImageBleed) && (
 					<>
 						{mT > 0 && <div className="pointer-events-none absolute left-0 right-0 top-0" style={{ height: mT, background: curtainBg, zIndex: 20 }} />}
 						{mB > 0 && <div className="pointer-events-none absolute bottom-0 left-0 right-0" style={{ height: mB, background: curtainBg, zIndex: 20 }} />}
