@@ -7,6 +7,11 @@ function extractYoutubeId(url: string): string | null {
   return match?.[1] ?? null;
 }
 
+function extractVimeoId(url: string): string | null {
+  const match = url.match(/vimeo\.com\/(?:video\/|channels\/[^/]+\/|groups\/[^/]+\/videos\/)?(\d+)/);
+  return match?.[1] ?? null;
+}
+
 export function MediaVideoBlock({ block }: { block: Block }) {
   const cfg = parseCfg(block.config);
   const url = String(cfg.url ?? "");
@@ -15,6 +20,8 @@ export function MediaVideoBlock({ block }: { block: Block }) {
 
   const isYoutube = cfg.provider === "youtube" ||
     (cfg.provider !== "direct" && (url.includes("youtube.com") || url.includes("youtu.be")));
+  const isVimeo = cfg.provider === "vimeo" ||
+    (cfg.provider !== "direct" && url.includes("vimeo.com"));
 
   if (!url) {
     return (
@@ -42,6 +49,29 @@ export function MediaVideoBlock({ block }: { block: Block }) {
         ) : (
           <p style={{ color: "#9b8e85", fontStyle: "italic", textAlign: "center", padding: "2rem 0" }}>
             Invalid YouTube URL.
+          </p>
+        )}
+      </section>
+    );
+  }
+
+  if (isVimeo) {
+    const videoId = extractVimeoId(url);
+    return (
+      <section className="block block-media-video" data-block-id={block.id} data-block-type={block.type} style={sectionStyle}>
+        {videoId ? (
+          <div style={{ position: "relative", paddingBottom: "56.25%", height: 0, overflow: "hidden", borderRadius: "8px" }}>
+            <iframe
+              src={`https://player.vimeo.com/video/${videoId}`}
+              title="Vimeo video"
+              allow="autoplay; fullscreen; picture-in-picture"
+              allowFullScreen
+              style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", border: 0 }}
+            />
+          </div>
+        ) : (
+          <p style={{ color: "#9b8e85", fontStyle: "italic", textAlign: "center", padding: "2rem 0" }}>
+            Invalid Vimeo URL.
           </p>
         )}
       </section>
