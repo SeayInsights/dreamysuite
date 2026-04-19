@@ -35,6 +35,10 @@ body { background:#fff !important; }
 .editor-canvas-scroll::-webkit-scrollbar { display:none; }
 .editor-canvas-scroll { scrollbar-width:none; }
 
+/* Prevent iframes/videos from swallowing clicks in the editor canvas */
+.editor-canvas-scroll iframe,
+.editor-canvas-scroll video { pointer-events:none; }
+
 /* ── Reduced motion ───────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
