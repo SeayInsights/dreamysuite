@@ -12,6 +12,7 @@ import { EditorErrorBoundary } from "./EditorErrorBoundary";
 import { useShortcuts } from "./hooks/useShortcuts";
 import { useSettingsSync } from "./hooks/useSettingsSync";
 import { useBlockSync } from "./hooks/useBlockSync";
+import { useV1Migration } from "./hooks/useV1Migration";
 import { useEditorStore } from "@/app/stores/editorStore";
 import {
   trackEditorMount,
@@ -45,6 +46,7 @@ export function EditorShell({ site, user: _user, children }: Props) {
 	useShortcuts();
 	useSettingsSync(site.id);
 	useBlockSync(site.id);
+	useV1Migration(site.id);
 	const setSiteId = useEditorStore((s) => s.setSiteId);
 	const setSiteMeta = useEditorStore((s) => s.setSiteMeta);
 

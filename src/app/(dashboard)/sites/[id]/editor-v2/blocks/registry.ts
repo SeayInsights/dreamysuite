@@ -169,6 +169,38 @@ export const BLOCK_REGISTRY: Record<string, BlockRegistryEntry> = {
     defaultData: { heading: "Guest Book", placeholder: "Leave a message for the happy couple…" },
     visible: true,
   },
+  "faq": {
+    component: BLOCK_COMPONENTS["faq"],
+    displayName: "FAQ",
+    icon: "HelpCircle",
+    category: "Simple",
+    defaultData: { heading: "Questions & Answers", displayMode: "accordion", items: [] },
+    visible: true,
+  },
+  "schedule": {
+    component: BLOCK_COMPONENTS["schedule"],
+    displayName: "Schedule",
+    icon: "Clock",
+    category: "Simple",
+    defaultData: { heading: "The Day", events: [] },
+    visible: true,
+  },
+  "fun-facts": {
+    component: BLOCK_COMPONENTS["fun-facts"],
+    displayName: "Fun Facts",
+    icon: "Lightbulb",
+    category: "Simple",
+    defaultData: { heading: "Fun Facts", columns: "auto", cardStyle: "card", items: [] },
+    visible: true,
+  },
+  "travel": {
+    component: BLOCK_COMPONENTS["travel"],
+    displayName: "Travel",
+    icon: "MapPin",
+    category: "Simple",
+    defaultData: { heading: "Getting There", items: [] },
+    visible: true,
+  },
 };
 
 export function getRegistryEntry(type: string): BlockRegistryEntry | undefined {
