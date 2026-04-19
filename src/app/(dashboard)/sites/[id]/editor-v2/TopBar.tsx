@@ -50,7 +50,7 @@ export function TopBar({ site }: Props) {
 				<UndoRedo />
 				<div className="h-6 w-px bg-border" aria-hidden />
 				<InspectorToggle />
-				<PreviewButton slug={site.slug} />
+				<PreviewButton siteId={site.id} />
 				<PublishButton siteId={site.id} />
 			</div>
 		</header>
