@@ -84,7 +84,7 @@ function MoveHandle({ rect, blockId, containerRef }: MoveHandleProps) {
 	);
 
 	const left = rect.left + rect.width / 2;
-	const top = rect.top - 22;
+	const top = Math.max(8, rect.top - 22);
 
 	return (
 		<div
