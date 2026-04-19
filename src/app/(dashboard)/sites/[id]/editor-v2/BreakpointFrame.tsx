@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { animate } from "motion/mini";
 
 import { useEditorStore, type Breakpoint } from "@/app/stores/editorStore";
@@ -82,14 +82,26 @@ export function BreakpointFrame({ children, nav }: Props) {
 		],
 	}), [settings.effectColor1, settings.effectColor2, settings.effectColor3, themeTokens.colors]);
 
+	const [frameReady, setFrameReady] = useState(false);
+
 	useEffect(() => {
 		const el = ref.current;
 		if (!el) return;
-		if (breakpoint === "desktop") {
-			animate(el, { width: "100%" }, { duration: duration("traySlide") / 1000, ease: EASING.standard });
-		} else {
-			animate(el, { width: `${WIDTHS[breakpoint]}px` }, { duration: duration("traySlide") / 1000, ease: EASING.standard });
-		}
+		const ro = new ResizeObserver(([entry]) => {
+			const { width, height } = entry.contentRect;
+			if (width > 0 && height > 0) setFrameReady(true);
+		});
+		ro.observe(el);
+		return () => ro.disconnect();
+	}, []);
+
+	useEffect(() => {
+		const el = ref.current;
+		if (!el) return;
+		const dur = duration("traySlide") / 1000;
+		const target = breakpoint === "desktop" ? { width: "100%" } : { width: `${WIDTHS[breakpoint]}px` };
+		const anim = animate(el, target, { duration: dur, ease: EASING.standard });
+		anim.finished.then(() => window.dispatchEvent(new Event("resize")));
 	}, [breakpoint]);
 
 	const isDesktop = breakpoint === "desktop";
@@ -116,7 +128,7 @@ export function BreakpointFrame({ children, nav }: Props) {
 					background: pageBgDisabled ? "transparent" : curtainBg,
 				}}
 			>
-				{BgEffect && (
+				{BgEffect && frameReady && (
 					<div className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
 						<BgEffect {...effectColors} />
 					</div>
@@ -126,7 +138,7 @@ export function BreakpointFrame({ children, nav }: Props) {
 						{children}
 					</div>
 				</div>
-				{DecorationEffect && (
+				{DecorationEffect && frameReady && (
 					<div className="pointer-events-none absolute inset-0 overflow-hidden" style={{ zIndex: 15 }}>
 						<DecorationEffect {...effectColors} />
 					</div>

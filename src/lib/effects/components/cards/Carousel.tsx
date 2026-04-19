@@ -28,7 +28,7 @@ const carouselStyles = `
 `;
 
 const DEFAULT_ITEMS = [
-  { title: 'Text Animations', description: 'Cool text animations for your projects.', id: 1, icon: <FiFileText className="carousel-icon" /> },
+  { title: 'Text Styles', description: 'Visual text style effects for your projects.', id: 1, icon: <FiFileText className="carousel-icon" /> },
   { title: 'Animations', description: 'Smooth animations for your projects.', id: 2, icon: <FiCircle className="carousel-icon" /> },
   { title: 'Components', description: 'Reusable components for your projects.', id: 3, icon: <FiLayers className="carousel-icon" /> },
   { title: 'Backgrounds', description: 'Beautiful backgrounds and patterns for your projects.', id: 4, icon: <FiLayout className="carousel-icon" /> },

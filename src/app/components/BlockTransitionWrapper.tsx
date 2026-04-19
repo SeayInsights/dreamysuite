@@ -1,9 +1,10 @@
 "use client";
 
-import { useMemo, type ReactNode } from "react";
+import { Suspense, useMemo, type ReactNode } from "react";
 import { useEditorStore } from "@/app/stores/editorStore";
 import { getEffectComponent } from "@/lib/effects/loader";
 import { useEffectsEnabled } from "@/lib/effects/performance";
+import { EffectErrorBoundary } from "./EffectErrorBoundary";
 
 const WRAPPER_TRANSITIONS = new Set(["animated-content", "fade-content"]);
 
@@ -23,5 +24,11 @@ export function BlockTransitionWrapper({ children }: Props) {
 
   if (!TransitionEffect) return <>{children}</>;
 
-  return <TransitionEffect>{children}</TransitionEffect>;
+  return (
+    <EffectErrorBoundary fallback={<>{children}</>}>
+      <Suspense fallback={<>{children}</>}>
+        <TransitionEffect>{children}</TransitionEffect>
+      </Suspense>
+    </EffectErrorBoundary>
+  );
 }

@@ -1056,6 +1056,10 @@ function SplashCursor({
       window.removeEventListener('touchstart', handleTouchStart);
       window.removeEventListener('touchmove', handleTouchMove);
       window.removeEventListener('touchend', handleTouchEnd);
+
+      // Release WebGL context
+      const loseExt = gl && gl.getExtension('WEBGL_lose_context');
+      if (loseExt) loseExt.loseContext();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
