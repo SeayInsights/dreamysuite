@@ -80,16 +80,11 @@ export async function POST(
 
   const sortOrder = (maxOrder?.maxOrder ?? -1) + 1;
 
-  await env.DB
+  const guest = await env.DB
     .prepare(
-      "INSERT INTO guest (id, siteId, firstName, lastName, party, rsvpStatus, notes, sortOrder, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, 'pending', ?, ?, ?, ?)"
+      "INSERT INTO guest (id, siteId, firstName, lastName, party, rsvpStatus, notes, sortOrder, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, 'pending', ?, ?, ?, ?) RETURNING *"
     )
     .bind(id, siteId, firstName, lastName ?? null, party ?? null, notes ?? null, sortOrder, now, now)
-    .run();
-
-  const guest = await env.DB
-    .prepare("SELECT * FROM guest WHERE id = ?")
-    .bind(id)
     .first();
 
   return NextResponse.json({ guest }, { status: 201 });
