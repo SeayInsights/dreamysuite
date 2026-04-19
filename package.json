@@ -3,8 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "engines": {
-    "node": ">=24",
-    "npm": ">=11"
+    "node": ">=22",
+    "npm": ">=10"
   },
   "scripts": {
     "dev": "next dev",
@@ -71,9 +71,9 @@
     "esbuild": "^0.28.0",
     "eslint": "^9",
     "eslint-config-next": "15.4.6",
+    "prettier": "^3.8.3",
     "tailwindcss": "^4",
     "typescript": "^5.7.4",
-    "prettier": "^3.0.0",
     "vitest": "^4.1.4",
     "wrangler": "^4.83.0"
   }
