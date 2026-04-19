@@ -19,6 +19,7 @@ import {
 
 import { useEditorStore } from "@/app/stores/editorStore";
 import { BLOCK_REGISTRY } from "@/app/(dashboard)/sites/[id]/editor-v2/blocks/registry";
+import { EffectPicker } from "../EffectPicker";
 
 type BlockDef = { id: string; label: string; Icon: LucideIcon; blockType: string };
 type Category = { id: string; label: string; blocks: BlockDef[] };
@@ -84,6 +85,8 @@ function getCategories(eventType: string | null): Category[] {
 export function ElementsTray() {
 	const blocks = useEditorStore((s) => s.blocks);
 	const insertBlock = useEditorStore((s) => s.insertBlock);
+	const settings = useEditorStore((s) => s.settings);
+	const updateSettings = useEditorStore((s) => s.updateSettings);
 	const eventType = useEditorStore((s) => s.eventType);
 	const categories = getCategories(eventType);
 
@@ -132,10 +135,13 @@ export function ElementsTray() {
 				))}
 			</div>
 
-			<div className="border-t border-border px-4 py-3">
-				<p className="text-[11px] text-muted-foreground">
-					Click to add — drag-to-position coming soon
-				</p>
+			<div className="border-t border-border px-3 py-3">
+				<EffectPicker
+					category="card"
+					value={settings.effectCard}
+					onChange={(id) => updateSettings({ effectCard: id, effectPreset: null })}
+					label="Card Style"
+				/>
 			</div>
 		</div>
 	);
