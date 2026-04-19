@@ -13,7 +13,7 @@ function boolEnv(raw: string | undefined): boolean {
 }
 
 export const flags = {
-	editorV2: boolEnv(process.env.NEXT_PUBLIC_EDITOR_V2),
+	editorV2: !boolEnv(process.env.NEXT_PUBLIC_EDITOR_V1_FALLBACK),
 } as const;
 
 export type FeatureFlags = typeof flags;
