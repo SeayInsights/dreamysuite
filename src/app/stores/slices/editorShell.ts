@@ -101,6 +101,9 @@ export interface EditorShellSlice {
 	setSiteMeta: (meta: { slug: string; customDomain: string | null; eventType: string | null }) => void;
 	setEventType: (eventType: string | null) => void;
 
+	saveError: string | null;
+	setSaveError: (msg: string | null) => void;
+
 	selectedBlockId: string | null;
 	selectBlock: (id: string | null) => void;
 
@@ -179,6 +182,9 @@ export const createEditorShellSlice: StateCreator<EditorShellSlice & SettingsSli
 	setSiteMeta: ({ slug, customDomain, eventType }) =>
 		set({ siteSlug: slug, siteCustomDomain: customDomain, eventType }),
 	setEventType: (eventType) => set({ eventType }),
+
+	saveError: null,
+	setSaveError: (saveError) => set({ saveError }),
 
 	selectedBlockId: null,
 	selectBlock: (id) => set({ selectedBlockId: id }),
