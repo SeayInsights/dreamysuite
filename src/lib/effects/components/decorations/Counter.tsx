@@ -90,6 +90,7 @@ export default function Counter({
   topGradientStyle,
   bottomGradientStyle
 }) {
+  if (value == null) return null;
   const resolvedPlaces = places ?? [...value.toString()].map((ch, i, a) => {
     if (ch === '.') return '.';
     return 10 ** (

@@ -1,9 +1,11 @@
 "use client";
 
-import { useState } from "react";
-import { Globe, Check, X, Plus } from "lucide-react";
+import { useState, useCallback } from "react";
+import { Globe, Check, X, Plus, RefreshCw } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 import { useEditorStore } from "@/app/stores/editorStore";
+import { TRANSLATABLE_FIELDS } from "@/lib/translations";
 
 const MAX_LANGUAGES = 5;
 
@@ -35,15 +37,82 @@ function parseSiteLanguages(raw: string | null): string[] {
 	}
 }
 
+function parseCfg(config: unknown): Record<string, unknown> {
+	if (!config) return {};
+	if (typeof config === "string") {
+		try { return JSON.parse(config); } catch { return {}; }
+	}
+	return config as Record<string, unknown>;
+}
+
 export function LanguageTray() {
 	const settings = useEditorStore((s) => s.settings);
 	const updateSettings = useEditorStore((s) => s.updateSettings);
+	const blocks = useEditorStore((s) => s.blocks);
+	const translations = useEditorStore((s) => s.translations);
+	const setTranslation = useEditorStore((s) => s.setTranslation);
+	const siteId = useEditorStore((s) => s.siteId);
+	const displayLang = useEditorStore((s) => s.displayLang);
+	const setDisplayLang = useEditorStore((s) => s.setDisplayLang);
 	const [showPicker, setShowPicker] = useState(false);
+	const [translating, setTranslating] = useState(false);
+	const [translateError, setTranslateError] = useState<string | null>(null);
 
 	const mainLang = settings.mainLanguage || "en";
 	const langs = parseSiteLanguages(settings.siteLanguages ?? null);
 	const canAdd = langs.length < MAX_LANGUAGES;
 	const usedCodes = new Set([mainLang, ...langs]);
+
+	const translateEntirePage = useCallback(async () => {
+		if (!siteId) return;
+		setTranslating(true);
+		setTranslateError(null);
+		let failures = 0;
+		const translatableBlocks = blocks.filter(
+			(b) => TRANSLATABLE_FIELDS[b.type]?.length,
+		);
+		try {
+			for (const lang of langs) {
+				const content: Record<string, Record<string, string>> = {};
+				for (const b of translatableBlocks) {
+					const fields = TRANSLATABLE_FIELDS[b.type] ?? [];
+					const cfg = parseCfg(b.config);
+					for (const f of fields) {
+						if (translations[b.id]?.[lang]?.[f.key]) continue;
+						const src = String(cfg[f.key] ?? "");
+						if (src.trim()) {
+							if (!content[b.id]) content[b.id] = {};
+							content[b.id][f.key] = src;
+						}
+					}
+				}
+				if (Object.keys(content).length === 0) continue;
+				const res = await fetch(`/api/sites/${siteId}/translate`, {
+					method: "POST",
+					headers: { "content-type": "application/json" },
+					body: JSON.stringify({ fromLang: mainLang, toLang: lang, content }),
+				});
+				if (res.ok) {
+					const data = (await res.json()) as {
+						translations: Record<string, Record<string, string>>;
+					};
+					for (const [blockId, fieldMap] of Object.entries(data.translations ?? {})) {
+						for (const [field, value] of Object.entries(fieldMap)) {
+							setTranslation(blockId, lang, field, value);
+						}
+					}
+				} else {
+					failures++;
+					if (res.status === 429) break;
+				}
+			}
+		} catch {
+			failures++;
+		} finally {
+			setTranslating(false);
+			if (failures > 0) setTranslateError(`${failures} language(s) failed — try again shortly`);
+		}
+	}, [siteId, blocks, langs, mainLang, translations, setTranslation]);
 
 	function addLanguage(code: string) {
 		const next = [...langs, code];
@@ -77,7 +146,7 @@ export function LanguageTray() {
 						<p className="text-[11px] leading-relaxed text-amber-800">
 							Add languages to your site. Visitors will see a
 							{langs.length > 1 ? " dropdown" : " toggle"} to switch between languages.
-							Translate block content in the inspector's Translate tab.
+							Use the editing toggle below to edit text directly in another language.
 						</p>
 					</div>
 
@@ -177,6 +246,73 @@ export function LanguageTray() {
 							</p>
 						)}
 					</div>
+
+					{/* Editing language toggle */}
+					{langs.length > 0 && (
+						<div className="flex flex-col gap-1.5">
+							<label className="text-[11px] font-medium uppercase leading-none tracking-wider text-muted-foreground">
+								Editing language
+							</label>
+							<div className="flex flex-wrap gap-1">
+								<button
+									type="button"
+									onClick={() => setDisplayLang(null)}
+									className={cn(
+										"rounded-md border px-2.5 py-1.5 text-xs font-medium transition-colors",
+										!displayLang || displayLang === mainLang
+											? "border-primary bg-primary/10 text-primary"
+											: "border-border text-muted-foreground hover:border-ring hover:text-foreground",
+									)}
+								>
+									{LANGUAGES.find((l) => l.code === mainLang)?.native ?? mainLang}
+								</button>
+								{langs.map((code) => {
+									const active = displayLang === code;
+									const info = LANGUAGES.find((l) => l.code === code);
+									return (
+										<button
+											key={code}
+											type="button"
+											onClick={() => setDisplayLang(active ? null : code)}
+											className={cn(
+												"rounded-md border px-2.5 py-1.5 text-xs font-medium transition-colors",
+												active
+													? "border-amber-400 bg-amber-100 text-amber-900"
+													: "border-border text-muted-foreground hover:border-ring hover:text-foreground",
+											)}
+										>
+											{info?.native ?? code}
+										</button>
+									);
+								})}
+							</div>
+							{displayLang && displayLang !== mainLang && (
+								<p className="text-[10px] text-amber-700">
+									Double-click any text block to edit in {LANGUAGES.find((l) => l.code === displayLang)?.english ?? displayLang}. Changes save as translations.
+								</p>
+							)}
+						</div>
+					)}
+
+					{/* Translate entire page */}
+					{langs.length > 0 && (
+						<div className="flex flex-col gap-1.5">
+							{translateError && (
+								<div className="rounded-md bg-destructive/10 px-2 py-1.5 text-[11px] text-destructive">
+									{translateError}
+								</div>
+							)}
+							<button
+								type="button"
+								onClick={translateEntirePage}
+								disabled={translating}
+								className="flex items-center justify-center gap-1.5 rounded-md border border-border px-3 py-2 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:opacity-50"
+							>
+								<RefreshCw className={`size-3 ${translating ? "animate-spin" : ""}`} />
+								{translating ? "Translating..." : "Translate Entire Page"}
+							</button>
+						</div>
+					)}
 
 					{/* Font overrides per language */}
 					{langs.length > 0 && (

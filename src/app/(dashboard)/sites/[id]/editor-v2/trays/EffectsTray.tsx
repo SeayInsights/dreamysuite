@@ -17,8 +17,6 @@ export function EffectsTray() {
       effectNav: effects.nav ?? null,
       effectNavStyle: effects.navStyle ?? null,
       effectText: effects.text ?? null,
-      effectCard: effects.card ?? null,
-      effectTransition: effects.transition ?? null,
       effectCursor: effects.cursor ?? null,
       effectDecoration: effects.decoration ?? null,
     });
@@ -31,8 +29,6 @@ export function EffectsTray() {
       effectNav: null,
       effectNavStyle: null,
       effectText: null,
-      effectCard: null,
-      effectTransition: null,
       effectCursor: null,
       effectDecoration: null,
     });

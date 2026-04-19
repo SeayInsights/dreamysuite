@@ -19,7 +19,6 @@ import {
 
 import { useEditorStore } from "@/app/stores/editorStore";
 import { BLOCK_REGISTRY } from "@/app/(dashboard)/sites/[id]/editor-v2/blocks/registry";
-import { EffectPicker } from "../EffectPicker";
 
 type BlockDef = { id: string; label: string; Icon: LucideIcon; blockType: string };
 type Category = { id: string; label: string; blocks: BlockDef[] };
@@ -85,8 +84,6 @@ function getCategories(eventType: string | null): Category[] {
 export function ElementsTray() {
 	const blocks = useEditorStore((s) => s.blocks);
 	const insertBlock = useEditorStore((s) => s.insertBlock);
-	const settings = useEditorStore((s) => s.settings);
-	const updateSettings = useEditorStore((s) => s.updateSettings);
 	const eventType = useEditorStore((s) => s.eventType);
 	const categories = getCategories(eventType);
 
@@ -113,7 +110,7 @@ export function ElementsTray() {
 
 			<div className="flex-1 overflow-y-auto p-3">
 				{categories.map((cat) => (
-					<div key={cat.id} className="mb-4 last:mb-0">
+					<div key={cat.id} className="mb-4">
 						<p className="mb-2 px-1 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
 							{cat.label}
 						</p>
@@ -133,15 +130,6 @@ export function ElementsTray() {
 						</div>
 					</div>
 				))}
-			</div>
-
-			<div className="border-t border-border px-3 py-3">
-				<EffectPicker
-					category="card"
-					value={settings.effectCard}
-					onChange={(id) => updateSettings({ effectCard: id, effectPreset: null })}
-					label="Card Style"
-				/>
 			</div>
 		</div>
 	);

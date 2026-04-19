@@ -57,7 +57,6 @@ const VariableProximity = forwardRef((props, ref) => {
     className = '',
     onClick,
     style,
-    ...restProps
   } = props;
 
   const letterRefs = useRef([]);
@@ -68,9 +67,10 @@ const VariableProximity = forwardRef((props, ref) => {
   const parsedSettings = useMemo(() => {
     const parseSettings = settingsStr =>
       new Map(
-        settingsStr
+        (settingsStr || "'wght' 400")
           .split(',')
           .map(s => s.trim())
+          .filter(Boolean)
           .map(s => {
             const [name, value] = s.split(' ');
             return [name.replace(/['"]/g, ''), parseFloat(value)];
@@ -171,7 +171,6 @@ const VariableProximity = forwardRef((props, ref) => {
       className={`${className} variable-proximity`}
       onClick={onClick}
       style={{ display: 'inline', ...style }}
-      {...restProps}
     >
       {words.map((word, wordIndex) => (
         <span key={wordIndex} style={{ display: 'inline-block', whiteSpace: 'nowrap' }}>

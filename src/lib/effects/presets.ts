@@ -11,10 +11,8 @@ export const EFFECT_PRESETS: EffectPreset[] = [
     effects: {
       background: "silk",
       text: "blur-text",
-      card: "glass-surface",
-      transition: "fade-content",
-      cursor: "ghost-cursor",
-      decoration: "click-spark",
+      cursor: "crosshair",
+      decoration: "ribbons",
     },
   },
   {
@@ -26,10 +24,8 @@ export const EFFECT_PRESETS: EffectPreset[] = [
     effects: {
       background: "soft-aurora",
       text: "scroll-reveal",
-      card: "spotlight-card",
-      transition: "gradual-blur",
-      cursor: "ghost-cursor",
-      decoration: "star-border",
+      cursor: "crosshair",
+      decoration: "ribbons",
     },
   },
   {
@@ -41,8 +37,6 @@ export const EFFECT_PRESETS: EffectPreset[] = [
     effects: {
       background: "threads",
       text: "split-text",
-      card: "reflective-card",
-      transition: "fade-content",
       cursor: "crosshair",
       decoration: "ribbons",
     },
@@ -58,10 +52,8 @@ export const EFFECT_PRESETS: EffectPreset[] = [
     effects: {
       background: "grainient",
       text: "count-up",
-      card: "spotlight-card",
-      transition: "gradual-blur",
-      cursor: "ghost-cursor",
-      decoration: "glare-hover",
+      cursor: "crosshair",
+      decoration: "magic-rings",
     },
   },
   {
@@ -73,8 +65,6 @@ export const EFFECT_PRESETS: EffectPreset[] = [
     effects: {
       background: "liquid-ether",
       text: "shiny-text",
-      card: "circular-gallery",
-      transition: "fade-content",
       cursor: "crosshair",
       decoration: "magic-rings",
     },
@@ -90,10 +80,8 @@ export const EFFECT_PRESETS: EffectPreset[] = [
     effects: {
       background: "floating-lines",
       text: "scroll-float",
-      card: "glass-surface",
-      transition: "fade-content",
-      cursor: "ghost-cursor",
-      decoration: "star-border",
+      cursor: "crosshair",
+      decoration: "ribbons",
     },
   },
   {
@@ -105,10 +93,8 @@ export const EFFECT_PRESETS: EffectPreset[] = [
     effects: {
       background: "iridescence",
       text: "gradient-text",
-      card: "spotlight-card",
-      transition: "animated-content",
       cursor: "crosshair",
-      decoration: "glare-hover",
+      decoration: "magic-rings",
     },
   },
 
@@ -122,10 +108,8 @@ export const EFFECT_PRESETS: EffectPreset[] = [
     effects: {
       background: "particles",
       text: "rotating-text",
-      card: "bounce-cards",
-      transition: "animated-content",
-      cursor: "blob-cursor",
-      decoration: "click-spark",
+      cursor: "pixel-trail",
+      decoration: "ribbons",
     },
   },
   {
@@ -137,9 +121,7 @@ export const EFFECT_PRESETS: EffectPreset[] = [
     effects: {
       background: "aurora",
       text: "decrypted-text",
-      card: "tilted-card",
-      transition: "pixel-transition",
-      cursor: "splash-cursor",
+      cursor: "pixel-trail",
       decoration: "electric-border",
     },
   },
@@ -154,10 +136,8 @@ export const EFFECT_PRESETS: EffectPreset[] = [
     effects: {
       background: "galaxy",
       text: "text-type",
-      card: "decay-card",
-      transition: "shape-blur",
       cursor: "pixel-trail",
-      decoration: "magnet-lines",
+      decoration: "magic-rings",
     },
   },
   {
@@ -169,9 +149,7 @@ export const EFFECT_PRESETS: EffectPreset[] = [
     effects: {
       background: "light-pillar",
       text: "blur-text",
-      card: "glass-surface",
-      transition: "gradual-blur",
-      cursor: "ghost-cursor",
+      cursor: "crosshair",
       decoration: "ribbons",
     },
   },
@@ -186,9 +164,7 @@ export const EFFECT_PRESETS: EffectPreset[] = [
     effects: {
       background: "lightning",
       text: "glitch-text",
-      card: "magic-bento",
-      transition: "pixel-transition",
-      cursor: "splash-cursor",
+      cursor: "pixel-trail",
       decoration: "ribbons",
     },
   },
@@ -201,9 +177,7 @@ export const EFFECT_PRESETS: EffectPreset[] = [
     effects: {
       background: "liquid-chrome",
       text: "scrambled-text",
-      card: "border-glow",
-      transition: "animated-content",
-      cursor: "splash-cursor",
+      cursor: "pixel-trail",
       decoration: "electric-border",
     },
   },
@@ -218,10 +192,8 @@ export const EFFECT_PRESETS: EffectPreset[] = [
     effects: {
       background: "dot-field",
       text: "text-type",
-      card: "stack",
-      transition: "animated-content",
       cursor: "crosshair",
-      decoration: "magnet-lines",
+      decoration: "magic-rings",
     },
   },
   {
@@ -233,10 +205,8 @@ export const EFFECT_PRESETS: EffectPreset[] = [
     effects: {
       background: "waves",
       text: "scroll-float",
-      card: "profile-card",
-      transition: "fade-content",
-      cursor: "ghost-cursor",
-      decoration: "star-border",
+      cursor: "crosshair",
+      decoration: "ribbons",
     },
   },
   {
@@ -248,9 +218,8 @@ export const EFFECT_PRESETS: EffectPreset[] = [
     effects: {
       background: "ripple-grid",
       text: "gradient-text",
-      card: "border-glow",
       cursor: "crosshair",
-      decoration: "glare-hover",
+      decoration: "magic-rings",
     },
   },
 ];
