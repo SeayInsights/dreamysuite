@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getCloudflareContext } from "@opennextjs/cloudflare";
+import { getEnv } from "@/lib/cloudflare";
 import { z } from "zod";
-import type { Env } from "@/app/lib/auth.server";
 import { requireSiteOwnership, apiOwnershipError, parseJsonBody } from "@/lib/api/site-auth";
 
 const PageUpdateSchema = z.object({
@@ -15,8 +14,7 @@ export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string; pageId: string }> }
 ) {
-  const { env: rawEnv } = await getCloudflareContext({ async: true });
-  const env = rawEnv as unknown as Env;
+  const env = await getEnv();
   const { id: siteId, pageId } = await params;
 
   const check = await requireSiteOwnership(req, env, siteId);
@@ -43,8 +41,7 @@ export async function DELETE(
   req: NextRequest,
   { params }: { params: Promise<{ id: string; pageId: string }> }
 ) {
-  const { env: rawEnv } = await getCloudflareContext({ async: true });
-  const env = rawEnv as unknown as Env;
+  const env = await getEnv();
   const { id: siteId, pageId } = await params;
 
   const check = await requireSiteOwnership(req, env, siteId);
@@ -80,8 +77,7 @@ export async function PUT(
   req: NextRequest,
   { params }: { params: Promise<{ id: string; pageId: string }> }
 ) {
-  const { env: rawEnv } = await getCloudflareContext({ async: true });
-  const env = rawEnv as unknown as Env;
+  const env = await getEnv();
   const { id: siteId, pageId } = await params;
 
   const check = await requireSiteOwnership(req, env, siteId);

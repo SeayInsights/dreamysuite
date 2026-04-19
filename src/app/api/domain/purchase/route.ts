@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getCloudflareContext } from "@opennextjs/cloudflare";
+import { getEnv } from "@/lib/cloudflare";
 import { createAuth, type Env } from "@/app/lib/auth.server";
 
 const DOMAIN_RE = /^[a-z0-9-]+(\.[a-z0-9-]+)*\.[a-z]{2,}$/;
@@ -69,8 +69,7 @@ async function saveDomainToSite(
 }
 
 export async function POST(req: NextRequest) {
-  const { env: rawEnv } = await getCloudflareContext({ async: true });
-  const env = rawEnv as unknown as Env;
+  const env = await getEnv();
 
   const auth = createAuth(env);
   const session = await auth.api.getSession({ headers: req.headers });

@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
-import { getCloudflareContext } from "@opennextjs/cloudflare";
-import { createAuth, type Env } from "@/app/lib/auth.server";
+import { getEnv } from "@/lib/cloudflare";
+import { createAuth } from "@/app/lib/auth.server";
 
 export const metadata = { title: "My Sites — DreamySuite" };
 
@@ -18,17 +18,16 @@ interface Site {
 }
 
 export default async function DashboardIndex() {
-  const { env } = await getCloudflareContext({ async: true });
-  const typedEnv = env as unknown as Env;
+  const env = await getEnv();
 
-  const auth = createAuth(typedEnv);
+  const auth = createAuth(env);
   const requestHeaders = await headers();
   const session = await auth.api.getSession({ headers: requestHeaders });
   if (!session) {
     redirect("/login");
   }
 
-  const db = typedEnv.DB;
+  const db = env.DB;
 
   const [owned, invited] = await Promise.all([
     db

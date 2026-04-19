@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getCloudflareContext } from "@opennextjs/cloudflare";
-import type { Env } from "@/app/lib/auth.server";
+import { getEnv } from "@/lib/cloudflare";
 import { isRateLimited } from "@/lib/rateLimit";
 
 // Public guest book endpoints — no auth required so site visitors can sign and read.
@@ -9,8 +8,7 @@ export async function GET(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const { env: rawEnv } = await getCloudflareContext({ async: true });
-  const env = rawEnv as unknown as Env;
+  const env = await getEnv();
   const { id: siteId } = await params;
 
   const site = await env.DB.prepare("SELECT id FROM site WHERE id = ? AND status = 'published'").bind(siteId).first();
@@ -30,8 +28,7 @@ export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const { env: rawEnv } = await getCloudflareContext({ async: true });
-  const env = rawEnv as unknown as Env;
+  const env = await getEnv();
 
   // Rate limit: 5 requests per 600 s per IP on guestbook
   const ip = req.headers.get("cf-connecting-ip") ?? "unknown";

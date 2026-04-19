@@ -1,7 +1,7 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
-import { getCloudflareContext } from "@opennextjs/cloudflare";
-import { createAuth, type Env } from "@/app/lib/auth.server";
+import { getEnv } from "@/lib/cloudflare";
+import { createAuth } from "@/app/lib/auth.server";
 import { flags } from "@/lib/flags";
 import { SiteEditor } from "./editor";
 import { SiteEditorV2 } from "./editor-v2";
@@ -24,10 +24,9 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 
 export default async function SiteEditorPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const { env } = await getCloudflareContext({ async: true });
-  const typedEnv = env as unknown as Env;
+  const env = await getEnv();
 
-  const auth = createAuth(typedEnv);
+  const auth = createAuth(env);
   const requestHeaders = await headers();
   const session = await auth.api.getSession({ headers: requestHeaders });
   if (!session) {
@@ -35,19 +34,19 @@ export default async function SiteEditorPage({ params }: { params: Promise<{ id:
   }
 
   // Primary: owner check
-  let result = await typedEnv.DB
+  let result = await env.DB
     .prepare("SELECT id, name, slug, customDomain, eventType, status, previewColor, updatedAt FROM site WHERE id = ? AND userId = ?")
     .bind(id, session.user.id)
     .first<Site>();
 
   // Fallback: collaborator invite check
   if (!result) {
-    const invite = await typedEnv.DB
+    const invite = await env.DB
       .prepare("SELECT id FROM site_invite WHERE siteId = ? AND email = ?")
       .bind(id, session.user.email.toLowerCase())
       .first<{ id: string }>();
     if (invite) {
-      result = await typedEnv.DB
+      result = await env.DB
         .prepare("SELECT id, name, slug, customDomain, eventType, status, previewColor, updatedAt FROM site WHERE id = ?")
         .bind(id)
         .first<Site>();

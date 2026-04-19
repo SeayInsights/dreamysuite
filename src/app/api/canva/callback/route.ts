@@ -1,10 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getCloudflareContext } from "@opennextjs/cloudflare";
-import type { Env } from "@/app/lib/auth.server";
-
+import { getEnv } from "@/lib/cloudflare";
 export async function GET(req: NextRequest) {
-  const { env: rawEnv } = await getCloudflareContext({ async: true });
-  const env = rawEnv as unknown as Env;
+  const env = await getEnv();
 
   const url = new URL(req.url);
   const code = url.searchParams.get("code");

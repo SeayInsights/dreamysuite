@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getCloudflareContext } from "@opennextjs/cloudflare";
+import { getEnv } from "@/lib/cloudflare";
 import { createAuth, type Env } from "@/app/lib/auth.server";
 
 async function generatePKCE(): Promise<{ verifier: string; challenge: string }> {
@@ -15,8 +15,7 @@ async function generatePKCE(): Promise<{ verifier: string; challenge: string }> 
 }
 
 export async function GET(req: NextRequest) {
-  const { env: rawEnv } = await getCloudflareContext({ async: true });
-  const env = rawEnv as unknown as Env;
+  const env = await getEnv();
 
   const auth = createAuth(env);
   const session = await auth.api.getSession({ headers: req.headers });
