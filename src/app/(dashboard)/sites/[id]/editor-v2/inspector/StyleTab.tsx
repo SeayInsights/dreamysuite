@@ -11,6 +11,11 @@ export function StyleTab() {
   const themeTokens = useEditorStore((s) => s.themeTokens);
   const setOpenTray = useEditorStore((s) => s.setOpenTray);
 
+  const hasPageMargins = !!(
+    settings.marginLeft || settings.marginRight ||
+    settings.marginTop  || settings.marginBottom
+  );
+
   // Local buffer prevents re-render interference with browser range input drag tracking.
   const storeOpacity = settings.bgImageOpacity ?? 1;
   const [localOpacity, setLocalOpacity] = useState(storeOpacity);
@@ -48,28 +53,30 @@ export function StyleTab() {
 
         {settings.bgImage && (
           <>
-            <div className="flex items-center gap-2">
-              <span className="text-[10px] text-muted-foreground">Margins</span>
-              <div className="flex overflow-hidden rounded border border-input text-[10px] font-medium">
-                {([["full", "Full page"], ["clip", "Content only"]] as const).map(([val, label]) => {
-                  const active = val === "full" ? (settings.bgImageBleed ?? 1) !== 0 : (settings.bgImageBleed ?? 1) === 0;
-                  return (
-                    <button
-                      key={val}
-                      type="button"
-                      onClick={() => updateSettings({ bgImageBleed: val === "full" ? 1 : 0 })}
-                      className={`px-2.5 py-1 transition-colors ${
-                        active
-                          ? "bg-accent text-accent-foreground"
-                          : "bg-background text-muted-foreground hover:bg-accent/50"
-                      }`}
-                    >
-                      {label}
-                    </button>
-                  );
-                })}
+            {hasPageMargins && (
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] text-muted-foreground">Margins</span>
+                <div className="flex overflow-hidden rounded border border-input text-[10px] font-medium">
+                  {([["full", "Full page"], ["clip", "Content only"]] as const).map(([val, label]) => {
+                    const active = val === "full" ? (settings.bgImageBleed ?? 1) !== 0 : (settings.bgImageBleed ?? 1) === 0;
+                    return (
+                      <button
+                        key={val}
+                        type="button"
+                        onClick={() => updateSettings({ bgImageBleed: val === "full" ? 1 : 0 })}
+                        className={`px-2.5 py-1 transition-colors ${
+                          active
+                            ? "bg-accent text-accent-foreground"
+                            : "bg-background text-muted-foreground hover:bg-accent/50"
+                        }`}
+                      >
+                        {label}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
-            </div>
+            )}
 
             <div className="space-y-1">
               <div className="flex items-center justify-between text-[10px] text-muted-foreground">
