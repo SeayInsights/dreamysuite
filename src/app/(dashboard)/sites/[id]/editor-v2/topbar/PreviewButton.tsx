@@ -7,13 +7,13 @@ import { Button } from "@/components/ui/button";
 import type { ShortcutEvent } from "../hooks/useShortcuts";
 
 interface Props {
-	slug: string;
+	siteId: string;
 }
 
-export function PreviewButton({ slug }: Props) {
+export function PreviewButton({ siteId }: Props) {
 	const openPreview = useCallback(() => {
-		window.open(`/${slug}`, "_blank", "noopener,noreferrer");
-	}, [slug]);
+		window.open(`/preview/${siteId}`, "_blank", "noopener,noreferrer");
+	}, [siteId]);
 
 	useEffect(() => {
 		function onShortcut(e: Event) {
