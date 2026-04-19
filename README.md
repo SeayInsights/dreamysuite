@@ -1,47 +1,75 @@
-# OpenNext Starter
+# DreamySuite
 
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+![Deploy](https://github.com/dannis-seay/dreamysuite/actions/workflows/deploy.yml/badge.svg)
+![License](https://img.shields.io/badge/license-MIT-blue)
 
-## Getting Started
+Event invitation SaaS — build beautiful wedding and event sites in a visual editor; guests RSVP through the published public site.
 
-Read the documentation at https://opennext.js.org/cloudflare.
-
-## Develop
-
-Run the Next.js development server:
+## Quick Start
 
 ```bash
+# 1. Clone
+git clone https://github.com/dannis-seay/dreamysuite.git && cd dreamysuite
+
+# 2. Install
+npm install
+
+# 3. Set environment variables
+cp .env.example .env.local   # fill in CLOUDFLARE_* and AUTH_SECRET
+
+# 4. Run the Next.js dev server
 npm run dev
-# or similar package manager command
-```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-## Preview
-
-Preview the application locally on the Cloudflare runtime:
-
-```bash
+# 5. Preview on the Cloudflare Workers runtime
 npm run preview
-# or similar package manager command
 ```
 
-## Deploy
+## Project Structure
 
-Deploy the application to Cloudflare:
-
-```bash
-npm run deploy
-# or similar package manager command
+```
+src/app/
+  (auth)/              Login + signup routes, cookie-based auth
+  (dashboard)/         Authed shell — site list, per-site editor
+    sites/[id]/
+      editor.tsx       Visual editor (V2 default; V1 behind feature flag)
+  [slug]/              Public site render (anonymous guests)
+    route.ts           SSR fetch → hydrates client renderer
+  api/
+    health/            GET /api/health — liveness probe
+    sites/[id]/        Authed site mutations (content, settings, templates)
+    public/[siteSlug]/ Anonymous read + RSVP submission
+  components/blocks/   Block renderer components (Hero, Text, RSVP, etc.)
+  stores/editorStore.ts Zustand store
+  lib/                 Auth helpers, D1 client, server utilities
+migrations/            D1 SQL migrations, applied in filename order
+scripts/               One-off seeds and generators (not part of deploy)
+e2e/                   Playwright end-to-end specs
 ```
 
-## Learn More
+## Tech Stack
 
-To learn more about Next.js, take a look at the following resources:
+| Layer | Technology |
+|-------|-----------|
+| Framework | Next.js 16 (App Router) |
+| Runtime | Cloudflare Workers via `@opennextjs/cloudflare` |
+| Database | Cloudflare D1 (SQLite) |
+| Auth | better-auth (email/password, cookie sessions) |
+| Storage | Cloudflare R2 (site media) |
+| Email | Resend (invites + RSVP confirmations) |
+| Styling | Tailwind CSS v4 |
+| Editor state | Zustand + `zundo` undo middleware |
+| Animations | GSAP (public site intro, CDN-loaded) |
+| Unit tests | Vitest |
+| E2E tests | Playwright |
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Contributing
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+See [CONTRIBUTING.md](CONTRIBUTING.md) for branch naming, commit format, and the PR checklist.
+
+## Security
+
+See [SECURITY.md](SECURITY.md) to report vulnerabilities.
+
+## License
+
+MIT

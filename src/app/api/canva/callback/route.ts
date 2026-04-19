@@ -37,7 +37,7 @@ export async function GET(req: NextRequest) {
   });
 
   if (!tokenRes.ok) {
-    console.error("[canva callback] token exchange failed", await tokenRes.text());
+    console.error("[canva callback] token exchange failed — status:", tokenRes.status);
     return NextResponse.redirect(new URL(`/dashboard/sites/${siteId}?s=site-setup&canva=error`, req.url));
   }
 

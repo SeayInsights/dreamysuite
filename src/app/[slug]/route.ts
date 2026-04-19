@@ -10,6 +10,20 @@ import { createAuth, type Env } from "@/app/lib/auth.server";
 import { safeBlockConfig } from "@/lib/schemas/blocks";
 import { getEffectById } from "@/lib/effects/registry";
 
+async function hashGuestPassword(pw: string): Promise<string> {
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(pw));
+  const hex = Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, "0")).join("");
+  return `$sha256$${hex}`;
+}
+
+function verifyGuestPassword(submitted: string, stored: string): Promise<boolean> {
+  if (stored.startsWith("$sha256$")) {
+    return hashGuestPassword(submitted).then(h => h === stored);
+  }
+  // Migration shim: plaintext passwords still in DB compare directly
+  return Promise.resolve(submitted === stored);
+}
+
 const R3F_EFFECTS = new Set(["silk", "beams", "dither", "antigravity", "pixel-trail"]);
 
 export async function GET(
@@ -73,7 +87,7 @@ export async function GET(
   let pwUnlocked = false;
   if (!isOwner && settings?.guestPassword) {
     const pw = req.cookies.get(`ds_pw_${slug}`)?.value ?? null;
-    if (pw === settings.guestPassword) {
+    if (pw && await verifyGuestPassword(pw, settings.guestPassword)) {
       pwUnlocked = true;
     } else if (!hasPerPagePassword) {
       const accent = settings.accentColor ?? "#B8921A";
@@ -141,12 +155,13 @@ export async function POST(
   const pw = formData.get("pw") as string | null;
 
   const redirectUrl = new URL(`/${slug}`, req.url);
-  if (pw && settings?.guestPassword && pw === settings.guestPassword) {
+  if (pw && settings?.guestPassword && await verifyGuestPassword(pw, settings.guestPassword)) {
+    const hashedPw = await hashGuestPassword(pw);
     return new Response(null, {
       status: 303,
       headers: {
         Location: redirectUrl.toString(),
-        "Set-Cookie": `ds_pw_${slug}=${encodeURIComponent(pw)}; Path=/; HttpOnly; SameSite=Strict; Max-Age=86400`,
+        "Set-Cookie": `ds_pw_${slug}=${encodeURIComponent(hashedPw)}; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=86400`,
       },
     });
   }

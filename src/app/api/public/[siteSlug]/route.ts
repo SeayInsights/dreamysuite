@@ -3,6 +3,15 @@ import { getCloudflareContext } from "@opennextjs/cloudflare";
 import type { Env } from "@/app/lib/auth.server";
 import { safeBlockConfig } from "@/lib/schemas/blocks";
 
+function escEmail(s: string): string {
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#x27;");
+}
+
 function jsonResponse(data: unknown, status = 200, cache = false) {
   return new Response(JSON.stringify(data), {
     status,
@@ -257,6 +266,10 @@ export async function POST(
     );
   }
 
+  if (firstName.trim().length > 100) return new Response(JSON.stringify({ ok: false, error: { code: "BAD_REQUEST", message: "firstName must be 100 characters or less" } }), { status: 400, headers: { "content-type": "application/json", "cache-control": "no-store" } });
+  if ((lastName?.trim()?.length ?? 0) > 100) return new Response(JSON.stringify({ ok: false, error: { code: "BAD_REQUEST", message: "lastName must be 100 characters or less" } }), { status: 400, headers: { "content-type": "application/json", "cache-control": "no-store" } });
+  if ((notes?.trim()?.length ?? 0) > 2000) return new Response(JSON.stringify({ ok: false, error: { code: "BAD_REQUEST", message: "notes must be 2000 characters or less" } }), { status: 400, headers: { "content-type": "application/json", "cache-control": "no-store" } });
+
   const firstNameClean = firstName.trim();
   const lastNameClean = lastName.trim();
 
@@ -337,15 +350,15 @@ export async function POST(
             from: "DreamySuite <notifications@dreamysuite.com>",
             to: [ownerInfo.ownerEmail],
             subject: `New RSVP: ${guestName} ${attendingLabel}`,
-            html: `<div style="font-family:Georgia,serif;max-width:520px;margin:0 auto;padding:2rem;color:#292524"><h2 style="font-weight:normal;margin:0 0 1rem">${eventLabel}</h2><p><strong>${guestName}</strong> has responded and <strong>${attendingLabel}</strong>.</p>${notes ? `<p style="color:#78716c"><em>Notes: ${notes}</em></p>` : ""}<hr style="border:none;border-top:1px solid #e7e5e4;margin:1.5rem 0"><p style="color:#a8a29e;font-size:0.8rem">Sent via DreamySuite</p></div>`,
+            html: `<div style="font-family:Georgia,serif;max-width:520px;margin:0 auto;padding:2rem;color:#292524"><h2 style="font-weight:normal;margin:0 0 1rem">${escEmail(eventLabel)}</h2><p><strong>${escEmail(guestName)}</strong> has responded and <strong>${escEmail(attendingLabel)}</strong>.</p>${notes ? `<p style="color:#78716c"><em>Notes: ${escEmail(notes)}</em></p>` : ""}<hr style="border:none;border-top:1px solid #e7e5e4;margin:1.5rem 0"><p style="color:#a8a29e;font-size:0.8rem">Sent via DreamySuite</p></div>`,
           }),
         }).catch(() => undefined);
 
         // Guest confirmation if email provided
         if (guestEmail) {
           const confirmMsg = attending === "yes"
-            ? `We're so happy you'll be joining us for <strong>${eventLabel}</strong>!`
-            : `Thank you for letting us know. We're sorry you won't be able to make it to <strong>${eventLabel}</strong>.`;
+            ? `We're so happy you'll be joining us for <strong>${escEmail(eventLabel)}</strong>!`
+            : `Thank you for letting us know. We're sorry you won't be able to make it to <strong>${escEmail(eventLabel)}</strong>.`;
           await fetch("https://api.resend.com/emails", {
             method: "POST",
             headers: emailHeaders,
@@ -353,7 +366,7 @@ export async function POST(
               from: "DreamySuite <notifications@dreamysuite.com>",
               to: [guestEmail],
               subject: attending === "yes" ? `See you there! — ${eventLabel}` : `RSVP confirmed — ${eventLabel}`,
-              html: `<div style="font-family:Georgia,serif;max-width:520px;margin:0 auto;padding:2rem;color:#292524"><h2 style="font-weight:normal;margin:0 0 1rem">${eventLabel}</h2><p>Hi ${firstNameClean},</p><p>${confirmMsg}</p><hr style="border:none;border-top:1px solid #e7e5e4;margin:1.5rem 0"><p style="color:#a8a29e;font-size:0.8rem">Sent via DreamySuite</p></div>`,
+              html: `<div style="font-family:Georgia,serif;max-width:520px;margin:0 auto;padding:2rem;color:#292524"><h2 style="font-weight:normal;margin:0 0 1rem">${escEmail(eventLabel)}</h2><p>Hi ${escEmail(firstNameClean)},</p><p>${confirmMsg}</p><hr style="border:none;border-top:1px solid #e7e5e4;margin:1.5rem 0"><p style="color:#a8a29e;font-size:0.8rem">Sent via DreamySuite</p></div>`,
             }),
           }).catch(() => undefined);
         }

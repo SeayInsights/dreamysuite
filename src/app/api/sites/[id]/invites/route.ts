@@ -54,6 +54,14 @@ export async function POST(
   const appUrl = env.APP_URL ?? "https://dreamysuite.com";
   const editorUrl = `${appUrl}/sites/${siteId}`;
 
+  // Record the invite first — email can be retried if it fails
+  const id = crypto.randomUUID();
+  const createdAt = Date.now();
+  await env.DB
+    .prepare("INSERT INTO site_invite (id, siteId, email, invitedBy, createdAt) VALUES (?, ?, ?, ?, ?)")
+    .bind(id, siteId, email, check.userId, createdAt)
+    .run();
+
   // Send via Resend
   const resendRes = await fetch("https://api.resend.com/emails", {
     method: "POST",
@@ -85,19 +93,10 @@ export async function POST(
   });
 
   if (!resendRes.ok) {
-    const err = await resendRes.text();
-    console.error("Resend error:", err);
-    return NextResponse.json({ error: { code: "EMAIL_FAILED", message: "Failed to send invite email" } }, { status: 502 });
+    console.error("Resend error: status", resendRes.status);
   }
 
-  // Record the invite
-  const id = crypto.randomUUID();
-  await env.DB
-    .prepare("INSERT INTO site_invite (id, siteId, email, invitedBy, createdAt) VALUES (?, ?, ?, ?, ?)")
-    .bind(id, siteId, email, check.userName, Date.now())
-    .run();
-
-  return NextResponse.json({ invite: { id, email, invitedBy: check.userName, createdAt: Date.now() } }, { status: 201 });
+  return NextResponse.json({ invite: { id, email, invitedBy: check.userId, createdAt } }, { status: 201 });
 }
 
 // DELETE /api/sites/:id/invites — remove an invite by id

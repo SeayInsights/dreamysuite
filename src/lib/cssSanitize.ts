@@ -1,8 +1,8 @@
-const BLOCKED_AT_RULES = /@import\b|@charset\b|@namespace\b/gi;
-const BLOCKED_FUNCTIONS =
-	/expression\s*\(|javascript\s*:|(?:^|[;\s])-moz-binding\s*:/gi;
-const BLOCKED_URL =
-	/url\s*\(\s*(?:['"]?\s*(?:https?:|\/\/|data:(?!image\/)))/gi;
+const BLOCKED_AT_RULES_SRC = /@import\b|@charset\b|@namespace\b/gi.source;
+const BLOCKED_FUNCTIONS_SRC =
+	/expression\s*\(|javascript\s*:|(?:^|[;\s])-moz-binding\s*:/gi.source;
+const BLOCKED_URL_SRC =
+	/url\s*\(\s*(?:['"]?\s*(?:https?:|\/\/|data:(?!image\/)))/gi.source;
 
 export interface SanitizeResult {
 	css: string;
@@ -13,19 +13,22 @@ export function sanitizeCss(raw: string): SanitizeResult {
 	const errors: string[] = [];
 	let css = raw;
 
-	if (BLOCKED_AT_RULES.test(css)) {
+	const atRules = new RegExp(BLOCKED_AT_RULES_SRC, "gi");
+	if (atRules.test(css)) {
 		errors.push("@import, @charset, and @namespace are not allowed");
-		css = css.replace(BLOCKED_AT_RULES, "/* blocked */");
+		css = css.replace(new RegExp(BLOCKED_AT_RULES_SRC, "gi"), "/* blocked */");
 	}
 
-	if (BLOCKED_FUNCTIONS.test(css)) {
+	const fns = new RegExp(BLOCKED_FUNCTIONS_SRC, "gi");
+	if (fns.test(css)) {
 		errors.push("JavaScript expressions are not allowed in CSS");
-		css = css.replace(BLOCKED_FUNCTIONS, "/* blocked */");
+		css = css.replace(new RegExp(BLOCKED_FUNCTIONS_SRC, "gi"), "/* blocked */");
 	}
 
-	if (BLOCKED_URL.test(css)) {
+	const urls = new RegExp(BLOCKED_URL_SRC, "gi");
+	if (urls.test(css)) {
 		errors.push("url() with external origins is not allowed");
-		css = css.replace(BLOCKED_URL, "/* blocked-url */(");
+		css = css.replace(new RegExp(BLOCKED_URL_SRC, "gi"), "/* blocked-url */(");
 	}
 
 	return { css, errors };

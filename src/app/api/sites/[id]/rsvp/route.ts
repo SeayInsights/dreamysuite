@@ -15,7 +15,7 @@ export async function POST(
 
   // Verify site exists (prevents submissions to phantom IDs)
   const site = await env.DB
-    .prepare("SELECT id FROM site WHERE id = ?")
+    .prepare("SELECT id FROM site WHERE id = ? AND status = 'published'")
     .bind(siteId)
     .first();
   if (!site) {

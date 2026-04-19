@@ -33,6 +33,9 @@ export async function POST(
   if (!pageId || !type) {
     return apiError("BAD_REQUEST", "pageId and type are required", 400);
   }
+  if (sortOrder !== undefined && (typeof sortOrder !== "number" || !Number.isInteger(sortOrder) || sortOrder < 0)) {
+    return apiError("VALIDATION_ERROR", "sortOrder must be a non-negative integer.", 400);
+  }
 
   const page = await env.DB
     .prepare("SELECT id FROM page WHERE id = ? AND siteId = ?")
