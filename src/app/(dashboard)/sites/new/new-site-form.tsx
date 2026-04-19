@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useActionState } from "react";
+import Link from "next/link";
 
 const EVENT_TYPES = [
   { type: "wedding", icon: "💍", label: "Wedding" },
@@ -189,12 +190,12 @@ export function NewSiteForm({ action }: { action: ActionFn }) {
             {pending ? "Creating…" : "Create Site"}
           </button>
           </div>
-          <a
+          <Link
             href="/"
             style={{ fontSize: "0.85rem", color: "#9b8e85", textDecoration: "none" }}
           >
             Cancel
-          </a>
+          </Link>
         </div>
       </form>
     </div>
