@@ -6,13 +6,17 @@ import type { PendingOps, Block } from "@/app/stores/slices/document";
 
 const DEBOUNCE_MS = 1_500;
 
+/**
+ * Returns true if all operations succeeded, false if any failed.
+ * A failure means the store should remain dirty so the next flush retries.
+ */
 async function flushOps(
   siteId: string,
   pageId: string,
   ops: PendingOps,
   blocks: Block[],
-) {
-  const promises: Promise<unknown>[] = [];
+): Promise<boolean> {
+  const promises: Promise<Response>[] = [];
 
   for (const id of ops.removed) {
     promises.push(
@@ -75,12 +79,21 @@ async function flushOps(
     }
   }
 
-  await Promise.allSettled(promises);
+  const results = await Promise.allSettled(promises);
+
+  const failures = results.filter(
+    (r): r is PromiseRejectedResult | PromiseFulfilledResult<Response> =>
+      r.status === "rejected" ||
+      (r.status === "fulfilled" && !r.value.ok),
+  );
+
+  return failures.length === 0;
 }
 
 export function useBlockSync(siteId: string) {
   const isDirty = useEditorStore((s) => s.isDirty);
   const markClean = useEditorStore((s) => s.markClean);
+  const setSaveError = useEditorStore((s) => s.setSaveError);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const siteIdRef = useRef(siteId);
   siteIdRef.current = siteId;
@@ -105,13 +118,21 @@ export function useBlockSync(siteId: string) {
       const pageId = state.currentPageId;
       if (!state.isDirty || !pageId) return;
       flushOps(siteIdRef.current, pageId, state.pendingOps, state.blocks).then(
-        () => markClean(),
+        (allSucceeded) => {
+          if (allSucceeded) {
+            markClean();
+            setSaveError(null);
+          } else {
+            // Leave the store dirty so the next debounce cycle retries.
+            setSaveError("Some changes could not be saved. Retrying…");
+          }
+        },
       );
     }, DEBOUNCE_MS);
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
     };
-  }, [isDirty, markClean]);
+  }, [isDirty, markClean, setSaveError]);
 
   useEffect(() => {
     window.addEventListener("beforeunload", flushNow);

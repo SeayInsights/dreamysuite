@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
-import { createAuth, type Env } from "@/app/lib/auth.server";
+import type { Env } from "@/app/lib/auth.server";
+import { requireSiteOwnership, apiOwnershipError } from "@/lib/api/site-auth";
 
 export async function POST(
   req: NextRequest,
@@ -10,19 +11,8 @@ export async function POST(
   const env = rawEnv as unknown as Env;
   const { id: siteId } = await params;
 
-  const auth = createAuth(env);
-  const session = await auth.api.getSession({ headers: req.headers });
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-  const db = env.DB;
-
-  const site = await db.prepare("SELECT id FROM site WHERE id = ? AND userId = ?")
-    .bind(siteId, session.user.id).first() as { id: string } | null;
-  if (!site) {
-    const invite = await db.prepare("SELECT id FROM site_invite WHERE siteId = ? AND email = ?")
-      .bind(siteId, session.user.email.toLowerCase()).first() as { id: string } | null;
-    if (!invite) return NextResponse.json({ error: "Access denied" }, { status: 403 });
-  }
+  const check = await requireSiteOwnership(req, env, siteId);
+  if ("error" in check) return apiOwnershipError(check);
 
   let body: { fromLang: string; toLang: string; content: Record<string, Record<string, string>> };
   try {
