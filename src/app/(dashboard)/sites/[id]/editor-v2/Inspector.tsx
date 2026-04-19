@@ -48,7 +48,7 @@ export function Inspector() {
 	const blocks = useEditorStore((s) => s.blocks);
 	const [tab, setTab] = useState<TabId>("layout");
 
-	const CONTENT_BLOCK_TYPES = new Set(["faq", "schedule", "fun-facts", "travel"]);
+	const CONTENT_BLOCK_TYPES = new Set(["faq", "schedule", "fun-facts", "travel", "video", "media-video"]);
 	useEffect(() => {
 		if (!selectedBlockId) return;
 		const block = blocks.find((b) => b.id === selectedBlockId);
