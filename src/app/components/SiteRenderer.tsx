@@ -1,3 +1,5 @@
+"use client";
+
 import { useMemo } from "react";
 import { BLOCK_COMPONENTS } from "@/app/components/blocks";
 import { useEditorStore } from "@/app/stores/editorStore";
