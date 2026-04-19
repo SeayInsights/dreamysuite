@@ -87,5 +87,11 @@ cloudflare-env.d.ts
 # E2E tests (not needed for launch)
 /e2e
 
+# Unused config files
+.dockerignore
+ARCHITECTURE.md
+playwright.config.ts
+vitest.config.ts
+
 # Stray directories (browser profiles, etc.)
 UsersDannis*
