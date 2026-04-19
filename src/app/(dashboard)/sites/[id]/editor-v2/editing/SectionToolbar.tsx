@@ -136,6 +136,20 @@ function AnimationIcon() {
   );
 }
 
+function PencilIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden>
+      <path
+        d="M9.5 2.5l2 2L4 12H2v-2L9.5 2.5z"
+        stroke="currentColor"
+        strokeWidth="1.2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 function ArrangeIcon() {
   return (
     <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden>
@@ -160,6 +174,8 @@ export function SectionToolbar({
 }): React.JSX.Element | null {
   const selectedBlockId = useEditorStore((s) => s.selectedBlockId);
   const isTextEditing = useEditorStore((s) => s.isTextEditing);
+  const blockToolbarVisible = useEditorStore((s) => s.blockToolbarVisible);
+  const setEditingPanel = useEditorStore((s) => s.setEditingPanel);
   const updateBlock = useEditorStore((s) => s.updateBlock);
   const selectBlock = useEditorStore((s) => s.selectBlock);
   const selectedBlock = useSelectedBlock();
@@ -344,7 +360,7 @@ export function SectionToolbar({
 
   // Main show/hide logic — position updates, block switching, exit to hidden.
   useEffect(() => {
-    const shouldShow = !!(selectedBlockId && position && !isTextEditing);
+    const shouldShow = !!(selectedBlockId && position && !isTextEditing && blockToolbarVisible);
 
     if (shouldShow) {
       const switchingBlock =
@@ -381,7 +397,7 @@ export function SectionToolbar({
         setRenderBlockId(null);
       }, ANIM_MS);
     }
-  }, [selectedBlockId, isTextEditing, position]);
+  }, [selectedBlockId, isTextEditing, blockToolbarVisible, position]);
 
   // Cleanup timers on unmount.
   useEffect(() => () => {
@@ -494,6 +510,20 @@ export function SectionToolbar({
           <circle cx="1.5" cy="15" r="1" /><circle cx="4.5" cy="15" r="1" />
         </svg>
       </div>
+
+      {/* Edit content button */}
+      <Button
+        variant="ghost"
+        size="sm"
+        className="h-8 gap-1.5 text-xs"
+        aria-label="Edit block content"
+        onClick={(e) => { e.stopPropagation(); setEditingPanel(renderBlockId); }}
+      >
+        <PencilIcon />
+        Edit
+      </Button>
+
+      <DividerLine />
 
       {/* Background button */}
       <Button

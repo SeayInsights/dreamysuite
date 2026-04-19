@@ -65,63 +65,6 @@ const HANDLE_VISUAL = 10;
 const TOUCH_TARGET = 44;
 const HANDLE_OFFSET = HANDLE_VISUAL / 2;
 
-// ─── Move handle (drag grip) ─────────────────────────────────────────────────
-
-interface MoveHandleProps {
-	rect: Rect;
-	blockId: string;
-	containerRef: React.RefObject<HTMLElement | null>;
-}
-
-function MoveHandle({ rect, blockId, containerRef }: MoveHandleProps) {
-	const { startMove } = useDrag(containerRef);
-
-	const handlePointerDown = useCallback(
-		(e: React.PointerEvent) => {
-			startMove(blockId, e);
-		},
-		[blockId, startMove],
-	);
-
-	const left = rect.left + rect.width / 2;
-	const top = Math.max(8, rect.top - 22);
-
-	return (
-		<div
-			role="button"
-			aria-label="Drag to move block"
-			tabIndex={0}
-			onPointerDown={handlePointerDown}
-			className="absolute z-30 flex items-center justify-center rounded-sm bg-primary text-primary-foreground"
-			style={{
-				left,
-				top,
-				width: 24,
-				height: 18,
-				transform: "translateX(-50%)",
-				cursor: "grab",
-				touchAction: "none",
-				userSelect: "none",
-			}}
-		>
-			<svg
-				width="12"
-				height="10"
-				viewBox="0 0 12 10"
-				fill="currentColor"
-				aria-hidden
-			>
-				<circle cx="3" cy="2" r="1" />
-				<circle cx="9" cy="2" r="1" />
-				<circle cx="3" cy="5" r="1" />
-				<circle cx="9" cy="5" r="1" />
-				<circle cx="3" cy="8" r="1" />
-				<circle cx="9" cy="8" r="1" />
-			</svg>
-		</div>
-	);
-}
-
 // ─── Main component ─────────────────────────────────────────────────────────
 
 export function DragHandles({ containerRef }: Props) {
@@ -172,14 +115,6 @@ export function DragHandles({ containerRef }: Props) {
 
 	return (
 		<div className="pointer-events-none absolute inset-0 z-[45] overflow-hidden" aria-hidden>
-			<div className="pointer-events-auto">
-				<MoveHandle
-					rect={rect}
-					blockId={selectedBlockId}
-					containerRef={containerRef}
-				/>
-			</div>
-
 			{RESIZE_HANDLES.map(({ pos, x, y, cursor, label }) => {
 				const visualLeft = rect.left + x * rect.width - HANDLE_OFFSET;
 				const visualTop = rect.top + y * rect.height - HANDLE_OFFSET;
