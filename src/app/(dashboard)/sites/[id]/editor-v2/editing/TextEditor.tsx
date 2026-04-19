@@ -103,7 +103,6 @@ export function TextEditor({
 }: {
   containerRef: React.RefObject<HTMLElement | null>;
 }): JSX.Element {
-  const blocks = useEditorStore((s) => s.blocks);
   const updateBlock = useEditorStore((s) => s.updateBlock);
   const setIsTextEditing = useEditorStore((s) => s.setIsTextEditing);
   const setTranslation = useEditorStore((s) => s.setTranslation);

@@ -6,7 +6,10 @@ import { EffectPicker } from "../EffectPicker";
 
 export function ThemeTray() {
 	const mode = useEditorStore((s) => s.mode);
-	const settings = useEditorStore((s) => s.settings);
+	const effectBg = useEditorStore((s) => s.settings.effectBg);
+	const effectColor1 = useEditorStore((s) => s.settings.effectColor1);
+	const effectColor2 = useEditorStore((s) => s.settings.effectColor2);
+	const effectColor3 = useEditorStore((s) => s.settings.effectColor3);
 	const updateSettings = useEditorStore((s) => s.updateSettings);
 	const themeTokens = useEditorStore((s) => s.themeTokens);
 	const applyPresetTheme = useEditorStore((s) => s.applyPresetTheme);
@@ -64,12 +67,12 @@ export function ThemeTray() {
 				<section className="mb-4 border-t border-border pt-4">
 					<EffectPicker
 						category="background"
-						value={settings.effectBg}
+						value={effectBg}
 						onChange={(id) => updateSettings({ effectBg: id, effectPreset: null })}
 						label="Background Effect"
 					/>
 
-					{settings.effectBg && (
+					{effectBg && (
 						<div className="mt-3 space-y-1.5">
 							<p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
 								Effect Colors
@@ -77,19 +80,19 @@ export function ThemeTray() {
 							<div className="flex flex-col gap-1.5">
 								<EffectColorRow
 									label="Primary"
-									value={settings.effectColor1 ?? themeTokens.colors.primary}
+									value={effectColor1 ?? themeTokens.colors.primary}
 									onChange={(v) => updateSettings({ effectColor1: v })}
 									onReset={() => updateSettings({ effectColor1: null })}
 								/>
 								<EffectColorRow
 									label="Secondary"
-									value={settings.effectColor2 ?? themeTokens.colors.secondary}
+									value={effectColor2 ?? themeTokens.colors.secondary}
 									onChange={(v) => updateSettings({ effectColor2: v })}
 									onReset={() => updateSettings({ effectColor2: null })}
 								/>
 								<EffectColorRow
 									label="Accent"
-									value={settings.effectColor3 ?? themeTokens.colors.accent}
+									value={effectColor3 ?? themeTokens.colors.accent}
 									onChange={(v) => updateSettings({ effectColor3: v })}
 									onReset={() => updateSettings({ effectColor3: null })}
 								/>

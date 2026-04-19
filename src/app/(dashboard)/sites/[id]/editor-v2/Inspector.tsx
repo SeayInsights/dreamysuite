@@ -6,6 +6,7 @@ import { X } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { useEditorStore } from "@/app/stores/editorStore";
+import { useSelectedBlock } from "./hooks/useSelectedBlock";
 import { duration, EASING } from "@/lib/motion";
 
 import { LayoutTab } from "./inspector/LayoutTab";
@@ -45,14 +46,13 @@ export function Inspector() {
 	const mode = useEditorStore((s) => s.mode);
 	const settingsLoaded = useEditorStore((s) => s.settingsLoaded);
 	const selectedBlockId = useEditorStore((s) => s.selectedBlockId);
-	const blocks = useEditorStore((s) => s.blocks);
+	const selectedBlock = useSelectedBlock();
 	const [tab, setTab] = useState<TabId>("layout");
 
 	const CONTENT_BLOCK_TYPES = new Set(["faq", "schedule", "fun-facts", "travel", "video", "media-video"]);
 	useEffect(() => {
-		if (!selectedBlockId) return;
-		const block = blocks.find((b) => b.id === selectedBlockId);
-		if (block && CONTENT_BLOCK_TYPES.has(block.type)) {
+		if (!selectedBlock) return;
+		if (CONTENT_BLOCK_TYPES.has(selectedBlock.type)) {
 			setTab("content");
 		}
 	}, [selectedBlockId]); // eslint-disable-line react-hooks/exhaustive-deps

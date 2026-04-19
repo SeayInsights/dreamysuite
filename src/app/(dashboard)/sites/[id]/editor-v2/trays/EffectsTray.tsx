@@ -6,7 +6,9 @@ import { EffectPicker } from "../EffectPicker";
 import type { EventType, EffectPreset } from "@/lib/effects/types";
 
 export function EffectsTray() {
-  const settings = useEditorStore((s) => s.settings);
+  const effectPreset = useEditorStore((s) => s.settings.effectPreset);
+  const effectDecoration = useEditorStore((s) => s.settings.effectDecoration);
+  const effectCursor = useEditorStore((s) => s.settings.effectCursor);
   const updateSettings = useEditorStore((s) => s.updateSettings);
   const eventType = useEditorStore((s) => s.eventType) as EventType | null;
 
@@ -46,7 +48,7 @@ export function EffectsTray() {
         <div className="flex flex-col gap-5">
           <EffectPresetPicker
             eventType={eventType}
-            activePresetId={settings.effectPreset}
+            activePresetId={effectPreset}
             onApply={handleApplyPreset}
             onClear={handleClearPreset}
           />
@@ -55,7 +57,7 @@ export function EffectsTray() {
 
           <EffectPicker
             category="decoration"
-            value={settings.effectDecoration}
+            value={effectDecoration}
             onChange={(id) =>
               updateSettings({ effectDecoration: id, effectPreset: null })
             }
@@ -64,7 +66,7 @@ export function EffectsTray() {
 
           <EffectPicker
             category="cursor"
-            value={settings.effectCursor}
+            value={effectCursor}
             onChange={(id) =>
               updateSettings({ effectCursor: id, effectPreset: null })
             }
