@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import type { Env } from "@/app/lib/auth.server";
-
-// Public RSVP endpoint — no auth required so guests can submit without an account.
-// Validates the site exists before inserting.
+import { requireSiteOwnership, apiOwnershipError } from "@/lib/api/site-auth";
 
 export async function POST(
   req: NextRequest,
@@ -12,6 +10,9 @@ export async function POST(
   const { env: rawEnv } = await getCloudflareContext({ async: true });
   const env = rawEnv as unknown as Env;
   const { id: siteId } = await params;
+
+  const check = await requireSiteOwnership(req, env, siteId);
+  if ("error" in check) return apiOwnershipError(check);
 
   // Verify site exists (prevents submissions to phantom IDs)
   const site = await env.DB
