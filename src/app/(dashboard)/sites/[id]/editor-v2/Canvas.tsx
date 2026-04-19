@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { useEditorStore } from "@/app/stores/editorStore";
 import { parseCfg, resolveBreakpointConfig } from "@/lib/editableField";
 import type { Block } from "@/app/stores/slices/document";
+import { consolidateBlocks } from "@/lib/migrations/blockConsolidation";
 import { trackEditorError } from "@/lib/telemetry/editor";
 import { SiteRenderer } from "@/app/components/SiteRenderer";
 import { BreakpointFrame } from "./BreakpointFrame";
@@ -193,9 +194,21 @@ export function Canvas({ siteId }: Props) {
 					blocks: unknown[];
 				};
 
-				if (!cancelled) setBlocks(
-					(rawBlocks as Block[]).map((b) => ({ ...b, config: parseCfg(b.config) })),
-				);
+				if (!cancelled) {
+					const parsed = (rawBlocks as Block[]).map((b) => ({ ...b, config: parseCfg(b.config) }));
+					const { blocks: consolidated } = consolidateBlocks(parsed);
+					const updateBlock = useEditorStore.getState().updateBlock;
+					setBlocks(consolidated as Block[]);
+					// Mark type-changed blocks dirty so the new type persists to DB.
+					for (let i = 0; i < parsed.length; i++) {
+						if (parsed[i].type !== (consolidated[i] as Block).type) {
+							updateBlock((consolidated[i] as Block).id, {
+								type: (consolidated[i] as Block).type,
+								config: parseCfg((consolidated[i] as Block).config),
+							});
+						}
+					}
+				}
 			} catch (err) {
 				if (!cancelled) {
 					const msg = err instanceof Error ? err.message : "Failed to load blocks";
