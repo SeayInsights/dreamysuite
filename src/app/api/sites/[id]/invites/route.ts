@@ -1,7 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
+import { z } from "zod";
 import type { Env } from "@/app/lib/auth.server";
-import { requireSiteOwner, apiOwnershipError } from "@/lib/api/site-auth";
+import { requireSiteOwner, apiOwnershipError, parseJsonBody } from "@/lib/api/site-auth";
+
+const InviteCreateSchema = z.object({
+  email: z.string().email().max(254),
+});
+
+const InviteDeleteSchema = z.object({
+  inviteId: z.string().min(1),
+});
 
 // GET /api/sites/:id/invites — list all invites for this site
 export async function GET(
@@ -35,12 +44,18 @@ export async function POST(
   const check = await requireSiteOwner(req, env, siteId);
   if ("error" in check) return apiOwnershipError(check);
 
-  const body = await req.json() as { email?: string };
-  const email = body.email?.trim().toLowerCase();
+  const parsed = await parseJsonBody<unknown>(req);
+  if ("error" in parsed) return parsed.error;
 
-  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    return NextResponse.json({ error: { code: "BAD_REQUEST", message: "Valid email required" } }, { status: 400 });
+  const result = InviteCreateSchema.safeParse(parsed.body);
+  if (!result.success) {
+    return NextResponse.json(
+      { error: { code: "BAD_REQUEST", message: result.error.issues[0]?.message ?? "Valid email required" } },
+      { status: 400 },
+    );
   }
+
+  const email = result.data.email.trim().toLowerCase();
 
   // Prevent duplicate invites
   const existing = await env.DB
@@ -111,12 +126,19 @@ export async function DELETE(
   const check = await requireSiteOwner(req, env, siteId);
   if ("error" in check) return apiOwnershipError(check);
 
-  const body = await req.json() as { inviteId?: string };
-  if (!body.inviteId) return NextResponse.json({ error: { code: "BAD_REQUEST", message: "inviteId required" } }, { status: 400 });
+  const parsedDel = await parseJsonBody<unknown>(req);
+  if ("error" in parsedDel) return parsedDel.error;
+
+  const delResult = InviteDeleteSchema.safeParse(parsedDel.body);
+  if (!delResult.success) {
+    return NextResponse.json({ error: { code: "BAD_REQUEST", message: "inviteId required" } }, { status: 400 });
+  }
+
+  const { inviteId } = delResult.data;
 
   await env.DB
     .prepare("DELETE FROM site_invite WHERE id = ? AND siteId = ?")
-    .bind(body.inviteId, siteId)
+    .bind(inviteId, siteId)
     .run();
 
   return NextResponse.json({ success: true });

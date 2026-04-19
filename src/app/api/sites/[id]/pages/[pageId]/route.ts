@@ -1,7 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
+import { z } from "zod";
 import type { Env } from "@/app/lib/auth.server";
-import { requireSiteOwnership, apiOwnershipError } from "@/lib/api/site-auth";
+import { requireSiteOwnership, apiOwnershipError, parseJsonBody } from "@/lib/api/site-auth";
+
+const PageUpdateSchema = z.object({
+  label: z.string().max(100).optional(),
+  isVisible: z.boolean().optional(),
+  isLocked: z.boolean().optional(),
+  sortOrder: z.number().int().optional(),
+});
 
 export async function GET(
   req: NextRequest,
@@ -88,12 +96,18 @@ export async function PUT(
     return NextResponse.json({ error: { code: "NOT_FOUND", message: "Page not found" } }, { status: 404 });
   }
 
-  let body: { label?: string; isVisible?: boolean; isLocked?: boolean; sortOrder?: number };
-  try {
-    body = await req.json();
-  } catch {
-    return NextResponse.json({ error: { code: "BAD_REQUEST", message: "Invalid JSON body" } }, { status: 400 });
+  const parsed = await parseJsonBody<unknown>(req);
+  if ("error" in parsed) return parsed.error;
+
+  const result = PageUpdateSchema.safeParse(parsed.body);
+  if (!result.success) {
+    return NextResponse.json(
+      { error: { code: "BAD_REQUEST", message: result.error.issues[0]?.message ?? "Invalid request body" } },
+      { status: 400 },
+    );
   }
+
+  const body = result.data;
 
   const fields: string[] = [];
   const values: unknown[] = [];
