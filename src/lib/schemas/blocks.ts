@@ -167,6 +167,8 @@ export const BLOCK_TYPES = [
   "media-video",
   "gallery",
   "info-card",
+  // Legacy aliases
+  "rsvp",
   // New (Task 19)
   "rsvp-form",
   "story-timeline",
@@ -194,6 +196,8 @@ const CONFIG_BY_TYPE: Record<BlockType, z.ZodTypeAny> = {
   "media-video": MediaVideoConfig,
   gallery: GalleryConfig,
   "info-card": InfoCardConfig,
+  // Legacy alias
+  rsvp: RsvpFormConfig,
   // New
   "rsvp-form": RsvpFormConfig,
   "story-timeline": StoryTimelineConfig,

@@ -25,6 +25,7 @@ const MINIMAL: Record<BlockType, Record<string, unknown>> = {
   "hotel-card": { name: "Hotel" },
   "venue-map": { name: "Venue" },
   "photo-split": { heading: "Us" },
+  rsvp: { heading: "RSVP" },
   // Consolidated (Task 18)
   "media-video": { provider: "youtube", url: "https://youtu.be/xyz" },
   gallery: { layout: "grid", urls: ["https://example.com/1.jpg"] },
@@ -53,6 +54,7 @@ const INVALID: Record<BlockType, Record<string, unknown>> = {
   "hotel-card": { address: 5 },
   "venue-map": { embedUrl: {} },
   "photo-split": { layout: "upside-down" },
+  rsvp: { heading: 42 },
   // Consolidated
   "media-video": { provider: "vimeo" },
   gallery: { layout: "masonry" },
