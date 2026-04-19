@@ -67,14 +67,9 @@ export async function POST(
 
   const sortOrder = (maxOrder?.maxOrder ?? -1) + 1;
 
-  await env.DB
-    .prepare("INSERT INTO media_item (id, siteId, mediaType, url, title, sortOrder, createdAt) VALUES (?, ?, ?, ?, ?, ?, ?)")
-    .bind(id, siteId, mediaType, bodyUrl.trim(), bodyTitle?.trim() ?? null, sortOrder, now)
-    .run();
-
   const item = await env.DB
-    .prepare("SELECT * FROM media_item WHERE id = ?")
-    .bind(id)
+    .prepare("INSERT INTO media_item (id, siteId, mediaType, url, title, sortOrder, createdAt) VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING *")
+    .bind(id, siteId, mediaType, bodyUrl.trim(), bodyTitle?.trim() ?? null, sortOrder, now)
     .first();
 
   return NextResponse.json({ item }, { status: 201 });
