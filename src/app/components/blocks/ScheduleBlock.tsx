@@ -75,17 +75,52 @@ export function ScheduleBlock({ block }: { block: Block }) {
                 )}
                 <p style={{ margin: "0 0 0.125rem", fontWeight: 600, fontSize: "0.95rem" }}>
                   {event.icon && <span style={{ marginRight: "0.4rem" }}>{event.icon}</span>}
-                  {event.name || <span style={{ color: "#9b8e85", fontStyle: "italic" }}>Event name</span>}
+                  {event.name ? (
+                    <span
+                      data-editable-item-index={i}
+                      data-editable-item-field="name"
+                      data-editable-array-key="events"
+                    >
+                      {event.name}
+                    </span>
+                  ) : (
+                    <span style={{ color: "#9b8e85", fontStyle: "italic" }}>Event name</span>
+                  )}
                 </p>
                 {event.location && (
                   <p style={{ margin: "0 0 0.125rem", fontSize: "0.82rem", color: "#6b6560" }}>
                     {event.mapsUrl ? (
-                      <a href={event.mapsUrl} target="_blank" rel="noopener noreferrer" style={{ color: "inherit", textDecoration: "underline" }}>{event.location}</a>
-                    ) : event.location}
+                      <a
+                        href={event.mapsUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{ color: "inherit", textDecoration: "underline" }}
+                        data-editable-item-index={i}
+                        data-editable-item-field="location"
+                        data-editable-array-key="events"
+                      >
+                        {event.location}
+                      </a>
+                    ) : (
+                      <span
+                        data-editable-item-index={i}
+                        data-editable-item-field="location"
+                        data-editable-array-key="events"
+                      >
+                        {event.location}
+                      </span>
+                    )}
                   </p>
                 )}
                 {event.description && (
-                  <p style={{ margin: 0, fontSize: "0.82rem", color: "#6b6560" }}>{event.description}</p>
+                  <p
+                    style={{ margin: 0, fontSize: "0.82rem", color: "#6b6560" }}
+                    data-editable-item-index={i}
+                    data-editable-item-field="description"
+                    data-editable-array-key="events"
+                  >
+                    {event.description}
+                  </p>
                 )}
                 {event.dressCode && (
                   <p style={{ margin: "0.25rem 0 0", fontSize: "0.75rem", color: "#9b8e85" }}>

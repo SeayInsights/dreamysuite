@@ -114,7 +114,7 @@ export function blockSectionStyle(cfg: Record<string, unknown>): CSSProperties {
     const oy = hasOffsetY ? (cfg.blockOffsetY as number) : 0;
     style.position = "relative";
     style.left = `${ox}px`;
-    style.marginTop = `${oy}px`;
+    style.top = `${oy}px`;
   }
 
   if (typeof cfg.blockZIndex === "number") {

@@ -60,12 +60,22 @@ export function FunFactsBlock({ block }: { block: Block }) {
                 <div style={{ fontSize: "1.75rem", marginBottom: "0.5rem" }}>{item.icon}</div>
               )}
               {item.title && (
-                <h4 style={{ margin: "0 0 0.375rem", fontSize: "0.95rem", fontWeight: 600 }}>
+                <h4
+                  style={{ margin: "0 0 0.375rem", fontSize: "0.95rem", fontWeight: 600 }}
+                  data-editable-item-index={i}
+                  data-editable-item-field="title"
+                  data-editable-array-key="items"
+                >
                   {item.title}
                 </h4>
               )}
               {item.body && (
-                <p style={{ margin: 0, fontSize: "0.85rem", color: "#4a4540", lineHeight: 1.55 }}>
+                <p
+                  style={{ margin: 0, fontSize: "0.85rem", color: "#4a4540", lineHeight: 1.55 }}
+                  data-editable-item-index={i}
+                  data-editable-item-field="body"
+                  data-editable-array-key="items"
+                >
                   {item.body}
                 </p>
               )}

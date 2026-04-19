@@ -5,7 +5,6 @@ import { type ReactNode, useEffect } from "react";
 import { IconRail } from "./IconRail";
 import { SlideTray } from "./SlideTray";
 import { TopBar } from "./TopBar";
-import { Inspector } from "./Inspector";
 import { Breadcrumb } from "./Breadcrumb";
 import { Canvas } from "./Canvas";
 import { EditorErrorBoundary } from "./EditorErrorBoundary";
@@ -71,8 +70,6 @@ export function EditorShell({ site, user: _user, children }: Props) {
 					</EditorErrorBoundary>
 					<Breadcrumb />
 				</main>
-
-				<Inspector />
 			</div>
 		</div>
 	);
