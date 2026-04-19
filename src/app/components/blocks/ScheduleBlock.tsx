@@ -11,6 +11,7 @@ interface ScheduleEvent {
   description?: string;
   dressCode?: string;
   icon?: string;
+  mapsUrl?: string;
 }
 
 interface Block { id: string; type: string; [key: string]: unknown }
@@ -67,12 +68,21 @@ export function ScheduleBlock({ block }: { block: Block }) {
 
               {/* Content */}
               <div className="timeline-content" style={{ paddingLeft: "1.25rem", flex: 1 }}>
+                {event.date && (
+                  <p style={{ margin: "0 0 0.1rem", fontSize: "0.72rem", fontWeight: 600, color: "var(--accent, #B8921A)", textTransform: "uppercase", letterSpacing: "0.04em" }}>
+                    {event.date}
+                  </p>
+                )}
                 <p style={{ margin: "0 0 0.125rem", fontWeight: 600, fontSize: "0.95rem" }}>
                   {event.icon && <span style={{ marginRight: "0.4rem" }}>{event.icon}</span>}
                   {event.name || <span style={{ color: "#9b8e85", fontStyle: "italic" }}>Event name</span>}
                 </p>
                 {event.location && (
-                  <p style={{ margin: "0 0 0.125rem", fontSize: "0.82rem", color: "#6b6560" }}>{event.location}</p>
+                  <p style={{ margin: "0 0 0.125rem", fontSize: "0.82rem", color: "#6b6560" }}>
+                    {event.mapsUrl ? (
+                      <a href={event.mapsUrl} target="_blank" rel="noopener noreferrer" style={{ color: "inherit", textDecoration: "underline" }}>{event.location}</a>
+                    ) : event.location}
+                  </p>
                 )}
                 {event.description && (
                   <p style={{ margin: 0, fontSize: "0.82rem", color: "#6b6560" }}>{event.description}</p>

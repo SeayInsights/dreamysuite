@@ -16,6 +16,7 @@ interface ScheduleEvent {
   description?: string;
   dressCode?: string;
   icon?: string;
+  mapsUrl?: string;
 }
 
 interface ScheduleConfig {
@@ -185,6 +186,13 @@ export function ScheduleEditor({
               value={event.icon ?? ""}
               onChange={(v) => updateEvent(event.id, { icon: v })}
               placeholder="emoji"
+            />
+
+            <PanelTextInput
+              label="Maps URL"
+              value={event.mapsUrl ?? ""}
+              onChange={(v) => updateEvent(event.id, { mapsUrl: v })}
+              placeholder="https://maps.google.com/..."
             />
           </div>
         ))}
