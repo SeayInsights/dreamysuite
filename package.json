@@ -11,7 +11,7 @@
     "build:effects": "node scripts/build-public-effects.mjs",
     "build": "node scripts/build-public-effects.mjs && next build --webpack",
     "start": "next start",
-    "lint": "next lint",
+    "lint": "eslint src --ext .ts,.tsx",
     "test": "vitest run",
     "deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
     "upload": "opennextjs-cloudflare build && opennextjs-cloudflare upload",
