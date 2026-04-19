@@ -146,6 +146,7 @@ export function BreakpointFrame({ children, nav }: Props) {
 	const bgImage = settings.bgImage as string | null;
 	const bgImageLayer = (settings.bgImageLayer as string) ?? "behind";
 	const bgImageOpacity = Number(settings.bgImageOpacity ?? 1);
+	const bgImageBleed = settings.bgImageBleed !== 0; // default true (1)
 
 	return (
 		<div
@@ -160,7 +161,7 @@ export function BreakpointFrame({ children, nav }: Props) {
 					...(isDesktop ? {} : { width: WIDTHS[breakpoint] }),
 					...themeVars(themeTokens.colors, themeTokens.typography),
 					background: pageBgDisabled ? "transparent" : curtainBg,
-					...(bgImage && bgImageLayer !== "overlay" && !pageBgDisabled ? {
+					...(bgImage && bgImageLayer !== "overlay" && !pageBgDisabled && bgImageBleed ? {
 						backgroundImage: `url('${bgImage}')`,
 						backgroundSize: "cover",
 						backgroundPosition: "center",
@@ -186,7 +187,15 @@ export function BreakpointFrame({ children, nav }: Props) {
 					/>
 				)}
 				<div className="editor-canvas-scroll relative h-full overflow-x-hidden overflow-y-auto" style={{ zIndex: 10 }}>
-					<div style={{ padding: `${mT}px ${mR}px ${mB}px ${mL}px` }}>
+					<div style={{
+						padding: `${mT}px ${mR}px ${mB}px ${mL}px`,
+						...(bgImage && bgImageLayer !== "overlay" && !pageBgDisabled && !bgImageBleed ? {
+							backgroundImage: `url('${bgImage}')`,
+							backgroundSize: "cover",
+							backgroundPosition: "center",
+							backgroundAttachment: "fixed",
+						} : {}),
+					}}>
 						{children}
 					</div>
 				</div>

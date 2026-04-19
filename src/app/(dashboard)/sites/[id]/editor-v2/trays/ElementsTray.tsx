@@ -14,6 +14,8 @@ import {
 	Square,
 	Quote,
 	Timer,
+	HelpCircle,
+	Lightbulb,
 	type LucideIcon,
 } from "lucide-react";
 
@@ -42,35 +44,39 @@ const TIMELINE   = { id: "timeline",   label: "Timeline",     Icon: Clock,     b
 const INFO_CARD  = { id: "info-card",  label: "Info Card",    Icon: MapPin,    blockType: "info-card" } as const;
 const COUNTDOWN  = { id: "countdown",  label: "Countdown",    Icon: Timer,     blockType: "countdown" } as const;
 const VENUE_MAP  = { id: "venue-map",  label: "Venue Map",    Icon: Square,    blockType: "venue-map" } as const;
+const FAQ        = { id: "faq",        label: "FAQ",          Icon: HelpCircle, blockType: "faq" } as const;
+const SCHEDULE   = { id: "schedule",   label: "Schedule",     Icon: Clock,      blockType: "schedule" } as const;
+const FUN_FACTS  = { id: "fun-facts",  label: "Fun Facts",    Icon: Lightbulb,  blockType: "fun-facts" } as const;
+const TRAVEL     = { id: "travel",     label: "Travel",       Icon: MapPin,     blockType: "travel" } as const;
 
 const EVENT_BLOCKS: Record<string, { label: string; blocks: BlockDef[] }> = {
 	wedding: {
 		label: "Wedding",
-		blocks: [RSVP, GUESTBOOK, TIMELINE, INFO_CARD, COUNTDOWN, VENUE_MAP],
+		blocks: [RSVP, GUESTBOOK, TIMELINE, SCHEDULE, FAQ, FUN_FACTS, TRAVEL, INFO_CARD, COUNTDOWN, VENUE_MAP],
 	},
 	anniversary: {
 		label: "Anniversary",
-		blocks: [GUESTBOOK, { ...TIMELINE, label: "Through the Years" }, COUNTDOWN, INFO_CARD],
+		blocks: [GUESTBOOK, { ...TIMELINE, label: "Through the Years" }, SCHEDULE, FAQ, FUN_FACTS, COUNTDOWN, INFO_CARD],
 	},
 	"vow-renewal": {
 		label: "Vow Renewal",
-		blocks: [RSVP, GUESTBOOK, TIMELINE, COUNTDOWN, VENUE_MAP],
+		blocks: [RSVP, GUESTBOOK, TIMELINE, SCHEDULE, FAQ, FUN_FACTS, TRAVEL, COUNTDOWN, VENUE_MAP],
 	},
 	engagement: {
 		label: "Engagement",
-		blocks: [RSVP, GUESTBOOK, { ...TIMELINE, label: "The Proposal" }, COUNTDOWN, INFO_CARD],
+		blocks: [RSVP, GUESTBOOK, { ...TIMELINE, label: "The Proposal" }, SCHEDULE, FAQ, FUN_FACTS, COUNTDOWN, INFO_CARD],
 	},
 	elopement: {
 		label: "Elopement",
-		blocks: [GUESTBOOK, { ...TIMELINE, label: "The Adventure" }, INFO_CARD],
+		blocks: [GUESTBOOK, { ...TIMELINE, label: "The Adventure" }, SCHEDULE, FAQ, FUN_FACTS, TRAVEL, INFO_CARD],
 	},
 	celebration: {
 		label: "Celebration",
-		blocks: [RSVP, GUESTBOOK, COUNTDOWN, VENUE_MAP, INFO_CARD],
+		blocks: [RSVP, GUESTBOOK, SCHEDULE, FAQ, FUN_FACTS, COUNTDOWN, VENUE_MAP, INFO_CARD],
 	},
 };
 
-const FALLBACK_EVENT = { label: "Event", blocks: [RSVP, GUESTBOOK, TIMELINE, INFO_CARD, COUNTDOWN, VENUE_MAP] };
+const FALLBACK_EVENT = { label: "Event", blocks: [RSVP, GUESTBOOK, TIMELINE, SCHEDULE, FAQ, FUN_FACTS, TRAVEL, INFO_CARD, COUNTDOWN, VENUE_MAP] };
 
 function getCategories(eventType: string | null): Category[] {
 	const event = EVENT_BLOCKS[eventType ?? ""] ?? FALLBACK_EVENT;
