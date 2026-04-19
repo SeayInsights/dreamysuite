@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { useEditorStore } from "@/app/stores/editorStore";
 import { useSelectedBlock } from "../hooks/useSelectedBlock";
 import { parseCfg } from "@/lib/editableField";
+import { hexToRgb, rgbToHex } from "@/lib/color";
 import { AnimationPresetPicker } from "../inspector/AnimationPresetPicker";
 import { getPreset } from "@/app/animations/registry";
 import { themeSwatches, themeGradients } from "../lib/themeSwatches";
@@ -113,17 +114,6 @@ function applyAngle(gradValue: string, angle: string): string {
 }
 
 type ColorMode = "hex" | "rgb";
-
-function hexToRgbParts(h: string): [number, number, number] {
-  const m = /^#?([0-9a-f]{6})$/i.exec(h);
-  if (!m) return [255, 255, 255];
-  return [parseInt(m[1].slice(0, 2), 16), parseInt(m[1].slice(2, 4), 16), parseInt(m[1].slice(4, 6), 16)];
-}
-
-function rgbPartsToHex(r: number, g: number, b: number): string {
-  const c = (v: number) => Math.max(0, Math.min(255, Math.round(v))).toString(16).padStart(2, "0");
-  return `#${c(r)}${c(g)}${c(b)}`;
-}
 
 function parseRgbaOpacity(val: string): { hex: string; opacity: number } {
   const m = val.match(/^rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*(?:,\s*([\d.]+))?\s*\)$/);
@@ -230,7 +220,7 @@ function BackgroundPopover({ currentValue, onSelect, swatches, gradients }: BgPo
             ) : (
               <div className="flex gap-1">
                 {(["r", "g", "b"] as const).map((ch, i) => {
-                  const parts = hexToRgbParts(hex);
+                  const parts = hexToRgb(hex);
                   return (
                     <input
                       key={ch}
@@ -239,9 +229,9 @@ function BackgroundPopover({ currentValue, onSelect, swatches, gradients }: BgPo
                       max={255}
                       value={parts[i]}
                       onChange={(e) => {
-                        const p = hexToRgbParts(hex);
+                        const p = hexToRgb(hex);
                         p[i] = Math.max(0, Math.min(255, parseInt(e.target.value) || 0));
-                        const next = rgbPartsToHex(p[0], p[1], p[2]);
+                        const next = rgbToHex(p[0], p[1], p[2]);
                         setHex(next);
                         applyHexOpacity(next, opacity);
                       }}
