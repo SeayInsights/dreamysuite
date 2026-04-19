@@ -55,8 +55,6 @@ const _inject_PixelTransition_Styles = () => {
 };
 if (typeof document !== 'undefined') _inject_PixelTransition_Styles();
 import { useRef, useEffect, useState } from 'react';
-import { gsap } from 'gsap';
-
 
 function PixelTransition({
   firstContent,
@@ -73,8 +71,13 @@ function PixelTransition({
   const pixelGridRef = useRef(null);
   const activeRef = useRef(null);
   const delayedCallRef = useRef(null);
+  const gsapRef = useRef(null);
 
   const [isActive, setIsActive] = useState(false);
+
+  useEffect(() => {
+    import('gsap').then(mod => { gsapRef.current = mod.gsap; });
+  }, []);
 
   const isTouchDevice =
     'ontouchstart' in window || navigator.maxTouchPoints > 0 || window.matchMedia('(pointer: coarse)').matches;
@@ -102,6 +105,9 @@ function PixelTransition({
   }, [gridSize, pixelColor]);
 
   const animatePixels = activate => {
+    const gsap = gsapRef.current;
+    if (!gsap) return;
+
     setIsActive(activate);
 
     const pixelGridEl = pixelGridRef.current;

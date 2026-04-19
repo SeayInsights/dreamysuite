@@ -2,7 +2,6 @@
 "use client";
 
 import { useRef, useEffect } from 'react';
-import { gsap } from 'gsap';
 
 const chromaGridStyles = `
 .chroma-grid { position:relative; width:100%; height:100%; display:grid; grid-template-columns:repeat(var(--cols,3),320px); grid-auto-rows:auto; justify-content:center; gap:0.75rem; max-width:1200px; margin:0 auto; padding:1rem; box-sizing:border-box; --x:50%; --y:50%; --r:220px; }
@@ -28,6 +27,11 @@ export const ChromaGrid = ({
   const setX = useRef(null);
   const setY = useRef(null);
   const pos = useRef({ x: 0, y: 0 });
+  const gsapRef = useRef(null);
+
+  useEffect(() => {
+    import('gsap').then(mod => { gsapRef.current = mod.gsap; });
+  }, []);
 
   const demo = [
     { image: 'https://i.pravatar.cc/300?img=8', title: 'Alex Rivera', subtitle: 'Full Stack Developer', handle: '@alexrivera', borderColor: '#4F46E5', gradient: 'linear-gradient(145deg,#4F46E5,#000)', url: 'https://github.com/' },
@@ -42,25 +46,37 @@ export const ChromaGrid = ({
   useEffect(() => {
     const el = rootRef.current;
     if (!el) return;
-    setX.current = gsap.quickSetter(el, '--x', 'px');
-    setY.current = gsap.quickSetter(el, '--y', 'px');
-    const { width, height } = el.getBoundingClientRect();
-    pos.current = { x: width / 2, y: height / 2 };
-    setX.current(pos.current.x);
-    setY.current(pos.current.y);
+    import('gsap').then(mod => {
+      const gsap = mod.gsap;
+      gsapRef.current = gsap;
+      setX.current = gsap.quickSetter(el, '--x', 'px');
+      setY.current = gsap.quickSetter(el, '--y', 'px');
+      const { width, height } = el.getBoundingClientRect();
+      pos.current = { x: width / 2, y: height / 2 };
+      setX.current(pos.current.x);
+      setY.current(pos.current.y);
+    });
   }, []);
 
   const moveTo = (x, y) => {
+    const gsap = gsapRef.current;
+    if (!gsap) return;
     gsap.to(pos.current, { x, y, duration: damping, ease, onUpdate: () => { setX.current?.(pos.current.x); setY.current?.(pos.current.y); }, overwrite: true });
   };
 
   const handleMove = e => {
+    const gsap = gsapRef.current;
+    if (!gsap) return;
     const r = rootRef.current.getBoundingClientRect();
     moveTo(e.clientX - r.left, e.clientY - r.top);
     gsap.to(fadeRef.current, { opacity: 0, duration: 0.25, overwrite: true });
   };
 
-  const handleLeave = () => { gsap.to(fadeRef.current, { opacity: 1, duration: fadeOut, overwrite: true }); };
+  const handleLeave = () => {
+    const gsap = gsapRef.current;
+    if (!gsap) return;
+    gsap.to(fadeRef.current, { opacity: 1, duration: fadeOut, overwrite: true });
+  };
 
   const handleCardClick = url => { if (url) window.open(url, '_blank', 'noopener,noreferrer'); };
 

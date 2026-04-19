@@ -2,7 +2,6 @@
 "use client";
 
 import { useRef, useEffect, useCallback } from 'react';
-import gsap from 'gsap';
 
 const _inject_BlobCursor_Styles = () => {
   if (typeof document === 'undefined') return;
@@ -68,6 +67,11 @@ export default function BlobCursor({
 }) {
   const containerRef = useRef(null);
   const blobsRef = useRef([]);
+  const gsapRef = useRef(null);
+
+  useEffect(() => {
+    import('gsap').then(mod => { gsapRef.current = mod.gsap; });
+  }, []);
 
   const updateOffset = useCallback(() => {
     if (!containerRef.current) return { left: 0, top: 0 };
@@ -77,6 +81,8 @@ export default function BlobCursor({
 
   const handleMove = useCallback(
     e => {
+      const gsap = gsapRef.current;
+      if (!gsap) return;
       const { left, top } = updateOffset();
       const x = 'clientX' in e ? e.clientX : e.touches[0].clientX;
       const y = 'clientY' in e ? e.clientY : e.touches[0].clientY;

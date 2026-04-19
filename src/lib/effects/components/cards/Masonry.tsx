@@ -2,7 +2,6 @@
 "use client";
 
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { gsap } from 'gsap';
 
 const masonryStyles = `
 .masonry-list { position:relative; width:100%; height:100%; }
@@ -47,6 +46,11 @@ const Masonry = ({
   );
   const [containerRef, { width }] = useMeasure();
   const [imagesReady, setImagesReady] = useState(false);
+  const gsapRef = useRef(null);
+
+  useEffect(() => {
+    import('gsap').then(mod => { gsapRef.current = mod.gsap; });
+  }, []);
 
   const getInitialPosition = item => {
     const containerRect = containerRef.current?.getBoundingClientRect();
@@ -80,7 +84,8 @@ const Masonry = ({
   const hasMounted = useRef(false);
 
   useLayoutEffect(() => {
-    if (!imagesReady) return;
+    const gsap = gsapRef.current;
+    if (!imagesReady || !gsap) return;
     grid.forEach((item, index) => {
       const selector = `[data-key="${item.id}"]`;
       const animationProps = { x: item.x, y: item.y, width: item.w, height: item.h };
@@ -96,11 +101,15 @@ const Masonry = ({
   }, [grid, imagesReady, stagger, animateFrom, blurToFocus, duration, ease]);
 
   const handleMouseEnter = (e, item) => {
+    const gsap = gsapRef.current;
+    if (!gsap) return;
     if (scaleOnHover) gsap.to(`[data-key="${item.id}"]`, { scale: hoverScale, duration: 0.3, ease: 'power2.out' });
     if (colorShiftOnHover) { const overlay = e.currentTarget.querySelector('.color-overlay'); if (overlay) gsap.to(overlay, { opacity: 0.3, duration: 0.3 }); }
   };
 
   const handleMouseLeave = (e, item) => {
+    const gsap = gsapRef.current;
+    if (!gsap) return;
     if (scaleOnHover) gsap.to(`[data-key="${item.id}"]`, { scale: 1, duration: 0.3, ease: 'power2.out' });
     if (colorShiftOnHover) { const overlay = e.currentTarget.querySelector('.color-overlay'); if (overlay) gsap.to(overlay, { opacity: 0, duration: 0.3 }); }
   };
