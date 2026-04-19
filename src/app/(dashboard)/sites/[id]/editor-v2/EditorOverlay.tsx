@@ -21,14 +21,26 @@ export function EditorOverlay({ children, containerRef }: Props) {
 			className="editor-canvas-scroll relative min-h-full w-full overflow-x-hidden pb-8"
 			onClick={(e) => {
 				const currentId = useEditorStore.getState().selectedBlockId;
-				const id = (e.target as HTMLElement)
-					.closest<HTMLElement>("[data-block-id]")
-					?.dataset.blockId;
-				if (id) {
-					if (id === currentId) clear();
-					else select(id);
-				} else {
+
+				// Use elementsFromPoint so blocks with negative z-index (sent to back)
+				// remain selectable even when visually behind other blocks.
+				const seen = new Set<string>();
+				const stackIds: string[] = [];
+				for (const el of document.elementsFromPoint(e.clientX, e.clientY)) {
+					const bid = (el as HTMLElement).closest<HTMLElement>("[data-block-id]")?.dataset.blockId;
+					if (bid && !seen.has(bid)) { seen.add(bid); stackIds.push(bid); }
+				}
+
+				if (stackIds.length === 0) { clear(); return; }
+
+				const currentIdx = currentId ? stackIds.indexOf(currentId) : -1;
+				if (currentIdx === -1) {
+					select(stackIds[0]);
+				} else if (stackIds.length === 1) {
 					clear();
+				} else {
+					// Multiple overlapping blocks — cycle front-to-back on each click.
+					select(stackIds[(currentIdx + 1) % stackIds.length]);
 				}
 			}}
 			onMouseMove={(e) => {
