@@ -4,11 +4,18 @@ import { useEditorStore } from "@/app/stores/editorStore";
 import { EffectPicker } from "../EffectPicker";
 
 export function NavigationTray() {
-	const settings = useEditorStore((s) => s.settings);
+	const showNavBrand = useEditorStore((s) => s.settings.showNavBrand);
+	const navPosition = useEditorStore((s) => s.settings.navPosition as string | undefined);
+	const navUnderline = useEditorStore((s) => s.settings.navUnderline);
+	const effectNavStyle = useEditorStore((s) => s.settings.effectNavStyle);
+	const navBg = useEditorStore((s) => s.settings.navBg);
+	const navBrandColor = useEditorStore((s) => s.settings.navBrandColor);
+	const navLinkColor = useEditorStore((s) => s.settings.navLinkColor);
+	const navHighlightColor = useEditorStore((s) => s.settings.navHighlightColor);
 	const updateSettings = useEditorStore((s) => s.updateSettings);
 
-	const showBrand = (settings.showNavBrand ?? 1) === 1;
-	const navPosition = (settings.navPosition as string) ?? "fixed";
+	const showBrand = (showNavBrand ?? 1) === 1;
+	const resolvedNavPosition = navPosition ?? "fixed";
 
 	return (
 		<div className="flex h-full flex-col">
@@ -31,7 +38,7 @@ export function NavigationTray() {
 					{/* Nav Style */}
 					<EffectPicker
 						category="nav-style"
-						value={settings.effectNavStyle}
+						value={effectNavStyle}
 						onChange={(id) => updateSettings({ effectNavStyle: id })}
 						label="Style"
 					/>
@@ -53,14 +60,14 @@ export function NavigationTray() {
 									onClick={() => updateSettings({ navPosition: opt.value })}
 									className={
 										"flex flex-col rounded-md border px-2.5 py-1.5 text-left transition-colors " +
-										(navPosition === opt.value
+										(resolvedNavPosition === opt.value
 											? "border-ring bg-accent"
 											: "border-border hover:border-ring/50")
 									}
 								>
 									<span className={
 										"text-xs font-medium " +
-										(navPosition === opt.value ? "text-accent-foreground" : "text-foreground")
+										(resolvedNavPosition === opt.value ? "text-accent-foreground" : "text-foreground")
 									}>
 										{opt.label}
 									</span>
@@ -76,10 +83,10 @@ export function NavigationTray() {
 							Link underline
 						</label>
 						<Toggle
-							on={(settings.navUnderline ?? "on") === "on"}
+							on={(navUnderline ?? "on") === "on"}
 							onToggle={() =>
 								updateSettings({
-									navUnderline: (settings.navUnderline ?? "on") === "on" ? "off" : "on",
+									navUnderline: (navUnderline ?? "on") === "on" ? "off" : "on",
 								})
 							}
 						/>
@@ -91,10 +98,10 @@ export function NavigationTray() {
 							Colors
 						</label>
 						<div className="flex flex-col gap-1.5">
-							<ColorRow label="Background" value={settings.navBg ?? "white"} onChange={(v) => updateSettings({ navBg: v })} />
-							<ColorRow label="Brand" value={settings.navBrandColor ?? "#1C1917"} onChange={(v) => updateSettings({ navBrandColor: v })} />
-							<ColorRow label="Links" value={settings.navLinkColor ?? "#6B6560"} onChange={(v) => updateSettings({ navLinkColor: v })} />
-							<ColorRow label="Highlight" value={settings.navHighlightColor ?? "#B8921A"} onChange={(v) => updateSettings({ navHighlightColor: v })} />
+							<ColorRow label="Background" value={navBg ?? "white"} onChange={(v) => updateSettings({ navBg: v })} />
+							<ColorRow label="Brand" value={navBrandColor ?? "#1C1917"} onChange={(v) => updateSettings({ navBrandColor: v })} />
+							<ColorRow label="Links" value={navLinkColor ?? "#6B6560"} onChange={(v) => updateSettings({ navLinkColor: v })} />
+							<ColorRow label="Highlight" value={navHighlightColor ?? "#B8921A"} onChange={(v) => updateSettings({ navHighlightColor: v })} />
 						</div>
 					</div>
 				</div>

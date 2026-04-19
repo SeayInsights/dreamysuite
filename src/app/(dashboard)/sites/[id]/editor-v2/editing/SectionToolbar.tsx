@@ -13,6 +13,7 @@ import { animate } from "motion/mini";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useEditorStore } from "@/app/stores/editorStore";
+import { useSelectedBlock } from "../hooks/useSelectedBlock";
 import { parseCfg } from "@/lib/editableField";
 import { AnimationPresetPicker } from "../inspector/AnimationPresetPicker";
 import { getPreset } from "@/app/animations/registry";
@@ -656,9 +657,9 @@ export function SectionToolbar({
 }): React.JSX.Element | null {
   const selectedBlockId = useEditorStore((s) => s.selectedBlockId);
   const isTextEditing = useEditorStore((s) => s.isTextEditing);
-  const blocks = useEditorStore((s) => s.blocks);
   const updateBlock = useEditorStore((s) => s.updateBlock);
   const selectBlock = useEditorStore((s) => s.selectBlock);
+  const selectedBlock = useSelectedBlock();
   const mode = useEditorStore((s) => s.mode);
   const themeColors = useEditorStore((s) => s.themeTokens.colors);
   const bgSwatches = useMemo(() => themeSwatches(themeColors), [themeColors]);
@@ -886,7 +887,11 @@ export function SectionToolbar({
 
   if (toolbarPhase === "hidden" || !renderPos || !renderBlockId) return null;
 
-  const block = blocks.find((b) => b.id === renderBlockId);
+  // Use selectedBlock from the hook for render — only re-renders when that
+  // specific block changes, not when any unrelated block changes.
+  // For bringToFront/sendToBack we read getState().blocks at call-time
+  // (not reactive) since those functions are only called on user interaction.
+  const block = selectedBlock?.id === renderBlockId ? selectedBlock : null;
   const config = parseCfg(block?.config);
 
   const currentBg =
@@ -925,7 +930,8 @@ export function SectionToolbar({
   const currentRotation = typeof config.blockRotation === "number" ? config.blockRotation : 0;
 
   function bringToFront() {
-    const maxZ = blocks.reduce((max, b) => {
+    const allBlocks = useEditorStore.getState().blocks;
+    const maxZ = allBlocks.reduce((max, b) => {
       const c = parseCfg(b.config);
       const z = typeof c.blockZIndex === "number" ? c.blockZIndex : 0;
       return Math.max(max, z);
@@ -936,7 +942,8 @@ export function SectionToolbar({
   }
 
   function sendToBack() {
-    const minZ = blocks.reduce((min, b) => {
+    const allBlocks = useEditorStore.getState().blocks;
+    const minZ = allBlocks.reduce((min, b) => {
       const c = parseCfg(b.config);
       const z = typeof c.blockZIndex === "number" ? c.blockZIndex : 0;
       return Math.min(min, z);
