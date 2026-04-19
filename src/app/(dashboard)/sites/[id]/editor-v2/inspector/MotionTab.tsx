@@ -2,6 +2,9 @@
 
 import { useEditorStore } from "@/app/stores/editorStore";
 import { AnimationPresetPicker } from "./AnimationPresetPicker";
+import { EffectPicker } from "../EffectPicker";
+
+const TRANSITION_EXCLUDE = ["animated-content", "fade-content", "gradual-blur"];
 
 const EASING_OPTIONS_SIMPLE = [
   "power2.out", "power2.inOut", "power3.out", "expo.out",
@@ -43,6 +46,16 @@ export function MotionTab() {
         <AnimationPresetPicker
           value={currentPreset}
           onChange={(id) => updateSettings({ defaultAnimation: id })}
+        />
+      </div>
+
+      <div className="space-y-2 border-t border-border pt-4">
+        <EffectPicker
+          category="transition"
+          value={settings.effectTransition}
+          onChange={(id) => updateSettings({ effectTransition: id, effectPreset: null })}
+          label="Block Transition"
+          excludeIds={TRANSITION_EXCLUDE}
         />
       </div>
 

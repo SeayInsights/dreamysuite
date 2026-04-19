@@ -5,6 +5,8 @@ import { createPortal } from "react-dom";
 import { animate } from "motion/mini";
 import { cn } from "@/lib/utils";
 import { duration, EASING } from "@/lib/motion";
+import { useEditorStore } from "@/app/stores/editorStore";
+import { getEffectsByCategory, getEffectById } from "@/lib/effects/registry";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -340,7 +342,122 @@ export function FloatingFormatToolbar({
       >
         <AlignRightIcon />
       </ToolbarButton>
+
+      <Divider />
+
+      <TextEffectDropdown />
     </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Text effect inline dropdown
+// ---------------------------------------------------------------------------
+
+const TEXT_EFFECTS = getEffectsByCategory("text");
+
+function TextEffectDropdown() {
+  const settings = useEditorStore((s) => s.settings);
+  const updateSettings = useEditorStore((s) => s.updateSettings);
+  const [open, setOpen] = useState(false);
+  const btnRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const [menuPos, setMenuPos] = useState({ top: 0, left: 0 });
+
+  const selected = settings.effectText ? getEffectById(settings.effectText) : null;
+
+  useEffect(() => {
+    if (!open) return;
+    function onDown(e: MouseEvent) {
+      const t = e.target as Node;
+      if (!menuRef.current?.contains(t) && !btnRef.current?.contains(t)) {
+        setOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", onDown);
+    return () => document.removeEventListener("mousedown", onDown);
+  }, [open]);
+
+  return (
+    <>
+      <button
+        ref={btnRef}
+        type="button"
+        aria-label="Text effect"
+        aria-expanded={open}
+        onMouseDown={(e) => e.stopPropagation()}
+        onClick={(e) => {
+          e.stopPropagation();
+          const rect = btnRef.current?.getBoundingClientRect();
+          if (rect) setMenuPos({ top: rect.bottom + 4, left: rect.left });
+          setOpen((v) => !v);
+        }}
+        className={cn(
+          "flex h-7 items-center gap-1 rounded px-1.5 text-xs",
+          "hover:bg-accent hover:text-accent-foreground",
+          "focus:outline-none focus:ring-1 focus:ring-ring",
+          open && "bg-accent text-accent-foreground",
+        )}
+        title="Text Effect"
+      >
+        <span className="max-w-[48px] truncate">
+          {selected ? selected.name : "Effect"}
+        </span>
+        <svg width="8" height="8" viewBox="0 0 8 8" fill="currentColor" aria-hidden>
+          <path d="M1 2.5l3 3 3-3" stroke="currentColor" strokeWidth="1.2" fill="none" strokeLinecap="round"/>
+        </svg>
+      </button>
+
+      {open && typeof document !== "undefined" && createPortal(
+        <div
+          ref={menuRef}
+          data-format-toolbar
+          className={cn(
+            "fixed z-[200] min-w-[140px] rounded-lg border border-border",
+            "bg-popover py-1 shadow-lg",
+          )}
+          style={{ top: menuPos.top, left: menuPos.left }}
+          onMouseDown={(e) => e.stopPropagation()}
+        >
+          <button
+            type="button"
+            onMouseDown={(e) => e.stopPropagation()}
+            onClick={() => {
+              updateSettings({ effectText: null, effectPreset: null });
+              setOpen(false);
+            }}
+            className={cn(
+              "flex w-full items-center px-3 py-1.5 text-left text-xs",
+              "hover:bg-accent hover:text-accent-foreground",
+              !settings.effectText && "text-primary font-medium",
+            )}
+          >
+            None
+          </button>
+          <div className="mx-2 my-0.5 h-px bg-border" />
+          {TEXT_EFFECTS.map((effect) => (
+            <button
+              key={effect.id}
+              type="button"
+              onMouseDown={(e) => e.stopPropagation()}
+              onClick={() => {
+                updateSettings({ effectText: effect.id, effectPreset: null });
+                setOpen(false);
+              }}
+              title={effect.description}
+              className={cn(
+                "flex w-full items-center px-3 py-1.5 text-left text-xs",
+                "hover:bg-accent hover:text-accent-foreground",
+                settings.effectText === effect.id && "text-primary font-medium",
+              )}
+            >
+              {effect.name}
+            </button>
+          ))}
+        </div>,
+        document.body,
+      )}
+    </>
   );
 }
 

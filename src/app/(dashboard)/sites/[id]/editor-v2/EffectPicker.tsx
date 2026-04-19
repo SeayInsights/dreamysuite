@@ -1,29 +1,19 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { ChevronDown, ChevronRight } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useEditorStore } from "@/app/stores/editorStore";
-import { getEffectsByCategory, getEffectById, getRecommended } from "@/lib/effects/registry";
-import type { EffectCategory, EventType, Mood, EffectEntry } from "@/lib/effects/types";
+import { getEffectsByCategory, getEffectById } from "@/lib/effects/registry";
+import type { EffectCategory, EffectEntry } from "@/lib/effects/types";
 
 interface Props {
   category: EffectCategory;
   value: string | null;
   onChange: (id: string | null) => void;
   label?: string;
+  excludeIds?: string[];
 }
-
-const MOOD_LABELS: Record<Mood, string> = {
-  romantic: "Romantic",
-  elegant: "Elegant",
-  modern: "Modern",
-  playful: "Playful",
-  dramatic: "Dramatic",
-  whimsical: "Whimsical",
-};
-
-const MOOD_ORDER: Mood[] = ["romantic", "elegant", "modern", "playful", "dramatic", "whimsical"];
 
 const INTENSITY_DOT: Record<string, string> = {
   subtle: "bg-emerald-400",
@@ -31,26 +21,15 @@ const INTENSITY_DOT: Record<string, string> = {
   dramatic: "bg-rose-400",
 };
 
-export function EffectPicker({ category, value, onChange, label }: Props) {
+export function EffectPicker({ category, value, onChange, label, excludeIds }: Props) {
   const [open, setOpen] = useState(false);
-  const [expandedMood, setExpandedMood] = useState<string | null>(null);
   const panelRef = useRef<HTMLDivElement>(null);
-  const mode = useEditorStore((s) => s.mode);
-  const eventType = useEditorStore((s) => s.eventType) as EventType | null;
 
   const allEffects = getEffectsByCategory(category);
+  const effects: EffectEntry[] = excludeIds
+    ? allEffects.filter((e) => !excludeIds.includes(e.id))
+    : allEffects;
   const selectedEffect = value ? getEffectById(value) : null;
-  const isPro = mode === "pro";
-
-  const recommended = eventType
-    ? getRecommended(category, eventType)
-    : allEffects.slice(0, 8);
-
-  const moodGroups = MOOD_ORDER.reduce<[Mood, EffectEntry[]][]>((acc, mood) => {
-    const effects = allEffects.filter((e) => e.mood.includes(mood));
-    if (effects.length > 0) acc.push([mood, effects]);
-    return acc;
-  }, []);
 
   useEffect(() => {
     if (!open) return;
@@ -66,7 +45,6 @@ export function EffectPicker({ category, value, onChange, label }: Props) {
   function handleSelect(id: string | null) {
     onChange(id);
     setOpen(false);
-    setExpandedMood(null);
   }
 
   return (
@@ -119,65 +97,23 @@ export function EffectPicker({ category, value, onChange, label }: Props) {
           <div className="h-px bg-border" />
 
           <div className="max-h-56 overflow-y-auto">
-            {isPro ? (
-              moodGroups.map(([mood, effects]) => (
-                <div key={mood}>
-                  <button
-                    type="button"
-                    onClick={() => setExpandedMood(expandedMood === mood ? null : mood)}
-                    className="flex w-full items-center gap-1.5 px-2.5 py-1.5 text-left text-[11px] font-semibold uppercase tracking-wider text-muted-foreground hover:bg-accent/50"
-                  >
-                    {expandedMood === mood ? (
-                      <ChevronDown className="size-3" />
-                    ) : (
-                      <ChevronRight className="size-3" />
-                    )}
-                    {MOOD_LABELS[mood]}
-                    <span className="text-[9px] font-normal">({effects.length})</span>
-                  </button>
-
-                  {expandedMood === mood && (
-                    <div className="flex flex-col">
-                      {effects.map((effect) => (
-                        <button
-                          key={effect.id}
-                          type="button"
-                          onClick={() => handleSelect(effect.id)}
-                          title={effect.description}
-                          className={cn(
-                            "flex w-full items-center gap-2 px-4 py-1.5 text-left text-xs transition-colors hover:bg-accent",
-                            value === effect.id && "bg-primary/10 font-medium text-primary",
-                          )}
-                        >
-                          <span
-                            className={cn("size-1.5 shrink-0 rounded-full", INTENSITY_DOT[effect.intensity])}
-                          />
-                          <span className="truncate">{effect.name}</span>
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              ))
-            ) : (
-              recommended.map((effect) => (
-                <button
-                  key={effect.id}
-                  type="button"
-                  onClick={() => handleSelect(effect.id)}
-                  title={effect.description}
-                  className={cn(
-                    "flex w-full items-center gap-2 px-2.5 py-1.5 text-left text-xs transition-colors hover:bg-accent",
-                    value === effect.id && "bg-primary/10 font-medium text-primary",
-                  )}
-                >
-                  <span
-                    className={cn("size-1.5 shrink-0 rounded-full", INTENSITY_DOT[effect.intensity])}
-                  />
-                  <span className="truncate">{effect.name}</span>
-                </button>
-              ))
-            )}
+            {effects.map((effect) => (
+              <button
+                key={effect.id}
+                type="button"
+                onClick={() => handleSelect(effect.id)}
+                title={effect.description}
+                className={cn(
+                  "flex w-full items-center gap-2 px-2.5 py-1.5 text-left text-xs transition-colors hover:bg-accent",
+                  value === effect.id && "bg-primary/10 font-medium text-primary",
+                )}
+              >
+                <span
+                  className={cn("size-1.5 shrink-0 rounded-full", INTENSITY_DOT[effect.intensity])}
+                />
+                <span className="truncate">{effect.name}</span>
+              </button>
+            ))}
           </div>
         </div>
       )}
