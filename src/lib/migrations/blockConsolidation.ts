@@ -108,6 +108,31 @@ function migrateTidbits(block: RawBlock): RawBlock {
   };
 }
 
+function migrateTravelSection(block: RawBlock): RawBlock {
+  const cfg = parseConfig(block.config);
+  return {
+    ...block,
+    type: "travel",
+    config: serializeConfig(cfg),
+  };
+}
+
+// multi-text blocks whose mode maps to a dedicated v2 block type
+const MULTI_TEXT_MODE_MAP: Record<string, string> = {
+  schedule: "schedule",
+  faq: "faq",
+  tidbits: "fun-facts",
+  travel: "travel",
+};
+
+function migrateMultiText(block: RawBlock): RawBlock | null {
+  const cfg = parseConfig(block.config);
+  const mode = typeof cfg.mode === "string" ? cfg.mode : "";
+  const targetType = MULTI_TEXT_MODE_MAP[mode];
+  if (!targetType) return null;
+  return { ...block, type: targetType, config: serializeConfig(cfg) };
+}
+
 const MIGRATORS: Record<string, (b: RawBlock) => RawBlock> = {
   video: migrateVideo,
   youtube: migrateYoutube,
@@ -117,6 +142,7 @@ const MIGRATORS: Record<string, (b: RawBlock) => RawBlock> = {
   "hotel-card": migrateHotelCard,
   rsvp: migrateRsvp,
   tidbits: migrateTidbits,
+  "travel-section": migrateTravelSection,
 };
 
 // ── Public API ────────────────────────────────────────────────────────────────
@@ -130,6 +156,15 @@ export interface MigrationResult {
 export function consolidateBlocks(blocks: RawBlock[]): MigrationResult {
   let migrated = 0;
   const result = blocks.map((block) => {
+    // multi-text mode consolidation (mode-dependent, handled separately)
+    if (block.type === "multi-text") {
+      const converted = migrateMultiText(block);
+      if (converted) {
+        migrated++;
+        return converted;
+      }
+      return block;
+    }
     const migrator = MIGRATORS[block.type];
     if (migrator) {
       migrated++;
@@ -141,5 +176,10 @@ export function consolidateBlocks(blocks: RawBlock[]): MigrationResult {
 }
 
 export function needsMigration(block: RawBlock): boolean {
+  if (block.type === "multi-text") {
+    const cfg = parseConfig(block.config);
+    const mode = typeof cfg.mode === "string" ? cfg.mode : "";
+    return mode in MULTI_TEXT_MODE_MAP;
+  }
   return block.type in MIGRATORS;
 }

@@ -92,8 +92,7 @@ export function useV1Migration(siteId: string) {
           const cfg = parseCfg(block.config);
           const legacy = pc[mapping.contentKey];
           if (!Array.isArray(legacy) || legacy.length === 0) {
-            // No legacy data — stamp the block so we skip it on future reloads
-            updateBlock(block.id, { config: { ...cfg, _v2migrated: true } });
+            // No legacy data for this key — skip without stamping so we retry next session
             continue;
           }
 

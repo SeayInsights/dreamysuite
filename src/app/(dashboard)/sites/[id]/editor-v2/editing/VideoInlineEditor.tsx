@@ -346,25 +346,27 @@ export function VideoInlineEditor({ containerRef }: Props) {
       className="pointer-events-none absolute inset-0 z-20"
       aria-hidden
     >
-      <AnimatePresence>
-        {active && (
-          <FloatingToolbar
-            key="toolbar"
-            blockRect={active.blockRect}
-            videoPanelOpen={videoPanel}
-            onVideoToggle={() => setVideoPanel((v) => !v)}
-            onDismiss={dismiss}
-          />
-        )}
-        {active && videoPanel && panelStyle && (
-          <InlineVideoPanel
-            key="video-panel"
-            blockId={active.blockId}
-            style={panelStyle}
-            onDismiss={() => setVideoPanel(false)}
-          />
-        )}
-      </AnimatePresence>
+      <div className="pointer-events-auto">
+        <AnimatePresence>
+          {active && (
+            <FloatingToolbar
+              key="toolbar"
+              blockRect={active.blockRect}
+              videoPanelOpen={videoPanel}
+              onVideoToggle={() => setVideoPanel((v) => !v)}
+              onDismiss={dismiss}
+            />
+          )}
+          {active && videoPanel && panelStyle && (
+            <InlineVideoPanel
+              key="video-panel"
+              blockId={active.blockId}
+              style={panelStyle}
+              onDismiss={() => setVideoPanel(false)}
+            />
+          )}
+        </AnimatePresence>
+      </div>
     </div>
   );
 }
