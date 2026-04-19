@@ -16,6 +16,7 @@ import { MotionTab } from "./inspector/MotionTab";
 import { AssistantTab } from "./inspector/AssistantTab";
 
 const PANEL_WIDTH = 320;
+const CONTENT_BLOCK_TYPES = new Set(["faq", "schedule", "fun-facts", "travel", "video", "media-video"]);
 
 type TabId = "layout" | "content" | "style" | "motion" | "assistant";
 const TABS: { id: TabId; label: string }[] = [
@@ -49,7 +50,6 @@ export function Inspector() {
 	const selectedBlock = useSelectedBlock();
 	const [tab, setTab] = useState<TabId>("layout");
 
-	const CONTENT_BLOCK_TYPES = new Set(["faq", "schedule", "fun-facts", "travel", "video", "media-video"]);
 	useEffect(() => {
 		if (!selectedBlock) return;
 		if (CONTENT_BLOCK_TYPES.has(selectedBlock.type)) {

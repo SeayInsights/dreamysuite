@@ -1,5 +1,6 @@
 import type React from "react";
 import { BLOCK_COMPONENTS } from "@/app/components/blocks";
+import type { BlockType } from "@/lib/schemas/blocks";
 
 export type BlockCategory = "Simple" | "Pro";
 
@@ -63,6 +64,14 @@ export const BLOCK_REGISTRY: Record<string, BlockRegistryEntry> = {
     visible: true,
   },
   // ── Legacy (existing DB records — hidden from block picker) ───────────────
+  "couple": {
+    component: BLOCK_COMPONENTS["couple"],
+    displayName: "Couple",
+    icon: "Heart",
+    category: "Simple",
+    defaultData: { coupleNames: "", dateText: "", locationText: "" },
+    visible: false,
+  },
   "video": {
     component: BLOCK_COMPONENTS["video"],
     displayName: "Video",
@@ -202,6 +211,11 @@ export const BLOCK_REGISTRY: Record<string, BlockRegistryEntry> = {
     visible: true,
   },
 };
+
+// Compile-time check: every BlockType must have a registry entry.
+// Adding a key to BLOCK_TYPES without a corresponding entry here produces a TS error on the next line.
+const _registryCheck: Record<BlockType, BlockRegistryEntry> = BLOCK_REGISTRY;
+void _registryCheck;
 
 export function getRegistryEntry(type: string): BlockRegistryEntry | undefined {
   return BLOCK_REGISTRY[type];

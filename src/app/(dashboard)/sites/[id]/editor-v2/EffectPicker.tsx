@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useEditorStore } from "@/app/stores/editorStore";
@@ -25,7 +25,7 @@ export function EffectPicker({ category, value, onChange, label, excludeIds }: P
   const [open, setOpen] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
 
-  const allEffects = getEffectsByCategory(category);
+  const allEffects = useMemo(() => getEffectsByCategory(category), [category]);
   const effects: EffectEntry[] = excludeIds
     ? allEffects.filter((e) => !excludeIds.includes(e.id))
     : allEffects;

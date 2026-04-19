@@ -122,7 +122,11 @@ export async function GET(
   const activeLang = new URL(req.url).searchParams.get("_lang") ?? null;
   return new Response(buildHtml(site, settings ?? null, pages, contentMap, blockTransMap, site.slug, activeLang, lockedPageIds), {
     status: 200,
-    headers: { "content-type": "text/html; charset=utf-8", "cache-control": "public, max-age=300, stale-while-revalidate=600" },
+    headers: {
+      "content-type": "text/html; charset=utf-8",
+      "cache-control": "public, max-age=300, stale-while-revalidate=600",
+      "content-security-policy": "default-src 'self'; script-src 'self' 'unsafe-inline' https://esm.sh https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self'; frame-src https:",
+    },
   });
 }
 
@@ -2334,7 +2338,7 @@ function renderBlock(
         <section class="block block-guest-book"${bsAttr} aria-label="Guest Book" data-block-id="${escHtml(block.id)}" data-block-type="${escHtml(block.type)}"
           style="max-width:600px;margin:0 auto;">
           ${heading ? `<h2 class="section-heading">${escHtml(heading)}</h2><div class="section-rule" aria-hidden="true"></div>` : ""}
-          <form class="rsvp-form" id="${formId}" onsubmit="submitGuestBook(event,'${escHtml(slug)}','${formId}','${listId}')">
+          <form class="rsvp-form" id="${formId}" onsubmit="submitGuestBook(event,'${escHtml(block.siteId)}','${formId}','${listId}')">
             <div class="form-group">
               <label class="form-label" for="gb-name-${escHtml(block.id)}">Your Name</label>
               <input class="form-input" id="gb-name-${escHtml(block.id)}" name="name" type="text" placeholder="Your name" required />
@@ -3483,6 +3487,47 @@ function submitRsvp(event, slug, formId, msgId) {
     msgEl.style.color = '#991b1b';
     msgEl.style.border = '1px solid #fecaca';
     msgEl.textContent = 'Network error. Please check your connection and try again.';
+  });
+}
+function submitGuestBook(event, siteId, formId, listId) {
+  event.preventDefault();
+  var form = document.getElementById(formId);
+  var listEl = document.getElementById(listId);
+  if (!form) return;
+  var data = new FormData(form);
+  var body = {
+    name: data.get('name') || '',
+    message: data.get('message') || ''
+  };
+  var submitBtn = form.querySelector('button[type="submit"]');
+  if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Sending\u2026'; }
+  fetch('/api/sites/' + encodeURIComponent(siteId) + '/guestbook', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify(body)
+  })
+  .then(function(res) { return res.json(); })
+  .then(function(result) {
+    if (result.entry) {
+      form.reset();
+      if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Sign the book'; }
+      if (listEl) {
+        var entry = result.entry;
+        var div = document.createElement('div');
+        div.style.cssText = 'padding:0.75rem 1rem;border:1px solid #e7e5e4;border-radius:6px;background:#faf8f5;';
+        div.innerHTML = '<strong style="font-size:0.875rem;">' + entry.name.replace(/[&<>"]/g, function(c){return({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]||c;}) + '</strong>' +
+          '<p style="margin:0.25rem 0 0;font-size:0.875rem;color:#57534e;">' + entry.message.replace(/[&<>"]/g, function(c){return({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]||c;}) + '</p>';
+        listEl.prepend(div);
+      }
+    } else {
+      if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Sign the book'; }
+      var errMsg = (result.error && result.error.message) ? result.error.message : 'Something went wrong. Please try again.';
+      alert(errMsg);
+    }
+  })
+  .catch(function() {
+    if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Sign the book'; }
+    alert('Network error. Please check your connection and try again.');
   });
 }
   </script>
