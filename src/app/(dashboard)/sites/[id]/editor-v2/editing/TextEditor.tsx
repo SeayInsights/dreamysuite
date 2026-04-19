@@ -29,6 +29,8 @@ interface EditState {
   blockRect: DOMRect;
   /** The actual DOM element being edited */
   element: HTMLElement;
+  /** Non-null when editing a translated language instead of primary */
+  translatingLang: string | null;
 }
 
 // ---------------------------------------------------------------------------
@@ -104,6 +106,7 @@ export function TextEditor({
   const blocks = useEditorStore((s) => s.blocks);
   const updateBlock = useEditorStore((s) => s.updateBlock);
   const setIsTextEditing = useEditorStore((s) => s.setIsTextEditing);
+  const setTranslation = useEditorStore((s) => s.setTranslation);
 
   const [editState, setEditState] = useState<EditState | null>(null);
   const toolbar = useFloatingToolbar();
@@ -120,15 +123,20 @@ export function TextEditor({
     (state: EditState) => {
       const el = state.element;
       const text = el.innerText.trim();
-      const currentBlock = useEditorStore
-        .getState()
-        .blocks.find((b) => b.id === state.blockId);
-      if (!currentBlock) return;
 
-      const currentCfg = parseCfgFromBlock(currentBlock);
-      updateBlock(state.blockId, {
-        config: { ...currentCfg, [state.field]: text },
-      });
+      if (state.translatingLang) {
+        setTranslation(state.blockId, state.translatingLang, state.field, text);
+      } else {
+        const currentBlock = useEditorStore
+          .getState()
+          .blocks.find((b) => b.id === state.blockId);
+        if (!currentBlock) return;
+
+        const currentCfg = parseCfgFromBlock(currentBlock);
+        updateBlock(state.blockId, {
+          config: { ...currentCfg, [state.field]: text },
+        });
+      }
 
       el.removeAttribute("contenteditable");
       el.removeAttribute("spellcheck");
@@ -137,7 +145,7 @@ export function TextEditor({
       setEditState(null);
       setIsTextEditing(false);
     },
-    [updateBlock, toolbar, setIsTextEditing],
+    [updateBlock, setTranslation, toolbar, setIsTextEditing],
   );
 
   const discard = useCallback((state: EditState) => {
@@ -180,26 +188,50 @@ export function TextEditor({
       e.preventDefault();
       e.stopPropagation();
 
-      const block = useEditorStore.getState().blocks.find((b) => b.id === blockId);
+      const store = useEditorStore.getState();
+      const block = store.blocks.find((b) => b.id === blockId);
       if (!block) return;
 
       const cfg = parseCfgFromBlock(block);
       const blockRect = blockEl!.getBoundingClientRect();
 
+      const displayLang = store.displayLang;
+      const mainLang = store.settings.mainLanguage || "en";
+      const isTranslating = !!(displayLang && displayLang !== mainLang);
+
       // Activate contentEditable on the element directly
       fieldEl.setAttribute("contenteditable", "true");
       fieldEl.setAttribute("spellcheck", "true");
-      fieldEl.style.outline = "2px solid var(--primary, #6366f1)";
+      const outlineColor = isTranslating
+        ? "var(--amber-500, #f59e0b)"
+        : "var(--primary, #6366f1)";
+      fieldEl.style.outline = `2px solid ${outlineColor}`;
       fieldEl.style.outlineOffset = "2px";
       fieldEl.style.borderRadius = "2px";
+
+      const originalText = fieldEl.innerText;
+
+      if (isTranslating) {
+        let translatedText = store.getTranslation(blockId, displayLang, field);
+        if (!translatedText) {
+          translatedText = String(cfg[field] ?? "");
+          if (translatedText) {
+            store.setTranslation(blockId, displayLang, field, translatedText);
+          }
+        }
+        if (translatedText) {
+          fieldEl.innerText = translatedText;
+        }
+      }
 
       const state: EditState = {
         blockId,
         field,
-        originalText: fieldEl.innerText,
+        originalText,
         originalCfg: cfg,
         blockRect,
         element: fieldEl,
+        translatingLang: isTranslating ? displayLang : null,
       };
       setEditState(state);
       setIsTextEditing(true);
@@ -234,8 +266,6 @@ export function TextEditor({
     function handleBlur(e: FocusEvent) {
       const rt = e.relatedTarget as HTMLElement | null;
       if (rt?.closest("[data-format-toolbar]")) {
-        // Focus moved to the format toolbar (e.g. font select, color picker).
-        // Don't commit — handleFormat will re-focus the CE after the interaction.
         return;
       }
       const state = editStateRef.current;
@@ -244,6 +274,26 @@ export function TextEditor({
 
     el.addEventListener("blur", handleBlur);
     return () => el.removeEventListener("blur", handleBlur);
+  }, [editState, commit]);
+
+  // -------------------------------------------------------------------------
+  // Click-outside → commit (catches cases where focus moved to toolbar first)
+  // -------------------------------------------------------------------------
+
+  useEffect(() => {
+    if (!editState) return;
+    const el = editState.element;
+
+    function handleDocMouseDown(e: MouseEvent) {
+      const target = e.target as HTMLElement;
+      if (el.contains(target)) return;
+      if (target.closest("[data-format-toolbar]")) return;
+      const state = editStateRef.current;
+      if (state) commit(state);
+    }
+
+    document.addEventListener("mousedown", handleDocMouseDown);
+    return () => document.removeEventListener("mousedown", handleDocMouseDown);
   }, [editState, commit]);
 
   // -------------------------------------------------------------------------

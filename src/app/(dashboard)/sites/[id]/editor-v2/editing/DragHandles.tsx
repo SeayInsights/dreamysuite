@@ -269,6 +269,7 @@ export function DragHandles({ containerRef }: Props) {
 						onPointerDown={(e) => {
 							startResize(selectedBlockId, pos, e);
 						}}
+						onClick={(e) => e.stopPropagation()}
 						className="pointer-events-auto absolute"
 						style={{
 							left: visualLeft - hitPad,

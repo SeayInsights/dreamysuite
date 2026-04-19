@@ -23,6 +23,28 @@ const PRESETS: Preset[] = [
     ),
   },
   {
+    id: "fade-in",
+    label: "Fade In",
+    icon: (
+      <svg viewBox="0 0 32 32" fill="none" className="size-6">
+        <rect x="4" y="8" width="8" height="16" rx="1.5" fill="currentColor" opacity="0.15" />
+        <rect x="12" y="8" width="8" height="16" rx="1.5" fill="currentColor" opacity="0.45" />
+        <rect x="20" y="8" width="8" height="16" rx="1.5" fill="currentColor" opacity="0.85" />
+      </svg>
+    ),
+  },
+  {
+    id: "spring-in",
+    label: "Spring In",
+    icon: (
+      <svg viewBox="0 0 32 32" fill="none" className="size-6">
+        <rect x="6" y="10" width="20" height="14" rx="2" fill="currentColor" />
+        <path d="M10 8 L16 4 L22 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" opacity="0.4" />
+        <path d="M8 8 L24 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeDasharray="2 2" opacity="0.3" />
+      </svg>
+    ),
+  },
+  {
     id: "blur-in",
     label: "Blur In",
     icon: (

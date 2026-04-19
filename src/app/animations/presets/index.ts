@@ -8,5 +8,7 @@ registerPreset("ken-burns", () => import("./kenBurns").then((m) => m.default));
 registerPreset("scroll-pinned-story", () => import("./scrollPinnedStory").then((m) => m.default));
 registerPreset("sticky-date", () => import("./stickyDate").then((m) => m.default));
 registerPreset("blur-in", () => import("./blurIn").then((m) => m.default));
+registerPreset("fade-in", () => import("./fadeIn").then((m) => m.default));
+registerPreset("spring-in", () => import("./springIn").then((m) => m.default));
 registerPreset("envelope-unfold", () => import("./envelopeUnfold").then((m) => m.default));
 registerPreset("letter-cascade", () => import("./letterCascade").then((m) => m.default));
