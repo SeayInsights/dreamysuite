@@ -15,6 +15,17 @@ const WIDTHS: Record<Breakpoint, number> = {
 	mobile: 390,
 };
 
+const GFONTS_MAP: Record<string, string> = {
+	"Playfair Display": "Playfair+Display:wght@400;600",
+	"Cormorant Garamond": "Cormorant+Garamond:wght@400;600",
+	"EB Garamond": "EB+Garamond:wght@400;600",
+	"Lato": "Lato:wght@400;700",
+	"Merriweather": "Merriweather:wght@400;700",
+	"Source Sans 3": "Source+Sans+3:wght@400;600",
+	"Open Sans": "Open+Sans:wght@400;600",
+};
+const SYSTEM_FONTS = new Set(["Georgia", "Inter"]);
+
 interface Props {
 	children?: ReactNode;
 	nav?: ReactNode;
@@ -103,6 +114,26 @@ export function BreakpointFrame({ children, nav }: Props) {
 		const anim = animate(el, target, { duration: dur, ease: EASING.standard });
 		anim.finished.then(() => window.dispatchEvent(new Event("resize")));
 	}, [breakpoint]);
+
+	useEffect(() => {
+		const fonts = [themeTokens.typography.headingFont, themeTokens.typography.bodyFont]
+			.map((f) => f.split(",")[0].trim())
+			.filter((f) => !SYSTEM_FONTS.has(f) && GFONTS_MAP[f])
+			.filter((f, i, a) => a.indexOf(f) === i);
+		if (!fonts.length) return;
+		const id = "editor-gfonts";
+		let link = document.getElementById(id) as HTMLLinkElement | null;
+		const href = `https://fonts.googleapis.com/css2?${fonts.map((f) => `family=${GFONTS_MAP[f]}`).join("&")}&display=swap`;
+		if (link) {
+			link.href = href;
+		} else {
+			link = document.createElement("link");
+			link.id = id;
+			link.rel = "stylesheet";
+			link.href = href;
+			document.head.appendChild(link);
+		}
+	}, [themeTokens.typography.headingFont, themeTokens.typography.bodyFont]);
 
 	const isDesktop = breakpoint === "desktop";
 

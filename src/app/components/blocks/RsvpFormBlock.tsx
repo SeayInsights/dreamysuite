@@ -8,14 +8,10 @@ interface Block { id: string; type: string; [key: string]: unknown }
 
 export function RsvpFormBlock({ block }: { block: Block }) {
   const cfg = parseCfg(block.config);
-  const heading = String(cfg.heading ?? "RSVP");
-  const subheading = String(cfg.subheading ?? "We hope to see you there!");
+  const heading = String(cfg.heading ?? cfg.title ?? "RSVP");
+  const subheading = String(cfg.subheading ?? "");
   const siteId = String(cfg.siteId ?? "");
 
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
-  const [email, setEmail] = useState("");
-  const [attending, setAttending] = useState<"yes" | "no" | "">("");
   const [status, setStatus] = useState<"idle" | "submitting" | "success" | "error">("idle");
   const [errorMsg, setErrorMsg] = useState("");
 
@@ -24,11 +20,18 @@ export function RsvpFormBlock({ block }: { block: Block }) {
     if (!siteId) { setErrorMsg("RSVP unavailable — site not configured."); setStatus("error"); return; }
     setStatus("submitting");
     setErrorMsg("");
+    const form = e.target as HTMLFormElement;
+    const data = new FormData(form);
     try {
       const res = await fetch(`/api/sites/${siteId}/guests`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ firstName, lastName, email, rsvpStatus: attending || "pending" }),
+        body: JSON.stringify({
+          firstName: data.get("firstName"),
+          lastName: data.get("lastName"),
+          email: data.get("email"),
+          rsvpStatus: data.get("attending") || "pending",
+        }),
       });
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
@@ -41,55 +44,54 @@ export function RsvpFormBlock({ block }: { block: Block }) {
     }
   }
 
-  const inputStyle: React.CSSProperties = {
-    width: "100%", padding: "0.5rem 0.75rem", border: "1px solid #e0dbd4",
-    borderRadius: "6px", fontSize: "0.9rem", boxSizing: "border-box",
-  };
-
   return (
-    <section className="block block-rsvp-form" data-block-id={block.id} data-block-type={block.type}
-      style={{ padding: "2rem", maxWidth: "480px", margin: "0 auto", ...blockSectionStyle(cfg) }}>
-      <TextEffectWrapper as="h2" style={{ textAlign: "center", marginBottom: "0.25rem" }}>{heading}</TextEffectWrapper>
-      {subheading && <p style={{ textAlign: "center", color: "#9b8e85", marginBottom: "1.5rem" }}>{subheading}</p>}
+    <section className="block block-rsvp" data-block-id={block.id} data-block-type={block.type}
+      style={blockSectionStyle(cfg)}>
+      <TextEffectWrapper as="h2" className="section-heading">{heading}</TextEffectWrapper>
+      <div className="section-rule" aria-hidden="true" />
+      {subheading && <p style={{ textAlign: "center", color: "var(--muted)", marginBottom: "1.5rem" }}>{subheading}</p>}
 
       {status === "success" ? (
-        <p style={{ textAlign: "center", color: "#22c55e", fontWeight: 500 }}>
+        <div role="alert" aria-live="polite" style={{ textAlign: "center", color: "#22c55e", padding: "0.875rem 1rem", fontSize: "0.9375rem" }}>
           Thank you! Your RSVP has been received.
-        </p>
+        </div>
       ) : (
-        <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.5rem" }}>
-            <input style={inputStyle} placeholder="First name" value={firstName}
-              onChange={(e) => setFirstName(e.target.value)} required />
-            <input style={inputStyle} placeholder="Last name" value={lastName}
-              onChange={(e) => setLastName(e.target.value)} required />
+        <form className="rsvp-form" onSubmit={handleSubmit} aria-label="RSVP form">
+          <div className="form-group">
+            <label className="form-label">First Name</label>
+            <input className="form-input" name="firstName" type="text" placeholder="First name" autoComplete="given-name" required />
           </div>
-          <input style={inputStyle} type="email" placeholder="Email address" value={email}
-            onChange={(e) => setEmail(e.target.value)} required />
-          <div style={{ display: "flex", gap: "0.5rem" }}>
-            {(["yes", "no"] as const).map((val) => (
-              <label key={val} style={{
-                flex: 1, display: "flex", alignItems: "center", justifyContent: "center",
-                gap: "0.4rem", padding: "0.5rem", border: `1px solid ${attending === val ? "var(--accent, #B8921A)" : "#e0dbd4"}`,
-                borderRadius: "6px", cursor: "pointer", fontSize: "0.875rem",
-                background: attending === val ? "var(--accent-light, #fdf6e3)" : "#fff",
-              }}>
-                <input type="radio" name="attending" value={val} checked={attending === val}
-                  onChange={() => setAttending(val)} style={{ accentColor: "var(--accent, #B8921A)" }} />
-                {val === "yes" ? "Attending" : "Not attending"}
+          <div className="form-group">
+            <label className="form-label">Last Name</label>
+            <input className="form-input" name="lastName" type="text" placeholder="Last name" autoComplete="family-name" required />
+          </div>
+          <div className="form-group">
+            <label className="form-label">
+              Email <span style={{ fontSize: "0.8em", color: "#9b8e85", fontWeight: 400 }}>(optional — for confirmation)</span>
+            </label>
+            <input className="form-input" name="email" type="email" placeholder="your@email.com" autoComplete="email" />
+          </div>
+          <div className="form-group">
+            <label className="form-label">Will you attend?</label>
+            <div className="radio-group" role="radiogroup" aria-label="Attendance">
+              <label className="radio-label">
+                <input type="radio" name="attending" value="yes" required /> Joyfully accepts
               </label>
-            ))}
+              <label className="radio-label">
+                <input type="radio" name="attending" value="no" /> Regretfully declines
+              </label>
+            </div>
+          </div>
+          <div className="form-group">
+            <label className="form-label">Notes or Dietary Restrictions</label>
+            <textarea className="form-input form-textarea" name="notes" placeholder="Optional" />
           </div>
           {status === "error" && (
-            <p style={{ color: "#ef4444", fontSize: "0.85rem", margin: 0 }}>{errorMsg}</p>
+            <p role="alert" style={{ color: "#ef4444", fontSize: "0.85rem", margin: 0 }}>{errorMsg}</p>
           )}
-          <button type="submit" disabled={status === "submitting"} style={{
-            background: "var(--accent, #B8921A)", color: "#fff", border: "none",
-            padding: "0.65rem 1.5rem", borderRadius: "6px", fontSize: "0.9rem",
-            fontWeight: 600, cursor: status === "submitting" ? "not-allowed" : "pointer",
-            opacity: status === "submitting" ? 0.7 : 1,
-          }}>
-            {status === "submitting" ? "Sending…" : "Send RSVP"}
+          <button className="rsvp-submit" type="submit" disabled={status === "submitting"}
+            style={{ background: "var(--accent, #B8921A)", opacity: status === "submitting" ? 0.7 : 1 }}>
+            {status === "submitting" ? "Sending\u2026" : "Send RSVP"}
           </button>
         </form>
       )}
