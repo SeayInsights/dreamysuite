@@ -50,6 +50,26 @@ export async function POST(
       { status: 400 },
     );
   }
+  if (rows.length > 200) {
+    return NextResponse.json(
+      { error: { code: "PAYLOAD_TOO_LARGE", message: "rows array exceeds 200 items." } },
+      { status: 400 },
+    );
+  }
+
+  // Verify all supplied blockIds belong to this site
+  const uniqueBlockIds = [...new Set(rows.map((r) => r.blockId))];
+  const placeholders = uniqueBlockIds.map(() => "?").join(",");
+  const owned = await env.DB
+    .prepare(`SELECT id FROM block WHERE id IN (${placeholders}) AND siteId = ?`)
+    .bind(...uniqueBlockIds, siteId)
+    .all<{ id: string }>();
+  if (owned.results.length !== uniqueBlockIds.length) {
+    return NextResponse.json(
+      { error: { code: "FORBIDDEN", message: "One or more blockIds do not belong to this site." } },
+      { status: 403 },
+    );
+  }
 
   const now = Date.now();
   const stmts = rows.map((r) =>
