@@ -6,15 +6,17 @@ import { Music, Play, RotateCcw, ExternalLink } from "lucide-react";
 import { useEditorStore } from "@/app/stores/editorStore";
 
 export function MusicTray() {
-	const settings = useEditorStore((s) => s.settings);
+	const musicUrl = useEditorStore((s) => s.settings.musicUrl);
+	const songResetPages = useEditorStore((s) => s.settings.songResetPages);
+	const popupAfterAnimation = useEditorStore((s) => s.settings.popupAfterAnimation);
 	const updateSettings = useEditorStore((s) => s.updateSettings);
 	const pages = useEditorStore((s) => s.pages);
 
-	const [urlDraft, setUrlDraft] = useState(settings.musicUrl ?? "");
+	const [urlDraft, setUrlDraft] = useState(musicUrl ?? "");
 
-	const songResetPages: string[] = (() => {
+	const parsedSongResetPages: string[] = (() => {
 		try {
-			const parsed = JSON.parse(settings.songResetPages ?? "");
+			const parsed = JSON.parse(songResetPages ?? "");
 			return Array.isArray(parsed) ? parsed : [];
 		} catch {
 			return [];
@@ -27,14 +29,14 @@ export function MusicTray() {
 	}
 
 	function toggleResetPage(pageId: string) {
-		const next = songResetPages.includes(pageId)
-			? songResetPages.filter((id) => id !== pageId)
-			: [...songResetPages, pageId];
+		const next = parsedSongResetPages.includes(pageId)
+			? parsedSongResetPages.filter((id) => id !== pageId)
+			: [...parsedSongResetPages, pageId];
 		updateSettings({ songResetPages: next.length > 0 ? JSON.stringify(next) : null });
 	}
 
-	const hasMusic = !!settings.musicUrl;
-	const sourceLabel = describeSource(settings.musicUrl);
+	const hasMusic = !!musicUrl;
+	const sourceLabel = describeSource(musicUrl);
 
 	return (
 		<div className="flex h-full flex-col">
@@ -71,7 +73,7 @@ export function MusicTray() {
 								<span>{sourceLabel}</span>
 							</div>
 						)}
-						{hasMusic && <MusicPreview url={settings.musicUrl!} />}
+						{hasMusic && <MusicPreview url={musicUrl!} />}
 					</div>
 
 					{hasMusic && (
@@ -83,10 +85,10 @@ export function MusicTray() {
 										Autoplay on open
 									</label>
 									<ToggleSwitch
-										on={settings.popupAfterAnimation !== 1}
+										on={popupAfterAnimation !== 1}
 										onToggle={() =>
 											updateSettings({
-												popupAfterAnimation: settings.popupAfterAnimation === 1 ? 0 : 1,
+												popupAfterAnimation: popupAfterAnimation === 1 ? 0 : 1,
 											})
 										}
 									/>
@@ -107,7 +109,7 @@ export function MusicTray() {
 									</p>
 									<div className="flex flex-col gap-0.5 rounded-md border border-border p-2">
 										{pages.map((page) => {
-											const on = songResetPages.includes(page.id);
+											const on = parsedSongResetPages.includes(page.id);
 											return (
 												<button
 													key={page.id}

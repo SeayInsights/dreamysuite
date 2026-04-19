@@ -126,7 +126,6 @@ function MoveHandle({ rect, blockId, containerRef }: MoveHandleProps) {
 
 export function DragHandles({ containerRef }: Props) {
 	const { selectedBlockId } = useSelection();
-	const blocks = useEditorStore((s) => s.blocks);
 	const [rect, setRect] = useState<Rect | null>(null);
 	const rafRef = useRef<number | null>(null);
 
@@ -156,7 +155,7 @@ export function DragHandles({ containerRef }: Props) {
 			window.removeEventListener("scroll", schedMeasure, true);
 			if (rafRef.current) cancelAnimationFrame(rafRef.current);
 		};
-	}, [containerRef, measure, selectedBlockId, blocks]);
+	}, [containerRef, measure, selectedBlockId]);
 
 	if (!selectedBlockId || !rect) return null;
 
