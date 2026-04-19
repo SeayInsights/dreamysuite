@@ -2,7 +2,6 @@
 "use client";
 
 import { useEffect, useRef } from 'react';
-import { gsap } from 'gsap';
 
 export default function GridMotion({ items = [], gradientColor = 'black' }) {
   const gridRef = useRef(null);
@@ -16,39 +15,52 @@ export default function GridMotion({ items = [], gradientColor = 'black' }) {
   const combinedItems = items.length > 0 ? items.slice(0, totalItems) : defaultItems;
 
   useEffect(() => {
-    gsap.ticker.lagSmoothing(0);
+    let cancelled = false;
+    const cleanup: Array<() => void> = [];
 
-    const handleMouseMove = e => {
-      mouseXRef.current = e.clientX;
-    };
+    (async () => {
+      const { gsap } = await import('gsap');
+      if (cancelled) return;
 
-    const updateMotion = () => {
-      const maxMoveAmount = 300;
-      const baseDuration = 0.8;
-      const inertiaFactors = [0.6, 0.4, 0.3, 0.2];
+      gsap.ticker.lagSmoothing(0);
 
-      rowRefs.current.forEach((row, index) => {
-        if (row) {
-          const direction = index % 2 === 0 ? 1 : -1;
-          const moveAmount =
-            ((mouseXRef.current / window.innerWidth) * maxMoveAmount - maxMoveAmount / 2) * direction;
+      const handleMouseMove = e => {
+        mouseXRef.current = e.clientX;
+      };
 
-          gsap.to(row, {
-            x: moveAmount,
-            duration: baseDuration + inertiaFactors[index % inertiaFactors.length],
-            ease: 'power3.out',
-            overwrite: 'auto'
-          });
-        }
-      });
-    };
+      const updateMotion = () => {
+        const maxMoveAmount = 300;
+        const baseDuration = 0.8;
+        const inertiaFactors = [0.6, 0.4, 0.3, 0.2];
 
-    const removeAnimationLoop = gsap.ticker.add(updateMotion);
-    window.addEventListener('mousemove', handleMouseMove);
+        rowRefs.current.forEach((row, index) => {
+          if (row) {
+            const direction = index % 2 === 0 ? 1 : -1;
+            const moveAmount =
+              ((mouseXRef.current / window.innerWidth) * maxMoveAmount - maxMoveAmount / 2) * direction;
+
+            gsap.to(row, {
+              x: moveAmount,
+              duration: baseDuration + inertiaFactors[index % inertiaFactors.length],
+              ease: 'power3.out',
+              overwrite: 'auto'
+            });
+          }
+        });
+      };
+
+      const removeAnimationLoop = gsap.ticker.add(updateMotion);
+      window.addEventListener('mousemove', handleMouseMove);
+
+      cleanup.push(
+        () => window.removeEventListener('mousemove', handleMouseMove),
+        () => removeAnimationLoop()
+      );
+    })();
 
     return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
-      removeAnimationLoop();
+      cancelled = true;
+      cleanup.forEach(fn => fn());
     };
   }, []);
 

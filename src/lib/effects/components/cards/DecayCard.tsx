@@ -2,7 +2,6 @@
 "use client";
 
 import { useEffect, useRef } from 'react';
-import { gsap } from 'gsap';
 
 const decayCardStyles = `
 .dc-content { position:relative; }
@@ -24,49 +23,63 @@ const DecayCard = ({
   const winsize = useRef({ width: window.innerWidth, height: window.innerHeight });
 
   useEffect(() => {
-    const lerp = (a, b, n) => (1 - n) * a + n * b;
-    const map = (x, a, b, c, d) => ((x - a) * (d - c)) / (b - a) + c;
-    const distance = (x1, x2, y1, y2) => Math.hypot(x1 - x2, y1 - y2);
+    let cancelled = false;
+    let rafId: number;
+    const cleanup: Array<() => void> = [];
 
-    const handleResize = () => { winsize.current = { width: window.innerWidth, height: window.innerHeight }; };
-    const handleMouseMove = ev => { cursor.current = { x: ev.clientX, y: ev.clientY }; };
+    (async () => {
+      const { gsap } = await import('gsap');
+      if (cancelled) return;
 
-    window.addEventListener('resize', handleResize);
-    window.addEventListener('mousemove', handleMouseMove);
+      const lerp = (a, b, n) => (1 - n) * a + n * b;
+      const map = (x, a, b, c, d) => ((x - a) * (d - c)) / (b - a) + c;
+      const distance = (x1, x2, y1, y2) => Math.hypot(x1 - x2, y1 - y2);
 
-    const imgValues = { imgTransforms: { x: 0, y: 0, rz: 0 }, displacementScale: 0 };
+      const handleResize = () => { winsize.current = { width: window.innerWidth, height: window.innerHeight }; };
+      const handleMouseMove = ev => { cursor.current = { x: ev.clientX, y: ev.clientY }; };
 
-    const render = () => {
-      let targetX = lerp(imgValues.imgTransforms.x, map(cursor.current.x, 0, winsize.current.width, -120, 120), 0.1);
-      let targetY = lerp(imgValues.imgTransforms.y, map(cursor.current.y, 0, winsize.current.height, -120, 120), 0.1);
-      const targetRz = lerp(imgValues.imgTransforms.rz, map(cursor.current.x, 0, winsize.current.width, -10, 10), 0.1);
+      window.addEventListener('resize', handleResize);
+      window.addEventListener('mousemove', handleMouseMove);
 
-      if (targetX > movementBound) targetX = movementBound + (targetX - movementBound) * 0.2;
-      if (targetX < -movementBound) targetX = -movementBound + (targetX + movementBound) * 0.2;
-      if (targetY > movementBound) targetY = movementBound + (targetY - movementBound) * 0.2;
-      if (targetY < -movementBound) targetY = -movementBound + (targetY + movementBound) * 0.2;
+      const imgValues = { imgTransforms: { x: 0, y: 0, rz: 0 }, displacementScale: 0 };
 
-      imgValues.imgTransforms.x = targetX;
-      imgValues.imgTransforms.y = targetY;
-      imgValues.imgTransforms.rz = targetRz;
+      const render = () => {
+        let targetX = lerp(imgValues.imgTransforms.x, map(cursor.current.x, 0, winsize.current.width, -120, 120), 0.1);
+        let targetY = lerp(imgValues.imgTransforms.y, map(cursor.current.y, 0, winsize.current.height, -120, 120), 0.1);
+        const targetRz = lerp(imgValues.imgTransforms.rz, map(cursor.current.x, 0, winsize.current.width, -10, 10), 0.1);
 
-      if (svgRef.current) gsap.set(svgRef.current, { x: imgValues.imgTransforms.x, y: imgValues.imgTransforms.y, rotateZ: imgValues.imgTransforms.rz });
+        if (targetX > movementBound) targetX = movementBound + (targetX - movementBound) * 0.2;
+        if (targetX < -movementBound) targetX = -movementBound + (targetX + movementBound) * 0.2;
+        if (targetY > movementBound) targetY = movementBound + (targetY - movementBound) * 0.2;
+        if (targetY < -movementBound) targetY = -movementBound + (targetY + movementBound) * 0.2;
 
-      const cursorTravelledDistance = distance(cachedCursor.current.x, cursor.current.x, cachedCursor.current.y, cursor.current.y);
-      imgValues.displacementScale = lerp(imgValues.displacementScale, map(cursorTravelledDistance, 0, 200, 0, maxDisplacement), 0.06);
+        imgValues.imgTransforms.x = targetX;
+        imgValues.imgTransforms.y = targetY;
+        imgValues.imgTransforms.rz = targetRz;
 
-      if (displacementMapRef.current) gsap.set(displacementMapRef.current, { attr: { scale: imgValues.displacementScale } });
+        if (svgRef.current) gsap.set(svgRef.current, { x: imgValues.imgTransforms.x, y: imgValues.imgTransforms.y, rotateZ: imgValues.imgTransforms.rz });
 
-      cachedCursor.current = { ...cursor.current };
+        const cursorTravelledDistance = distance(cachedCursor.current.x, cursor.current.x, cachedCursor.current.y, cursor.current.y);
+        imgValues.displacementScale = lerp(imgValues.displacementScale, map(cursorTravelledDistance, 0, 200, 0, maxDisplacement), 0.06);
+
+        if (displacementMapRef.current) gsap.set(displacementMapRef.current, { attr: { scale: imgValues.displacementScale } });
+
+        cachedCursor.current = { ...cursor.current };
+        rafId = requestAnimationFrame(render);
+      };
+
       rafId = requestAnimationFrame(render);
-    };
 
-    let rafId = requestAnimationFrame(render);
+      cleanup.push(
+        () => { if (rafId) cancelAnimationFrame(rafId); },
+        () => window.removeEventListener('resize', handleResize),
+        () => window.removeEventListener('mousemove', handleMouseMove)
+      );
+    })();
 
     return () => {
-      cancelAnimationFrame(rafId);
-      window.removeEventListener('resize', handleResize);
-      window.removeEventListener('mousemove', handleMouseMove);
+      cancelled = true;
+      cleanup.forEach(fn => fn());
     };
   }, [maxDisplacement, movementBound]);
 

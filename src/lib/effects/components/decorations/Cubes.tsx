@@ -92,7 +92,6 @@ const _inject_Cubes_Styles = () => {
 };
 if (typeof document !== 'undefined') _inject_Cubes_Styles();
 import { useCallback, useEffect, useRef } from 'react';
-import gsap from 'gsap';
 
 
 const Cubes = ({
@@ -118,6 +117,11 @@ const Cubes = ({
   const simPosRef = useRef({ x: 0, y: 0 });
   const simTargetRef = useRef({ x: 0, y: 0 });
   const simRAFRef = useRef(null);
+  const gsapRef = useRef(null);
+
+  useEffect(() => {
+    import('gsap').then(mod => { gsapRef.current = mod.gsap; });
+  }, []);
 
   const colGap = typeof cellGap === 'number' ? `${cellGap}px` : cellGap?.col !== undefined ? `${cellGap.col}px` : '5%';
   const rowGap = typeof cellGap === 'number' ? `${cellGap}px` : cellGap?.row !== undefined ? `${cellGap.row}px` : '5%';
@@ -135,7 +139,7 @@ const Cubes = ({
         if (dist <= radius) {
           const pct = 1 - dist / radius;
           const angle = pct * maxAngle;
-          gsap.to(cube, {
+          gsapRef.current?.to(cube, {
             duration: enterDur,
             ease: easing,
             overwrite: true,
@@ -143,7 +147,7 @@ const Cubes = ({
             rotateY: angle
           });
         } else {
-          gsap.to(cube, {
+          gsapRef.current?.to(cube, {
             duration: leaveDur,
             ease: 'power3.out',
             overwrite: true,
@@ -180,7 +184,7 @@ const Cubes = ({
   const resetAll = useCallback(() => {
     if (!sceneRef.current) return;
     sceneRef.current.querySelectorAll('.cube').forEach(cube =>
-      gsap.to(cube, {
+      gsapRef.current?.to(cube, {
         duration: leaveDur,
         rotateX: 0,
         rotateY: 0,
@@ -260,13 +264,13 @@ const Cubes = ({
           const delay = ring * spreadDelay;
           const faces = rings[ring].flatMap(cube => Array.from(cube.querySelectorAll('.cube-face')));
 
-          gsap.to(faces, {
+          gsapRef.current?.to(faces, {
             backgroundColor: rippleColor,
             duration: animDuration,
             delay,
             ease: 'power3.out'
           });
-          gsap.to(faces, {
+          gsapRef.current?.to(faces, {
             backgroundColor: faceColor,
             duration: animDuration,
             delay: delay + animDuration + holdTime,

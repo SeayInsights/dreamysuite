@@ -68,16 +68,11 @@ export async function POST(
     resolvedOrder = (maxOrder?.maxOrder ?? -1) + 1;
   }
 
-  await env.DB
+  const block = await env.DB
     .prepare(
-      "INSERT INTO block (id, siteId, pageId, type, config, sortOrder, isVisible, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, 1, ?, ?)"
+      "INSERT INTO block (id, siteId, pageId, type, config, sortOrder, isVisible, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, 1, ?, ?) RETURNING *"
     )
     .bind(id, siteId, pageId, type, configStr, resolvedOrder, now, now)
-    .run();
-
-  const block = await env.DB
-    .prepare("SELECT * FROM block WHERE id = ?")
-    .bind(id)
     .first();
 
   return NextResponse.json({ block }, { status: 201 });

@@ -170,11 +170,6 @@ const _inject_StickerPeel_Styles = () => {
 };
 if (typeof document !== 'undefined') _inject_StickerPeel_Styles();
 import { useRef, useEffect, useMemo } from 'react';
-import { gsap } from 'gsap';
-import { Draggable } from 'gsap/Draggable';
-
-
-gsap.registerPlugin(Draggable);
 
 const StickerPeel = ({
   imageSrc,
@@ -195,12 +190,17 @@ const StickerPeel = ({
   const pointLightRef = useRef(null);
   const pointLightFlippedRef = useRef(null);
   const draggableInstanceRef = useRef(null);
+  const gsapRef = useRef(null);
+  const DraggableRef = useRef(null);
+
 
   const defaultPadding = 10;
 
   useEffect(() => {
+    const gsap = gsapRef.current;
     const target = dragTargetRef.current;
     if (!target) return;
+    if (!gsap) return;
 
     let startX = 0,
       startY = 0;
@@ -218,65 +218,83 @@ const StickerPeel = ({
   }, [initialPosition]);
 
   useEffect(() => {
-    const target = dragTargetRef.current;
-    const boundsEl = target.parentNode;
+    let cancelled = false;
+    const cleanup: Array<() => void> = [];
 
-    draggableInstanceRef.current = Draggable.create(target, {
-      type: 'x,y',
-      bounds: boundsEl,
-      inertia: true,
-      onDrag() {
-        const rot = gsap.utils.clamp(-24, 24, this.deltaX * 0.4);
-        gsap.to(target, { rotation: rot, duration: 0.15, ease: 'power1.out' });
-      },
-      onDragEnd() {
-        const rotationEase = 'power2.out';
-        const duration = 0.8;
-        gsap.to(target, { rotation: 0, duration, ease: rotationEase });
-      }
-    })[0];
+    (async () => {
+      const { gsap } = await import('gsap');
+      const { Draggable } = await import('gsap/Draggable');
+      gsap.registerPlugin(Draggable);
+      gsapRef.current = gsap;
+      DraggableRef.current = Draggable;
+      if (cancelled) return;
 
-    const handleResize = () => {
-      if (draggableInstanceRef.current) {
-        draggableInstanceRef.current.update();
+      const target = dragTargetRef.current;
+      if (!target) return;
+      const boundsEl = target.parentNode;
 
-        const currentX = gsap.getProperty(target, 'x');
-        const currentY = gsap.getProperty(target, 'y');
-
-        const boundsRect = boundsEl.getBoundingClientRect();
-        const targetRect = target.getBoundingClientRect();
-
-        const maxX = boundsRect.width - targetRect.width;
-        const maxY = boundsRect.height - targetRect.height;
-
-        const newX = Math.max(0, Math.min(currentX, maxX));
-        const newY = Math.max(0, Math.min(currentY, maxY));
-
-        if (newX !== currentX || newY !== currentY) {
-          gsap.to(target, {
-            x: newX,
-            y: newY,
-            duration: 0.3,
-            ease: 'power2.out'
-          });
+      draggableInstanceRef.current = Draggable.create(target, {
+        type: 'x,y',
+        bounds: boundsEl,
+        inertia: true,
+        onDrag() {
+          const rot = gsap.utils.clamp(-24, 24, this.deltaX * 0.4);
+          gsap.to(target, { rotation: rot, duration: 0.15, ease: 'power1.out' });
+        },
+        onDragEnd() {
+          const rotationEase = 'power2.out';
+          const duration = 0.8;
+          gsap.to(target, { rotation: 0, duration, ease: rotationEase });
         }
-      }
-    };
+      })[0];
 
-    window.addEventListener('resize', handleResize);
-    window.addEventListener('orientationchange', handleResize);
+      const handleResize = () => {
+        if (draggableInstanceRef.current) {
+          draggableInstanceRef.current.update();
+
+          const currentX = gsap.getProperty(target, 'x');
+          const currentY = gsap.getProperty(target, 'y');
+
+          const boundsRect = boundsEl.getBoundingClientRect();
+          const targetRect = target.getBoundingClientRect();
+
+          const maxX = boundsRect.width - targetRect.width;
+          const maxY = boundsRect.height - targetRect.height;
+
+          const newX = Math.max(0, Math.min(currentX, maxX));
+          const newY = Math.max(0, Math.min(currentY, maxY));
+
+          if (newX !== currentX || newY !== currentY) {
+            gsap.to(target, {
+              x: newX,
+              y: newY,
+              duration: 0.3,
+              ease: 'power2.out'
+            });
+          }
+        }
+      };
+
+      window.addEventListener('resize', handleResize);
+      window.addEventListener('orientationchange', handleResize);
+
+      cleanup.push(
+        () => window.removeEventListener('resize', handleResize),
+        () => window.removeEventListener('orientationchange', handleResize),
+        () => { if (draggableInstanceRef.current) draggableInstanceRef.current.kill(); }
+      );
+    })();
 
     return () => {
-      window.removeEventListener('resize', handleResize);
-      window.removeEventListener('orientationchange', handleResize);
-      if (draggableInstanceRef.current) {
-        draggableInstanceRef.current.kill();
-      }
+      cancelled = true;
+      cleanup.forEach(fn => fn());
     };
   }, []);
 
   useEffect(() => {
     const updateLight = e => {
+      const gsap = gsapRef.current;
+      if (!gsap) return;
       const rect = containerRef.current?.getBoundingClientRect();
       if (!rect) return;
 

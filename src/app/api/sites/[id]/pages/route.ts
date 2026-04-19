@@ -58,13 +58,14 @@ export async function POST(
 
   const sortOrder = (maxOrder?.maxOrder ?? -1) + 1;
 
+  let page: unknown;
   try {
-    await env.DB
+    page = await env.DB
       .prepare(
-        "INSERT INTO page (id, siteId, slug, label, isVisible, isLocked, sortOrder, createdAt, updatedAt) VALUES (?, ?, ?, ?, 1, 0, ?, ?, ?)"
+        "INSERT INTO page (id, siteId, slug, label, isVisible, isLocked, sortOrder, createdAt, updatedAt) VALUES (?, ?, ?, ?, 1, 0, ?, ?, ?) RETURNING *"
       )
       .bind(id, siteId, slug, label, sortOrder, now, now)
-      .run();
+      .first();
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     if (msg.includes("UNIQUE")) {
@@ -73,11 +74,6 @@ export async function POST(
     console.error("[api/sites/[id]/pages POST]", msg);
     return NextResponse.json({ error: { code: "INTERNAL_ERROR", message: "Failed to create page" } }, { status: 500 });
   }
-
-  const page = await env.DB
-    .prepare("SELECT * FROM page WHERE id = ?")
-    .bind(id)
-    .first();
 
   return NextResponse.json({ page }, { status: 201 });
 }

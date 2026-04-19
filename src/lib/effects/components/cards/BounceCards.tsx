@@ -2,7 +2,6 @@
 "use client";
 
 import { useEffect, useRef } from 'react';
-import { gsap } from 'gsap';
 
 const bounceCardsStyles = `
 .bounceCardsContainer { position:relative; display:flex; justify-content:center; align-items:center; width:400px; height:400px; }
@@ -20,12 +19,25 @@ export default function BounceCards({
   enableHover = true
 }) {
   const containerRef = useRef(null);
+  const gsapRef = useRef(null);
 
   useEffect(() => {
-    const ctx = gsap.context(() => {
-      gsap.fromTo('.bc-card', { scale: 0 }, { scale: 1, stagger: animationStagger, ease: easeType, delay: animationDelay });
-    }, containerRef);
-    return () => ctx.revert();
+    let cancelled = false;
+    let ctx = null;
+
+    (async () => {
+      const { gsap } = await import('gsap');
+      gsapRef.current = gsap;
+      if (cancelled) return;
+      ctx = gsap.context(() => {
+        gsap.fromTo('.bc-card', { scale: 0 }, { scale: 1, stagger: animationStagger, ease: easeType, delay: animationDelay });
+      }, containerRef);
+    })();
+
+    return () => {
+      cancelled = true;
+      ctx?.revert();
+    };
   }, [animationStagger, easeType, animationDelay]);
 
   const getNoRotationTransform = transformStr => {
@@ -45,7 +57,8 @@ export default function BounceCards({
   };
 
   const pushSiblings = hoveredIdx => {
-    if (!enableHover || !containerRef.current) return;
+    const gsap = gsapRef.current;
+    if (!enableHover || !containerRef.current || !gsap) return;
     const q = gsap.utils.selector(containerRef);
     images.forEach((_, i) => {
       const target = q(`.bc-card-${i}`);
@@ -61,7 +74,8 @@ export default function BounceCards({
   };
 
   const resetSiblings = () => {
-    if (!enableHover || !containerRef.current) return;
+    const gsap = gsapRef.current;
+    if (!enableHover || !containerRef.current || !gsap) return;
     const q = gsap.utils.selector(containerRef);
     images.forEach((_, i) => {
       const target = q(`.bc-card-${i}`);
