@@ -1,4 +1,5 @@
-import { lazy, type ComponentType } from "react";
+import dynamic from "next/dynamic";
+import type { ComponentType } from "react";
 import { getEffectById } from "./registry";
 
 type Importer = () => Promise<{ default: ComponentType<any> }>;
@@ -105,14 +106,15 @@ export function getEffectComponent(id: string): ComponentType<any> | null {
   const importer = IMPORT_MAP[key];
   if (!importer) return null;
 
-  const LazyComponent = lazy(
+  const DynamicComponent = dynamic(
     () => importer().catch((err) => {
       console.warn(`[effects] Failed to load ${id}:`, err);
       componentCache.delete(id);
       return { default: (() => null) as unknown as ComponentType<any> };
     }),
+    { ssr: false },
   );
 
-  componentCache.set(id, LazyComponent);
-  return LazyComponent;
+  componentCache.set(id, DynamicComponent);
+  return DynamicComponent;
 }
