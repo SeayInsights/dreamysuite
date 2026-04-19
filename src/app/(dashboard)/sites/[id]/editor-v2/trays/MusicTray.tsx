@@ -198,7 +198,7 @@ function MusicPreview({ url }: { url: string }) {
 		<iframe
 			src={embed.src}
 			title="Music preview"
-			allow="autoplay; encrypted-media"
+			allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
 			className="w-full rounded-md border-0"
 			style={{ height: embed.height }}
 		/>
