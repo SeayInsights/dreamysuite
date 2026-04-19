@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import type { Env } from "@/app/lib/auth.server";
 import { safeBlockConfig } from "@/lib/schemas/blocks";
+import { isRateLimited } from "@/lib/rateLimit";
 
 function escEmail(s: string): string {
   return s
@@ -202,6 +203,13 @@ export async function POST(
 ) {
   const { env: rawEnv } = await getCloudflareContext({ async: true });
   const env = rawEnv as unknown as Env;
+
+  // Rate limit: 5 requests per 600 s per IP on RSVP
+  const ip = req.headers.get("cf-connecting-ip") ?? "unknown";
+  if (await isRateLimited(env.RATE_LIMIT_KV, `rsvp:${ip}`, 5, 600)) {
+    return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+  }
+
   const { siteSlug } = await params;
   const db = env.DB;
 

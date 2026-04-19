@@ -1,7 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
+import { z } from "zod";
 import type { Env } from "@/app/lib/auth.server";
-import { requireSiteOwnership, apiOwnershipError } from "@/lib/api/site-auth";
+import { requireSiteOwnership, apiOwnershipError, parseJsonBody } from "@/lib/api/site-auth";
+
+const MediaCreateSchema = z.object({
+  url: z.string().url().max(2048),
+  title: z.string().max(200).optional(),
+  mediaType: z.enum(["video", "music"]).optional(),
+});
 
 export async function GET(
   req: NextRequest,
@@ -36,16 +43,19 @@ export async function POST(
   const check = await requireSiteOwnership(req, env, siteId);
   if ("error" in check) return apiOwnershipError(check);
 
-  const body = await req.json() as { url?: string; title?: string; mediaType?: string };
+  const parsed = await parseJsonBody<unknown>(req);
+  if ("error" in parsed) return parsed.error;
 
-  if (!body.url || !body.url.trim()) {
-    return NextResponse.json({ error: { code: "BAD_REQUEST", message: "url is required" } }, { status: 400 });
+  const result = MediaCreateSchema.safeParse(parsed.body);
+  if (!result.success) {
+    return NextResponse.json(
+      { error: { code: "BAD_REQUEST", message: result.error.issues[0]?.message ?? "Invalid request body" } },
+      { status: 400 },
+    );
   }
 
-  const mediaType = body.mediaType ?? "video";
-  if (!["video", "music"].includes(mediaType)) {
-    return NextResponse.json({ error: { code: "BAD_REQUEST", message: "mediaType must be video or music" } }, { status: 400 });
-  }
+  const { url: bodyUrl, title: bodyTitle, mediaType: rawMediaType } = result.data;
+  const mediaType = rawMediaType ?? "video";
 
   const id = crypto.randomUUID();
   const now = Date.now();
@@ -59,7 +69,7 @@ export async function POST(
 
   await env.DB
     .prepare("INSERT INTO media_item (id, siteId, mediaType, url, title, sortOrder, createdAt) VALUES (?, ?, ?, ?, ?, ?, ?)")
-    .bind(id, siteId, mediaType, body.url.trim(), body.title?.trim() ?? null, sortOrder, now)
+    .bind(id, siteId, mediaType, bodyUrl.trim(), bodyTitle?.trim() ?? null, sortOrder, now)
     .run();
 
   const item = await env.DB
