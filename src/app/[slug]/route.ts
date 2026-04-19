@@ -324,6 +324,10 @@ const GFONTS_MAP: Record<string, string> = {
   "Playfair Display": "Playfair+Display:wght@400;600",
   "Cormorant Garamond": "Cormorant+Garamond:wght@400;600",
   "EB Garamond": "EB+Garamond:wght@400;600",
+  "Lato": "Lato:wght@400;700",
+  "Merriweather": "Merriweather:wght@400;700",
+  "Source Sans 3": "Source+Sans+3:wght@400;600",
+  "Open Sans": "Open+Sans:wght@400;600",
 };
 
 interface BuiltStyles {
@@ -1716,7 +1720,8 @@ function renderBlock(
     }
 
     case "youtube": {
-      const videoId = cfg.videoId as string | undefined;
+      const rawUrl = cfg.url as string | undefined;
+      const videoId = (cfg.videoId as string | undefined) ?? (rawUrl ? (rawUrl.match(/(?:youtu\.be\/|[?&]v=)([^&\s]+)/)?.[1] ?? "") : "");
       return `
         <section class="block block-youtube"${bsAttr} aria-label="YouTube video" data-block-id="${escHtml(block.id)}" data-block-type="${escHtml(block.type)}">
           ${
@@ -1779,10 +1784,13 @@ function renderBlock(
     }
 
     case "venue-map": {
+      const embedUrl = (cfg.embedUrl as string | undefined) ?? (cfg.mapUrl as string | undefined);
       const address = cfg.address as string | undefined;
-      const name = cfg.name as string | undefined;
+      const name = (cfg.name as string | undefined) ?? (cfg.venueName as string | undefined);
       const note = cfg.note as string | undefined;
-      const mapSrc = address
+      const mapSrc = embedUrl
+        ? embedUrl
+        : address
         ? `https://maps.google.com/maps?q=${encodeURIComponent(address)}&output=embed`
         : null;
       return `
@@ -1868,15 +1876,19 @@ function renderBlock(
 
     case "photo-split": {
       const photo = (cfg.photo as Record<string, unknown> | undefined) ?? {};
-      const photoUrl = String(photo.url ?? "");
-      const photoSide = String(cfg.photoSide ?? "left");
+      const flatImageUrl = cfg.imageUrl as string | undefined;
+      const photoUrl = String(flatImageUrl ?? photo.url ?? "");
+      const photoSide = String(cfg.photoSide ?? cfg.layout ?? "left");
       const cropVal = escHtml(String(photo.crop ?? "center"));
       const wPx = photo.widthPx ? `${Number(photo.widthPx)}px` : "auto";
       const hPx = photo.heightPx ? `${Number(photo.heightPx)}px` : "auto";
       const offsetXRaw = Number(photo.offsetX ?? 0);
       const marginDir = photoSide === "right" ? "right" : "left";
       const photoContainerStyle = `flex-shrink:0;${offsetXRaw !== 0 ? `margin-${marginDir}:${offsetXRaw}px;` : ""}`;
-      const components = (cfg.components as Array<Record<string, unknown>>) ?? [];
+      const flatHeading = cfg.heading as string | undefined;
+      const flatBody = (cfg.body as string | undefined) ?? (cfg.text as string | undefined);
+      const components = (cfg.components as Array<Record<string, unknown>>) ??
+        (flatHeading || flatBody ? [{ type: "text", heading: flatHeading ?? "", body: flatBody ?? "" }] : []);
 
       const imgEl = photoUrl
         ? `<div class="ps-photo" style="${photoContainerStyle}">
@@ -2068,6 +2080,185 @@ function renderBlock(
       <div class="text-body"${itemDivStyle ? ` style="${itemDivStyle}"` : ""}>${b ? `<p${langBodyAttr}>${b}</p>` : (idx === 0 ? placeholder("Text will appear here once added.") : "")}</div>`;
       }).join("")}
     </section>`;
+    }
+
+    case "media-video": {
+      const url = cfg.url as string | undefined;
+      const height = (cfg.height as string | undefined) ?? "100dvh";
+      const provider = cfg.provider as string | undefined;
+      const isYoutube = provider === "youtube" ||
+        (provider !== "direct" && url && (url.includes("youtube.com") || url.includes("youtu.be")));
+
+      if (isYoutube && url) {
+        const ytMatch = url.match(/(?:youtu\.be\/|[?&]v=)([^&\s]+)/);
+        const ytId = ytMatch?.[1] ?? "";
+        return `
+        <section class="block block-media-video"${bsAttr} aria-label="Video" data-block-id="${escHtml(block.id)}" data-block-type="${escHtml(block.type)}">
+          ${ytId
+            ? `<div class="video-wrap">
+                 <iframe src="https://www.youtube-nocookie.com/embed/${escHtml(ytId)}" title="YouTube video" frameborder="0"
+                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen class="youtube-iframe"></iframe>
+               </div>`
+            : placeholder("Invalid YouTube URL.")}
+        </section>`;
+      }
+      return `
+        <section class="block block-media-video"${bsAttr} aria-label="Video" data-block-id="${escHtml(block.id)}" data-block-type="${escHtml(block.type)}" style="position:relative;${url ? `height:${escHtml(height)}` : ""}">
+          ${url
+            ? `<video src="${escHtml(url)}" autoplay muted loop playsinline style="width:100%;height:100%;object-fit:cover;"></video>`
+            : mediaPlaceholder("Video")}
+        </section>`;
+    }
+
+    case "gallery": {
+      const layout = String(cfg.layout ?? "grid");
+
+      if (layout === "split") {
+        const imageUrl = cfg.imageUrl as string | undefined;
+        const heading = String(cfg.heading ?? "");
+        const body = String(cfg.body ?? "");
+        const imageLayout = String(cfg.imageLayout ?? "left");
+        const isRight = imageLayout === "right";
+        const imgEl = imageUrl
+          ? `<div style="flex:1;"><img src="${escHtml(imageUrl)}" alt="" loading="lazy" style="width:100%;border-radius:8px;object-fit:cover;" /></div>`
+          : `<div style="flex:1;background:#f5f0eb;border-radius:8px;height:200px;display:flex;align-items:center;justify-content:center;color:#9b8e85;">Photo</div>`;
+        const textEl = `<div style="flex:1;">${heading ? `<h3>${escHtml(heading)}</h3>` : ""}${body ? `<p>${nl2br(body)}</p>` : placeholder("Content will appear here.")}</div>`;
+        return `
+        <section class="block block-gallery"${bsAttr} data-block-id="${escHtml(block.id)}" data-block-type="${escHtml(block.type)}">
+          <div style="display:flex;gap:1.5rem;align-items:center;flex-wrap:wrap;${isRight ? "flex-direction:row-reverse;" : ""}">${imgEl}${textEl}</div>
+        </section>`;
+      }
+
+      const urls = Array.isArray(cfg.urls) ? (cfg.urls as string[]) : [];
+      const imageSlot = cfg.imageUrl as string | undefined;
+      const images = imageSlot ? [imageSlot] : urls;
+      return `
+        <section class="block block-gallery"${bsAttr} aria-label="Photo gallery" data-block-id="${escHtml(block.id)}" data-block-type="${escHtml(block.type)}">
+          ${images.length > 0
+            ? `<div class="image-grid" style="display:grid;gap:0.5rem;grid-template-columns:${images.length > 1 ? "1fr 1fr" : "1fr"};">
+                 ${images.map((u, i) => `<img src="${escHtml(u)}" alt="Gallery photo ${i + 1}" loading="lazy" style="width:100%;border-radius:8px;object-fit:cover;" />`).join("")}
+               </div>`
+            : placeholder("Images will appear here once added.")}
+        </section>`;
+    }
+
+    case "info-card": {
+      const variant = String(cfg.variant ?? "registry");
+      const name = String(cfg.name ?? cfg.title ?? (variant === "hotel" ? "Hotel" : "Registry"));
+      const address = cfg.address as string | undefined;
+      const url = cfg.url as string | undefined;
+      const imageUrl = cfg.imageUrl as string | undefined;
+      const headingLabel = variant === "hotel" ? "Hotels &amp; Accommodations" : "Registry";
+      const linkLabel = variant === "hotel" ? "Book Now" : "View Registry";
+      return `
+        <section class="block block-info-card"${bsAttr} aria-label="${escHtml(headingLabel)}" data-block-id="${escHtml(block.id)}" data-block-type="${escHtml(block.type)}">
+          <h2 class="section-heading">${headingLabel}</h2>
+          <div class="section-rule" aria-hidden="true"></div>
+          <div class="info-card" style="text-align:center;">
+            ${imageUrl ? `<img src="${escHtml(imageUrl)}" alt="${escHtml(name)}" loading="lazy" style="max-width:${variant === "hotel" ? "200px" : "120px"};border-radius:8px;margin-bottom:0.75rem;" />` : ""}
+            <p class="card-title">${escHtml(name)}</p>
+            ${address ? `<p class="card-note">${escHtml(address)}</p>` : ""}
+            ${url ? `<a href="${escHtml(safeUrl(url))}" target="_blank" rel="noopener noreferrer" class="card-link" style="color:${escHtml(accent)}">${linkLabel}</a>` : ""}
+          </div>
+        </section>`;
+    }
+
+    case "rsvp-form": {
+      const formTitle = (cfg.heading as string | undefined) ?? (cfg.title as string | undefined) ?? "RSVP";
+      const subheading = (cfg.subheading as string | undefined) ?? "";
+      const slug = siteSlug ?? "";
+      const formId = `rsvp-form-${escHtml(block.id)}`;
+      const msgId = `rsvp-msg-${escHtml(block.id)}`;
+      return `
+        <section class="block block-rsvp"${bsAttr} aria-label="RSVP" data-block-id="${escHtml(block.id)}" data-block-type="${escHtml(block.type)}">
+          <h2 class="section-heading">${escHtml(formTitle)}</h2>
+          <div class="section-rule" aria-hidden="true"></div>
+          ${subheading ? `<p style="text-align:center;color:var(--muted);margin-bottom:1.5rem;">${escHtml(subheading)}</p>` : ""}
+          <form class="rsvp-form" id="${formId}" aria-label="RSVP form" onsubmit="submitRsvp(event,'${escHtml(slug)}','${formId}','${msgId}')">
+            <div class="form-group">
+              <label class="form-label" for="rsvp-fn-${escHtml(block.id)}">First Name</label>
+              <input class="form-input" id="rsvp-fn-${escHtml(block.id)}" name="firstName" type="text" placeholder="First name" autocomplete="given-name" required />
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="rsvp-ln-${escHtml(block.id)}">Last Name</label>
+              <input class="form-input" id="rsvp-ln-${escHtml(block.id)}" name="lastName" type="text" placeholder="Last name" autocomplete="family-name" required />
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="rsvp-email-${escHtml(block.id)}">Email <span style="font-size:0.8em;color:#9b8e85;font-weight:400;">(optional — for confirmation)</span></label>
+              <input class="form-input" id="rsvp-email-${escHtml(block.id)}" name="email" type="email" placeholder="your@email.com" autocomplete="email" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Will you attend?</label>
+              <div class="radio-group" role="radiogroup" aria-label="Attendance">
+                <label class="radio-label">
+                  <input type="radio" name="attending" value="yes" required /> Joyfully accepts
+                </label>
+                <label class="radio-label">
+                  <input type="radio" name="attending" value="no" /> Regretfully declines
+                </label>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="rsvp-notes-${escHtml(block.id)}">Notes or Dietary Restrictions</label>
+              <textarea class="form-input form-textarea" id="rsvp-notes-${escHtml(block.id)}" name="notes" placeholder="Optional"></textarea>
+            </div>
+            <button class="rsvp-submit" type="submit" style="background:var(--accent)">Send RSVP</button>
+          </form>
+          <div id="${msgId}" role="alert" aria-live="polite" style="display:none;margin-top:1.25rem;text-align:center;font-size:0.9375rem;padding:0.875rem 1rem;border-radius:6px;"></div>
+        </section>`;
+    }
+
+    case "story-timeline": {
+      const heading = String(cfg.heading ?? "Our Story");
+      const events = Array.isArray(cfg.events)
+        ? (cfg.events as Array<{ date?: string; title?: string; description?: string; imageUrl?: string }>)
+        : [];
+      return `
+        <section class="block block-story-timeline"${bsAttr} aria-label="Our Story" data-block-id="${escHtml(block.id)}" data-block-type="${escHtml(block.type)}">
+          ${heading ? `<h2 class="section-heading">${escHtml(heading)}</h2><div class="section-rule" aria-hidden="true"></div>` : ""}
+          ${events.length > 0
+            ? `<div class="story-timeline" style="position:relative;max-width:600px;margin:0 auto;">
+                <div style="position:absolute;left:50%;top:0;bottom:0;width:2px;background:var(--site-border,#e0dbd4);transform:translateX(-50%);" aria-hidden="true"></div>
+                ${events.map((ev, i) => {
+                  const isLeft = i % 2 === 0;
+                  return `<div style="display:flex;justify-content:${isLeft ? "flex-start" : "flex-end"};margin-bottom:2rem;position:relative;">
+                    <div style="position:absolute;left:50%;top:0.75rem;width:12px;height:12px;background:var(--accent);border-radius:50%;transform:translateX(-50%);z-index:1;" aria-hidden="true"></div>
+                    <div style="width:44%;background:#fff;border:1px solid var(--site-border,#e0dbd4);border-radius:8px;padding:0.875rem 1rem;">
+                      ${ev.imageUrl ? `<img src="${escHtml(ev.imageUrl)}" alt="" loading="lazy" style="width:100%;border-radius:4px;margin-bottom:0.5rem;object-fit:cover;max-height:120px;" />` : ""}
+                      ${ev.date ? `<p style="font-size:0.75rem;color:var(--accent);font-weight:600;margin:0 0 0.25rem;text-transform:uppercase;letter-spacing:0.05em;">${escHtml(ev.date)}</p>` : ""}
+                      ${ev.title ? `<h4 style="margin:0 0 0.25rem;font-size:0.95rem;">${escHtml(ev.title)}</h4>` : ""}
+                      ${ev.description ? `<p style="margin:0;font-size:0.85rem;color:#6b6560;">${escHtml(ev.description)}</p>` : ""}
+                    </div>
+                  </div>`;
+                }).join("")}
+              </div>`
+            : placeholder("Timeline events will appear here once added.")}
+        </section>`;
+    }
+
+    case "guest-book": {
+      const heading = String(cfg.heading ?? "Guest Book");
+      const placeholderText = String(cfg.placeholder ?? "Leave a message for the happy couple…");
+      const slug = siteSlug ?? "";
+      const formId = `gb-form-${escHtml(block.id)}`;
+      const listId = `gb-list-${escHtml(block.id)}`;
+      return `
+        <section class="block block-guest-book"${bsAttr} aria-label="Guest Book" data-block-id="${escHtml(block.id)}" data-block-type="${escHtml(block.type)}"
+          style="max-width:600px;margin:0 auto;">
+          ${heading ? `<h2 class="section-heading">${escHtml(heading)}</h2><div class="section-rule" aria-hidden="true"></div>` : ""}
+          <form class="rsvp-form" id="${formId}" onsubmit="submitGuestBook(event,'${escHtml(slug)}','${formId}','${listId}')">
+            <div class="form-group">
+              <label class="form-label" for="gb-name-${escHtml(block.id)}">Your Name</label>
+              <input class="form-input" id="gb-name-${escHtml(block.id)}" name="name" type="text" placeholder="Your name" required />
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="gb-msg-${escHtml(block.id)}">Message</label>
+              <textarea class="form-input form-textarea" id="gb-msg-${escHtml(block.id)}" name="message" placeholder="${escHtml(placeholderText)}" required></textarea>
+            </div>
+            <button class="rsvp-submit" type="submit" style="background:var(--accent)">Sign the book</button>
+          </form>
+          <div id="${listId}" style="margin-top:1.5rem;display:flex;flex-direction:column;gap:0.75rem;"></div>
+        </section>`;
     }
 
     default:
