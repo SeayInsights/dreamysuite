@@ -1450,6 +1450,16 @@ function renderBlock(
   if (_tcCfg) _bsParts.push(`color:${escHtml(_tcCfg)}`, `--block-text:${escHtml(_tcCfg)}`);
   const _bcCfg = cfg.borderColor as string | undefined;
   if (_bcCfg && !cfg.hideBorder) _bsParts.push(`border:1px solid ${escHtml(_bcCfg)}`);
+  const _bw = typeof cfg.blockWidth === "number" && cfg.blockWidth > 0 && cfg.blockWidth < 100 ? cfg.blockWidth : 0;
+  if (_bw) {
+    const _ml = typeof cfg.blockMarginLeft === "number" ? cfg.blockMarginLeft : 0;
+    _bsParts.push(`width:${_bw}%`, `margin-left:${_ml > 0 ? `${_ml}%` : "0"}`, `margin-right:0`);
+  }
+  const _ox = typeof cfg.blockOffsetX === "number" && cfg.blockOffsetX !== 0 ? cfg.blockOffsetX : 0;
+  const _oy = typeof cfg.blockOffsetY === "number" && cfg.blockOffsetY !== 0 ? cfg.blockOffsetY : 0;
+  if (_ox || _oy) _bsParts.push(`position:relative`, `left:${_ox}px`, `margin-top:${_oy}px`);
+  const _zi = typeof cfg.blockZIndex === "number" ? cfg.blockZIndex : 0;
+  if (_zi) _bsParts.push(`position:relative`, `z-index:${_zi}`);
   const _bh = typeof cfg.blockHeight === "number" && cfg.blockHeight > 0 ? cfg.blockHeight : 0;
   if (_bh) _bsParts.push(`height:${_bh}px`, `padding-top:0`, `padding-bottom:0`, `overflow-y:hidden`);
   const _pad = cfg.padding as Record<string, unknown> | null | undefined;
