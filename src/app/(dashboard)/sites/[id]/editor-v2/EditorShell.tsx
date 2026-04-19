@@ -59,10 +59,6 @@ export function EditorShell({ site, user: _user, children }: Props) {
 
 	return (
 		<div className="fixed inset-0 flex flex-col bg-background text-foreground antialiased">
-			<div className="pointer-events-none absolute right-3 top-3 z-30 rounded-md bg-neutral-900/90 px-2 py-1 text-[10px] font-semibold uppercase tracking-widest text-white shadow-sm">
-				Editor V2
-			</div>
-
 			<TopBar site={site} />
 
 			<div className="relative flex flex-1 overflow-hidden">
