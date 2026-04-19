@@ -131,6 +131,11 @@ export function DragHandles({ containerRef }: Props) {
 
 	const { startResize } = useDrag(containerRef);
 
+	// Subscribe to selected block's config so resize dimension changes re-measure the selection box.
+	const selectedBlockConfig = useEditorStore(
+		(s) => s.blocks.find((b) => b.id === s.selectedBlockId)?.config,
+	);
+
 	const measure = useCallback(() => {
 		setRect(measureBlock(containerRef.current, selectedBlockId));
 	}, [containerRef, selectedBlockId]);
@@ -156,6 +161,12 @@ export function DragHandles({ containerRef }: Props) {
 			if (rafRef.current) cancelAnimationFrame(rafRef.current);
 		};
 	}, [containerRef, measure, selectedBlockId]);
+
+	// Re-measure whenever the selected block's config changes (e.g. width/height during resize).
+	useEffect(() => {
+		if (rafRef.current) cancelAnimationFrame(rafRef.current);
+		rafRef.current = requestAnimationFrame(measure);
+	}, [selectedBlockConfig, measure]);
 
 	if (!selectedBlockId || !rect) return null;
 
