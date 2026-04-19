@@ -23,14 +23,35 @@ const MIGRATION_MAP: Record<
   schedule: {
     contentKey: "events",
     configKey: "events",
+    // V1 uses snake_case dress_code and maps_url; V2 uses camelCase dressCode
+    transform: (items) =>
+      items.map((raw) => {
+        const item = raw as Record<string, unknown>;
+        return {
+          id: crypto.randomUUID(),
+          name: item.name ?? "",
+          date: item.date ?? "",
+          time: item.time ?? "",
+          location: item.location ?? "",
+          description: item.description ?? "",
+          dressCode: item.dressCode ?? item.dress_code ?? "",
+          mapsUrl: item.maps_url ?? item.mapsUrl ?? "",
+        };
+      }),
   },
   "fun-facts": {
     contentKey: "tidbits",
     configKey: "items",
+    // V1 tidbits are {title, body, icon} — matches FunFactItem directly
+    transform: (items) =>
+      items.map((raw) => ({ id: crypto.randomUUID(), ...(raw as Record<string, unknown>) })),
   },
   travel: {
     contentKey: "travelItems",
     configKey: "items",
+    // V1 travelItems already use camelCase linkLabel/linkUrl
+    transform: (items) =>
+      items.map((raw) => ({ id: crypto.randomUUID(), ...(raw as Record<string, unknown>) })),
   },
 };
 
@@ -50,8 +71,8 @@ export function useV1Migration(siteId: string) {
       const mapping = MIGRATION_MAP[b.type];
       if (!mapping) return false;
       const cfg = parseCfg(b.config);
-      // Skip blocks already migrated in a previous session (persisted flag)
-      if (cfg._v2migrated === true) return false;
+      // Only skip if the block already has content — the _v2migrated flag alone is not enough
+      // because it may have been stamped on a run before content was available
       const existing = cfg[mapping.configKey];
       return !Array.isArray(existing) || existing.length === 0;
     });
