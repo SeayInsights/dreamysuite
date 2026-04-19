@@ -80,9 +80,9 @@ export async function GET(
 
   // Find site by slug
   const site = await db
-    .prepare("SELECT id FROM site WHERE slug = ? AND status = 'published'")
+    .prepare("SELECT id, name, slug, customDomain, eventType, previewColor, status FROM site WHERE slug = ? AND status = 'published'")
     .bind(siteSlug)
-    .first<Pick<SiteRow, 'id'>>();
+    .first<Pick<SiteRow, 'id' | 'name' | 'slug' | 'customDomain' | 'eventType' | 'previewColor' | 'status'>>();
 
   if (!site) {
     return jsonResponse({ error: { code: "NOT_FOUND", message: "Site not found" } }, 404, false);
