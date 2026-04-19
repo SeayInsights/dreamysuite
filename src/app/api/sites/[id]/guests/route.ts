@@ -1,7 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
+import { z } from "zod";
 import type { Env } from "@/app/lib/auth.server";
-import { requireSiteOwnership, apiOwnershipError } from "@/lib/api/site-auth";
+import { requireSiteOwnership, apiOwnershipError, parseJsonBody } from "@/lib/api/site-auth";
+
+const GuestSchema = z.object({
+  firstName: z.string().min(1).max(100),
+  lastName: z.string().max(100).optional(),
+  party: z.number().int().nonnegative().optional(),
+  notes: z.string().max(2000).optional(),
+});
 
 export async function GET(
   req: NextRequest,
@@ -49,17 +57,18 @@ export async function POST(
   const check = await requireSiteOwnership(req, env, siteId);
   if ("error" in check) return apiOwnershipError(check);
 
-  let body: { firstName?: string; lastName?: string; party?: string; notes?: string };
-  try {
-    body = await req.json();
-  } catch {
-    return NextResponse.json({ error: { code: "BAD_REQUEST", message: "Invalid JSON body" } }, { status: 400 });
+  const parsed = await parseJsonBody<unknown>(req);
+  if ("error" in parsed) return parsed.error;
+
+  const result = GuestSchema.safeParse(parsed.body);
+  if (!result.success) {
+    return NextResponse.json(
+      { error: { code: "BAD_REQUEST", message: result.error.issues[0]?.message ?? "Invalid request body" } },
+      { status: 400 },
+    );
   }
 
-  const { firstName, lastName, party, notes } = body;
-  if (!firstName) {
-    return NextResponse.json({ error: { code: "BAD_REQUEST", message: "firstName is required" } }, { status: 400 });
-  }
+  const { firstName, lastName, party, notes } = result.data;
 
   const id = crypto.randomUUID();
   const now = Date.now();

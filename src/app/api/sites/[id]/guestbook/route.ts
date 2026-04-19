@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import type { Env } from "@/app/lib/auth.server";
+import { isRateLimited } from "@/lib/rateLimit";
 
 // Public guest book endpoints — no auth required so site visitors can sign and read.
 
@@ -31,6 +32,13 @@ export async function POST(
 ) {
   const { env: rawEnv } = await getCloudflareContext({ async: true });
   const env = rawEnv as unknown as Env;
+
+  // Rate limit: 5 requests per 600 s per IP on guestbook
+  const ip = req.headers.get("cf-connecting-ip") ?? "unknown";
+  if (await isRateLimited(env.RATE_LIMIT_KV, `guestbook:${ip}`, 5, 600)) {
+    return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+  }
+
   const { id: siteId } = await params;
 
   // Verify site exists
