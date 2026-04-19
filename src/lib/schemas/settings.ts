@@ -77,6 +77,7 @@ export const SettingsSchema = z.object({
   ogImage: z.string().nullable().default(null),
   pageBgDisabled: intBool.default(0),
   bgImageBleed: intBool.default(1),
+  effectBleed: intBool.default(1),
   defaultAnimation: z.string().nullable().default(null),
   defaultAnimDuration: z.number().nullable().default(null),
   defaultAnimDelay: z.number().nullable().default(null),

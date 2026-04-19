@@ -146,6 +146,7 @@ export function BreakpointFrame({ children, nav }: Props) {
 	const bgImage = settings.bgImage as string | null;
 	const bgImageOpacity = Number(settings.bgImageOpacity ?? 1);
 	const bgImageBleed = settings.bgImageBleed !== 0; // default true (1)
+	const effectBleed = settings.effectBleed !== 0;  // default true (1)
 
 	return (
 		<div
@@ -163,7 +164,12 @@ export function BreakpointFrame({ children, nav }: Props) {
 				}}
 			>
 				{BgEffect && frameReady && (
-					<div className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
+					<div
+						className="pointer-events-none absolute z-0 overflow-hidden"
+						style={effectBleed
+							? { inset: 0 }
+							: { top: mT, right: mR, bottom: mB, left: mL }}
+					>
 						<BgEffect {...effectColors} />
 					</div>
 				)}
@@ -198,7 +204,7 @@ export function BreakpointFrame({ children, nav }: Props) {
 						<TransitionEffect {...effectColors} />
 					</div>
 				)}
-				{hasMargins && (!bgImage || !bgImageBleed) && (
+				{hasMargins && (!bgImage || !bgImageBleed) && (!settings.effectBg || !effectBleed) && (
 					<>
 						{mT > 0 && <div className="pointer-events-none absolute left-0 right-0 top-0" style={{ height: mT, background: curtainBg, zIndex: 20 }} />}
 						{mB > 0 && <div className="pointer-events-none absolute bottom-0 left-0 right-0" style={{ height: mB, background: curtainBg, zIndex: 20 }} />}
