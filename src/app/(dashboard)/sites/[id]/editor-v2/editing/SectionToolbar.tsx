@@ -145,10 +145,7 @@ function BackgroundPopover({ currentValue, onSelect, swatches, gradients }: BgPo
   const [hex, setHex] = useState(parsed ? parsed.hex : isGradient || isTransparent ? "#ffffff" : currentValue);
   const [opacity, setOpacity] = useState(parsed ? parsed.opacity : 100);
 
-  const prevValue = useRef(currentValue);
   useEffect(() => {
-    if (prevValue.current === currentValue) return;
-    prevValue.current = currentValue;
     const isGrad = currentValue.startsWith("linear-gradient") || currentValue.startsWith("radial-gradient");
     const isTrans = currentValue === "transparent" || currentValue === "";
     setTab(isGrad ? "gradient" : isTrans ? "transparent" : "solid");
@@ -672,44 +669,48 @@ export function SectionToolbar({
   const [activePopover, setActivePopover] = useState<"bg" | "padding" | "animation" | "arrange" | null>(null);
   const [popoverPos, setPopoverPos] = useState<Position>({ top: 0, left: 0 });
 
-  // Manual toolbar position — once user drags, this overrides auto-positioning
-  const [manualPos, setManualPos] = useState<Position | null>(null);
-  const toolbarDragRef = useRef<{ startX: number; startY: number; startPos: Position } | null>(null);
+  // Drag offset — added on top of auto-calculated renderPos so the toolbar
+  // follows the block on scroll/resize while preserving the user's drag delta.
+  const [dragOffset, setDragOffset] = useState<Position>({ top: 0, left: 0 });
+  const dragOffsetRef = useRef<Position>({ top: 0, left: 0 });
+  const toolbarDragRef = useRef<{ startX: number; startY: number; startOffset: Position } | null>(null);
 
-  // Reset manual position when block selection changes
+  // Reset drag offset when block selection changes
   const prevSelectedRef = useRef(selectedBlockId);
   useEffect(() => {
     if (prevSelectedRef.current !== selectedBlockId) {
-      setManualPos(null);
+      dragOffsetRef.current = { top: 0, left: 0 };
+      setDragOffset({ top: 0, left: 0 });
       prevSelectedRef.current = selectedBlockId;
     }
   }, [selectedBlockId]);
 
   const onToolbarPointerDown = useCallback((e: React.PointerEvent) => {
-    const target = e.target as HTMLElement;
-    if (target.closest("button, input, select, [role=button]")) return;
     e.preventDefault();
+    e.stopPropagation();
     (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
-    const el = e.currentTarget as HTMLElement;
     toolbarDragRef.current = {
       startX: e.clientX,
       startY: e.clientY,
-      startPos: { top: parseFloat(el.style.top) || 0, left: parseFloat(el.style.left) || 0 },
+      startOffset: { ...dragOffsetRef.current },
     };
   }, []);
 
   const onToolbarPointerMove = useCallback((e: React.PointerEvent) => {
     const session = toolbarDragRef.current;
     if (!session) return;
+    e.stopPropagation();
     const next = {
-      top: session.startPos.top + (e.clientY - session.startY),
-      left: session.startPos.left + (e.clientX - session.startX),
+      top: session.startOffset.top + (e.clientY - session.startY),
+      left: session.startOffset.left + (e.clientX - session.startX),
     };
-    setManualPos(next);
+    dragOffsetRef.current = next;
+    setDragOffset(next);
   }, []);
 
-  const onToolbarPointerUp = useCallback(() => {
+  const onToolbarPointerUp = useCallback((e: React.PointerEvent) => {
     toolbarDragRef.current = null;
+    e.stopPropagation();
   }, []);
 
   const TOOLBAR_HEIGHT = 44;
@@ -860,8 +861,8 @@ export function SectionToolbar({
       } else if (phaseRef.current !== "shown") {
         // Fresh show (was hidden or mid-exit).
         showBlock(position, selectedBlockId);
-      } else if (!manualPos) {
-        // Same block, user hasn't dragged — reposition to follow block.
+      } else {
+        // Same block — always update renderPos; drag offset handles user displacement.
         setRenderPos(position);
       }
     } else if (phaseRef.current !== "hidden" && phaseRef.current !== "exiting") {
@@ -921,6 +922,7 @@ export function SectionToolbar({
   };
 
   const currentZIndex = typeof config.blockZIndex === "number" ? config.blockZIndex : 0;
+  const currentRotation = typeof config.blockRotation === "number" ? config.blockRotation : 0;
 
   function bringToFront() {
     const maxZ = blocks.reduce((max, b) => {
@@ -958,18 +960,30 @@ export function SectionToolbar({
       aria-label="Section toolbar"
       className={cn(
         "absolute z-50 flex items-center gap-0.5 rounded-lg border border-border",
-        "bg-popover px-2 py-1 shadow-lg cursor-grab",
+        "bg-popover px-0 py-1 shadow-lg",
       )}
       style={{
-        top: manualPos ? manualPos.top : renderPos.top,
-        left: manualPos ? manualPos.left : renderPos.left,
-        touchAction: "none",
+        top: (renderPos?.top ?? 0) + dragOffset.top,
+        left: (renderPos?.left ?? 0) + dragOffset.left,
       }}
-      onPointerDown={onToolbarPointerDown}
-      onPointerMove={onToolbarPointerMove}
-      onPointerUp={onToolbarPointerUp}
       onMouseDown={(e) => e.stopPropagation()}
     >
+      {/* Grab handle */}
+      <div
+        className="flex items-center justify-center rounded-l-lg cursor-grab active:cursor-grabbing self-stretch px-1 hover:bg-muted/60 transition-colors"
+        style={{ touchAction: "none" }}
+        onPointerDown={onToolbarPointerDown}
+        onPointerMove={onToolbarPointerMove}
+        onPointerUp={onToolbarPointerUp}
+      >
+        <svg width="6" height="18" viewBox="0 0 6 18" fill="currentColor" className="text-muted-foreground/60" aria-hidden>
+          <circle cx="1.5" cy="3" r="1" /><circle cx="4.5" cy="3" r="1" />
+          <circle cx="1.5" cy="7" r="1" /><circle cx="4.5" cy="7" r="1" />
+          <circle cx="1.5" cy="11" r="1" /><circle cx="4.5" cy="11" r="1" />
+          <circle cx="1.5" cy="15" r="1" /><circle cx="4.5" cy="15" r="1" />
+        </svg>
+      </div>
+
       {/* Background button */}
       <Button
         variant="ghost"
@@ -1034,7 +1048,7 @@ export function SectionToolbar({
       >
         <BackgroundPopover
           currentValue={currentBg}
-          swatches={currentBg && currentBg !== "transparent" && !currentBg.startsWith("linear-gradient") && !currentBg.startsWith("radial-gradient") ? [currentBg, ...bgSwatches.slice(1)] : bgSwatches}
+          swatches={currentBg && currentBg !== "transparent" && !currentBg.startsWith("linear-gradient") && !currentBg.startsWith("radial-gradient") && !bgSwatches.includes(currentBg) ? [currentBg, ...bgSwatches.slice(1)] : bgSwatches}
           gradients={bgGradients}
           onSelect={(value) => {
             updateBlock(renderBlockId!, {
@@ -1091,12 +1105,9 @@ export function SectionToolbar({
         onClose={() => setActivePopover(null)}
         toolbarRef={toolbarRef}
       >
-        <div className="w-40 space-y-1">
+        <div className="w-48 space-y-2">
           <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
             Layer Order
-          </p>
-          <p className="text-[10px] text-muted-foreground mb-1">
-            z-index: {currentZIndex}
           </p>
           <Button
             variant="ghost"
@@ -1120,6 +1131,63 @@ export function SectionToolbar({
             </svg>
             Send to Back
           </Button>
+
+          <div className="border-t border-border pt-2 mt-2">
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">
+              Rotation
+            </p>
+            <div className="flex items-center gap-2">
+              <input
+                type="range"
+                min={-180}
+                max={180}
+                step={1}
+                value={currentRotation}
+                className="flex-1 h-1 accent-primary"
+                onChange={(e) => {
+                  e.stopPropagation();
+                  updateBlock(renderBlockId!, {
+                    config: { ...config, blockRotation: Number(e.target.value) },
+                  });
+                }}
+              />
+              <div className="flex items-center gap-0.5">
+                <input
+                  type="number"
+                  min={-180}
+                  max={180}
+                  value={currentRotation}
+                  className="w-12 rounded border border-border bg-background px-1.5 py-0.5 text-[11px] text-center tabular-nums"
+                  onChange={(e) => {
+                    e.stopPropagation();
+                    const v = Number(e.target.value);
+                    if (!Number.isNaN(v)) {
+                      updateBlock(renderBlockId!, {
+                        config: { ...config, blockRotation: Math.max(-180, Math.min(180, v)) },
+                      });
+                    }
+                  }}
+                  onPointerDown={(e) => e.stopPropagation()}
+                />
+                <span className="text-[10px] text-muted-foreground">°</span>
+              </div>
+            </div>
+            {currentRotation !== 0 && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="w-full justify-start gap-2 text-xs mt-1"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  updateBlock(renderBlockId!, {
+                    config: { ...config, blockRotation: 0 },
+                  });
+                }}
+              >
+                Reset rotation
+              </Button>
+            )}
+          </div>
         </div>
       </FloatingPopover>
 
