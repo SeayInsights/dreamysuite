@@ -55,6 +55,7 @@ export async function PUT(
   }
 
   const parsed = await parseJsonBody<{
+    type?: string;
     config?: unknown;
     sortOrder?: number;
     isVisible?: boolean;
@@ -64,6 +65,11 @@ export async function PUT(
 
   const fields: string[] = [];
   const values: unknown[] = [];
+
+  if (body.type !== undefined && body.type !== block.type) {
+    fields.push(`"type" = ?`);
+    values.push(body.type);
+  }
 
   if (body.config !== undefined) {
     const configParse = parseBlockConfig(block.type, body.config);

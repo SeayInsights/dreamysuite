@@ -51,7 +51,7 @@ async function flushOps(
     if (ops.inserted.has(id)) continue;
     const block = blocks.find((b) => b.id === id);
     if (!block) continue;
-    const payload: Record<string, unknown> = { config: block.config };
+    const payload: Record<string, unknown> = { type: block.type, config: block.config };
     if (block.isVisible !== undefined) payload.isVisible = block.isVisible !== 0;
     promises.push(
       fetch(`/api/sites/${siteId}/blocks/${id}`, {
