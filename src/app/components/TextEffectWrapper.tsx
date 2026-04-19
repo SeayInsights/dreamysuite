@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  Suspense,
   useMemo,
   useRef,
   useState,
@@ -10,6 +11,7 @@ import {
 } from "react";
 import { useEditorStore } from "@/app/stores/editorStore";
 import { getEffectComponent } from "@/lib/effects/loader";
+import { EffectErrorBoundary } from "./EffectErrorBoundary";
 
 interface Props {
   as: "h1" | "h2" | "h3";
@@ -108,7 +110,15 @@ export function TextEffectWrapper({ as: Tag, children, className, style, ...rest
       {...rest}
       data-ds-effect={effectText}
     >
-      {layoutReady ? <TextEffect key={effectText} {...effectProps} /> : null}
+      {layoutReady ? (
+        <EffectErrorBoundary fallback={<span>{children}</span>}>
+          <Suspense fallback={<span>{children}</span>}>
+            <TextEffect key={effectText} {...effectProps} />
+          </Suspense>
+        </EffectErrorBoundary>
+      ) : (
+        <span>{children}</span>
+      )}
     </div>
   );
 }

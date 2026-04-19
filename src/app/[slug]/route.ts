@@ -10,7 +10,7 @@ import { createAuth, type Env } from "@/app/lib/auth.server";
 import { safeBlockConfig } from "@/lib/schemas/blocks";
 import { getEffectById } from "@/lib/effects/registry";
 
-const R3F_EFFECTS = new Set(["silk", "beams", "dither", "antigravity"]);
+const R3F_EFFECTS = new Set(["silk", "beams", "dither", "antigravity", "pixel-trail"]);
 
 export async function GET(
   req: NextRequest,
@@ -2716,6 +2716,7 @@ function showPage(pageId) {
   var section = document.getElementById('page-' + pageId);
   if (section) { section.classList.add('active'); window.scrollTo({top:0,behavior:'smooth'}); }
   document.querySelectorAll('[data-page="' + pageId + '"]').forEach(function(b){ b.classList.add('active'); });
+  window.dispatchEvent(new CustomEvent('dreamysuite_pageChange', { detail: { pageId: pageId } }));
   if (window.parent !== window) {
     window.parent.postMessage({ type: 'dreamysuite_pageChange', pageId: pageId }, '*');
   }
@@ -2741,7 +2742,7 @@ ${hideOnScrollScript}
   const bundledWithAnim = !!(settings?.popupBundle) && !!settings?.animation
     && settings?.animation !== "none" && settings?.animation !== "envelope";
   const greetingHtml = showPopup && !bundledWithAnim
-    ? `<div class="greeting-overlay${settings?.animation ? " hidden" : ""}" id="greeting-overlay" role="dialog" aria-modal="true" aria-label="Welcome message"
+    ? `<div class="greeting-overlay${settings?.animation && settings.animation !== "none" ? " hidden" : ""}" id="greeting-overlay" role="dialog" aria-modal="true" aria-label="Welcome message"
         onclick="document.getElementById('greeting-overlay').classList.add('hidden');">
         <div class="greeting-modal" onclick="event.stopPropagation();">
           ${popupTitle ? `<h2 class="greeting-title">${escHtml(popupTitle)}</h2>` : ""}
@@ -2831,7 +2832,7 @@ function switchLang() {
     greeting
   );
   const gsapCdn = (introHtml || usedBlockPresets.size > 0)
-    ? `<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>\n  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/CustomEase.min.js"></script>${blockPresetNeedsScrollTrigger ? "\n  <script src=\"https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js\"></script>" : ""}`
+    ? `<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.15.0/gsap.min.js"></script>\n  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.15.0/CustomEase.min.js"></script>${blockPresetNeedsScrollTrigger ? "\n  <script src=\"https://cdnjs.cloudflare.com/ajax/libs/gsap/3.15.0/ScrollTrigger.min.js\"></script>" : ""}`
     : "";
 
   // Show greeting after animation whenever animation is active and popup isn't bundled.
@@ -3231,6 +3232,8 @@ function submitRsvp(event, slug, formId, msgId) {
   ${settings?.effectCursor ? `<script type="module">
 (async()=>{
   if(window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  var c=navigator.hardwareConcurrency||4,m=navigator.deviceMemory||4;
+  if(c<=2||m<=2) return;
   var el=document.getElementById('effect-cursor');
   if(!el) return;
   try{
@@ -3266,6 +3269,7 @@ function submitRsvp(event, slug, formId, msgId) {
 </script>` : ""}
   ${settings?.effectTransition ? `<script type="module">
 (async()=>{
+  if(window.__dsTextDone) await window.__dsTextDone;
   if(window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
   try{
     var[{default:E},{createElement:h},{createRoot:cr}]=await Promise.all([
@@ -3274,36 +3278,47 @@ function submitRsvp(event, slug, formId, msgId) {
       import('react-dom/client')
     ]);
     var isWrapper=${JSON.stringify(["animated-content", "fade-content"].includes(settings.effectTransition ?? ""))};
-    var blocks=document.querySelectorAll('.block');
-    var obs=new IntersectionObserver(function(entries){
-      entries.forEach(function(entry){
-        if(!entry.isIntersecting) return;
-        obs.unobserve(entry.target);
-        if(isWrapper){
-          var frag=document.createDocumentFragment();
-          while(entry.target.firstChild) frag.appendChild(entry.target.firstChild);
-          var mount=document.createElement('div');
-          mount.style.cssText='width:100%';
-          entry.target.appendChild(mount);
-          var done=false;
-          cr(mount).render(h(E,{},h('div',{ref:function(el){
-            if(el&&!done){done=true;el.appendChild(frag)}
-          }})));
-        }else{
-          entry.target.style.position='relative';
-          var wrap=document.createElement('div');
-          wrap.style.cssText='position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:1';
-          entry.target.appendChild(wrap);
-          cr(wrap).render(h(E,{}));
-        }
+    function mountTransitions(scope){
+      var blocks=scope.querySelectorAll('.block');
+      blocks.forEach(function(b){
+        if(b.dataset.dsTransition) return;
+        b.dataset.dsTransition='1';
+        var obs=new IntersectionObserver(function(entries){
+          entries.forEach(function(entry){
+            if(!entry.isIntersecting) return;
+            obs.unobserve(entry.target);
+            if(isWrapper){
+              var frag=document.createDocumentFragment();
+              while(entry.target.firstChild) frag.appendChild(entry.target.firstChild);
+              var mount=document.createElement('div');
+              mount.style.cssText='width:100%';
+              entry.target.appendChild(mount);
+              var done=false;
+              cr(mount).render(h(E,{},h('div',{ref:function(el){
+                if(el&&!done){done=true;el.appendChild(frag)}
+              }})));
+            }else{
+              entry.target.style.position='relative';
+              var wrap=document.createElement('div');
+              wrap.style.cssText='position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:1';
+              entry.target.appendChild(wrap);
+              cr(wrap).render(h(E,{}));
+            }
+          });
+        },{threshold:0.1});
+        obs.observe(b);
       });
-    },{threshold:0.1});
-    blocks.forEach(function(b){obs.observe(b)});
+    }
+    mountTransitions(document);
+    window.addEventListener('dreamysuite_pageChange',function(){
+      var active=document.querySelector('.page-section.active');
+      if(active) mountTransitions(active);
+    });
   }catch(e){console.warn('Transition effect unavailable:',e)}
 })();
 </script>` : ""}
   ${settings?.effectText ? `<script type="module">
-(async()=>{
+window.__dsTextDone=(async()=>{
   if(window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
   try{
     var[{default:E},{createElement:h},{createRoot:cr}]=await Promise.all([
@@ -3314,14 +3329,16 @@ function submitRsvp(event, slug, formId, msgId) {
     var c1=${JSON.stringify(settings.effectColor1 ?? settings.headingColor ?? settings.accentColor ?? "#B8921A")};
     var c2=${JSON.stringify(settings.effectColor2 ?? settings.bodyColor ?? settings.accentColor ?? "#B8921A")};
     var c3=${JSON.stringify(settings.effectColor3 ?? settings.accentColor ?? "#B8921A")};
-    var headings=document.querySelectorAll('.block h1,.block h2,.block h3,.block .heading-text');
+    var headings=document.querySelectorAll('.page-section.active .block h1,.page-section.active .block h2,.page-section.active .block h3,.page-section.active .block .heading-text');
     headings.forEach(function(el){
-      var wrap=document.createElement('span');
-      wrap.style.display='inline';
-      var text=el.textContent||'';
-      el.textContent='';
-      el.appendChild(wrap);
-      cr(wrap).render(h(E,{children:text,color:c1,colors:[c1,c2,c3]}));
+      var orig=el.textContent||'';
+      try{
+        var wrap=document.createElement('span');
+        wrap.style.display='inline';
+        el.textContent='';
+        el.appendChild(wrap);
+        cr(wrap).render(h(E,{children:orig,text:orig,sentence:orig,marqueeText:orig,label:orig,texts:[orig],color:c1,colors:[c1,c2,c3]}));
+      }catch(_){el.textContent=orig}
     });
   }catch(e){console.warn('Text effect unavailable:',e)}
 })();
@@ -3336,14 +3353,23 @@ function submitRsvp(event, slug, formId, msgId) {
       import('react'),
       import('react-dom/client')
     ]);
-    var cards=document.querySelectorAll('.block-registry-card,.block-hotel-card,.block-venue-map,.block-faq');
-    cards.forEach(function(el){
-      var wrap=document.createElement('div');
-      wrap.style.cssText='position:absolute;inset:0;pointer-events:none;overflow:hidden;border-radius:inherit';
-      el.style.position='relative';
-      el.prepend(wrap);
-      try{cr(wrap).render(h(E,{color:c1}))}catch(_){wrap.remove()}
-      setTimeout(function(){var cv=wrap.querySelector('canvas');if(cv&&cv.parentNode){try{var gl=cv.getContext('webgl2')||cv.getContext('webgl');if(!gl||gl.isContextLost())wrap.remove()}catch(_){wrap.remove()}}},3000);
+    function mountCards(scope){
+      var cards=scope.querySelectorAll('.block-registry-card,.block-hotel-card,.block-venue-map,.block-faq');
+      cards.forEach(function(el){
+        if(el.dataset.dsCard) return;
+        el.dataset.dsCard='1';
+        var wrap=document.createElement('div');
+        wrap.style.cssText='position:absolute;inset:0;pointer-events:none;overflow:hidden;border-radius:inherit';
+        el.style.position='relative';
+        el.prepend(wrap);
+        try{cr(wrap).render(h(E,{color:c1}))}catch(_){wrap.remove()}
+        setTimeout(function(){var cv=wrap.querySelector('canvas');if(cv&&cv.parentNode){try{var gl=cv.getContext('webgl2')||cv.getContext('webgl');if(!gl||gl.isContextLost())wrap.remove()}catch(_){wrap.remove()}}},3000);
+      });
+    }
+    mountCards(document);
+    window.addEventListener('dreamysuite_pageChange',function(){
+      var active=document.querySelector('.page-section.active');
+      if(active) mountCards(active);
     });
   }catch(e){console.warn('Card effect unavailable:',e)}
 })();
@@ -3380,33 +3406,51 @@ function submitRsvp(event, slug, formId, msgId) {
       if(a.classList.contains('site-nav-brand')||a.classList.contains('site-nav-brand-outside')) return;
       var label=a.textContent||'';
       if(!label.trim()) return;
-      items.push({label:label,href:a.getAttribute('href')||'#',icon:label.charAt(0).toUpperCase(),color:accent,isActive:a.classList.contains('active')||a.getAttribute('aria-current')==='page'});
+      var pageId=a.getAttribute('data-page')||'';
+      items.push({label:label,href:'#',pageId:pageId,icon:label.charAt(0).toUpperCase(),color:accent,isActive:a.classList.contains('active')||a.getAttribute('aria-current')==='page',onClick:function(){if(pageId)showPage(pageId)}});
     });
     if(!items.length) return;
     var wrap=document.createElement('div');
     wrap.style.cssText='width:100%';
-    if(navRow&&navEl){
-      navEl.style.cssText='background:none;border:none;box-shadow:none;padding:0;border-radius:0;backdrop-filter:none;-webkit-backdrop-filter:none;';
-      navEl.innerHTML='';
-      navEl.appendChild(wrap);
-    }else{
-      target.style.cssText='background:none;border:none;box-shadow:none;padding:0;border-radius:0;backdrop-filter:none;-webkit-backdrop-filter:none;border-bottom:none;';
-      target.innerHTML='';
-      target.appendChild(wrap);
+    var restoreEl=navEl||target;
+    var savedHtml=restoreEl.innerHTML;
+    var savedStyle=restoreEl.getAttribute('style')||'';
+    try{
+      if(navRow&&navEl){
+        navEl.style.cssText='background:none;border:none;box-shadow:none;padding:0;border-radius:0;backdrop-filter:none;-webkit-backdrop-filter:none;';
+        navEl.innerHTML='';
+        navEl.appendChild(wrap);
+      }else{
+        target.style.cssText='background:none;border:none;box-shadow:none;padding:0;border-radius:0;backdrop-filter:none;-webkit-backdrop-filter:none;border-bottom:none;';
+        target.innerHTML='';
+        target.appendChild(wrap);
+      }
+      var root=cr(wrap);
+      function renderNav(){
+        var updatedItems=items.map(function(it){
+          return Object.assign({},it,{isActive:it.pageId?document.querySelector('.page-section#page-'+it.pageId+'.active')!==null:it.isActive});
+        });
+        root.render(h(E,{
+          items:updatedItems,
+          logo:${JSON.stringify(nsLogoSvg)},
+          logoAlt:${JSON.stringify(nsInitials)},
+          accent:accent,
+          bg:${JSON.stringify(nsBg)},
+          textColor:${JSON.stringify(nsText)},
+          brandColor:${JSON.stringify(nsBrand)},
+          headingFont:${JSON.stringify(nsHFont)},
+          bodyFont:${JSON.stringify(nsBFont)},
+          brandName:${JSON.stringify(nsBrandName)},
+          compact:window.innerWidth<768
+        }));
+      }
+      renderNav();
+      window.addEventListener('dreamysuite_pageChange',renderNav);
+    }catch(renderErr){
+      console.warn('Nav style render failed, restoring:',renderErr);
+      restoreEl.innerHTML=savedHtml;
+      if(savedStyle)restoreEl.setAttribute('style',savedStyle);else restoreEl.removeAttribute('style');
     }
-    cr(wrap).render(h(E,{
-      items:items,
-      logo:${JSON.stringify(nsLogoSvg)},
-      logoAlt:${JSON.stringify(nsInitials)},
-      accent:accent,
-      bg:${JSON.stringify(nsBg)},
-      textColor:${JSON.stringify(nsText)},
-      brandColor:${JSON.stringify(nsBrand)},
-      headingFont:${JSON.stringify(nsHFont)},
-      bodyFont:${JSON.stringify(nsBFont)},
-      brandName:${JSON.stringify(nsBrandName)},
-      compact:window.innerWidth<768
-    }));
   }catch(e){console.warn('Nav style unavailable:',e)}
 })();
 </script>`;

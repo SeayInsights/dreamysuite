@@ -75,7 +75,7 @@ export function EffectsTray() {
                 onChange={(id) =>
                   updateSettings({ effectText: id, effectPreset: null })
                 }
-                label="Text Animation"
+                label="Text Style"
               />
 
               <EffectPicker
