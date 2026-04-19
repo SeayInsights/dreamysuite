@@ -88,9 +88,11 @@ export async function GET(
     return jsonResponse({ error: { code: "NOT_FOUND", message: "Site not found" } }, 404, false);
   }
 
-  // Fetch settings
+  // Fetch settings (guestPassword excluded — server-only field for [slug]/route.ts)
   const settings = await db
-    .prepare("SELECT * FROM site_setting WHERE siteId = ?")
+    .prepare(
+      "SELECT siteId, eventName, eventDate, eventLocation, greeting, musicUrl, mainLanguage, secondLanguage, isLive, headingFont, bodyFont, accentColor, bgColor, updatedAt, songPages, songResetPages, headingColor, bodyColor, siteTextColor, siteBorderColor, buttonStyle, buttonBorderWidth, headingFontVi, bodyFontVi, navBg, navPosition, navBrandColor, navLinkColor, navHighlightColor, animation, bgImage, envelopeColor, sealInitials, cardColor, cardImage, navShape, navLinkPadding, navUnderline, popupEnabled, popupTitle, popupTicker, popupAfterAnimation, musicBtnBg, musicBtnColor, popupBundle, marginTop, marginRight, marginBottom, marginLeft, bgImageLayer, bgImageOpacity, siteMaxWidth, showNavBrand, sectionSpacing, pageTemplate, seoTitle, seoDescription, ogImage, pageBgDisabled, defaultAnimation, navItemsConfig, passwordPages, siteLanguages, navMaterial, effectPreset, effectBg, effectNav, effectText, effectCard, effectTransition, effectCursor, effectDecoration, effectNavStyle, effectColor1, effectColor2, effectColor3, defaultAnimDuration, defaultAnimDelay, defaultAnimTrigger FROM site_setting WHERE siteId = ?"
+    )
     .bind(site.id)
     .first();
 
@@ -141,10 +143,8 @@ export async function GET(
     return { ...row, content: parsed };
   });
 
-  // Strip sensitive info from settings
-  const publicSettings = settings
-    ? { ...settings, guestPassword: undefined }
-    : null;
+  // guestPassword already excluded from SELECT above
+  const publicSettings = settings ?? null;
 
   // Build navConfig from flat setting columns + per-page entrance config
   const s = settings as Record<string, unknown> | null;

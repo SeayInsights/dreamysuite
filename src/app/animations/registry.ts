@@ -18,6 +18,3 @@ export function getPreset(id: string): (() => Promise<PresetFn>) | undefined {
   return registry.get(id);
 }
 
-export function listPresets(): string[] {
-  return [...registry.keys()];
-}
