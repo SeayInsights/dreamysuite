@@ -32,7 +32,7 @@
 		"enabled": true
 	},
 	"workers_dev": false,
-	"upload_source_maps": true,
+	"upload_source_maps": false,
 	"routes": [
 		{
 			"pattern": "dreamysuite.com",
