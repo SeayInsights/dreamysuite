@@ -7,6 +7,7 @@ import { ScheduleEditor } from "./editors/ScheduleEditor";
 import { FunFactsEditor } from "./editors/FunFactsEditor";
 import { TravelEditor } from "./editors/TravelEditor";
 import { VideoEditor } from "./editors/VideoEditor";
+import { GalleryEditor } from "./editors/GalleryEditor";
 
 // ---------------------------------------------------------------------------
 // BlockContentPanel — public export, switch-dispatches to per-type editors
@@ -37,6 +38,9 @@ export function BlockContentPanel({ block, updateBlock }: Props) {
       return <VideoEditor cfg={{ ...cfg, _type: "video" }} updateConfig={updateConfig} />;
     case "media-video":
       return <VideoEditor cfg={{ ...cfg, _type: "media-video" }} updateConfig={updateConfig} />;
+    case "gallery":
+    case "images":
+      return <GalleryEditor cfg={cfg} updateConfig={updateConfig} />;
     default:
       return (
         <p className="p-4 text-xs text-muted-foreground italic">

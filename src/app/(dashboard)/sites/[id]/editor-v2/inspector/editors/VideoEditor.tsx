@@ -8,6 +8,13 @@ import { PanelTextInput } from "../PanelInputs";
 // Video editor
 // ---------------------------------------------------------------------------
 
+function detectProvider(url: string): string {
+  if (/youtube\.com|youtu\.be/.test(url)) return "youtube";
+  if (/vimeo\.com/.test(url)) return "vimeo";
+  if (/\.gif(\?|$)/i.test(url)) return "gif";
+  return "direct";
+}
+
 export function VideoEditor({
   cfg,
   updateConfig,
@@ -20,6 +27,7 @@ export function VideoEditor({
   const height = String(cfg.height ?? "100dvh");
   const [videos, setVideos] = useState<{ id: string; url: string; title: string | null }[]>([]);
   const [loading, setLoading] = useState(true);
+  const [urlInput, setUrlInput] = useState("");
 
   useEffect(() => {
     if (!siteId) return;
@@ -29,6 +37,13 @@ export function VideoEditor({
       .catch(() => {})
       .finally(() => setLoading(false));
   }, [siteId]);
+
+  function applyUrlInput() {
+    const trimmed = urlInput.trim();
+    if (!trimmed) return;
+    updateConfig({ url: trimmed, provider: detectProvider(trimmed) });
+    setUrlInput("");
+  }
 
   return (
     <div className="space-y-4 p-4">
@@ -42,7 +57,7 @@ export function VideoEditor({
             <span className="flex-1 truncate text-[10px]">{currentUrl.split("/").pop()}</span>
             <button
               type="button"
-              onClick={() => updateConfig({ url: "" })}
+              onClick={() => updateConfig({ url: "", provider: "" })}
               className="shrink-0 text-[10px] text-muted-foreground hover:text-destructive"
             >
               Remove
@@ -52,13 +67,7 @@ export function VideoEditor({
 
         {loading ? (
           <p className="py-2 text-center text-[10px] text-muted-foreground">Loading videos...</p>
-        ) : videos.length === 0 ? (
-          <div className="flex flex-col items-center gap-1 rounded-md border border-dashed border-border px-3 py-4">
-            <p className="text-[10px] text-muted-foreground text-center">
-              No videos imported yet. Add videos in the Media tray.
-            </p>
-          </div>
-        ) : (
+        ) : videos.length > 0 ? (
           <div className="space-y-1">
             {videos.map((v) => {
               const isSelected = currentUrl === v.url;
@@ -66,7 +75,7 @@ export function VideoEditor({
                 <button
                   key={v.id}
                   type="button"
-                  onClick={() => updateConfig({ url: v.url })}
+                  onClick={() => updateConfig({ url: v.url, provider: detectProvider(v.url) })}
                   className={`flex w-full items-center gap-2 rounded-md border px-2.5 py-2 text-left text-[10px] transition-colors ${
                     isSelected
                       ? "border-primary bg-primary/5 text-foreground"
@@ -79,7 +88,31 @@ export function VideoEditor({
               );
             })}
           </div>
-        )}
+        ) : null}
+
+        <div className="space-y-1 border-t border-border pt-3">
+          <label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+            Or paste a URL
+          </label>
+          <p className="text-[10px] text-muted-foreground">YouTube, Vimeo, GIF, or direct link</p>
+          <div className="flex gap-1.5">
+            <input
+              type="text"
+              value={urlInput}
+              onChange={(e) => setUrlInput(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter") applyUrlInput(); }}
+              placeholder="https://..."
+              className="h-7 flex-1 rounded border border-input bg-background px-2 text-[11px] focus:outline-none focus:ring-1 focus:ring-ring"
+            />
+            <button
+              type="button"
+              onClick={applyUrlInput}
+              className="h-7 rounded bg-primary px-2.5 text-[11px] font-medium text-primary-foreground hover:bg-primary/90"
+            >
+              Use
+            </button>
+          </div>
+        </div>
       </div>
 
       <PanelTextInput
