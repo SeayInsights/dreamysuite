@@ -1,6 +1,5 @@
 import type { StateCreator } from "zustand";
-import type { SettingsSlice } from "./settings";
-import type { SettingsPatch } from "@/lib/schemas/settings";
+import type { ThemeSlice } from "./theme";
 
 export type Breakpoint = "desktop" | "tablet" | "mobile";
 export type EditorMode = "simple" | "pro";
@@ -15,72 +14,6 @@ export type Section =
 	| "language"
 	| "effects"
 	| "settings";
-
-// ---------------------------------------------------------------------------
-// Theme token types
-// ---------------------------------------------------------------------------
-
-export interface ThemeColors {
-	primary: string;
-	secondary: string;
-	accent: string;
-	background: string;
-	text: string;
-}
-
-export interface ThemeTypography {
-	headingFont: string;
-	bodyFont: string;
-	scale: number;
-}
-
-export interface ThemeTokens {
-	colors: ThemeColors;
-	typography: ThemeTypography;
-}
-
-export const PRESET_THEMES: Array<{
-	id: string;
-	name: string;
-	colors: ThemeColors;
-	typography: ThemeTypography;
-}> = [
-	{
-		id: "classic",
-		name: "Classic",
-		colors: { primary: "#1c1917", secondary: "#78716c", accent: "#b8921a", background: "#faf8f6", text: "#1c1917" },
-		typography: { headingFont: "Georgia, serif", bodyFont: "system-ui, sans-serif", scale: 1 },
-	},
-	{
-		id: "modern",
-		name: "Modern",
-		colors: { primary: "#0f172a", secondary: "#64748b", accent: "#6366f1", background: "#ffffff", text: "#0f172a" },
-		typography: { headingFont: "ui-sans-serif, system-ui", bodyFont: "ui-sans-serif, system-ui", scale: 1 },
-	},
-	{
-		id: "romantic",
-		name: "Romantic",
-		colors: { primary: "#7c3aed", secondary: "#a78bfa", accent: "#f472b6", background: "#fdf4ff", text: "#1c1917" },
-		typography: { headingFont: "Georgia, serif", bodyFont: "ui-sans-serif", scale: 1.05 },
-	},
-	{
-		id: "minimal",
-		name: "Minimal",
-		colors: { primary: "#000000", secondary: "#666666", accent: "#000000", background: "#ffffff", text: "#000000" },
-		typography: { headingFont: "ui-sans-serif", bodyFont: "ui-sans-serif", scale: 0.95 },
-	},
-	{
-		id: "garden",
-		name: "Garden",
-		colors: { primary: "#166534", secondary: "#4ade80", accent: "#f59e0b", background: "#f0fdf4", text: "#14532d" },
-		typography: { headingFont: "Georgia, serif", bodyFont: "ui-sans-serif", scale: 1 },
-	},
-];
-
-const DEFAULT_THEME: ThemeTokens = {
-	colors: { primary: "#292524", secondary: "#78716c", accent: "#B8921A", background: "#ffffff", text: "#292524" },
-	typography: { headingFont: "Georgia, serif", bodyFont: "Inter, system-ui, sans-serif", scale: 1 },
-};
 
 // ---------------------------------------------------------------------------
 
@@ -119,10 +52,6 @@ export interface EditorShellSlice {
 	inspectorOpen: boolean;
 	fullPreview: boolean;
 
-	themeTokens: ThemeTokens;
-	setThemeTokens: (tokens: ThemeTokens) => void;
-	applyPresetTheme: (presetId: string) => void;
-
 	setBreakpoint: (bp: Breakpoint) => void;
 	setMode: (mode: EditorMode) => void;
 	toggleRail: () => void;
@@ -133,46 +62,11 @@ export interface EditorShellSlice {
 	toggleFullPreview: () => void;
 }
 
-function themeToSettings(tokens: ThemeTokens): SettingsPatch {
-	return {
-		accentColor: tokens.colors.accent,
-		bgColor: tokens.colors.background,
-		headingFont: tokens.typography.headingFont,
-		bodyFont: tokens.typography.bodyFont,
-		headingColor: tokens.colors.primary,
-		siteTextColor: tokens.colors.text,
-		bodyColor: tokens.colors.secondary,
-	};
-}
-
-export function settingsToTheme(s: {
-	accentColor?: string | null;
-	bgColor?: string | null;
-	headingFont?: string | null;
-	bodyFont?: string | null;
-	headingColor?: string | null;
-	siteTextColor?: string | null;
-	bodyColor?: string | null;
-}): ThemeTokens {
-	const d = DEFAULT_THEME;
-	return {
-		colors: {
-			primary: s.headingColor ?? d.colors.primary,
-			secondary: s.bodyColor ?? d.colors.secondary,
-			accent: s.accentColor ?? d.colors.accent,
-			background: s.bgColor ?? d.colors.background,
-			text: s.siteTextColor ?? d.colors.text,
-		},
-		typography: {
-			headingFont: s.headingFont ?? d.typography.headingFont,
-			bodyFont: s.bodyFont ?? d.typography.bodyFont,
-			scale: d.typography.scale,
-		},
-	};
-}
-
-export const createEditorShellSlice: StateCreator<EditorShellSlice & SettingsSlice, [], [], EditorShellSlice> = (
-	set, get,
+// EditorShellSlice no longer owns theme state — ThemeSlice does.
+// The StateCreator is typed without ThemeSlice since it does not call any
+// theme methods; compose them side-by-side in editorStore instead.
+export const createEditorShellSlice: StateCreator<EditorShellSlice & ThemeSlice, [], [], EditorShellSlice> = (
+	set,
 ) => ({
 	siteId: null,
 	siteSlug: null,
@@ -200,29 +94,6 @@ export const createEditorShellSlice: StateCreator<EditorShellSlice & SettingsSli
 	openTray: null,
 	inspectorOpen: false,
 	fullPreview: false,
-
-	themeTokens: DEFAULT_THEME,
-	setThemeTokens: (themeTokens) => {
-		set({ themeTokens });
-		get().updateSettings({
-			...themeToSettings(themeTokens),
-			effectColor1: null,
-			effectColor2: null,
-			effectColor3: null,
-		});
-	},
-	applyPresetTheme: (presetId) => {
-		const preset = PRESET_THEMES.find((p) => p.id === presetId);
-		if (!preset) return;
-		const themeTokens = { colors: preset.colors, typography: preset.typography };
-		set({ themeTokens });
-		get().updateSettings({
-			...themeToSettings(themeTokens),
-			effectColor1: null,
-			effectColor2: null,
-			effectColor3: null,
-		});
-	},
 
 	setBreakpoint: (breakpoint) => set({ breakpoint }),
 	setMode: (mode) => set({ mode }),

@@ -5,7 +5,7 @@ import { animate } from "motion/mini";
 
 import { useEditorStore, type Breakpoint } from "@/app/stores/editorStore";
 import { duration, EASING } from "@/lib/motion";
-import type { ThemeColors, ThemeTypography } from "@/app/stores/slices/editorShell";
+import type { ThemeColors, ThemeTypography } from "@/app/stores/slices/theme";
 import { getEffectComponent } from "@/lib/effects/loader";
 import { useEffectsEnabled } from "@/lib/effects/performance";
 

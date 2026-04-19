@@ -1,4 +1,4 @@
-import type { ThemeColors } from "@/app/stores/slices/editorShell";
+import type { ThemeColors } from "@/app/stores/slices/theme";
 
 function hexToHsl(hex: string): [number, number, number] {
   const m = /^#?([0-9a-f]{6})$/i.exec(hex);
