@@ -6,6 +6,7 @@ import { Film, X } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { useEditorStore } from "@/app/stores/editorStore";
 import { parseCfg, resolveBreakpointConfig } from "@/lib/editableField";
+import type { Block } from "@/app/stores/slices/document";
 import { trackEditorError } from "@/lib/telemetry/editor";
 import { SiteRenderer } from "@/app/components/SiteRenderer";
 import { BreakpointFrame } from "./BreakpointFrame";
@@ -192,8 +193,9 @@ export function Canvas({ siteId }: Props) {
 					blocks: unknown[];
 				};
 
-				// eslint-disable-next-line @typescript-eslint/no-explicit-any
-				if (!cancelled) setBlocks(rawBlocks as any[]);
+				if (!cancelled) setBlocks(
+					(rawBlocks as Block[]).map((b) => ({ ...b, config: parseCfg(b.config) })),
+				);
 			} catch (err) {
 				if (!cancelled) {
 					const msg = err instanceof Error ? err.message : "Failed to load blocks";
