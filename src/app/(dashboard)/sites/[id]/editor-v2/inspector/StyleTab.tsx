@@ -53,23 +53,27 @@ export function StyleTab() {
               </div>
             </div>
 
-            <div className="flex items-center justify-between">
-              <span className="text-[10px] text-muted-foreground">Extend into margins</span>
-              <button
-                type="button"
-                role="switch"
-                aria-checked={settings.bgImageBleed !== 0}
-                onClick={() => updateSettings({ bgImageBleed: settings.bgImageBleed === 0 ? 1 : 0 })}
-                className={`relative inline-flex h-4 w-8 shrink-0 items-center rounded-full transition-colors ${
-                  settings.bgImageBleed !== 0 ? "bg-primary" : "bg-muted"
-                }`}
-              >
-                <span
-                  className={`inline-block h-3 w-3 rounded-full bg-white shadow-sm transition-transform ${
-                    settings.bgImageBleed !== 0 ? "translate-x-4" : "translate-x-0.5"
-                  }`}
-                />
-              </button>
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] text-muted-foreground">Margins</span>
+              <div className="flex overflow-hidden rounded border border-input text-[10px] font-medium">
+                {([["full", "Full page"], ["clip", "Content only"]] as const).map(([val, label]) => {
+                  const active = val === "full" ? (settings.bgImageBleed ?? 1) !== 0 : (settings.bgImageBleed ?? 1) === 0;
+                  return (
+                    <button
+                      key={val}
+                      type="button"
+                      onClick={() => updateSettings({ bgImageBleed: val === "full" ? 1 : 0 })}
+                      className={`px-2.5 py-1 transition-colors ${
+                        active
+                          ? "bg-accent text-accent-foreground"
+                          : "bg-background text-muted-foreground hover:bg-accent/50"
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
 
             {(settings.bgImageLayer ?? "behind") === "overlay" && (
