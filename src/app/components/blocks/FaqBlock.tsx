@@ -35,10 +35,22 @@ export function FaqBlock({ block }: { block: Block }) {
         <dl className="faq-list" style={{ maxWidth: "720px", margin: "0 auto" }}>
           {items.map((item, i) => (
             <div key={item.id ?? i} style={{ marginBottom: "1.5rem" }}>
-              <dt className="faq-question" style={{ fontWeight: 600, marginBottom: "0.375rem" }}>
+              <dt
+                className="faq-question"
+                style={{ fontWeight: 600, marginBottom: "0.375rem" }}
+                data-editable-item-index={i}
+                data-editable-item-field="question"
+                data-editable-array-key="items"
+              >
                 {item.question || <span style={{ color: "#9b8e85", fontStyle: "italic" }}>Question</span>}
               </dt>
-              <dd className="faq-answer" style={{ margin: 0, color: "#4a4540", lineHeight: 1.6 }}>
+              <dd
+                className="faq-answer"
+                style={{ margin: 0, color: "#4a4540", lineHeight: 1.6 }}
+                data-editable-item-index={i}
+                data-editable-item-field="answer"
+                data-editable-array-key="items"
+              >
                 {item.answer || <span style={{ color: "#9b8e85", fontStyle: "italic" }}>Answer</span>}
               </dd>
             </div>

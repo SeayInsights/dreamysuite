@@ -15,7 +15,7 @@
  *   { top, left, right, bottom }  — all positive = crop inward
  */
 
-import { useRef, useCallback } from "react";
+import { useRef, useCallback, type RefObject } from "react";
 import { useEditorStore } from "@/app/stores/editorStore";
 import { parseCfg } from "@/lib/editableField";
 
@@ -104,9 +104,10 @@ const HANDLES: HandleDef[] = [
 interface Props {
   blockId: string;
   rect: DOMRect;
+  containerRef: RefObject<HTMLElement | null>;
 }
 
-export function CropHandles({ blockId, rect }: Props) {
+export function CropHandles({ blockId, rect, containerRef }: Props) {
   const updateBlock = useEditorStore((s) => s.updateBlock);
   const blocks = useEditorStore((s) => s.blocks);
 
@@ -178,11 +179,19 @@ export function CropHandles({ blockId, rect }: Props) {
     [blockId, updateBlock],
   );
 
+  // rect uses scroll-buffer coordinates: eBox.top - containerBox.top + scrollTop.
+  // That coordinate space is correct for DragHandles, which renders inside the
+  // scrolling EditorOverlay container. CropHandles renders in a non-scrolling
+  // overlay that is a sibling of the container, so top is relative to the
+  // outer wrapper (same left/top origin, but no scroll offset). Subtracting
+  // scrollTop converts from scroll-buffer coords to the overlay's coord space.
+  const scrollTop = containerRef.current?.scrollTop ?? 0;
+
   return (
     <div
       className="pointer-events-none absolute z-20"
       style={{
-        top: rect.top,
+        top: rect.top - scrollTop,
         left: rect.left,
         width: rect.width,
         height: rect.height,

@@ -55,20 +55,24 @@ export function MediaVideoBlock({ block }: { block: Block }) {
     );
   }
 
-  if (isVimeo) {
-    const videoId = extractVimeoId(url);
+  const directVimeoId = cfg.vimeoId as string | undefined;
+
+  if (isVimeo || directVimeoId) {
+    const videoId = directVimeoId ?? extractVimeoId(url);
+    const vimeoSrc = videoId
+      ? `https://player.vimeo.com/video/${videoId}?autoplay=1&muted=1&loop=1&background=1`
+      : null;
     return (
-      <section className="block block-media-video" data-block-id={block.id} data-block-type={block.type} style={sectionStyle}>
-        {videoId ? (
-          <div style={{ position: "relative", paddingBottom: "56.25%", height: 0, overflow: "hidden", borderRadius: "8px" }}>
-            <iframe
-              src={`https://player.vimeo.com/video/${videoId}`}
-              title="Vimeo video"
-              allow="autoplay; fullscreen; picture-in-picture"
-              allowFullScreen
-              style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", border: 0 }}
-            />
-          </div>
+      <section className="block block-media-video" data-block-id={block.id} data-block-type={block.type}
+        style={{ position: "relative", width: "100%", height, overflow: "hidden", background: "#000", ...sectionStyle }}>
+        {vimeoSrc ? (
+          <iframe
+            src={vimeoSrc}
+            title="Vimeo video"
+            allow="autoplay; fullscreen; picture-in-picture"
+            allowFullScreen
+            style={{ position: "absolute", top: "50%", left: "50%", width: "177.78vh", minWidth: "100%", minHeight: "100%", height: "56.25vw", transform: "translate(-50%,-50%)", border: 0 }}
+          />
         ) : (
           <p style={{ color: "#9b8e85", fontStyle: "italic", textAlign: "center", padding: "2rem 0" }}>
             Invalid Vimeo URL.
