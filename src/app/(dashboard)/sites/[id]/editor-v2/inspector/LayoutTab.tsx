@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useEditorStore } from "@/app/stores/editorStore";
+import { parseCfg } from "@/lib/editableField";
 
 function SettingsInput({
   label,
@@ -51,6 +52,17 @@ function SettingsInput({
 export function LayoutTab() {
   const settings = useEditorStore((s) => s.settings);
   const updateSettings = useEditorStore((s) => s.updateSettings);
+  const blocks = useEditorStore((s) => s.blocks);
+
+  const hasCustomPositioning = useMemo(() => {
+    return blocks.some((b) => {
+      const cfg = parseCfg(b.config);
+      return (
+        (typeof cfg.blockOffsetX === "number" && cfg.blockOffsetX !== 0) ||
+        (typeof cfg.blockOffsetY === "number" && cfg.blockOffsetY !== 0)
+      );
+    });
+  }, [blocks]);
 
   return (
     <div className="space-y-4 p-4">
@@ -82,7 +94,7 @@ export function LayoutTab() {
         </div>
       </div>
 
-      <div className="space-y-2 border-t border-border pt-4">
+      <div className={`space-y-2 border-t border-border pt-4 ${hasCustomPositioning ? "opacity-40 pointer-events-none" : ""}`}>
         <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
           Section Spacing
         </p>
@@ -92,6 +104,11 @@ export function LayoutTab() {
           onChange={(v) => updateSettings({ sectionSpacing: v })}
           placeholder="0"
         />
+        {hasCustomPositioning && (
+          <p className="text-[10px] text-muted-foreground">
+            Gap is disabled because one or more blocks use custom positioning. Reset block offsets to re-enable.
+          </p>
+        )}
       </div>
 
       <div className="border-t border-border pt-4">

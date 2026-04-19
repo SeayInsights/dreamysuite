@@ -100,10 +100,29 @@ export function blockSectionStyle(cfg: Record<string, unknown>): CSSProperties {
     if (bg?.type === "color" && bg?.value) style.background = bg.value;
   }
 
+  if (typeof cfg.blockWidth === "number" && cfg.blockWidth > 0 && cfg.blockWidth < 100) {
+    style.width = `${cfg.blockWidth}%`;
+    const ml = typeof cfg.blockMarginLeft === "number" ? cfg.blockMarginLeft : 0;
+    style.marginLeft = ml > 0 ? `${ml}%` : "0";
+    style.marginRight = "0";
+  }
+
+  const hasOffsetX = typeof cfg.blockOffsetX === "number" && cfg.blockOffsetX !== 0;
+  const hasOffsetY = typeof cfg.blockOffsetY === "number" && cfg.blockOffsetY !== 0;
+  if (hasOffsetX || hasOffsetY) {
+    const ox = hasOffsetX ? (cfg.blockOffsetX as number) : 0;
+    const oy = hasOffsetY ? (cfg.blockOffsetY as number) : 0;
+    style.position = "relative";
+    style.left = `${ox}px`;
+    style.marginTop = `${oy}px`;
+  }
+
+  if (typeof cfg.blockZIndex === "number") {
+    style.position = "relative";
+    style.zIndex = cfg.blockZIndex;
+  }
+
   if (typeof cfg.blockHeight === "number" && cfg.blockHeight > 0) {
-    // Use explicit height so the block occupies exactly this space.
-    // Zero out the CSS-class vertical padding (.block { padding: 3.5rem ... })
-    // so the height value is immediately visible. User-set padding overrides below.
     style.height = `${cfg.blockHeight}px`;
     style.paddingTop = "0";
     style.paddingBottom = "0";
