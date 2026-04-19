@@ -9,7 +9,7 @@
   "scripts": {
     "dev": "next dev",
     "build:effects": "node scripts/build-public-effects.mjs",
-    "build": "node scripts/build-public-effects.mjs && next build",
+    "build": "node scripts/build-public-effects.mjs && next build --webpack",
     "start": "next start",
     "lint": "next lint",
     "test": "vitest run",
