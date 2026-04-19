@@ -33,22 +33,6 @@ export function StyleTab() {
 
         {settings.bgImage && (
           <>
-            <div className="space-y-1">
-              <div className="flex items-center justify-between text-[10px] text-muted-foreground">
-                <span>Opacity</span>
-                <span className="tabular-nums">{Math.round((settings.bgImageOpacity ?? 1) * 100)}%</span>
-              </div>
-              <input
-                type="range"
-                min={0}
-                max={1}
-                step={0.01}
-                value={settings.bgImageOpacity ?? 1}
-                onChange={(e) => updateSettings({ bgImageOpacity: parseFloat(e.target.value) })}
-                className="w-full accent-primary"
-              />
-            </div>
-
             <div className="flex items-center gap-2">
               <span className="text-[10px] text-muted-foreground">Layer</span>
               <div className="flex overflow-hidden rounded border border-input text-[10px] font-medium">
@@ -68,6 +52,43 @@ export function StyleTab() {
                 ))}
               </div>
             </div>
+
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] text-muted-foreground">Extend into margins</span>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={settings.bgImageBleed !== 0}
+                onClick={() => updateSettings({ bgImageBleed: settings.bgImageBleed === 0 ? 1 : 0 })}
+                className={`relative inline-flex h-4 w-8 shrink-0 items-center rounded-full transition-colors ${
+                  settings.bgImageBleed !== 0 ? "bg-primary" : "bg-muted"
+                }`}
+              >
+                <span
+                  className={`inline-block h-3 w-3 rounded-full bg-white shadow-sm transition-transform ${
+                    settings.bgImageBleed !== 0 ? "translate-x-4" : "translate-x-0.5"
+                  }`}
+                />
+              </button>
+            </div>
+
+            {(settings.bgImageLayer ?? "behind") === "overlay" && (
+              <div className="space-y-1">
+                <div className="flex items-center justify-between text-[10px] text-muted-foreground">
+                  <span>Opacity</span>
+                  <span className="tabular-nums">{Math.round((settings.bgImageOpacity ?? 1) * 100)}%</span>
+                </div>
+                <input
+                  type="range"
+                  min={0}
+                  max={1}
+                  step={0.01}
+                  value={settings.bgImageOpacity ?? 1}
+                  onChange={(e) => updateSettings({ bgImageOpacity: parseFloat(e.target.value) })}
+                  className="w-full accent-primary"
+                />
+              </div>
+            )}
           </>
         )}
       </div>
