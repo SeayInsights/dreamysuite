@@ -15,11 +15,10 @@ const MIGRATION_MAP: Record<
     configKey: "items",
     // V1 uses {q, a}, V2 uses {question, answer}
     transform: (items) =>
-      items.map((item: any) => ({
-        id: crypto.randomUUID(),
-        question: item.q ?? item.question ?? "",
-        answer: item.a ?? item.answer ?? "",
-      })),
+      items.map((raw) => {
+        const item = raw as Record<string, unknown>;
+        return { id: crypto.randomUUID(), question: item.q ?? item.question ?? "", answer: item.a ?? item.answer ?? "" };
+      }),
   },
   schedule: {
     contentKey: "events",
@@ -94,7 +93,7 @@ export function useV1Migration(siteId: string) {
           const cfg = parseCfg(block.config);
           const items = mapping.transform
             ? mapping.transform(legacy)
-            : legacy.map((item: any) => ({ id: crypto.randomUUID(), ...item }));
+            : legacy.map((raw) => ({ id: crypto.randomUUID(), ...(raw as Record<string, unknown>) }));
 
           const newConfig = JSON.stringify({ ...cfg, [mapping.configKey]: items });
           updateBlock(block.id, { config: newConfig });
