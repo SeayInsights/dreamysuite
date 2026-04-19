@@ -143,6 +143,9 @@ export function BreakpointFrame({ children, nav }: Props) {
 	const mL = Number(settings.marginLeft ?? 0) || 0;
 	const hasMargins = mT > 0 || mR > 0 || mB > 0 || mL > 0;
 	const curtainBg = settings.bgColor ?? themeTokens.colors.background;
+	const bgImage = settings.bgImage as string | null;
+	const bgImageLayer = (settings.bgImageLayer as string) ?? "behind";
+	const bgImageOpacity = Number(settings.bgImageOpacity ?? 1);
 
 	return (
 		<div
@@ -157,12 +160,30 @@ export function BreakpointFrame({ children, nav }: Props) {
 					...(isDesktop ? {} : { width: WIDTHS[breakpoint] }),
 					...themeVars(themeTokens.colors, themeTokens.typography),
 					background: pageBgDisabled ? "transparent" : curtainBg,
+					...(bgImage && bgImageLayer !== "overlay" && !pageBgDisabled ? {
+						backgroundImage: `url('${bgImage}')`,
+						backgroundSize: "cover",
+						backgroundPosition: "center",
+						backgroundAttachment: "fixed",
+					} : {}),
 				}}
 			>
 				{BgEffect && frameReady && (
 					<div className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
 						<BgEffect {...effectColors} />
 					</div>
+				)}
+				{bgImage && bgImageLayer === "overlay" && !pageBgDisabled && (
+					<div
+						className="pointer-events-none absolute inset-0"
+						style={{
+							zIndex: 1,
+							backgroundImage: `url('${bgImage}')`,
+							backgroundSize: "cover",
+							backgroundPosition: "center",
+							opacity: bgImageOpacity,
+						}}
+					/>
 				)}
 				<div className="editor-canvas-scroll relative h-full overflow-x-hidden overflow-y-auto" style={{ zIndex: 10 }}>
 					<div style={{ padding: `${mT}px ${mR}px ${mB}px ${mL}px` }}>
