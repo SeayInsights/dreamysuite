@@ -350,10 +350,8 @@ export function ImageEditor({ containerRef }: Props) {
       );
       if (blockRoot && blockRoot.contains(e.target as Node)) return;
 
-      // Allow toolbar clicks (toolbar is inside the container overlay)
-      const overlay = container.parentElement?.querySelector<HTMLElement>(
-        "[data-image-editor-overlay]",
-      );
+      // Allow toolbar clicks — overlay is rendered outside the container in the DOM
+      const overlay = document.querySelector<HTMLElement>("[data-image-editor-overlay]");
       if (overlay && overlay.contains(e.target as Node)) return;
 
       dismiss();
