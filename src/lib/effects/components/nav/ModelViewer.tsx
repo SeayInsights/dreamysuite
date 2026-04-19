@@ -1,6 +1,6 @@
 // @ts-nocheck
 /* eslint-disable react-hooks/rules-of-hooks */
-/* eslint-disable react/no-unknown-property */
+ 
 "use client";
 
 import { Suspense, useRef, useLayoutEffect, useEffect, useMemo } from 'react';

@@ -21,7 +21,7 @@ const _inject_PixelTrail_Styles = () => {
   document.head.appendChild(el);
 };
 if (typeof document !== 'undefined') _inject_PixelTrail_Styles();
-/* eslint-disable react/no-unknown-property */
+ 
 import { useMemo } from 'react';
 import { Canvas, useThree } from '@react-three/fiber';
 import { shaderMaterial, useTrailTexture } from '@react-three/drei';
