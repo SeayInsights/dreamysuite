@@ -206,7 +206,7 @@ export async function POST(
 
   // Rate limit: 5 requests per 600 s per IP on RSVP
   const ip = req.headers.get("cf-connecting-ip") ?? "unknown";
-  if (await isRateLimited(env.RATE_LIMIT_KV, `rsvp:${ip}`, 5, 600)) {
+  if (await isRateLimited(env.KV, `rsvp:${ip}`, 5, 600)) {
     return NextResponse.json({ error: "Too many requests" }, { status: 429 });
   }
 
