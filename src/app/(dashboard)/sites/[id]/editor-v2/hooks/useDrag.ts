@@ -31,6 +31,8 @@ interface DragSession {
 	startMarginLeftPct?: number;
 	startHeightPx?: number;
 	containerWidth?: number;
+	/** The most-recent config patch applied during this drag (committed on pointerup). */
+	lastConfig?: Record<string, unknown>;
 }
 
 // ─── Column snap ───────────────────────────────────────────────────────────
@@ -59,6 +61,7 @@ export function useDrag(
 	const blocks = useEditorStore((s) => s.blocks);
 	const updateBlock = useEditorStore((s) => s.updateBlock);
 	const setDrag = useEditorStore((s) => s.setDrag);
+	const temporalStore = useEditorStore.temporal;
 
 	const sessionRef = useRef<DragSession | null>(null);
 	const cleanupRef = useRef<(() => void) | null>(null);
@@ -103,6 +106,20 @@ export function useDrag(
 	// ── End drag ───────────────────────────────────────────────────────────
 
 	const endDrag = useCallback(() => {
+		const session = sessionRef.current;
+
+		// Commit the drag as a single undo entry. Tracking was paused at drag
+		// start; resuming re-enables it. The subsequent updateBlock call is the
+		// one tracked write — exactly one history entry for the whole drag.
+		if (session?.lastConfig !== undefined) {
+			temporalStore.getState().resume();
+			updateBlock(session.blockId, { config: session.lastConfig });
+		} else {
+			// No move happened (pointer up immediately) — just resume without
+			// writing so no spurious history entry is created.
+			temporalStore.getState().resume();
+		}
+
 		setDrag({ kind: null, id: null });
 		sessionRef.current = null;
 		setIsDragging(false);
@@ -112,7 +129,7 @@ export function useDrag(
 			cleanupRef.current();
 			cleanupRef.current = null;
 		}
-	}, [setDrag]);
+	}, [setDrag, temporalStore, updateBlock]);
 
 	// ── Pointer move ───────────────────────────────────────────────────────
 
@@ -128,13 +145,13 @@ export function useDrag(
 				const block = blocks.find((b) => b.id === session.blockId);
 				if (!block) return;
 				const config = block.config;
-				updateBlock(session.blockId, {
-					config: {
-						...config,
-						blockOffsetX: (session.startOffsetX ?? 0) + dx,
-						blockOffsetY: (session.startOffsetY ?? 0) + dy,
-					},
-				});
+				const newConfig = {
+					...config,
+					blockOffsetX: (session.startOffsetX ?? 0) + dx,
+					blockOffsetY: (session.startOffsetY ?? 0) + dy,
+				};
+				session.lastConfig = newConfig;
+				updateBlock(session.blockId, { config: newConfig });
 			} else if (session.kind === "resize" && session.handle) {
 				const container = containerRef.current;
 				if (!container || session.containerWidth === undefined) return;
@@ -173,10 +190,9 @@ export function useDrag(
 				if (Object.keys(patch).length > 0) {
 					const block = blocks.find((b) => b.id === session.blockId);
 					const config = block?.config ?? {};
-
-					updateBlock(session.blockId, {
-						config: { ...config, ...patch },
-					});
+					const newConfig = { ...config, ...patch };
+					session.lastConfig = newConfig;
+					updateBlock(session.blockId, { config: newConfig });
 				}
 			}
 		},
@@ -231,6 +247,10 @@ export function useDrag(
 			const block = blocks.find((b) => b.id === blockId);
 			const config = block?.config ?? {};
 
+			// Pause undo tracking for the duration of the drag. All intermediate
+			// pointermove updates are silent; a single entry is committed on pointerup.
+			temporalStore.getState().pause();
+
 			sessionRef.current = {
 				kind: "move",
 				blockId,
@@ -246,7 +266,7 @@ export function useDrag(
 			attachListeners(e);
 		},
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-		[blocks, onPointerMove, onPointerUp, setDrag],
+		[blocks, onPointerMove, onPointerUp, setDrag, temporalStore],
 	);
 
 	const startResize = useCallback(
@@ -258,6 +278,10 @@ export function useDrag(
 			if (!container) return;
 
 			const { widthPct, marginLeftPct, heightPx } = getBlockLayout(blockId, container);
+
+			// Pause undo tracking for the duration of the resize. A single entry
+			// is committed on pointerup.
+			temporalStore.getState().pause();
 
 			sessionRef.current = {
 				kind: "resize",
@@ -277,7 +301,7 @@ export function useDrag(
 			attachListeners(e);
 		},
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-		[blocks, containerRef, onPointerMove, onPointerUp, setDrag],
+		[blocks, containerRef, onPointerMove, onPointerUp, setDrag, temporalStore],
 	);
 
 	return { isDragging, draggedId, startMove, startResize };

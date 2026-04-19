@@ -61,10 +61,24 @@ export function TravelBlock({ block }: { block: Block }) {
                 </p>
               )}
               {item.heading && (
-                <h4 style={{ margin: 0, fontSize: "0.95rem", fontWeight: 600 }}>{item.heading}</h4>
+                <h4
+                  style={{ margin: 0, fontSize: "0.95rem", fontWeight: 600 }}
+                  data-editable-item-index={i}
+                  data-editable-item-field="heading"
+                  data-editable-array-key="items"
+                >
+                  {item.heading}
+                </h4>
               )}
               {item.body && (
-                <p style={{ margin: 0, fontSize: "0.85rem", color: "#4a4540", lineHeight: 1.55 }}>{item.body}</p>
+                <p
+                  style={{ margin: 0, fontSize: "0.85rem", color: "#4a4540", lineHeight: 1.55 }}
+                  data-editable-item-index={i}
+                  data-editable-item-field="body"
+                  data-editable-array-key="items"
+                >
+                  {item.body}
+                </p>
               )}
               {item.linkUrl && item.linkLabel && (
                 <a

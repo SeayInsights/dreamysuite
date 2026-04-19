@@ -1460,7 +1460,7 @@ function renderBlock(
   }
   const _ox = typeof cfg.blockOffsetX === "number" && cfg.blockOffsetX !== 0 ? cfg.blockOffsetX : 0;
   const _oy = typeof cfg.blockOffsetY === "number" && cfg.blockOffsetY !== 0 ? cfg.blockOffsetY : 0;
-  if (_ox || _oy) _bsParts.push(`position:relative`, `left:${_ox}px`, `margin-top:${_oy}px`);
+  if (_ox || _oy) _bsParts.push(`position:relative`, `left:${_ox}px`, `top:${_oy}px`);
   const _zi = typeof cfg.blockZIndex === "number" ? cfg.blockZIndex : 0;
   if (_zi) _bsParts.push(`position:relative`, `z-index:${_zi}`);
   const _bh = typeof cfg.blockHeight === "number" && cfg.blockHeight > 0 ? cfg.blockHeight : 0;
@@ -2176,10 +2176,27 @@ function renderBlock(
 
     case "media-video": {
       const url = cfg.url as string | undefined;
+      const vimeoId = cfg.vimeoId as string | undefined;
       const height = (cfg.height as string | undefined) ?? "100dvh";
       const provider = cfg.provider as string | undefined;
       const isYoutube = provider === "youtube" ||
         (provider !== "direct" && url && (url.includes("youtube.com") || url.includes("youtu.be")));
+      const resolvedVimeoId = vimeoId
+        ?? (provider === "vimeo" || (provider !== "direct" && url?.includes("vimeo.com"))
+            ? url?.match(/vimeo\.com\/(?:video\/)?(\d+)/)?.[1]
+            : undefined);
+
+      if (resolvedVimeoId) {
+        return `
+        <section class="block block-media-video"${bsAttr} aria-label="Video" data-block-id="${escHtml(block.id)}" data-block-type="${escHtml(block.type)}"
+          style="position:relative;width:100%;height:${escHtml(height)};overflow:hidden;background:#000;">
+          <iframe
+            src="https://player.vimeo.com/video/${escHtml(resolvedVimeoId)}?autoplay=1&muted=1&loop=1&background=1"
+            style="position:absolute;top:50%;left:50%;width:177.78vh;min-width:100%;min-height:100%;height:56.25vw;transform:translate(-50%,-50%);border:0;"
+            allow="autoplay; fullscreen; picture-in-picture" allowfullscreen title="Video"
+          ></iframe>
+        </section>`;
+      }
 
       if (isYoutube && url) {
         const ytMatch = url.match(/(?:youtu\.be\/|[?&]v=)([^&\s]+)/);
