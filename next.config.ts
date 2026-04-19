@@ -20,6 +20,7 @@ const nextConfig: NextConfig = {
               "font-src 'self' data:",
               "connect-src 'self' https:",
               "frame-ancestors 'self'",
+              "frame-src https:",
             ].join("; "),
           },
         ],
