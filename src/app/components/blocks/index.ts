@@ -18,6 +18,11 @@ import { InfoCardBlock } from './InfoCardBlock'
 import { RsvpFormBlock } from './RsvpFormBlock'
 import { StoryTimelineBlock } from './StoryTimelineBlock'
 import { GuestBookBlock } from './GuestBookBlock'
+// New (Task 3)
+import { FaqBlock } from './FaqBlock'
+import { ScheduleBlock } from './ScheduleBlock'
+import { FunFactsBlock } from './FunFactsBlock'
+import { TravelBlock } from './TravelBlock'
 
 interface Block {
   id: string
@@ -45,10 +50,15 @@ export const BLOCK_COMPONENTS: Record<string, React.ComponentType<{ block: Block
   'media-video':   MediaVideoBlock,
   'gallery':       GalleryBlock,
   'info-card':     InfoCardBlock,
-  // New
+  // New (Task 19)
   'rsvp-form':     RsvpFormBlock,
   'story-timeline': StoryTimelineBlock,
   'guest-book':    GuestBookBlock,
+  // New (Task 3)
+  'faq':           FaqBlock,
+  'schedule':      ScheduleBlock,
+  'fun-facts':     FunFactsBlock,
+  'travel':        TravelBlock,
 }
 
 export {
@@ -70,4 +80,8 @@ export {
   RsvpFormBlock,
   StoryTimelineBlock,
   GuestBookBlock,
+  FaqBlock,
+  ScheduleBlock,
+  FunFactsBlock,
+  TravelBlock,
 }
