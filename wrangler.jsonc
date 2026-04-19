@@ -54,13 +54,6 @@
 			"binding": "KV",
 			"id": "8fb116b82a3f4b5d8de3195ebe28df04",
 			"preview_id": "8fb116b82a3f4b5d8de3195ebe28df04"
-		},
-		{
-			// Rate limiting KV — replace with real namespace ID from Cloudflare dashboard
-			// (Workers & Pages → KV → Create namespace → "dreamysuite-rate-limit")
-			"binding": "RATE_LIMIT_KV",
-			"id": "rate_limit_kv_placeholder",
-			"preview_id": "rate_limit_kv_placeholder"
 		}
 	],
 	"r2_buckets": [
