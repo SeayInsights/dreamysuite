@@ -111,12 +111,12 @@ export function ThemeTray() {
 									<span className="text-[10px] text-muted-foreground">Margins</span>
 									<div className="flex overflow-hidden rounded border border-input text-[10px] font-medium">
 										{([["full", "Full page"], ["clip", "Content only"]] as const).map(([val, label]) => {
-											const active = val === "full" ? (settings.bgImageBleed ?? 1) !== 0 : (settings.bgImageBleed ?? 1) === 0;
+											const active = val === "full" ? (settings.effectBleed ?? 1) !== 0 : (settings.effectBleed ?? 1) === 0;
 											return (
 												<button
 													key={val}
 													type="button"
-													onClick={() => updateSettings({ bgImageBleed: val === "full" ? 1 : 0 })}
+													onClick={() => updateSettings({ effectBleed: val === "full" ? 1 : 0 })}
 													className={`px-2.5 py-1 transition-colors ${
 														active
 															? "bg-accent text-accent-foreground"
