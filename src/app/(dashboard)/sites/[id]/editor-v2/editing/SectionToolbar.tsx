@@ -124,12 +124,43 @@ function rgbPartsToHex(r: number, g: number, b: number): string {
   return `#${c(r)}${c(g)}${c(b)}`;
 }
 
+function parseRgbaOpacity(val: string): { hex: string; opacity: number } {
+  const m = val.match(/^rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*(?:,\s*([\d.]+))?\s*\)$/);
+  if (m) {
+    const r = parseInt(m[1], 10);
+    const g = parseInt(m[2], 10);
+    const b = parseInt(m[3], 10);
+    const a = m[4] !== undefined ? parseFloat(m[4]) : 1;
+    const toHex = (n: number) => Math.max(0, Math.min(255, n)).toString(16).padStart(2, "0");
+    return { hex: `#${toHex(r)}${toHex(g)}${toHex(b)}`, opacity: Math.round(a * 100) };
+  }
+  return { hex: val, opacity: 100 };
+}
+
 function BackgroundPopover({ currentValue, onSelect, swatches, gradients }: BgPopoverProps) {
   const isGradient = currentValue.startsWith("linear-gradient") || currentValue.startsWith("radial-gradient");
   const isTransparent = currentValue === "transparent" || currentValue === "";
+  const parsed = !isGradient && !isTransparent ? parseRgbaOpacity(currentValue) : null;
   const [tab, setTab] = useState<BgTab>(isGradient ? "gradient" : isTransparent ? "transparent" : "solid");
-  const [hex, setHex] = useState(isGradient || isTransparent ? "#ffffff" : currentValue);
-  const [opacity, setOpacity] = useState(100);
+  const [hex, setHex] = useState(parsed ? parsed.hex : isGradient || isTransparent ? "#ffffff" : currentValue);
+  const [opacity, setOpacity] = useState(parsed ? parsed.opacity : 100);
+
+  const prevValue = useRef(currentValue);
+  useEffect(() => {
+    if (prevValue.current === currentValue) return;
+    prevValue.current = currentValue;
+    const isGrad = currentValue.startsWith("linear-gradient") || currentValue.startsWith("radial-gradient");
+    const isTrans = currentValue === "transparent" || currentValue === "";
+    setTab(isGrad ? "gradient" : isTrans ? "transparent" : "solid");
+    if (!isGrad && !isTrans) {
+      const p = parseRgbaOpacity(currentValue);
+      setHex(p.hex);
+      setOpacity(p.opacity);
+    } else {
+      setHex("#ffffff");
+      setOpacity(100);
+    }
+  }, [currentValue]);
   const [gradDir, setGradDir] = useState("135deg");
   const [colorMode, setColorMode] = useState<ColorMode>("hex");
 
@@ -381,64 +412,6 @@ function PaddingPopover({ current, onChange }: PaddingPopoverProps) {
 }
 
 // ---------------------------------------------------------------------------
-// Height (size) popover content
-// ---------------------------------------------------------------------------
-
-interface HeightPopoverProps {
-  current: number | undefined;
-  onChange: (v: number | undefined) => void;
-}
-
-function HeightPopover({ current, onChange }: HeightPopoverProps) {
-  const [val, setVal] = useState(current !== undefined ? String(current) : "");
-
-  // Re-sync when the measured DOM height arrives (current changes on first open)
-  const prevCurrent = useRef(current);
-  useEffect(() => {
-    if (prevCurrent.current !== current && current !== undefined) {
-      setVal(String(current));
-    }
-    prevCurrent.current = current;
-  }, [current]);
-
-  function commit(raw: string) {
-    const trimmed = raw.trim();
-    if (trimmed === "") { onChange(undefined); return; }
-    const n = parseInt(trimmed, 10);
-    if (!isNaN(n) && n >= 0) onChange(n);
-  }
-
-  return (
-    <div className="w-44 space-y-2">
-      <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-        Block Height (px)
-      </p>
-      <input
-        type="text"
-        inputMode="numeric"
-        pattern="[0-9]*"
-        placeholder="auto"
-        value={val}
-        className={cn(
-          "h-7 w-full rounded border border-input bg-background px-2 text-xs",
-          "focus:outline-none focus:ring-1 focus:ring-ring",
-        )}
-        onChange={(e) => setVal(e.target.value)}
-        onBlur={(e) => commit(e.target.value)}
-        onFocus={(e) => e.target.select()}
-        onKeyDown={(e) => {
-          if (e.key === "Enter") commit((e.target as HTMLInputElement).value);
-          e.stopPropagation();
-        }}
-      />
-      <p className="text-[10px] text-muted-foreground">
-        Shows current block height. Edit to lock it. Clear to restore auto.
-      </p>
-    </div>
-  );
-}
-
-// ---------------------------------------------------------------------------
 // Animation popover content
 // ---------------------------------------------------------------------------
 
@@ -642,14 +615,6 @@ function PaddingIcon() {
   );
 }
 
-function SizeIcon() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden>
-      <path d="M7 2v10M4 4.5l3-3 3 3M4 9.5l3 3 3-3" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
 function AnimationIcon() {
   return (
     <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden>
@@ -666,6 +631,15 @@ function AnimationIcon() {
         strokeLinecap="round"
         strokeLinejoin="round"
       />
+    </svg>
+  );
+}
+
+function ArrangeIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden>
+      <rect x="1" y="1" width="8" height="8" rx="1" stroke="currentColor" strokeWidth="1.2" />
+      <rect x="5" y="5" width="8" height="8" rx="1" stroke="currentColor" strokeWidth="1.2" fill="var(--popover)" />
     </svg>
   );
 }
@@ -695,8 +669,48 @@ export function SectionToolbar({
 
   const toolbarRef = useRef<HTMLDivElement>(null);
   const [position, setPosition] = useState<Position | null>(null);
-  const [activePopover, setActivePopover] = useState<"bg" | "padding" | "height" | "animation" | null>(null);
+  const [activePopover, setActivePopover] = useState<"bg" | "padding" | "animation" | "arrange" | null>(null);
   const [popoverPos, setPopoverPos] = useState<Position>({ top: 0, left: 0 });
+
+  // Manual toolbar position — once user drags, this overrides auto-positioning
+  const [manualPos, setManualPos] = useState<Position | null>(null);
+  const toolbarDragRef = useRef<{ startX: number; startY: number; startPos: Position } | null>(null);
+
+  // Reset manual position when block selection changes
+  const prevSelectedRef = useRef(selectedBlockId);
+  useEffect(() => {
+    if (prevSelectedRef.current !== selectedBlockId) {
+      setManualPos(null);
+      prevSelectedRef.current = selectedBlockId;
+    }
+  }, [selectedBlockId]);
+
+  const onToolbarPointerDown = useCallback((e: React.PointerEvent) => {
+    const target = e.target as HTMLElement;
+    if (target.closest("button, input, select, [role=button]")) return;
+    e.preventDefault();
+    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+    const el = e.currentTarget as HTMLElement;
+    toolbarDragRef.current = {
+      startX: e.clientX,
+      startY: e.clientY,
+      startPos: { top: parseFloat(el.style.top) || 0, left: parseFloat(el.style.left) || 0 },
+    };
+  }, []);
+
+  const onToolbarPointerMove = useCallback((e: React.PointerEvent) => {
+    const session = toolbarDragRef.current;
+    if (!session) return;
+    const next = {
+      top: session.startPos.top + (e.clientY - session.startY),
+      left: session.startPos.left + (e.clientX - session.startX),
+    };
+    setManualPos(next);
+  }, []);
+
+  const onToolbarPointerUp = useCallback(() => {
+    toolbarDragRef.current = null;
+  }, []);
 
   const TOOLBAR_HEIGHT = 44;
   const TOOLBAR_MARGIN = 8;
@@ -846,8 +860,8 @@ export function SectionToolbar({
       } else if (phaseRef.current !== "shown") {
         // Fresh show (was hidden or mid-exit).
         showBlock(position, selectedBlockId);
-      } else {
-        // Same block — just reposition.
+      } else if (!manualPos) {
+        // Same block, user hasn't dragged — reposition to follow block.
         setRenderPos(position);
       }
     } else if (phaseRef.current !== "hidden" && phaseRef.current !== "exiting") {
@@ -898,17 +912,6 @@ export function SectionToolbar({
         }
       : {};
 
-  // Prefer the config value; fall back to measuring the DOM block height.
-  function getBlockHeight(): number | undefined {
-    if (typeof config.blockHeight === "number") return config.blockHeight;
-    const container = containerRef.current;
-    if (!container || !renderBlockId) return undefined;
-    const node = container.querySelector<HTMLElement>(`[data-block-id="${renderBlockId}"]`);
-    return node ? Math.round(node.getBoundingClientRect().height) : undefined;
-  }
-
-  const currentHeight = typeof config.blockHeight === "number" ? config.blockHeight : undefined;
-
   const rawAnim = config.animation;
   const currentAnim: AnimationConfig = {
     ...DEFAULT_ANIM,
@@ -917,7 +920,31 @@ export function SectionToolbar({
       : {}),
   };
 
-  function openPopover(which: "bg" | "padding" | "height" | "animation", btnEl: HTMLElement) {
+  const currentZIndex = typeof config.blockZIndex === "number" ? config.blockZIndex : 0;
+
+  function bringToFront() {
+    const maxZ = blocks.reduce((max, b) => {
+      const c = parseCfg(b.config);
+      const z = typeof c.blockZIndex === "number" ? c.blockZIndex : 0;
+      return Math.max(max, z);
+    }, 0);
+    updateBlock(renderBlockId!, {
+      config: { ...config, blockZIndex: maxZ + 1 },
+    });
+  }
+
+  function sendToBack() {
+    const minZ = blocks.reduce((min, b) => {
+      const c = parseCfg(b.config);
+      const z = typeof c.blockZIndex === "number" ? c.blockZIndex : 0;
+      return Math.min(min, z);
+    }, 0);
+    updateBlock(renderBlockId!, {
+      config: { ...config, blockZIndex: minZ - 1 },
+    });
+  }
+
+  function openPopover(which: "bg" | "padding" | "animation" | "arrange", btnEl: HTMLElement) {
     const btnBox = btnEl.getBoundingClientRect();
     setPopoverPos({ top: btnBox.bottom + 6, left: btnBox.left });
     setActivePopover((prev) => (prev === which ? null : which));
@@ -931,16 +958,17 @@ export function SectionToolbar({
       aria-label="Section toolbar"
       className={cn(
         "absolute z-50 flex items-center gap-0.5 rounded-lg border border-border",
-        "bg-popover px-2 py-1 shadow-lg",
+        "bg-popover px-2 py-1 shadow-lg cursor-grab",
       )}
-      style={{ top: renderPos.top, left: renderPos.left }}
-      onMouseDown={(e) => e.stopPropagation()}
-      onClick={(e) => {
-        // Clicking the toolbar background (not a button/input) dismisses selection
-        if (!(e.target as HTMLElement).closest("button, input, select")) {
-          selectBlock(null);
-        }
+      style={{
+        top: manualPos ? manualPos.top : renderPos.top,
+        left: manualPos ? manualPos.left : renderPos.left,
+        touchAction: "none",
       }}
+      onPointerDown={onToolbarPointerDown}
+      onPointerMove={onToolbarPointerMove}
+      onPointerUp={onToolbarPointerUp}
+      onMouseDown={(e) => e.stopPropagation()}
     >
       {/* Background button */}
       <Button
@@ -970,20 +998,6 @@ export function SectionToolbar({
 
       <DividerLine />
 
-      {/* Size (height) button */}
-      <Button
-        variant="ghost"
-        size="sm"
-        className="h-8 gap-1.5 text-xs"
-        aria-label="Set block height"
-        onClick={(e) => { e.stopPropagation(); openPopover("height", e.currentTarget); }}
-      >
-        <SizeIcon />
-        Size
-      </Button>
-
-      <DividerLine />
-
       {/* Animation button */}
       <Button
         variant="ghost"
@@ -996,6 +1010,20 @@ export function SectionToolbar({
         Animation
       </Button>
 
+      <DividerLine />
+
+      {/* Arrange button */}
+      <Button
+        variant="ghost"
+        size="sm"
+        className="h-8 gap-1.5 text-xs"
+        aria-label="Arrange block layering"
+        onClick={(e) => { e.stopPropagation(); openPopover("arrange", e.currentTarget); }}
+      >
+        <ArrangeIcon />
+        Arrange
+      </Button>
+
       {/* Background popover */}
       <FloatingPopover
         open={activePopover === "bg"}
@@ -1006,7 +1034,7 @@ export function SectionToolbar({
       >
         <BackgroundPopover
           currentValue={currentBg}
-          swatches={bgSwatches}
+          swatches={currentBg && currentBg !== "transparent" && !currentBg.startsWith("linear-gradient") && !currentBg.startsWith("radial-gradient") ? [currentBg, ...bgSwatches.slice(1)] : bgSwatches}
           gradients={bgGradients}
           onSelect={(value) => {
             updateBlock(renderBlockId!, {
@@ -1034,24 +1062,6 @@ export function SectionToolbar({
         />
       </FloatingPopover>
 
-      {/* Height popover */}
-      <FloatingPopover
-        open={activePopover === "height"}
-        top={popoverPos.top}
-        left={popoverPos.left}
-        onClose={() => setActivePopover(null)}
-        toolbarRef={toolbarRef}
-      >
-        <HeightPopover
-          current={activePopover === "height" ? (getBlockHeight() ?? currentHeight) : currentHeight}
-          onChange={(blockHeight) => {
-            updateBlock(renderBlockId!, {
-              config: { ...config, blockHeight },
-            });
-          }}
-        />
-      </FloatingPopover>
-
       {/* Animation popover */}
       <FloatingPopover
         open={activePopover === "animation"}
@@ -1071,6 +1081,46 @@ export function SectionToolbar({
             });
           }}
         />
+      </FloatingPopover>
+
+      {/* Arrange popover */}
+      <FloatingPopover
+        open={activePopover === "arrange"}
+        top={popoverPos.top}
+        left={popoverPos.left}
+        onClose={() => setActivePopover(null)}
+        toolbarRef={toolbarRef}
+      >
+        <div className="w-40 space-y-1">
+          <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+            Layer Order
+          </p>
+          <p className="text-[10px] text-muted-foreground mb-1">
+            z-index: {currentZIndex}
+          </p>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="w-full justify-start gap-2 text-xs"
+            onClick={(e) => { e.stopPropagation(); bringToFront(); }}
+          >
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden>
+              <path d="M7 2v10M4 4.5L7 2l3 2.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            Bring to Front
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="w-full justify-start gap-2 text-xs"
+            onClick={(e) => { e.stopPropagation(); sendToBack(); }}
+          >
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden>
+              <path d="M7 12V2M4 9.5L7 12l3-2.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            Send to Back
+          </Button>
+        </div>
       </FloatingPopover>
 
     </div>
