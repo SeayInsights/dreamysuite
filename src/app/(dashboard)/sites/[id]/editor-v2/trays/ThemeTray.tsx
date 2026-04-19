@@ -6,11 +6,17 @@ import { EffectPicker } from "../EffectPicker";
 
 export function ThemeTray() {
 	const mode = useEditorStore((s) => s.mode);
-	const effectBg = useEditorStore((s) => s.settings.effectBg);
-	const effectColor1 = useEditorStore((s) => s.settings.effectColor1);
-	const effectColor2 = useEditorStore((s) => s.settings.effectColor2);
-	const effectColor3 = useEditorStore((s) => s.settings.effectColor3);
+	const settings = useEditorStore((s) => s.settings);
+	const effectBg = settings.effectBg;
+	const effectColor1 = settings.effectColor1;
+	const effectColor2 = settings.effectColor2;
+	const effectColor3 = settings.effectColor3;
 	const updateSettings = useEditorStore((s) => s.updateSettings);
+
+	const hasPageMargins = !!(
+		settings.marginLeft || settings.marginRight ||
+		settings.marginTop  || settings.marginBottom
+	);
 	const themeTokens = useEditorStore((s) => s.themeTokens);
 	const applyPresetTheme = useEditorStore((s) => s.applyPresetTheme);
 	const setThemeTokens = useEditorStore((s) => s.setThemeTokens);
@@ -73,31 +79,58 @@ export function ThemeTray() {
 					/>
 
 					{effectBg && (
-						<div className="mt-3 space-y-1.5">
-							<p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-								Effect Colors
-							</p>
-							<div className="flex flex-col gap-1.5">
-								<EffectColorRow
-									label="Primary"
-									value={effectColor1 ?? themeTokens.colors.primary}
-									onChange={(v) => updateSettings({ effectColor1: v })}
-									onReset={() => updateSettings({ effectColor1: null })}
-								/>
-								<EffectColorRow
-									label="Secondary"
-									value={effectColor2 ?? themeTokens.colors.secondary}
-									onChange={(v) => updateSettings({ effectColor2: v })}
-									onReset={() => updateSettings({ effectColor2: null })}
-								/>
-								<EffectColorRow
-									label="Accent"
-									value={effectColor3 ?? themeTokens.colors.accent}
-									onChange={(v) => updateSettings({ effectColor3: v })}
-									onReset={() => updateSettings({ effectColor3: null })}
-								/>
+						<>
+							<div className="mt-3 space-y-1.5">
+								<p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+									Effect Colors
+								</p>
+								<div className="flex flex-col gap-1.5">
+									<EffectColorRow
+										label="Primary"
+										value={effectColor1 ?? themeTokens.colors.primary}
+										onChange={(v) => updateSettings({ effectColor1: v })}
+										onReset={() => updateSettings({ effectColor1: null })}
+									/>
+									<EffectColorRow
+										label="Secondary"
+										value={effectColor2 ?? themeTokens.colors.secondary}
+										onChange={(v) => updateSettings({ effectColor2: v })}
+										onReset={() => updateSettings({ effectColor2: null })}
+									/>
+									<EffectColorRow
+										label="Accent"
+										value={effectColor3 ?? themeTokens.colors.accent}
+										onChange={(v) => updateSettings({ effectColor3: v })}
+										onReset={() => updateSettings({ effectColor3: null })}
+									/>
+								</div>
 							</div>
-						</div>
+
+							{hasPageMargins && (
+								<div className="mt-2 flex items-center gap-2">
+									<span className="text-[10px] text-muted-foreground">Margins</span>
+									<div className="flex overflow-hidden rounded border border-input text-[10px] font-medium">
+										{([["full", "Full page"], ["clip", "Content only"]] as const).map(([val, label]) => {
+											const active = val === "full" ? (settings.bgImageBleed ?? 1) !== 0 : (settings.bgImageBleed ?? 1) === 0;
+											return (
+												<button
+													key={val}
+													type="button"
+													onClick={() => updateSettings({ bgImageBleed: val === "full" ? 1 : 0 })}
+													className={`px-2.5 py-1 transition-colors ${
+														active
+															? "bg-accent text-accent-foreground"
+															: "bg-background text-muted-foreground hover:bg-accent/50"
+													}`}
+												>
+													{label}
+												</button>
+											);
+										})}
+									</div>
+								</div>
+							)}
+						</>
 					)}
 				</section>
 
