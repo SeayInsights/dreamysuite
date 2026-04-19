@@ -53,20 +53,9 @@ function snapWidth(rawPct: number, containerWidth: number): number {
 
 // ─── Hook ──────────────────────────────────────────────────────────────────
 
-export interface UseDragReturn {
-	isDragging: boolean;
-	draggedId: string | null;
-	startMove: (blockId: string, e: React.PointerEvent) => void;
-	startResize: (
-		blockId: string,
-		handle: HandlePosition,
-		e: React.PointerEvent,
-	) => void;
-}
-
 export function useDrag(
 	containerRef: React.RefObject<HTMLElement | null>,
-): UseDragReturn {
+): { isDragging: boolean; draggedId: string | null; startMove: (blockId: string, e: React.PointerEvent) => void; startResize: (blockId: string, handle: HandlePosition, e: React.PointerEvent) => void } {
 	const blocks = useEditorStore((s) => s.blocks);
 	const updateBlock = useEditorStore((s) => s.updateBlock);
 	const setDrag = useEditorStore((s) => s.setDrag);

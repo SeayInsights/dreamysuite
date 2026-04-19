@@ -217,10 +217,6 @@ export const BLOCK_REGISTRY: Record<string, BlockRegistryEntry> = {
 const _registryCheck: Record<BlockType, BlockRegistryEntry> = BLOCK_REGISTRY;
 void _registryCheck;
 
-export function getRegistryEntry(type: string): BlockRegistryEntry | undefined {
-  return BLOCK_REGISTRY[type];
-}
-
 export function getVisibleBlocks(category?: BlockCategory): [string, BlockRegistryEntry][] {
   return Object.entries(BLOCK_REGISTRY).filter(([, entry]) => {
     if (!entry.visible) return false;
