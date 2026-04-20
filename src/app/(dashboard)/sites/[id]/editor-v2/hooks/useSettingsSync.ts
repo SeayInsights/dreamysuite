@@ -70,4 +70,15 @@ export function useSettingsSync(siteId: string) {
       flushNow();
     };
   }, [flushNow]);
+
+  // Safety net: flush every 10s if settings are dirty
+  useEffect(() => {
+    const id = setInterval(() => {
+      const state = useEditorStore.getState();
+      if (state.settingsDirty) {
+        state.saveSettings(siteId);
+      }
+    }, 10_000);
+    return () => clearInterval(id);
+  }, [siteId]);
 }

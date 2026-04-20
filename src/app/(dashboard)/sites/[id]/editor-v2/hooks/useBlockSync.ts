@@ -141,4 +141,12 @@ export function useBlockSync(siteId: string) {
       flushNow();
     };
   }, [flushNow]);
+
+  // Safety net: flush every 10s if dirty in case debounce or beforeunload missed
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (useEditorStore.getState().isDirty) flushNow();
+    }, 10_000);
+    return () => clearInterval(id);
+  }, [flushNow]);
 }
