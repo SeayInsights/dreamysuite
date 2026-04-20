@@ -82,8 +82,28 @@ export function EditorOverlay({ children, containerRef }: Props) {
 			}}
 			// ── Double-click: show floating toolbar ───────────────────────────
 			onDoubleClick={(e) => {
-				// Suppress toolbar show if the target is a contentEditable text
-				// field — the browser's own selection + text editing takes over.
+				const blockId = resolveBlockId(e.clientX, e.clientY);
+				if (!blockId) return;
+
+				// Video blocks are handled exclusively by VideoInlineEditor — skip
+				// the generic block toolbar so the two dblclick handlers don't fight.
+				const blockEl = document.querySelector<HTMLElement>(`[data-block-id="${blockId}"]`);
+				const blockType = blockEl?.dataset.blockType ?? "";
+				if (blockType === "media-video" || blockType === "video" || blockType === "youtube") {
+					return;
+				}
+
+				// Ensure the block is selected (in case dblclick skipped the click).
+				const currentId = useEditorStore.getState().selectedBlockId;
+				if (currentId !== blockId) {
+					select(blockId);
+				}
+				// Always show the toolbar on dblclick — even when text editing also
+				// activates (e.g. schedule/FAQ/travel inline editors).
+				useEditorStore.getState().setBlockToolbarVisible(true);
+
+				// If the target is a contentEditable node the browser takes over text
+				// selection; nothing else needed from this handler.
 				const target = e.target as HTMLElement;
 				if (
 					target.isContentEditable ||
@@ -91,16 +111,6 @@ export function EditorOverlay({ children, containerRef }: Props) {
 				) {
 					return;
 				}
-
-				const blockId = resolveBlockId(e.clientX, e.clientY);
-				if (!blockId) return;
-
-				// Ensure the block is selected (in case dblclick skipped the click).
-				const currentId = useEditorStore.getState().selectedBlockId;
-				if (currentId !== blockId) {
-					select(blockId);
-				}
-				useEditorStore.getState().setBlockToolbarVisible(true);
 			}}
 			// ── Pointer down on a SELECTED block: start drag-threshold ────────
 			onPointerDown={(e) => {

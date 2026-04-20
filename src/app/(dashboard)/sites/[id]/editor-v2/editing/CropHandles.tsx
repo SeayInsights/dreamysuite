@@ -15,7 +15,7 @@
  *   { top, left, right, bottom }  — all positive = crop inward
  */
 
-import { useRef, useCallback, type RefObject } from "react";
+import { useRef, useCallback, useEffect, useState, type RefObject } from "react";
 import { useEditorStore } from "@/app/stores/editorStore";
 import { parseCfg } from "@/lib/editableField";
 
@@ -111,6 +111,19 @@ export function CropHandles({ blockId, rect, containerRef }: Props) {
   const updateBlock = useEditorStore((s) => s.updateBlock);
   const blocks = useEditorStore((s) => s.blocks);
 
+  // Keep scrollTop reactive so the overlay doesn't drift when the user scrolls
+  // while crop mode is active.
+  const [scrollTop, setScrollTop] = useState(
+    () => containerRef.current?.scrollTop ?? 0,
+  );
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+    const onScroll = () => setScrollTop(container.scrollTop);
+    container.addEventListener("scroll", onScroll, { passive: true });
+    return () => container.removeEventListener("scroll", onScroll);
+  }, [containerRef]);
+
   // Read existing cropDelta so we accumulate correctly across drags
   const currentDelta = useRef<CropDelta>({ top: 0, left: 0, right: 0, bottom: 0 });
 
@@ -180,13 +193,8 @@ export function CropHandles({ blockId, rect, containerRef }: Props) {
   );
 
   // rect uses scroll-buffer coordinates: eBox.top - containerBox.top + scrollTop.
-  // That coordinate space is correct for DragHandles, which renders inside the
-  // scrolling EditorOverlay container. CropHandles renders in a non-scrolling
-  // overlay that is a sibling of the container, so top is relative to the
-  // outer wrapper (same left/top origin, but no scroll offset). Subtracting
-  // scrollTop converts from scroll-buffer coords to the overlay's coord space.
-  const scrollTop = containerRef.current?.scrollTop ?? 0;
-
+  // CropHandles renders in a non-scrolling overlay sibling of the container,
+  // so we subtract the reactive scrollTop state to stay locked to the image.
   return (
     <div
       className="pointer-events-none absolute z-20"

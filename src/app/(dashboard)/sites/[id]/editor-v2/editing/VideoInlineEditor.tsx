@@ -195,7 +195,10 @@ function FloatingToolbar({
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: showBelow ? -4 : 4 }}
       transition={{ duration: 0.15, ease: "easeOut" }}
+      data-video-editor-overlay
       style={style}
+      onMouseDown={(e) => e.stopPropagation()}
+      onClick={(e) => e.stopPropagation()}
       className="absolute z-30 flex items-center gap-0.5 rounded-lg px-1.5 py-1 bg-neutral-900/95 shadow-xl ring-1 ring-white/10 backdrop-blur-sm"
     >
       <button
@@ -305,19 +308,23 @@ export function VideoInlineEditor({ containerRef }: Props) {
   }, [active, containerRef]);
 
   useEffect(() => {
-    if (!active || videoPanel) return;
+    if (!active) return;
     const handler = (e: MouseEvent) => {
       const container = containerRef.current;
       if (!container) return;
       const blockRoot = container.querySelector<HTMLElement>(`[data-block-id="${active.blockId}"]`);
       if (blockRoot && blockRoot.contains(e.target as Node)) return;
-      const overlay = document.querySelector<HTMLElement>("[data-video-editor-overlay]");
-      if (overlay && overlay.contains(e.target as Node)) return;
+      // Both FloatingToolbar and InlineVideoPanel carry data-video-editor-overlay,
+      // so any click inside either stops propagation before reaching here.
+      // The querySelectorAll handles the case where both are mounted simultaneously.
+      for (const overlay of document.querySelectorAll<HTMLElement>("[data-video-editor-overlay]")) {
+        if (overlay.contains(e.target as Node)) return;
+      }
       dismiss();
     };
     document.addEventListener("mousedown", handler, true);
     return () => document.removeEventListener("mousedown", handler, true);
-  }, [active, videoPanel, dismiss, containerRef]);
+  }, [active, dismiss, containerRef]);
 
   const blockExists = active !== null && blocks.some((b) => b.id === active.blockId);
   if (!blockExists && active) {
