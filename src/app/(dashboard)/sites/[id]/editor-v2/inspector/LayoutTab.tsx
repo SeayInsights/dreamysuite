@@ -36,7 +36,11 @@ function SettingsInput({
         inputMode="numeric"
         value={draft}
         placeholder={placeholder ?? "auto"}
-        onChange={(e) => setDraft(e.target.value)}
+        onChange={(e) => {
+          setDraft(e.target.value);
+          const trimmed = e.target.value.trim();
+          onChange(trimmed === "" ? null : trimmed);
+        }}
         onBlur={commit}
         onKeyDown={(e) => {
           if (e.key === "Enter") commit();

@@ -43,15 +43,14 @@ export function TopBar({ site }: Props) {
 				<BreakpointToggle />
 			</div>
 
-			{/* Right cluster: mode / undo-redo / preview / publish / inspector */}
+			{/* Right cluster: mode / undo-redo / inspector / preview / publish */}
 			<div className="flex items-center gap-2">
 				<ModeToggle />
 				<div className="h-6 w-px bg-border" aria-hidden />
 				<UndoRedo />
+				<InspectorToggle />
 				<PreviewButton siteId={site.id} />
 				<PublishButton siteId={site.id} />
-				<div className="h-6 w-px bg-border" aria-hidden />
-				<InspectorToggle />
 			</div>
 		</header>
 	);

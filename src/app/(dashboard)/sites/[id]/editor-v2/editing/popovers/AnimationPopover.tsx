@@ -66,20 +66,19 @@ export function AnimationPopoverContent({ blockId, anim, isPro, onUpdate }: Anim
     onUpdate(patch);
     const presetId = patch.presetId ?? anim.presetId;
     if (presetId) {
-      const el = document.querySelector<Element>(`[data-block-id="${blockId}"]`);
-      if (el) {
+      const el = document.querySelector<HTMLElement>(`[data-block-id="${blockId}"]`);
+      if (el && el.parentElement) {
         const clone = el.cloneNode(true) as HTMLElement;
         clone.removeAttribute("data-block-id");
-        clone.style.position = "absolute";
-        clone.style.inset = "0";
-        clone.style.zIndex = "50";
         clone.style.pointerEvents = "none";
-        el.parentElement?.appendChild(clone);
-        (el as HTMLElement).style.opacity = "0";
+        // Insert clone in-flow at the block's exact position so animations
+        // play at the correct coordinates (CSS transforms don't affect layout flow).
+        el.parentElement.insertBefore(clone, el);
+        el.style.visibility = "hidden";
         getPreset(presetId)?.().then((fn) => {
           fn(clone);
           setTimeout(() => {
-            (el as HTMLElement).style.opacity = "";
+            el.style.visibility = "";
             clone.remove();
           }, 1500);
         });
