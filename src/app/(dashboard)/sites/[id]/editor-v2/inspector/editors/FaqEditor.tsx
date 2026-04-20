@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { PanelTextInput, PanelTextArea } from "../PanelInputs";
+import { PanelTextInput } from "../PanelInputs";
 
 // ---------------------------------------------------------------------------
 // FAQ data types
@@ -213,15 +213,15 @@ export function FaqEditor({
         {faq.items.map((item, index) => (
           <div
             key={item.id}
-            className="rounded-md border border-border bg-background/60 p-3 space-y-2"
+            className="rounded-md border border-border bg-background/60 p-3"
           >
-            {/* Item header row */}
-            <div className="flex items-center justify-between">
-              <span className="text-[10px] font-semibold text-muted-foreground">
-                #{index + 1}
+            <div className="flex items-center justify-between gap-2">
+              <span className="min-w-0 truncate text-[11px] text-foreground/70">
+                {item.question
+                  ? item.question.slice(0, 50)
+                  : <span className="italic text-muted-foreground">Question #{index + 1}</span>}
               </span>
-              <div className="flex items-center gap-1">
-                {/* Up button */}
+              <div className="flex shrink-0 items-center gap-1">
                 <button
                   type="button"
                   disabled={index === 0}
@@ -231,7 +231,6 @@ export function FaqEditor({
                 >
                   ▲
                 </button>
-                {/* Down button */}
                 <button
                   type="button"
                   disabled={index === faq.items.length - 1}
@@ -241,7 +240,6 @@ export function FaqEditor({
                 >
                   ▼
                 </button>
-                {/* Delete button */}
                 <button
                   type="button"
                   onClick={() => deleteItem(item.id)}
@@ -252,22 +250,6 @@ export function FaqEditor({
                 </button>
               </div>
             </div>
-
-            {/* Question input */}
-            <PanelTextInput
-              label="Question"
-              value={item.question}
-              onChange={(v) => updateItem(item.id, { question: v })}
-              placeholder="e.g. What is the dress code?"
-            />
-
-            {/* Answer textarea */}
-            <PanelTextArea
-              label="Answer"
-              value={item.answer}
-              onChange={(v) => updateItem(item.id, { answer: v })}
-              placeholder="Type your answer here…"
-            />
           </div>
         ))}
       </div>
