@@ -1,3 +1,4 @@
+import React from "react";
 import { blockSectionStyle, parseCfg } from "@/lib/editableField";
 
 interface Block { id: string; type: string; [key: string]: unknown }
@@ -16,6 +17,7 @@ export function MediaVideoBlock({ block }: { block: Block }) {
   const cfg = parseCfg(block.config);
   const url = String(cfg.url ?? "");
   const height = String(cfg.height ?? "100dvh");
+  const objectFit = String(cfg.objectFit ?? "cover") as React.CSSProperties["objectFit"];
   const sectionStyle = blockSectionStyle(cfg);
 
   const isYoutube = cfg.provider === "youtube" ||
@@ -84,14 +86,14 @@ export function MediaVideoBlock({ block }: { block: Block }) {
 
   return (
     <section className="block block-media-video" data-block-id={block.id} data-block-type={block.type}
-      style={{ height, position: "relative", ...sectionStyle }}>
+      style={{ height, position: "relative", overflow: "hidden", ...sectionStyle }}>
       <video
         src={url}
         autoPlay
         muted
         loop
         playsInline
-        style={{ width: "100%", height: "100%", objectFit: "cover" }}
+        style={{ width: "100%", height: "100%", objectFit }}
       />
     </section>
   );
