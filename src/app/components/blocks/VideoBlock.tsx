@@ -1,3 +1,4 @@
+import React from "react";
 import { blockSectionStyle, parseCfg } from "@/lib/editableField";
 
 interface Block { id: string; type: string; [key: string]: unknown }
@@ -6,6 +7,7 @@ export function VideoBlock({ block }: { block: Block }) {
   const cfg = parseCfg(block.config);
   const url = String(cfg.url ?? "");
   const height = String(cfg.height ?? "100dvh");
+  const objectFit = String(cfg.objectFit ?? "cover") as React.CSSProperties["objectFit"];
   const vimeoId = cfg.vimeoId as string | undefined;
 
   if (vimeoId) {
@@ -32,7 +34,7 @@ export function VideoBlock({ block }: { block: Block }) {
       className="block block-video"
       data-block-id={block.id}
       data-block-type={block.type}
-      style={{ height, position: "relative", ...blockSectionStyle(cfg) }}
+      style={{ height, position: "relative", overflow: "hidden", ...blockSectionStyle(cfg) }}
     >
       {url ? (
         <video
@@ -41,7 +43,7 @@ export function VideoBlock({ block }: { block: Block }) {
           muted
           loop
           playsInline
-          style={{ width: "100%", height: "100%", objectFit: "cover" }}
+          style={{ width: "100%", height: "100%", objectFit }}
         />
       ) : (
         <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", color: "#9b8e85" }}>
