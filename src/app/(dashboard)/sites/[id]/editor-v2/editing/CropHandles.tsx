@@ -15,7 +15,7 @@
  *   { top, left, right, bottom }  — all positive = crop inward
  */
 
-import { useRef, useCallback, useEffect, useState, type RefObject } from "react";
+import { useRef, useCallback, type RefObject } from "react";
 import { useEditorStore } from "@/app/stores/editorStore";
 import { parseCfg } from "@/lib/editableField";
 
@@ -111,19 +111,6 @@ export function CropHandles({ blockId, rect, containerRef }: Props) {
   const updateBlock = useEditorStore((s) => s.updateBlock);
   const blocks = useEditorStore((s) => s.blocks);
 
-  // Keep scrollTop reactive so the overlay doesn't drift when the user scrolls
-  // while crop mode is active.
-  const [scrollTop, setScrollTop] = useState(
-    () => containerRef.current?.scrollTop ?? 0,
-  );
-  useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
-    const onScroll = () => setScrollTop(container.scrollTop);
-    container.addEventListener("scroll", onScroll, { passive: true });
-    return () => container.removeEventListener("scroll", onScroll);
-  }, [containerRef]);
-
   // Read existing cropDelta so we accumulate correctly across drags
   const currentDelta = useRef<CropDelta>({ top: 0, left: 0, right: 0, bottom: 0 });
 
@@ -192,14 +179,13 @@ export function CropHandles({ blockId, rect, containerRef }: Props) {
     [blockId, updateBlock],
   );
 
-  // rect uses scroll-buffer coordinates: eBox.top - containerBox.top + scrollTop.
-  // CropHandles renders in a non-scrolling overlay sibling of the container,
-  // so we subtract the reactive scrollTop state to stay locked to the image.
+  // rect is now viewport-relative (getBoundingClientRect). The overlay is
+  // position:fixed (from ImageEditor), so top/left map directly to the viewport.
   return (
     <div
       className="pointer-events-none absolute z-20"
       style={{
-        top: rect.top - scrollTop,
+        top: rect.top,
         left: rect.left,
         width: rect.width,
         height: rect.height,
