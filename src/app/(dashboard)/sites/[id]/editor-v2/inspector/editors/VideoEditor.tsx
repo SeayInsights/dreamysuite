@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useEditorStore } from "@/app/stores/editorStore";
-import { PanelTextInput } from "../PanelInputs";
+import { PanelTextInput, PanelSelectInput } from "../PanelInputs";
 
 // ---------------------------------------------------------------------------
 // Video editor
@@ -25,6 +25,8 @@ export function VideoEditor({
   const siteId = useEditorStore((s) => s.siteId);
   const currentUrl = String(cfg.url ?? "");
   const height = String(cfg.height ?? "100dvh");
+  const objectFit = String(cfg.objectFit ?? "cover");
+  const provider = String(cfg.provider ?? "");
   const [videos, setVideos] = useState<{ id: string; url: string; title: string | null }[]>([]);
   const [loading, setLoading] = useState(true);
   const [urlInput, setUrlInput] = useState("");
@@ -124,6 +126,20 @@ export function VideoEditor({
       <p className="text-[10px] text-muted-foreground -mt-2">
         CSS value — e.g. 100dvh, 600px, 80vh
       </p>
+
+      {(!provider || provider === "direct") && (
+        <PanelSelectInput
+          label="Object Fit"
+          value={objectFit}
+          onChange={(v) => updateConfig({ objectFit: v })}
+          options={[
+            { value: "cover", label: "Cover (crop to fill)" },
+            { value: "contain", label: "Contain (letterbox)" },
+            { value: "fill", label: "Fill (stretch)" },
+            { value: "none", label: "None (natural size)" },
+          ]}
+        />
+      )}
     </div>
   );
 }
