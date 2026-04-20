@@ -1,10 +1,12 @@
 "use client";
 
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { Pencil } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { prefersReducedMotion, MOTION } from "@/lib/motion";
 import { useSelection } from "./hooks/useSelection";
+import { useEditorStore } from "@/app/stores/editorStore";
 
 interface Rect {
 	top: number;
@@ -98,6 +100,7 @@ export function SelectionLayer({ frameRef }: Props) {
 					rect={selectedRect}
 					label={selectedLabel}
 					variant="selected"
+					blockId={selectedBlockId}
 				/>
 			)}
 		</div>
@@ -108,9 +111,13 @@ interface OutlineProps {
 	rect: Rect;
 	label: string | null;
 	variant: "hover" | "selected";
+	blockId?: string | null;
 }
 
-function Outline({ rect, label, variant }: OutlineProps) {
+function Outline({ rect, label, variant, blockId }: OutlineProps) {
+	const editingPanelBlockId = useEditorStore((s) => s.editingPanelBlockId);
+	const setEditingPanel = useEditorStore((s) => s.setEditingPanel);
+	const pencilActive = blockId != null && editingPanelBlockId === blockId;
 	const ref = useRef<HTMLDivElement>(null);
 
 	useLayoutEffect(() => {
@@ -145,16 +152,38 @@ function Outline({ rect, label, variant }: OutlineProps) {
 			}}
 		>
 			{label && (
-				<span
-					className={cn(
-						"absolute -top-5 left-0 rounded-sm px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wider",
-						variant === "selected"
-							? "bg-primary text-primary-foreground"
-							: "bg-primary/70 text-primary-foreground",
+				<div className="absolute -top-5 left-0 flex items-end">
+					<span
+						className={cn(
+							"rounded-t-sm px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wider",
+							variant === "selected"
+								? "bg-primary text-primary-foreground"
+								: "bg-primary/70 text-primary-foreground",
+						)}
+					>
+						{label}
+					</span>
+					{variant === "selected" && blockId && (
+						<button
+							type="button"
+							aria-label="Edit block content"
+							aria-pressed={pencilActive}
+							className={cn(
+								"pointer-events-auto ml-px flex h-[18px] w-[18px] items-center justify-center rounded-t-sm border border-b-0 transition-colors",
+								pencilActive
+									? "border-primary bg-primary text-primary-foreground"
+									: "border-primary/30 bg-white text-primary hover:bg-primary/10",
+							)}
+							onPointerDown={(e) => e.stopPropagation()}
+							onClick={(e) => {
+								e.stopPropagation();
+								setEditingPanel(pencilActive ? null : blockId);
+							}}
+						>
+							<Pencil className="size-2.5" />
+						</button>
 					)}
-				>
-					{label}
-				</span>
+				</div>
 			)}
 		</div>
 	);

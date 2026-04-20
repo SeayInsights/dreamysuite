@@ -72,9 +72,6 @@ export function DragHandles({ containerRef }: Props) {
 	const [rect, setRect] = useState<Rect | null>(null);
 	const rafRef = useRef<number | null>(null);
 
-	const editingPanelBlockId = useEditorStore((s) => s.editingPanelBlockId);
-	const setEditingPanel = useEditorStore((s) => s.setEditingPanel);
-
 	const { startResize } = useDrag(containerRef);
 
 	// Subscribe to selected block's config so resize dimension changes re-measure the selection box.
@@ -116,37 +113,8 @@ export function DragHandles({ containerRef }: Props) {
 
 	if (!selectedBlockId || !rect) return null;
 
-	const pencilActive = editingPanelBlockId === selectedBlockId;
-
 	return (
 		<div className="pointer-events-none absolute inset-0 z-[45] overflow-hidden" aria-hidden="true">
-			{/* Pencil edit button — pinned to top-left corner of selected block */}
-			<button
-				type="button"
-				aria-label="Edit block content"
-				aria-pressed={pencilActive}
-				className="pointer-events-auto absolute flex items-center justify-center rounded-sm"
-				style={{
-					left: rect.left + 4,
-					top: rect.top + 4,
-					width: 24,
-					height: 24,
-					backgroundColor: pencilActive ? "hsl(var(--primary) / 0.85)" : "hsl(var(--primary))",
-					color: "hsl(var(--primary-foreground))",
-					outline: pencilActive ? "2px solid hsl(var(--primary-foreground) / 0.5)" : "none",
-					outlineOffset: 1,
-				}}
-				onPointerDown={(e) => e.stopPropagation()}
-				onClick={(e) => {
-					e.stopPropagation();
-					setEditingPanel(pencilActive ? null : selectedBlockId);
-				}}
-			>
-				<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-					<path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 000-1.41l-2.34-2.34a1 1 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
-				</svg>
-			</button>
-
 			{RESIZE_HANDLES.map(({ pos, x, y, cursor, label }) => {
 				const visualLeft = rect.left + x * rect.width - HANDLE_OFFSET;
 				const visualTop = rect.top + y * rect.height - HANDLE_OFFSET;

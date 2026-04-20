@@ -19,6 +19,7 @@ interface Block { id: string; type: string; [key: string]: unknown }
 export function ScheduleBlock({ block }: { block: Block }) {
   const cfg = parseCfg(block.config);
   const heading = String(cfg.heading ?? "Schedule of Events");
+  const displayMode = String(cfg.displayMode ?? "timeline");
   const events: ScheduleEvent[] = Array.isArray(cfg.events) ? cfg.events as ScheduleEvent[] : [];
 
   return (
@@ -34,15 +35,52 @@ export function ScheduleBlock({ block }: { block: Block }) {
       <div className="section-rule" aria-hidden="true" />
 
       {events.length === 0 ? (
-        <p style={{ color: "#9b8e85", fontStyle: "italic", textAlign: "center", marginTop: "1.5rem" }}>
+        <p style={{ color: "var(--muted)", fontStyle: "italic", textAlign: "center", marginTop: "1.5rem" }}>
           Add events in the Content panel
         </p>
+      ) : displayMode === "cards" ? (
+        <div style={{
+          display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))",
+          gap: "1.25rem", maxWidth: "900px", margin: "2rem auto 0",
+        }}>
+          {events.map((event, i) => (
+            <div key={event.id ?? i} style={{
+              background: "var(--bg, #fff)", border: "1px solid var(--border)",
+              borderRadius: "10px", padding: "1.25rem", display: "flex", flexDirection: "column", gap: "0.375rem",
+            }}>
+              {event.date && (
+                <p style={{ margin: 0, fontSize: "0.72rem", fontWeight: 700, color: "var(--accent)", textTransform: "uppercase", letterSpacing: "0.04em" }}>
+                  {event.date}
+                </p>
+              )}
+              <p style={{ margin: 0, fontWeight: 600, fontSize: "0.95rem" }}>
+                {event.icon && <span style={{ marginRight: "0.35rem" }}>{event.icon}</span>}
+                <span data-editable-item-index={i} data-editable-item-field="name" data-editable-array-key="events">
+                  {event.name || <span style={{ color: "var(--muted)", fontStyle: "italic" }}>Event name</span>}
+                </span>
+              </p>
+              {event.time && <p style={{ margin: 0, fontSize: "0.8rem", color: "var(--accent)", fontWeight: 600 }}>{event.time}</p>}
+              {event.location && (
+                <p style={{ margin: 0, fontSize: "0.82rem", color: "var(--body-color)" }}
+                   data-editable-item-index={i} data-editable-item-field="location" data-editable-array-key="events">
+                  {event.location}
+                </p>
+              )}
+              {event.description && (
+                <p style={{ margin: 0, fontSize: "0.82rem", color: "var(--body-color)" }}
+                   data-editable-item-index={i} data-editable-item-field="description" data-editable-array-key="events">
+                  {event.description}
+                </p>
+              )}
+            </div>
+          ))}
+        </div>
       ) : (
         <div className="timeline" style={{ maxWidth: "600px", margin: "2rem auto 0", position: "relative" }}>
           {/* Vertical rule */}
           <div style={{
             position: "absolute", left: "5.5rem", top: 0, bottom: 0,
-            width: "2px", background: "#e0dbd4",
+            width: "2px", background: "var(--border)",
           }} aria-hidden="true" />
 
           {events.map((event, i) => (
@@ -63,7 +101,7 @@ export function ScheduleBlock({ block }: { block: Block }) {
                 position: "absolute", left: "5rem", top: "0.4rem",
                 width: "10px", height: "10px",
                 background: "var(--accent, #B8921A)", borderRadius: "50%",
-                border: "2px solid #fff", zIndex: 1,
+                border: "2px solid var(--bg, #fff)", zIndex: 1,
               }} aria-hidden="true" />
 
               {/* Content */}
@@ -84,11 +122,11 @@ export function ScheduleBlock({ block }: { block: Block }) {
                       {event.name}
                     </span>
                   ) : (
-                    <span style={{ color: "#9b8e85", fontStyle: "italic" }}>Event name</span>
+                    <span style={{ color: "var(--muted)", fontStyle: "italic" }}>Event name</span>
                   )}
                 </p>
                 {event.location && (
-                  <p style={{ margin: "0 0 0.125rem", fontSize: "0.82rem", color: "#6b6560" }}>
+                  <p style={{ margin: "0 0 0.125rem", fontSize: "0.82rem", color: "var(--body-color)" }}>
                     {event.mapsUrl ? (
                       <a
                         href={event.mapsUrl}
@@ -114,7 +152,7 @@ export function ScheduleBlock({ block }: { block: Block }) {
                 )}
                 {event.description && (
                   <p
-                    style={{ margin: 0, fontSize: "0.82rem", color: "#6b6560" }}
+                    style={{ margin: 0, fontSize: "0.82rem", color: "var(--body-color)" }}
                     data-editable-item-index={i}
                     data-editable-item-field="description"
                     data-editable-array-key="events"
@@ -123,7 +161,7 @@ export function ScheduleBlock({ block }: { block: Block }) {
                   </p>
                 )}
                 {event.dressCode && (
-                  <p style={{ margin: "0.25rem 0 0", fontSize: "0.75rem", color: "#9b8e85" }}>
+                  <p style={{ margin: "0.25rem 0 0", fontSize: "0.75rem", color: "var(--muted)" }}>
                     Dress code: {event.dressCode}
                   </p>
                 )}
