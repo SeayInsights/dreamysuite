@@ -82,16 +82,6 @@ export function EditorOverlay({ children, containerRef }: Props) {
 			}}
 			// ── Double-click: show floating toolbar ───────────────────────────
 			onDoubleClick={(e) => {
-				// Suppress toolbar show if the target is a contentEditable text
-				// field — the browser's own selection + text editing takes over.
-				const target = e.target as HTMLElement;
-				if (
-					target.isContentEditable ||
-					target.closest("[contenteditable='true']")
-				) {
-					return;
-				}
-
 				const blockId = resolveBlockId(e.clientX, e.clientY);
 				if (!blockId) return;
 
@@ -108,7 +98,19 @@ export function EditorOverlay({ children, containerRef }: Props) {
 				if (currentId !== blockId) {
 					select(blockId);
 				}
+				// Always show the toolbar on dblclick — even when text editing also
+				// activates (e.g. schedule/FAQ/travel inline editors).
 				useEditorStore.getState().setBlockToolbarVisible(true);
+
+				// If the target is a contentEditable node the browser takes over text
+				// selection; nothing else needed from this handler.
+				const target = e.target as HTMLElement;
+				if (
+					target.isContentEditable ||
+					target.closest("[contenteditable='true']")
+				) {
+					return;
+				}
 			}}
 			// ── Pointer down on a SELECTED block: start drag-threshold ────────
 			onPointerDown={(e) => {
