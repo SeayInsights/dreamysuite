@@ -10,7 +10,7 @@ const DEBOUNCE_MS = 1_500;
  * Returns true if all operations succeeded, false if any failed.
  * A failure means the store should remain dirty so the next flush retries.
  */
-async function flushOps(
+export async function flushOps(
   siteId: string,
   pageId: string,
   ops: PendingOps,
