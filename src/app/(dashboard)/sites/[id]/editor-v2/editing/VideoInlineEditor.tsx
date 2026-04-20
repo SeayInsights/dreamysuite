@@ -28,15 +28,8 @@ const TOOLBAR_FLIP_THRESHOLD = TOOLBAR_HEIGHT + 8;
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-function getRelativeRect(element: HTMLElement, container: HTMLElement): DOMRect {
-  const eBox = element.getBoundingClientRect();
-  const cBox = container.getBoundingClientRect();
-  return new DOMRect(
-    eBox.left - cBox.left,
-    eBox.top - cBox.top + container.scrollTop,
-    eBox.width,
-    eBox.height,
-  );
+function getViewportRect(element: HTMLElement): DOMRect {
+  return element.getBoundingClientRect();
 }
 
 function detectProvider(url: string): string {
@@ -274,7 +267,7 @@ export function VideoInlineEditor({ containerRef }: Props) {
       e.preventDefault();
       e.stopPropagation();
 
-      const blockRect = getRelativeRect(blockRoot, container);
+      const blockRect = getViewportRect(blockRoot);
       setActive({ blockId, blockRect });
       setVideoPanel(false);
     };
@@ -293,16 +286,16 @@ export function VideoInlineEditor({ containerRef }: Props) {
       rafRef.current = requestAnimationFrame(() => {
         const blockRoot = container.querySelector<HTMLElement>(`[data-block-id="${active.blockId}"]`);
         if (!blockRoot) return;
-        const blockRect = getRelativeRect(blockRoot, container);
+        const blockRect = getViewportRect(blockRoot);
         setActive((prev) => prev ? { ...prev, blockRect } : prev);
       });
     };
 
     window.addEventListener("resize", recompute);
-    container.addEventListener("scroll", recompute);
+    document.addEventListener("scroll", recompute, true);
     return () => {
       window.removeEventListener("resize", recompute);
-      container.removeEventListener("scroll", recompute);
+      document.removeEventListener("scroll", recompute, true);
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
     };
   }, [active, containerRef]);
@@ -350,7 +343,7 @@ export function VideoInlineEditor({ containerRef }: Props) {
 
   return (
     <div
-      className="pointer-events-none absolute inset-0 z-20"
+      className="pointer-events-none fixed inset-0 z-[100]"
       aria-hidden
     >
       <div className="pointer-events-auto">

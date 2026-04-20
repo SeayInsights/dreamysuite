@@ -62,15 +62,8 @@ interface Photo {
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-function getRelativeRect(element: HTMLElement, container: HTMLElement): DOMRect {
-  const eBox = element.getBoundingClientRect();
-  const cBox = container.getBoundingClientRect();
-  return new DOMRect(
-    eBox.left - cBox.left,
-    eBox.top - cBox.top + container.scrollTop,
-    eBox.width,
-    eBox.height,
-  );
+function getViewportRect(element: HTMLElement): DOMRect {
+  return element.getBoundingClientRect();
 }
 
 function findImageElement(blockRoot: HTMLElement): HTMLElement | null {
@@ -370,8 +363,8 @@ export function ImageEditor({ containerRef }: Props) {
       e.stopPropagation();
 
       const imageEl = findImageElement(blockRoot);
-      const blockRect = getRelativeRect(blockRoot, container);
-      const imageRect = imageEl ? getRelativeRect(imageEl, container) : blockRect;
+      const blockRect = getViewportRect(blockRoot);
+      const imageRect = imageEl ? getViewportRect(imageEl) : blockRect;
 
       setActive({ blockId, imageRect, blockRect });
       setActiveBlockType(blockType);
@@ -394,17 +387,17 @@ export function ImageEditor({ containerRef }: Props) {
         const blockRoot = container.querySelector<HTMLElement>(`[data-block-id="${active.blockId}"]`);
         if (!blockRoot) return;
         const imageEl = findImageElement(blockRoot);
-        const blockRect = getRelativeRect(blockRoot, container);
-        const imageRect = imageEl ? getRelativeRect(imageEl, container) : blockRect;
+        const blockRect = getViewportRect(blockRoot);
+        const imageRect = imageEl ? getViewportRect(imageEl) : blockRect;
         setActive((prev) => prev ? { ...prev, imageRect, blockRect } : prev);
       });
     };
 
     window.addEventListener("resize", recompute);
-    containerRef.current?.addEventListener("scroll", recompute);
+    document.addEventListener("scroll", recompute, true);
     return () => {
       window.removeEventListener("resize", recompute);
-      containerRef.current?.removeEventListener("scroll", recompute);
+      document.removeEventListener("scroll", recompute, true);
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
     };
   }, [active, containerRef]);
@@ -453,7 +446,7 @@ export function ImageEditor({ containerRef }: Props) {
   return (
     <div
       data-image-editor-overlay
-      className="pointer-events-none absolute inset-0 z-20"
+      className="pointer-events-none fixed inset-0 z-[100]"
       aria-hidden
     >
       <div className="pointer-events-auto">
