@@ -25,7 +25,7 @@ export function MultiTextBlock({ block }: { block: Block }) {
       </TextEffectWrapper>
       <div className="section-rule" aria-hidden="true" />
       <div className="text-body">
-        <p style={{ whiteSpace: "pre-wrap" }} {...editableProps(cfg, "body")}>
+        <p {...editableProps(cfg, "body", { whiteSpace: "pre-wrap" })}>
           {body || (
             <span style={{ color: "#9b8e85", fontStyle: "italic" }}>
               {labels[mode] ?? "Text"} content will appear here.
