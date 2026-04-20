@@ -95,6 +95,14 @@ export function EditorOverlay({ children, containerRef }: Props) {
 				const blockId = resolveBlockId(e.clientX, e.clientY);
 				if (!blockId) return;
 
+				// Video blocks are handled exclusively by VideoInlineEditor — skip
+				// the generic block toolbar so the two dblclick handlers don't fight.
+				const blockEl = document.querySelector<HTMLElement>(`[data-block-id="${blockId}"]`);
+				const blockType = blockEl?.dataset.blockType ?? "";
+				if (blockType === "media-video" || blockType === "video" || blockType === "youtube") {
+					return;
+				}
+
 				// Ensure the block is selected (in case dblclick skipped the click).
 				const currentId = useEditorStore.getState().selectedBlockId;
 				if (currentId !== blockId) {
