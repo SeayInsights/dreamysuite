@@ -1,10 +1,6 @@
 "use client";
 
-import { PanelTextInput, PanelTextArea } from "../PanelInputs";
-
-// ---------------------------------------------------------------------------
-// Travel data types
-// ---------------------------------------------------------------------------
+import { PanelTextInput } from "../PanelInputs";
 
 interface TravelItem {
   id: string;
@@ -15,14 +11,18 @@ interface TravelItem {
   linkUrl?: string;
 }
 
+type DisplayMode = "cards" | "list";
+
 interface TravelConfig {
   heading: string;
+  displayMode: DisplayMode;
   items: TravelItem[];
 }
 
 function normalizeTravelConfig(cfg: Record<string, unknown>): TravelConfig {
   return {
     heading: typeof cfg.heading === "string" ? cfg.heading : "Getting There",
+    displayMode: cfg.displayMode === "list" ? "list" : "cards",
     items: Array.isArray(cfg.items)
       ? (cfg.items as TravelItem[]).filter(
           (i) => i && typeof i === "object" && typeof i.id === "string",
@@ -40,10 +40,6 @@ const TRAVEL_TYPE_OPTIONS: Array<{ value: TravelItem["type"]; label: string }> =
   { value: "custom", label: "Custom" },
 ];
 
-// ---------------------------------------------------------------------------
-// Travel editor
-// ---------------------------------------------------------------------------
-
 export function TravelEditor({
   cfg,
   updateConfig,
@@ -52,10 +48,6 @@ export function TravelEditor({
   updateConfig: (patch: Record<string, unknown>) => void;
 }) {
   const travel = normalizeTravelConfig(cfg);
-
-  function setHeading(v: string) {
-    updateConfig({ heading: v });
-  }
 
   function addItem() {
     const newItem: TravelItem = { id: crypto.randomUUID(), type: "custom" };
@@ -85,9 +77,32 @@ export function TravelEditor({
       <PanelTextInput
         label="Heading"
         value={travel.heading}
-        onChange={setHeading}
+        onChange={(v) => updateConfig({ heading: v })}
         placeholder="Getting There"
       />
+
+      {/* Display mode toggle */}
+      <div className="space-y-1">
+        <label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+          Display Mode
+        </label>
+        <div className="flex gap-1.5">
+          {(["cards", "list"] as const).map((mode) => (
+            <button
+              key={mode}
+              type="button"
+              onClick={() => updateConfig({ displayMode: mode })}
+              className={`flex-1 rounded-md border py-1 text-xs capitalize transition-colors ${
+                travel.displayMode === mode
+                  ? "border-primary bg-primary text-primary-foreground"
+                  : "border-border text-muted-foreground hover:bg-accent/50"
+              }`}
+            >
+              {mode.charAt(0).toUpperCase() + mode.slice(1)}
+            </button>
+          ))}
+        </div>
+      </div>
 
       <div className="space-y-2">
         <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
@@ -105,11 +120,13 @@ export function TravelEditor({
             key={item.id}
             className="rounded-md border border-border bg-background/60 p-3 space-y-2"
           >
-            <div className="flex items-center justify-between">
-              <span className="text-[10px] font-semibold text-muted-foreground">
-                #{index + 1}
+            <div className="flex items-center justify-between gap-2">
+              <span className="min-w-0 truncate text-[11px] text-foreground/70">
+                {item.heading
+                  ? item.heading.slice(0, 40)
+                  : <span className="italic text-muted-foreground capitalize">{item.type ?? "Item"} #{index + 1}</span>}
               </span>
-              <div className="flex items-center gap-1">
+              <div className="flex shrink-0 items-center gap-1">
                 <button
                   type="button"
                   disabled={index === 0}
@@ -147,9 +164,7 @@ export function TravelEditor({
               <select
                 value={item.type ?? "custom"}
                 onChange={(e) =>
-                  updateItem(item.id, {
-                    type: e.target.value as TravelItem["type"],
-                  })
+                  updateItem(item.id, { type: e.target.value as TravelItem["type"] })
                 }
                 onKeyDown={(e) => e.stopPropagation()}
                 className="h-8 w-full rounded border border-input bg-background px-2 text-xs focus:outline-none focus:ring-1 focus:ring-ring"
@@ -161,20 +176,6 @@ export function TravelEditor({
                 ))}
               </select>
             </div>
-
-            <PanelTextInput
-              label="Heading"
-              value={item.heading ?? ""}
-              onChange={(v) => updateItem(item.id, { heading: v })}
-              placeholder="e.g. Nearest Airport"
-            />
-
-            <PanelTextArea
-              label="Body"
-              value={item.body ?? ""}
-              onChange={(v) => updateItem(item.id, { body: v })}
-              placeholder="Details, directions, tips…"
-            />
 
             <PanelTextInput
               label="Link Label"

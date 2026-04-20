@@ -456,8 +456,38 @@ export function TextEditor({
     (cmd: FormatCommand) => {
       const state = editStateRef.current;
       if (!state) return;
+
+      // Apply formatting to the current selection via execCommand so the user
+      // sees an immediate visual change. The element keeps focus because toolbar
+      // buttons use onMouseDown + e.preventDefault().
+      state.element.focus();
+      switch (cmd.type) {
+        case "bold":         document.execCommand("bold"); break;
+        case "italic":       document.execCommand("italic"); break;
+        case "underline":    document.execCommand("underline"); break;
+        case "foreColor":    document.execCommand("foreColor", false, cmd.value); break;
+        case "fontName":     document.execCommand("fontName", false, cmd.value); break;
+        case "justifyLeft":  document.execCommand("justifyLeft"); break;
+        case "justifyCenter":document.execCommand("justifyCenter"); break;
+        case "justifyRight": document.execCommand("justifyRight"); break;
+        case "fontSize": {
+          // execCommand fontSize uses 1-7 scale; apply via a temporary span instead
+          const sel = window.getSelection();
+          if (sel && sel.rangeCount > 0 && !sel.isCollapsed) {
+            const range = sel.getRangeAt(0);
+            const span = document.createElement("span");
+            span.style.fontSize = cmd.value.includes("px") || cmd.value.includes("rem")
+              ? cmd.value
+              : cmd.value + "px";
+            range.surroundContents(span);
+          }
+          break;
+        }
+      }
+
+      // Also persist as a whole-field style in block config
       handleFormatForState(state, cmd);
-      // Restore focus to the editable element after toolbar interaction
+
       requestAnimationFrame(() => {
         editStateRef.current?.element.focus();
       });
