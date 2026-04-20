@@ -28,7 +28,7 @@ export function FaqBlock({ block }: { block: Block }) {
       <div className="section-rule" aria-hidden="true" />
 
       {items.length === 0 ? (
-        <p style={{ color: "#9b8e85", fontStyle: "italic", textAlign: "center", marginTop: "1.5rem" }}>
+        <p style={{ color: "var(--muted)", fontStyle: "italic", textAlign: "center", marginTop: "1.5rem" }}>
           Add questions in the Content panel
         </p>
       ) : (
@@ -42,16 +42,16 @@ export function FaqBlock({ block }: { block: Block }) {
                 data-editable-item-field="question"
                 data-editable-array-key="items"
               >
-                {item.question || <span style={{ color: "#9b8e85", fontStyle: "italic" }}>Question</span>}
+                {item.question || <span style={{ color: "var(--muted)", fontStyle: "italic" }}>Question</span>}
               </dt>
               <dd
                 className="faq-answer"
-                style={{ margin: 0, color: "#4a4540", lineHeight: 1.6 }}
+                style={{ margin: 0, color: "var(--body-color)", lineHeight: 1.6 }}
                 data-editable-item-index={i}
                 data-editable-item-field="answer"
                 data-editable-array-key="items"
               >
-                {item.answer || <span style={{ color: "#9b8e85", fontStyle: "italic" }}>Answer</span>}
+                {item.answer || <span style={{ color: "var(--muted)", fontStyle: "italic" }}>Answer</span>}
               </dd>
             </div>
           ))}

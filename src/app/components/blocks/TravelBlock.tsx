@@ -30,7 +30,7 @@ export function TravelBlock({ block }: { block: Block }) {
       <div className="section-rule" aria-hidden="true" />
 
       {items.length === 0 ? (
-        <p style={{ color: "#9b8e85", fontStyle: "italic", textAlign: "center", marginTop: "1.5rem" }}>
+        <p style={{ color: "var(--muted)", fontStyle: "italic", textAlign: "center", marginTop: "1.5rem" }}>
           Add travel info in the Content panel
         </p>
       ) : (
@@ -43,8 +43,8 @@ export function TravelBlock({ block }: { block: Block }) {
         }}>
           {items.map((item, i) => (
             <div key={item.id ?? i} style={{
-              background: "#fff",
-              border: "1px solid #e8e3dd",
+              background: "var(--bg, #fff)",
+              border: "1px solid var(--border)",
               borderRadius: "10px",
               padding: "1.5rem",
               boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
@@ -72,7 +72,7 @@ export function TravelBlock({ block }: { block: Block }) {
               )}
               {item.body && (
                 <p
-                  style={{ margin: 0, fontSize: "0.85rem", color: "#4a4540", lineHeight: 1.55 }}
+                  style={{ margin: 0, fontSize: "0.85rem", color: "var(--body-color)", lineHeight: 1.55 }}
                   data-editable-item-index={i}
                   data-editable-item-field="body"
                   data-editable-array-key="items"
@@ -94,7 +94,7 @@ export function TravelBlock({ block }: { block: Block }) {
                 </a>
               )}
               {!item.heading && !item.body && !item.type && (
-                <span style={{ color: "#9b8e85", fontStyle: "italic", fontSize: "0.85rem" }}>Empty travel card</span>
+                <span style={{ color: "var(--muted)", fontStyle: "italic", fontSize: "0.85rem" }}>Empty travel card</span>
               )}
             </div>
           ))}
