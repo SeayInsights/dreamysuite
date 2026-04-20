@@ -1,10 +1,6 @@
 "use client";
 
-import { PanelTextInput, PanelTextArea } from "../PanelInputs";
-
-// ---------------------------------------------------------------------------
-// Fun Facts data types
-// ---------------------------------------------------------------------------
+import { PanelTextInput } from "../PanelInputs";
 
 interface FunFactItem {
   id: string;
@@ -13,24 +9,25 @@ interface FunFactItem {
   body?: string;
 }
 
+type DisplayMode = "card" | "bordered" | "flat" | "numbered";
+
 interface FunFactsConfig {
   heading: string;
   columns: "auto" | "2" | "3";
-  cardStyle: "card" | "flat" | "bordered";
+  cardStyle: DisplayMode;
   items: FunFactItem[];
 }
 
 function normalizeFunFactsConfig(cfg: Record<string, unknown>): FunFactsConfig {
+  const style = cfg.cardStyle as string;
   return {
     heading: typeof cfg.heading === "string" ? cfg.heading : "Fun Facts",
-    columns:
-      cfg.columns === "2" ? "2" : cfg.columns === "3" ? "3" : "auto",
+    columns: cfg.columns === "2" ? "2" : cfg.columns === "3" ? "3" : "auto",
     cardStyle:
-      cfg.cardStyle === "flat"
-        ? "flat"
-        : cfg.cardStyle === "bordered"
-          ? "bordered"
-          : "card",
+      style === "bordered" ? "bordered"
+      : style === "flat" ? "flat"
+      : style === "numbered" ? "numbered"
+      : "card",
     items: Array.isArray(cfg.items)
       ? (cfg.items as FunFactItem[]).filter(
           (i) => i && typeof i === "object" && typeof i.id === "string",
@@ -39,9 +36,12 @@ function normalizeFunFactsConfig(cfg: Record<string, unknown>): FunFactsConfig {
   };
 }
 
-// ---------------------------------------------------------------------------
-// Fun Facts editor
-// ---------------------------------------------------------------------------
+const DISPLAY_MODES: Array<{ value: DisplayMode; label: string }> = [
+  { value: "card", label: "Card" },
+  { value: "bordered", label: "Bordered" },
+  { value: "flat", label: "Flat" },
+  { value: "numbered", label: "Numbered" },
+];
 
 export function FunFactsEditor({
   cfg,
@@ -51,18 +51,6 @@ export function FunFactsEditor({
   updateConfig: (patch: Record<string, unknown>) => void;
 }) {
   const facts = normalizeFunFactsConfig(cfg);
-
-  function setHeading(v: string) {
-    updateConfig({ heading: v });
-  }
-
-  function setColumns(v: FunFactsConfig["columns"]) {
-    updateConfig({ columns: v });
-  }
-
-  function setCardStyle(v: FunFactsConfig["cardStyle"]) {
-    updateConfig({ cardStyle: v });
-  }
 
   function addItem() {
     const newItem: FunFactItem = { id: crypto.randomUUID() };
@@ -92,7 +80,7 @@ export function FunFactsEditor({
       <PanelTextInput
         label="Heading"
         value={facts.heading}
-        onChange={setHeading}
+        onChange={(v) => updateConfig({ heading: v })}
         placeholder="Fun Facts"
       />
 
@@ -106,7 +94,7 @@ export function FunFactsEditor({
             <button
               key={col}
               type="button"
-              onClick={() => setColumns(col)}
+              onClick={() => updateConfig({ columns: col })}
               className={`flex-1 rounded-md border py-1 text-xs transition-colors ${
                 facts.columns === col
                   ? "border-primary bg-primary text-primary-foreground"
@@ -119,24 +107,24 @@ export function FunFactsEditor({
         </div>
       </div>
 
-      {/* Card style toggle */}
+      {/* Display mode toggle */}
       <div className="space-y-1">
         <label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-          Card Style
+          Display Mode
         </label>
-        <div className="flex gap-1.5">
-          {(["card", "flat", "bordered"] as const).map((style) => (
+        <div className="grid grid-cols-2 gap-1.5">
+          {DISPLAY_MODES.map(({ value, label }) => (
             <button
-              key={style}
+              key={value}
               type="button"
-              onClick={() => setCardStyle(style)}
-              className={`flex-1 rounded-md border py-1 text-xs capitalize transition-colors ${
-                facts.cardStyle === style
+              onClick={() => updateConfig({ cardStyle: value })}
+              className={`rounded-md border py-1 text-xs transition-colors ${
+                facts.cardStyle === value
                   ? "border-primary bg-primary text-primary-foreground"
                   : "border-border text-muted-foreground hover:bg-accent/50"
               }`}
             >
-              {style.charAt(0).toUpperCase() + style.slice(1)}
+              {label}
             </button>
           ))}
         </div>
@@ -159,11 +147,13 @@ export function FunFactsEditor({
             key={item.id}
             className="rounded-md border border-border bg-background/60 p-3 space-y-2"
           >
-            <div className="flex items-center justify-between">
-              <span className="text-[10px] font-semibold text-muted-foreground">
-                #{index + 1}
+            <div className="flex items-center justify-between gap-2">
+              <span className="min-w-0 truncate text-[11px] text-foreground/70">
+                {item.title || item.body
+                  ? (item.title ?? item.body ?? "").slice(0, 40)
+                  : <span className="italic text-muted-foreground">Fact #{index + 1}</span>}
               </span>
-              <div className="flex items-center gap-1">
+              <div className="flex shrink-0 items-center gap-1">
                 <button
                   type="button"
                   disabled={index === 0}
@@ -198,20 +188,6 @@ export function FunFactsEditor({
               value={item.icon ?? ""}
               onChange={(v) => updateItem(item.id, { icon: v })}
               placeholder="emoji"
-            />
-
-            <PanelTextInput
-              label="Title"
-              value={item.title ?? ""}
-              onChange={(v) => updateItem(item.id, { title: v })}
-              placeholder="e.g. First met in 2018"
-            />
-
-            <PanelTextArea
-              label="Body"
-              value={item.body ?? ""}
-              onChange={(v) => updateItem(item.id, { body: v })}
-              placeholder="Tell the story…"
             />
           </div>
         ))}

@@ -1,10 +1,6 @@
 "use client";
 
-import { PanelTextInput, PanelTextArea, PanelDateInput, PanelTimeInput } from "../PanelInputs";
-
-// ---------------------------------------------------------------------------
-// Schedule data types
-// ---------------------------------------------------------------------------
+import { PanelTextInput, PanelDateInput, PanelTimeInput } from "../PanelInputs";
 
 interface ScheduleEvent {
   id: string;
@@ -19,14 +15,18 @@ interface ScheduleEvent {
   mapsUrl?: string;
 }
 
+type DisplayMode = "timeline" | "cards";
+
 interface ScheduleConfig {
   heading: string;
+  displayMode: DisplayMode;
   events: ScheduleEvent[];
 }
 
 function normalizeScheduleConfig(cfg: Record<string, unknown>): ScheduleConfig {
   return {
     heading: typeof cfg.heading === "string" ? cfg.heading : "The Day",
+    displayMode: cfg.displayMode === "cards" ? "cards" : "timeline",
     events: Array.isArray(cfg.events)
       ? (cfg.events as ScheduleEvent[]).filter(
           (e) => e && typeof e === "object" && typeof e.id === "string",
@@ -34,10 +34,6 @@ function normalizeScheduleConfig(cfg: Record<string, unknown>): ScheduleConfig {
       : [],
   };
 }
-
-// ---------------------------------------------------------------------------
-// Schedule editor
-// ---------------------------------------------------------------------------
 
 export function ScheduleEditor({
   cfg,
@@ -47,10 +43,6 @@ export function ScheduleEditor({
   updateConfig: (patch: Record<string, unknown>) => void;
 }) {
   const schedule = normalizeScheduleConfig(cfg);
-
-  function setHeading(v: string) {
-    updateConfig({ heading: v });
-  }
 
   function addEvent() {
     const newEvent: ScheduleEvent = { id: crypto.randomUUID(), name: "" };
@@ -80,9 +72,32 @@ export function ScheduleEditor({
       <PanelTextInput
         label="Heading"
         value={schedule.heading}
-        onChange={setHeading}
+        onChange={(v) => updateConfig({ heading: v })}
         placeholder="The Day"
       />
+
+      {/* Display mode toggle */}
+      <div className="space-y-1">
+        <label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+          Display Mode
+        </label>
+        <div className="flex gap-1.5">
+          {(["timeline", "cards"] as const).map((mode) => (
+            <button
+              key={mode}
+              type="button"
+              onClick={() => updateConfig({ displayMode: mode })}
+              className={`flex-1 rounded-md border py-1 text-xs capitalize transition-colors ${
+                schedule.displayMode === mode
+                  ? "border-primary bg-primary text-primary-foreground"
+                  : "border-border text-muted-foreground hover:bg-accent/50"
+              }`}
+            >
+              {mode.charAt(0).toUpperCase() + mode.slice(1)}
+            </button>
+          ))}
+        </div>
+      </div>
 
       <div className="space-y-2">
         <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
@@ -100,11 +115,13 @@ export function ScheduleEditor({
             key={event.id}
             className="rounded-md border border-border bg-background/60 p-3 space-y-2"
           >
-            <div className="flex items-center justify-between">
-              <span className="text-[10px] font-semibold text-muted-foreground">
-                #{index + 1}
+            <div className="flex items-center justify-between gap-2">
+              <span className="min-w-0 truncate text-[11px] text-foreground/70">
+                {event.name
+                  ? event.name.slice(0, 40)
+                  : <span className="italic text-muted-foreground">Event #{index + 1}</span>}
               </span>
-              <div className="flex items-center gap-1">
+              <div className="flex shrink-0 items-center gap-1">
                 <button
                   type="button"
                   disabled={index === 0}
@@ -134,13 +151,6 @@ export function ScheduleEditor({
               </div>
             </div>
 
-            <PanelTextInput
-              label="Name"
-              value={event.name}
-              onChange={(v) => updateEvent(event.id, { name: v })}
-              placeholder="e.g. Ceremony"
-            />
-
             <div className="grid grid-cols-2 gap-2">
               <PanelDateInput
                 label="Date"
@@ -161,17 +171,10 @@ export function ScheduleEditor({
             />
 
             <PanelTextInput
-              label="Location"
-              value={event.location ?? ""}
-              onChange={(v) => updateEvent(event.id, { location: v })}
-              placeholder="e.g. Grand Ballroom"
-            />
-
-            <PanelTextArea
-              label="Description"
-              value={event.description ?? ""}
-              onChange={(v) => updateEvent(event.id, { description: v })}
-              placeholder="Optional details…"
+              label="Icon"
+              value={event.icon ?? ""}
+              onChange={(v) => updateEvent(event.id, { icon: v })}
+              placeholder="emoji"
             />
 
             <PanelTextInput
@@ -179,13 +182,6 @@ export function ScheduleEditor({
               value={event.dressCode ?? ""}
               onChange={(v) => updateEvent(event.id, { dressCode: v })}
               placeholder="e.g. Black Tie Optional"
-            />
-
-            <PanelTextInput
-              label="Icon"
-              value={event.icon ?? ""}
-              onChange={(v) => updateEvent(event.id, { icon: v })}
-              placeholder="emoji"
             />
 
             <PanelTextInput
