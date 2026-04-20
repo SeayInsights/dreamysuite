@@ -6,22 +6,18 @@ import { X } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { useEditorStore } from "@/app/stores/editorStore";
-import { useSelectedBlock } from "./hooks/useSelectedBlock";
 import { duration, EASING } from "@/lib/motion";
 
 import { LayoutTab } from "./inspector/LayoutTab";
-import { ContentTab } from "./inspector/ContentTab";
 import { StyleTab } from "./inspector/StyleTab";
 import { MotionTab } from "./inspector/MotionTab";
 import { AssistantTab } from "./inspector/AssistantTab";
 
 const PANEL_WIDTH = 320;
-const CONTENT_BLOCK_TYPES = new Set(["faq", "schedule", "fun-facts", "travel", "video", "media-video"]);
 
-type TabId = "layout" | "content" | "style" | "motion" | "assistant";
+type TabId = "layout" | "style" | "motion" | "assistant";
 const TABS: { id: TabId; label: string }[] = [
 	{ id: "layout", label: "Layout" },
-	{ id: "content", label: "Content" },
 	{ id: "style", label: "Style" },
 	{ id: "motion", label: "Motion" },
 	{ id: "assistant", label: "AI" },
@@ -46,16 +42,7 @@ export function Inspector() {
 	const setInspectorOpen = useEditorStore((s) => s.setInspectorOpen);
 	const mode = useEditorStore((s) => s.mode);
 	const settingsLoaded = useEditorStore((s) => s.settingsLoaded);
-	const selectedBlockId = useEditorStore((s) => s.selectedBlockId);
-	const selectedBlock = useSelectedBlock();
 	const [tab, setTab] = useState<TabId>("layout");
-
-	useEffect(() => {
-		if (!selectedBlock) return;
-		if (CONTENT_BLOCK_TYPES.has(selectedBlock.type)) {
-			setTab("content");
-		}
-	}, [selectedBlockId]); // eslint-disable-line react-hooks/exhaustive-deps
 
 	const visibleTabs = TABS.filter((t) => {
 		if (mode === "simple" && t.id === "assistant") return false;
@@ -163,8 +150,6 @@ export function Inspector() {
 					</div>
 				) : tab === "layout" ? (
 					<LayoutTab />
-				) : tab === "content" ? (
-					<ContentTab />
 				) : tab === "style" ? (
 					<StyleTab />
 				) : tab === "motion" ? (

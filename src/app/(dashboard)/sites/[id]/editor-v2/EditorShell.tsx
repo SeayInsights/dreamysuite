@@ -3,6 +3,7 @@
 import { type ReactNode, useEffect } from "react";
 
 import { IconRail } from "./IconRail";
+import { Inspector } from "./Inspector";
 import { SlideTray } from "./SlideTray";
 import { TopBar } from "./TopBar";
 import { Breadcrumb } from "./Breadcrumb";
@@ -70,6 +71,8 @@ export function EditorShell({ site, user: _user, children }: Props) {
 					</EditorErrorBoundary>
 					<Breadcrumb />
 				</main>
+
+				<Inspector />
 			</div>
 		</div>
 	);

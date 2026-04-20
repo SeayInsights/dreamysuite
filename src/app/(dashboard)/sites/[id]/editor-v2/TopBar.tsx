@@ -5,6 +5,7 @@ import { ChevronLeft } from "lucide-react";
 
 import type { EditorV2Site } from "./EditorShell";
 import { BreakpointToggle } from "./topbar/BreakpointToggle";
+import { InspectorToggle } from "./topbar/InspectorToggle";
 import { ModeToggle } from "./topbar/ModeToggle";
 import { UndoRedo } from "./topbar/UndoRedo";
 import { PreviewButton } from "./topbar/PreviewButton";
@@ -42,13 +43,15 @@ export function TopBar({ site }: Props) {
 				<BreakpointToggle />
 			</div>
 
-			{/* Right cluster: mode / undo-redo / preview / publish */}
+			{/* Right cluster: mode / undo-redo / preview / publish / inspector */}
 			<div className="flex items-center gap-2">
 				<ModeToggle />
 				<div className="h-6 w-px bg-border" aria-hidden />
 				<UndoRedo />
 				<PreviewButton siteId={site.id} />
 				<PublishButton siteId={site.id} />
+				<div className="h-6 w-px bg-border" aria-hidden />
+				<InspectorToggle />
 			</div>
 		</header>
 	);

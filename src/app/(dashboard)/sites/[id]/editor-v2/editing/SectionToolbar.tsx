@@ -173,7 +173,6 @@ export function SectionToolbar({
   containerRef: React.RefObject<HTMLElement | null>;
 }): React.JSX.Element | null {
   const selectedBlockId = useEditorStore((s) => s.selectedBlockId);
-  const isTextEditing = useEditorStore((s) => s.isTextEditing);
   const blockToolbarVisible = useEditorStore((s) => s.blockToolbarVisible);
   const setEditingPanel = useEditorStore((s) => s.setEditingPanel);
   const updateBlock = useEditorStore((s) => s.updateBlock);
@@ -360,7 +359,7 @@ export function SectionToolbar({
 
   // Main show/hide logic — position updates, block switching, exit to hidden.
   useEffect(() => {
-    const shouldShow = !!(selectedBlockId && position && !isTextEditing && blockToolbarVisible);
+    const shouldShow = !!(selectedBlockId && position && blockToolbarVisible);
 
     if (shouldShow) {
       const switchingBlock =
@@ -397,7 +396,7 @@ export function SectionToolbar({
         setRenderBlockId(null);
       }, ANIM_MS);
     }
-  }, [selectedBlockId, isTextEditing, blockToolbarVisible, position]);
+  }, [selectedBlockId, blockToolbarVisible, position]);
 
   // Cleanup timers on unmount.
   useEffect(() => () => {
