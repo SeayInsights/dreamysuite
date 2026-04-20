@@ -2452,7 +2452,9 @@ function buildMessageListenerScript(): string {
         var mb = delta.marginBottom != null ? Number(delta.marginBottom) : 0;
         var ml = delta.marginLeft != null ? Number(delta.marginLeft) : 0;
         siteContent.style.padding = mt + 'px ' + mr + 'px ' + mb + 'px ' + ml + 'px';
-        siteContent.style.overflowX = (mt || mr || mb || ml) ? 'hidden' : '';
+        var _overflow = (mt || mr || mb || ml) ? 'hidden' : '';
+        siteContent.style.overflowX = _overflow;
+        siteContent.style.overflowY = _overflow;
         var siteBg = getComputedStyle(document.documentElement).getPropertyValue('--bg').trim() || '#fff';
         var cT = document.querySelector('.margin-curtain-t');
         var cB = document.querySelector('.margin-curtain-b');
@@ -2977,7 +2979,7 @@ function buildHtml(
   const contentStyles: string[] = [];
   if (mTop || mRight || mBottom || mLeft) {
     contentStyles.push(`padding:${mTop}px ${mRight}px ${mBottom}px ${mLeft}px`);
-    contentStyles.push(`overflow-x:hidden`);
+    contentStyles.push(`overflow:hidden`);
   }
   if (mMaxWidth) contentStyles.push(`max-width:${mMaxWidth}px`, `margin-left:auto`, `margin-right:auto`);
   contentStyles.push(`position:relative`, `z-index:2`);
