@@ -19,6 +19,7 @@ interface Block { id: string; type: string; [key: string]: unknown }
 export function ScheduleBlock({ block }: { block: Block }) {
   const cfg = parseCfg(block.config);
   const heading = String(cfg.heading ?? "Schedule of Events");
+  const displayMode = String(cfg.displayMode ?? "timeline");
   const events: ScheduleEvent[] = Array.isArray(cfg.events) ? cfg.events as ScheduleEvent[] : [];
 
   return (
@@ -37,6 +38,43 @@ export function ScheduleBlock({ block }: { block: Block }) {
         <p style={{ color: "var(--muted)", fontStyle: "italic", textAlign: "center", marginTop: "1.5rem" }}>
           Add events in the Content panel
         </p>
+      ) : displayMode === "cards" ? (
+        <div style={{
+          display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))",
+          gap: "1.25rem", maxWidth: "900px", margin: "2rem auto 0",
+        }}>
+          {events.map((event, i) => (
+            <div key={event.id ?? i} style={{
+              background: "var(--bg, #fff)", border: "1px solid var(--border)",
+              borderRadius: "10px", padding: "1.25rem", display: "flex", flexDirection: "column", gap: "0.375rem",
+            }}>
+              {event.date && (
+                <p style={{ margin: 0, fontSize: "0.72rem", fontWeight: 700, color: "var(--accent)", textTransform: "uppercase", letterSpacing: "0.04em" }}>
+                  {event.date}
+                </p>
+              )}
+              <p style={{ margin: 0, fontWeight: 600, fontSize: "0.95rem" }}>
+                {event.icon && <span style={{ marginRight: "0.35rem" }}>{event.icon}</span>}
+                <span data-editable-item-index={i} data-editable-item-field="name" data-editable-array-key="events">
+                  {event.name || <span style={{ color: "var(--muted)", fontStyle: "italic" }}>Event name</span>}
+                </span>
+              </p>
+              {event.time && <p style={{ margin: 0, fontSize: "0.8rem", color: "var(--accent)", fontWeight: 600 }}>{event.time}</p>}
+              {event.location && (
+                <p style={{ margin: 0, fontSize: "0.82rem", color: "var(--body-color)" }}
+                   data-editable-item-index={i} data-editable-item-field="location" data-editable-array-key="events">
+                  {event.location}
+                </p>
+              )}
+              {event.description && (
+                <p style={{ margin: 0, fontSize: "0.82rem", color: "var(--body-color)" }}
+                   data-editable-item-index={i} data-editable-item-field="description" data-editable-array-key="events">
+                  {event.description}
+                </p>
+              )}
+            </div>
+          ))}
+        </div>
       ) : (
         <div className="timeline" style={{ maxWidth: "600px", margin: "2rem auto 0", position: "relative" }}>
           {/* Vertical rule */}

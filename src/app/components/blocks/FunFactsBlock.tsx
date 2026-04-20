@@ -46,6 +46,34 @@ export function FunFactsBlock({ block }: { block: Block }) {
         <p style={{ color: "var(--muted)", fontStyle: "italic", textAlign: "center", marginTop: "1.5rem" }}>
           Add fun facts in the Content panel
         </p>
+      ) : cardStyle === "numbered" ? (
+        <div style={{ maxWidth: "680px", margin: "2rem auto 0" }}>
+          {items.map((item, i) => (
+            <div key={item.id ?? i} style={{ display: "flex", gap: "1.5rem", alignItems: "flex-start", marginBottom: "1.75rem" }}>
+              <span style={{
+                flexShrink: 0, fontFamily: "var(--heading-font)", fontSize: "2.5rem", fontWeight: 700,
+                lineHeight: 1, color: "var(--accent)", opacity: 0.35, width: "3rem", textAlign: "right",
+              }}>
+                {String(i + 1).padStart(2, "0")}
+              </span>
+              <div style={{ flex: 1 }}>
+                {item.icon && <div style={{ fontSize: "1.5rem", marginBottom: "0.25rem" }}>{item.icon}</div>}
+                {item.title && (
+                  <h4 style={{ margin: "0 0 0.25rem", fontSize: "0.95rem", fontWeight: 600 }}
+                      data-editable-item-index={i} data-editable-item-field="title" data-editable-array-key="items">
+                    {item.title}
+                  </h4>
+                )}
+                {item.body && (
+                  <p style={{ margin: 0, fontSize: "0.85rem", color: "var(--body-color)", lineHeight: 1.55 }}
+                     data-editable-item-index={i} data-editable-item-field="body" data-editable-array-key="items">
+                    {item.body}
+                  </p>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
       ) : (
         <div style={{
           display: "grid",

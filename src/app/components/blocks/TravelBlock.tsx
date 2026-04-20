@@ -15,6 +15,7 @@ interface Block { id: string; type: string; [key: string]: unknown }
 export function TravelBlock({ block }: { block: Block }) {
   const cfg = parseCfg(block.config);
   const heading = String(cfg.heading ?? "Getting Here");
+  const displayMode = String(cfg.displayMode ?? "cards");
   const items: TravelItem[] = Array.isArray(cfg.items) ? cfg.items as TravelItem[] : [];
 
   return (
@@ -33,6 +34,44 @@ export function TravelBlock({ block }: { block: Block }) {
         <p style={{ color: "var(--muted)", fontStyle: "italic", textAlign: "center", marginTop: "1.5rem" }}>
           Add travel info in the Content panel
         </p>
+      ) : displayMode === "list" ? (
+        <div style={{ maxWidth: "680px", margin: "2rem auto 0" }}>
+          {items.map((item, i) => (
+            <div key={item.id ?? i} style={{
+              display: "flex", gap: "1rem", alignItems: "flex-start",
+              padding: "0.875rem 0", borderBottom: "1px solid var(--border)",
+            }}>
+              {item.type && (
+                <span style={{
+                  flexShrink: 0, width: "5rem", fontSize: "0.7rem", fontWeight: 700,
+                  color: "var(--accent)", textTransform: "uppercase", letterSpacing: "0.06em", paddingTop: "0.15rem",
+                }}>
+                  {item.type}
+                </span>
+              )}
+              <div style={{ flex: 1, minWidth: 0 }}>
+                {item.heading && (
+                  <p style={{ margin: "0 0 0.2rem", fontWeight: 600, fontSize: "0.9rem" }}
+                     data-editable-item-index={i} data-editable-item-field="heading" data-editable-array-key="items">
+                    {item.heading}
+                  </p>
+                )}
+                {item.body && (
+                  <p style={{ margin: 0, fontSize: "0.82rem", color: "var(--body-color)", lineHeight: 1.5 }}
+                     data-editable-item-index={i} data-editable-item-field="body" data-editable-array-key="items">
+                    {item.body}
+                  </p>
+                )}
+                {item.linkUrl && item.linkLabel && (
+                  <a href={item.linkUrl} target="_blank" rel="noopener noreferrer"
+                     style={{ fontSize: "0.8rem", color: "var(--accent)", fontWeight: 600, textDecoration: "underline" }}>
+                    {item.linkLabel}
+                  </a>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
       ) : (
         <div style={{
           display: "grid",
