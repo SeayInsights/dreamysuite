@@ -91,7 +91,11 @@ export function useDrag(
 					: 100;
 
 		const marginLeftPct =
-			typeof rawMarginLeft === "number" ? rawMarginLeft : 0;
+			typeof rawMarginLeft === "number"
+				? rawMarginLeft
+				: typeof rawMarginLeft === "string"
+					? parseFloat(rawMarginLeft) || 0
+					: 0;
 
 		const el = container.querySelector<HTMLElement>(
 			`[data-block-id="${blockId}"]`,
@@ -99,7 +103,13 @@ export function useDrag(
 		const heightPx =
 			typeof rawHeight === "number"
 				? rawHeight
-				: (el?.offsetHeight ?? 0);
+				: (() => {
+						if (!el) return 0;
+						const cs = window.getComputedStyle(el);
+						const pt = parseFloat(cs.paddingTop) || 0;
+						const pb = parseFloat(cs.paddingBottom) || 0;
+						return Math.max(20, (el.offsetHeight || 0) - pt - pb);
+					})();
 
 		return { widthPct, marginLeftPct, heightPx };
 	}
@@ -184,7 +194,7 @@ export function useDrag(
 						const maxWidth = 100 - session.startMarginLeftPct;
 						const clampedWidth = Math.max(COL_PCT, Math.min(maxWidth, rawPct));
 						patch.blockWidth = clampedWidth;
-						patch.blockMarginLeft = session.startMarginLeftPct;
+						// blockMarginLeft intentionally not patched — preserves CSS centering
 					}
 				}
 

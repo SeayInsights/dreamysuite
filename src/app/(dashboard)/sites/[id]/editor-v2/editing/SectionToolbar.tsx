@@ -276,9 +276,9 @@ export function SectionToolbar({
     const relTop = box.top - frameBox.top + (container.scrollTop ?? 0);
 
     const TOOLBAR_WIDTH = 320;
-    const rawLeft = box.left - frameBox.left;
+    const rawLeft = (box.left - frameBox.left) + box.width / 2 - TOOLBAR_WIDTH / 2;
     const maxLeft = frameBox.width - TOOLBAR_WIDTH;
-    const clampedLeft = Math.max(0, Math.min(rawLeft, maxLeft));
+    const clampedLeft = Math.max(0, Math.min(rawLeft, Math.max(0, maxLeft)));
 
     const spaceAbove = box.top - frameBox.top;
     const fitsAbove = spaceAbove >= TOOLBAR_HEIGHT + TOOLBAR_MARGIN;
@@ -596,8 +596,10 @@ export function SectionToolbar({
           swatches={currentBg && currentBg !== "transparent" && !currentBg.startsWith("linear-gradient") && !currentBg.startsWith("radial-gradient") && !bgSwatches.includes(currentBg) ? [currentBg, ...bgSwatches.slice(1)] : bgSwatches}
           gradients={bgGradients}
           onSelect={(value) => {
+            const freshBlock = useEditorStore.getState().blocks.find(b => b.id === renderBlockId);
+            const freshCfg = parseCfg(freshBlock?.config);
             updateBlock(renderBlockId!, {
-              config: { ...config, backgroundColor: value },
+              config: { ...freshCfg, backgroundColor: value },
             });
           }}
         />
@@ -614,8 +616,10 @@ export function SectionToolbar({
         <PaddingPopover
           current={currentPadding}
           onChange={(padding) => {
+            const freshBlock = useEditorStore.getState().blocks.find(b => b.id === renderBlockId);
+            const freshCfg = parseCfg(freshBlock?.config);
             updateBlock(renderBlockId!, {
-              config: { ...config, padding },
+              config: { ...freshCfg, padding },
             });
           }}
         />
@@ -634,9 +638,17 @@ export function SectionToolbar({
           anim={currentAnim}
           isPro={mode === "pro"}
           onUpdate={(patch) => {
-            const next = { ...currentAnim, ...patch };
+            const freshBlock = useEditorStore.getState().blocks.find(b => b.id === renderBlockId);
+            const freshCfg = parseCfg(freshBlock?.config);
+            const freshAnim = {
+              ...DEFAULT_ANIM,
+              ...(freshCfg.animation !== null && typeof freshCfg.animation === "object" && !Array.isArray(freshCfg.animation)
+                ? (freshCfg.animation as Partial<AnimationConfig>)
+                : {}),
+            };
+            const next = { ...freshAnim, ...patch };
             updateBlock(renderBlockId!, {
-              config: { ...config, animation: next },
+              config: { ...freshCfg, animation: next },
             });
           }}
         />

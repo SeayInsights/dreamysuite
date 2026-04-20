@@ -39,10 +39,11 @@ export function useFloatingToolbar(): UseFloatingToolbarReturn {
       ? rect.top - TOOLBAR_HEIGHT - TOOLBAR_MARGIN
       : rect.bottom + TOOLBAR_MARGIN;
 
-    // Left-align with the block, but clamp so the toolbar doesn't bleed off the
-    // right edge of the viewport (assuming ~340px toolbar width).
+    // Center over the block, clamped so the toolbar doesn't bleed off either
+    // edge of the viewport (assuming ~340px toolbar width).
     const TOOLBAR_WIDTH = 340;
-    const left = Math.min(rect.left, window.innerWidth - TOOLBAR_WIDTH - 8);
+    const rawLeft = rect.left + rect.width / 2 - TOOLBAR_WIDTH / 2;
+    const left = Math.max(8, Math.min(rawLeft, window.innerWidth - TOOLBAR_WIDTH - 8));
 
     setPosition({ top, left });
     setVisible(true);
