@@ -17,7 +17,7 @@ export function MediaVideoBlock({ block }: { block: Block }) {
   const cfg = parseCfg(block.config);
   const url = String(cfg.url ?? "");
   const height = String(cfg.height ?? "100dvh");
-  const objectFit = String(cfg.objectFit ?? "cover") as React.CSSProperties["objectFit"];
+  const objectFit = String(cfg.imageFit ?? cfg.objectFit ?? "cover") as React.CSSProperties["objectFit"];
   const sectionStyle = blockSectionStyle(cfg);
 
   const isYoutube = cfg.provider === "youtube" ||

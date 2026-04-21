@@ -109,12 +109,19 @@ export function blockSectionStyle(cfg: Record<string, unknown>): CSSProperties {
 
   const hasOffsetX = typeof cfg.blockOffsetX === "number" && cfg.blockOffsetX !== 0;
   const hasOffsetY = typeof cfg.blockOffsetY === "number" && cfg.blockOffsetY !== 0;
+  const hasRotation = typeof cfg.blockRotation === "number" && cfg.blockRotation !== 0;
+
+  const transforms: string[] = [];
   if (hasOffsetX || hasOffsetY) {
     const ox = hasOffsetX ? (cfg.blockOffsetX as number) : 0;
     const oy = hasOffsetY ? (cfg.blockOffsetY as number) : 0;
-    style.position = "relative";
-    style.left = `${ox}px`;
-    style.top = `${oy}px`;
+    transforms.push(`translate(${ox}px, ${oy}px)`);
+  }
+  if (hasRotation) {
+    transforms.push(`rotate(${cfg.blockRotation}deg)`);
+  }
+  if (transforms.length > 0) {
+    style.transform = transforms.join(" ");
   }
 
   if (typeof cfg.blockZIndex === "number") {
@@ -122,15 +129,13 @@ export function blockSectionStyle(cfg: Record<string, unknown>): CSSProperties {
     style.zIndex = cfg.blockZIndex;
   }
 
-  if (typeof cfg.blockRotation === "number" && cfg.blockRotation !== 0) {
-    style.transform = `rotate(${cfg.blockRotation}deg)`;
-  }
-
   if (typeof cfg.blockHeight === "number" && cfg.blockHeight > 0) {
     style.height = `${cfg.blockHeight}px`;
     style.paddingTop = "0";
     style.paddingBottom = "0";
-    style.overflowY = "hidden";
+    style.display = "flex";
+    style.flexDirection = "column";
+    style.alignItems = "stretch";
   }
 
   const pad = cfg.padding;
@@ -173,7 +178,7 @@ export function resolveBreakpointConfig(
 	return resolved;
 }
 
-/** Clip-path derived from a cfg.cropDelta = { top, left, right, bottom } (px). */
+/** Clip-path derived from cfg.cropDelta = { top, left, right, bottom } (0-1 normalized). */
 export function cropClipPath(cfg: Record<string, unknown>): string | undefined {
   const d = cfg.cropDelta as
     | { top?: number; left?: number; right?: number; bottom?: number }
@@ -184,5 +189,9 @@ export function cropClipPath(cfg: Record<string, unknown>): string | undefined {
   const r = Math.max(0, d.right ?? 0);
   const b = Math.max(0, d.bottom ?? 0);
   if (t + l + r + b === 0) return undefined;
-  return `inset(${t}px ${r}px ${b}px ${l}px)`;
+  // Legacy pixel values (any > 1) use px units; normalized values use %
+  if (t > 1 || l > 1 || r > 1 || b > 1) {
+    return `inset(${t}px ${r}px ${b}px ${l}px)`;
+  }
+  return `inset(${t * 100}% ${r * 100}% ${b * 100}% ${l * 100}%)`;
 }

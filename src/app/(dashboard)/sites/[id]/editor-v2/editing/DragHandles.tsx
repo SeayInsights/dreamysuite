@@ -1,8 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 
 import { useEditorStore } from "@/app/stores/editorStore";
+import { parseCfg } from "@/lib/editableField";
 import { useDrag, type HandlePosition } from "../hooks/useDrag";
 import { useSelection } from "../hooks/useSelection";
 
@@ -30,11 +32,35 @@ function measureBlock(
 		`[data-block-id="${blockId}"]`,
 	);
 	if (!el) return null;
-	const containerBox = container.getBoundingClientRect();
+
+	const block = useEditorStore.getState().blocks.find((b) => b.id === blockId);
+	const cfg = parseCfg(block?.config);
+	const cd = cfg.cropDelta as { top?: number; left?: number; right?: number; bottom?: number } | undefined;
+
+	if (cd && ((cd.top ?? 0) + (cd.left ?? 0) + (cd.right ?? 0) + (cd.bottom ?? 0)) > 0) {
+		const contentEl = el.querySelector<HTMLElement>("img, video") ?? el;
+		const contentBox = contentEl.getBoundingClientRect();
+		const t = cd.top ?? 0;
+		const l = cd.left ?? 0;
+		const r = cd.right ?? 0;
+		const b = cd.bottom ?? 0;
+		const isLegacy = t > 1 || l > 1 || r > 1 || b > 1;
+		const cropT = isLegacy ? t : t * contentBox.height;
+		const cropL = isLegacy ? l : l * contentBox.width;
+		const cropR = isLegacy ? r : r * contentBox.width;
+		const cropB = isLegacy ? b : b * contentBox.height;
+		return {
+			top: contentBox.top + cropT,
+			left: contentBox.left + cropL,
+			width: contentBox.width - cropL - cropR,
+			height: contentBox.height - cropT - cropB,
+		};
+	}
+
 	const elBox = el.getBoundingClientRect();
 	return {
-		top: elBox.top - containerBox.top + container.scrollTop,
-		left: elBox.left - containerBox.left,
+		top: elBox.top,
+		left: elBox.left,
 		width: elBox.width,
 		height: elBox.height,
 	};
@@ -69,6 +95,7 @@ const HANDLE_OFFSET = HANDLE_VISUAL / 2;
 
 export function DragHandles({ containerRef }: Props) {
 	const { selectedBlockId } = useSelection();
+	const isCropping = useEditorStore((s) => s.isCropping);
 	const [rect, setRect] = useState<Rect | null>(null);
 	const rafRef = useRef<number | null>(null);
 
@@ -111,10 +138,11 @@ export function DragHandles({ containerRef }: Props) {
 		rafRef.current = requestAnimationFrame(measure);
 	}, [selectedBlockConfig, measure]);
 
-	if (!selectedBlockId || !rect) return null;
+	if (!selectedBlockId || !rect || isCropping) return null;
+	if (typeof document === "undefined") return null;
 
-	return (
-		<div className="pointer-events-none absolute inset-0 z-[45] overflow-hidden" aria-hidden="true">
+	return createPortal(
+		<div className="pointer-events-none fixed inset-0 z-[60]" aria-hidden="true">
 			{RESIZE_HANDLES.map(({ pos, x, y, cursor, label }) => {
 				const visualLeft = rect.left + x * rect.width - HANDLE_OFFSET;
 				const visualTop = rect.top + y * rect.height - HANDLE_OFFSET;
@@ -130,7 +158,7 @@ export function DragHandles({ containerRef }: Props) {
 							startResize(selectedBlockId, pos, e);
 						}}
 						onClick={(e) => e.stopPropagation()}
-						className="pointer-events-auto absolute"
+						className="pointer-events-auto fixed"
 						style={{
 							left: visualLeft - hitPad,
 							top: visualTop - hitPad,
@@ -155,6 +183,7 @@ export function DragHandles({ containerRef }: Props) {
 					</div>
 				);
 			})}
-		</div>
+		</div>,
+		document.body,
 	);
 }

@@ -5,6 +5,7 @@ import { Pencil } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { prefersReducedMotion, MOTION } from "@/lib/motion";
+import { parseCfg } from "@/lib/editableField";
 import { useSelection } from "./hooks/useSelection";
 import { useEditorStore } from "@/app/stores/editorStore";
 
@@ -36,9 +37,32 @@ function findRect(
 	const node = frame.querySelector<HTMLElement>(`[data-block-id="${id}"]`);
 	if (!node) return null;
 	const frameBox = frame.getBoundingClientRect();
+
+	const block = useEditorStore.getState().blocks.find((b) => b.id === id);
+	const cfg = parseCfg(block?.config);
+	const cd = cfg.cropDelta as { top?: number; left?: number; right?: number; bottom?: number } | undefined;
+
+	if (cd && ((cd.top ?? 0) + (cd.left ?? 0) + (cd.right ?? 0) + (cd.bottom ?? 0)) > 0) {
+		const contentEl = node.querySelector<HTMLElement>("img, video") ?? node;
+		const contentBox = contentEl.getBoundingClientRect();
+		const t = cd.top ?? 0;
+		const l = cd.left ?? 0;
+		const r = cd.right ?? 0;
+		const b = cd.bottom ?? 0;
+		const isLegacy = t > 1 || l > 1 || r > 1 || b > 1;
+		const cropT = isLegacy ? t : t * contentBox.height;
+		const cropL = isLegacy ? l : l * contentBox.width;
+		const cropR = isLegacy ? r : r * contentBox.width;
+		const cropB = isLegacy ? b : b * contentBox.height;
+		return {
+			top: contentBox.top - frameBox.top + frame.scrollTop + cropT,
+			left: contentBox.left - frameBox.left + frame.scrollLeft + cropL,
+			width: contentBox.width - cropL - cropR,
+			height: contentBox.height - cropT - cropB,
+		};
+	}
+
 	const box = node.getBoundingClientRect();
-	// getBoundingClientRect() is viewport-relative; the SelectionLayer lives in
-	// content-space inside the scrollable frame, so add scroll offset to align.
 	return {
 		top: box.top - frameBox.top + frame.scrollTop,
 		left: box.left - frameBox.left + frame.scrollLeft,
@@ -57,6 +81,7 @@ export function SelectionLayer({ frameRef }: Props) {
 	const { selectedBlockId, hoveredBlockId } = useSelection();
 	const collidingIds = useEditorStore((s) => s.collidingIds);
 	const breakpoint = useEditorStore((s) => s.breakpoint);
+	const isCropping = useEditorStore((s) => s.isCropping);
 	const [selectedRect, setSelectedRect] = useState<Rect | null>(null);
 	const [hoverRect, setHoverRect] = useState<Rect | null>(null);
 	const [selectedLabel, setSelectedLabel] = useState<string | null>(null);
@@ -104,7 +129,7 @@ export function SelectionLayer({ frameRef }: Props) {
 			{hoverVisible && (
 				<Outline key={hoveredBlockId} rect={hoverRect} label={hoverLabel} variant="hover" />
 			)}
-			{selectedRect && (
+			{selectedRect && !isCropping && (
 				<Outline
 					key={selectedBlockId}
 					rect={selectedRect}
@@ -199,7 +224,18 @@ function Outline({ rect, label, variant, blockId }: OutlineProps) {
 							onPointerDown={(e) => e.stopPropagation()}
 							onClick={(e) => {
 								e.stopPropagation();
-								setEditingPanel(pencilActive ? null : blockId);
+								if (pencilActive) {
+									setEditingPanel(null);
+									return;
+								}
+								const frame = document.querySelector<HTMLElement>(`[data-block-id="${blockId}"]`);
+								const blockType = frame?.dataset.blockType;
+								const IMAGE_TYPES = new Set(["images", "photo-split", "home-hero", "gallery"]);
+								if (frame && blockType && IMAGE_TYPES.has(blockType)) {
+									frame.dispatchEvent(new MouseEvent("dblclick", { bubbles: true }));
+								} else {
+									setEditingPanel(blockId);
+								}
 							}}
 						>
 							<Pencil className="size-2.5" />
