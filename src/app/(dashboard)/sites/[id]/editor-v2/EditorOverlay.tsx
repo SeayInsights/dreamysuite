@@ -114,13 +114,12 @@ export function EditorOverlay({ children, containerRef }: Props) {
 			}}
 			// ── Pointer down on a SELECTED block: start drag-threshold ────────
 			onPointerDown={(e) => {
-				const currentId = useEditorStore.getState().selectedBlockId;
-				if (!currentId) return;
+				const state = useEditorStore.getState();
+				if (!state.selectedBlockId || state.drag.kind) return;
 
-				// Only initiate drag tracking on primary pointer on a block body
-				// (not on resize handle divs — those stop propagation themselves).
 				const blockEl = (e.target as HTMLElement).closest<HTMLElement>("[data-block-id]");
-				if (!blockEl || blockEl.dataset.blockId !== currentId) return;
+				if (!blockEl || blockEl.dataset.blockId !== state.selectedBlockId) return;
+				const currentId = state.selectedBlockId;
 
 				pendingDragRef.current = {
 					blockId: currentId,
@@ -132,21 +131,19 @@ export function EditorOverlay({ children, containerRef }: Props) {
 				};
 			}}
 			onPointerMove={(e) => {
+				if (useEditorStore.getState().drag.kind) return;
+
 				const pending = pendingDragRef.current;
 				if (pending && !pending.dragging && e.pointerId === pending.pointerId) {
 					const dx = e.clientX - pending.startX;
 					const dy = e.clientY - pending.startY;
 					if (Math.sqrt(dx * dx + dy * dy) > DRAG_THRESHOLD_PX) {
 						pending.dragging = true;
-						// Build a minimal React-compatible PointerEvent wrapper. startMove
-						// only reads clientX/Y, pointerId, currentTarget, and calls
-						// setPointerCapture, so we proxy those from the current move event.
 						startMove(pending.blockId, e);
 						pendingDragRef.current = null;
 					}
 				}
 
-				// Hover tracking
 				const id = (e.target as HTMLElement)
 					.closest<HTMLElement>("[data-block-id]")
 					?.dataset.blockId;

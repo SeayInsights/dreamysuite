@@ -10,6 +10,8 @@ export function PhotoSplitBlock({ block }: { block: Block }) {
   const body = String(cfg.body ?? cfg.text ?? "");
   const layout = String(cfg.layout ?? "left");
   const clipPath = cropClipPath(cfg);
+  const sized = typeof cfg.blockHeight === "number" && cfg.blockHeight > 0;
+  const imageFit = (typeof cfg.imageFit === "string" ? cfg.imageFit : "cover") as React.CSSProperties["objectFit"];
 
   return (
     <section className="block block-photo-split" data-block-id={block.id} data-block-type={block.type} style={blockSectionStyle(cfg)}>
@@ -17,14 +19,15 @@ export function PhotoSplitBlock({ block }: { block: Block }) {
         display: "flex",
         flexDirection: layout === "right" ? "row-reverse" : "row",
         gap: "1.5rem",
-        alignItems: "center",
+        alignItems: sized ? "stretch" : "center",
+        ...(sized ? { width: "100%", height: "100%", minHeight: 0, overflow: "hidden" } : {}),
       }}>
-        <div style={{ flex: 1 }}>
+        <div style={{ flex: 1, ...(sized ? { minHeight: 0, overflow: "hidden", height: "100%", position: "relative" as const } : {}) }}>
           {imageUrl ? (
             <img
               src={imageUrl}
               alt=""
-              style={{ width: "100%", borderRadius: "8px", objectFit: "cover", ...(clipPath ? { clipPath } : {}) }}
+              style={{ width: "100%", height: "100%", borderRadius: "8px", objectFit: imageFit, objectPosition: "center", display: "block", ...(clipPath ? { clipPath } : {}) }}
             />
           ) : (
             <div style={{ background: "#f5f0eb", borderRadius: "8px", height: "200px", display: "flex", alignItems: "center", justifyContent: "center", color: "#9b8e85" }}>
