@@ -40,7 +40,7 @@ export function FunFactsBlock({ block }: { block: Block }) {
       <TextEffectWrapper as="h2" className="section-heading" {...editableProps(cfg, "heading")}>
         {heading || <span style={{ opacity: 0.4, fontStyle: "italic" }}>Add heading</span>}
       </TextEffectWrapper>
-      <div className="section-rule" aria-hidden="true" />
+      <div className="section-rule" aria-hidden="true" style={{ width: "3rem", height: "1px", margin: "0 auto 2.5rem" }} />
 
       {items.length === 0 ? (
         <p style={{ color: "var(--muted)", fontStyle: "italic", textAlign: "center", marginTop: "1.5rem" }}>
