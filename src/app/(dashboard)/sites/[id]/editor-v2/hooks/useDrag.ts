@@ -268,16 +268,19 @@ export function useDrag(
 			document.body.style.userSelect = "";
 			window.removeEventListener("pointermove", move);
 			window.removeEventListener("pointerup", up);
+			window.removeEventListener("pointercancel", up);
 		};
 
 		window.addEventListener("pointermove", move);
 		window.addEventListener("pointerup", up);
+		window.addEventListener("pointercancel", up);
 
 		cleanupRef.current = () => {
 			document.removeEventListener("selectstart", preventSelect);
 			document.body.style.userSelect = "";
 			window.removeEventListener("pointermove", move);
 			window.removeEventListener("pointerup", up);
+			window.removeEventListener("pointercancel", up);
 		};
 	}
 
