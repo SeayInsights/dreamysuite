@@ -16,7 +16,7 @@ import {
   type RefObject,
 } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { Video, X } from "lucide-react";
+import { Video, X, Maximize, Minimize2, Square, Move } from "lucide-react";
 import { useEditorStore } from "@/app/stores/editorStore";
 import { parseCfg } from "@/lib/editableField";
 
@@ -162,19 +162,63 @@ function InlineVideoPanel({
   );
 }
 
+// ─── ToolbarButton ────────────────────────────────────────────────────────────
+
+function ToolbarButton({
+  label,
+  icon,
+  active = false,
+  onClick,
+}: {
+  label: string;
+  icon: React.ReactNode;
+  active?: boolean;
+  onClick?: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      aria-label={label}
+      aria-pressed={active}
+      onClick={onClick}
+      className={[
+        "flex h-8 w-8 items-center justify-center rounded-md text-sm transition-colors",
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+        active ? "bg-primary text-primary-foreground" : "text-white hover:bg-white/20",
+      ].join(" ")}
+    >
+      {icon}
+    </button>
+  );
+}
+
+// ─── Fit options ─────────────────────────────────────────────────────────────
+
+const VIDEO_FIT_OPTIONS = [
+  { id: "fill", label: "Fill", icon: Maximize },
+  { id: "contain", label: "Fit", icon: Minimize2 },
+  { id: "cover", label: "Crop", icon: Square },
+  { id: "none", label: "None", icon: Move },
+] as const;
+
 // ─── FloatingToolbar ─────────────────────────────────────────────────────────
 
 function FloatingToolbar({
   blockRect,
   videoPanelOpen,
+  currentFit,
   onVideoToggle,
+  onFitChange,
   onDismiss,
 }: {
   blockRect: DOMRect;
   videoPanelOpen: boolean;
+  currentFit: string;
   onVideoToggle(): void;
+  onFitChange(fit: string): void;
   onDismiss(): void;
 }) {
+  const [showFitMenu, setShowFitMenu] = useState(false);
   const spaceAbove = blockRect.top;
   const showBelow = spaceAbove < TOOLBAR_FLIP_THRESHOLD;
 
@@ -194,31 +238,43 @@ function FloatingToolbar({
       onClick={(e) => e.stopPropagation()}
       className="absolute z-30 flex items-center gap-0.5 rounded-lg px-1.5 py-1 bg-neutral-900/95 shadow-xl ring-1 ring-white/10 backdrop-blur-sm"
     >
-      <button
-        type="button"
-        aria-label="Change video"
-        aria-pressed={videoPanelOpen}
+      <ToolbarButton
+        label="Change video"
+        icon={<Video className="h-3.5 w-3.5" />}
+        active={videoPanelOpen}
         onClick={onVideoToggle}
-        className={[
-          "flex h-8 items-center gap-1.5 rounded-md px-2.5 text-[11px] font-medium transition-colors",
-          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-          videoPanelOpen
-            ? "bg-primary text-primary-foreground"
-            : "text-white hover:bg-white/20",
-        ].join(" ")}
-      >
-        <Video className="h-3.5 w-3.5" />
-        Video
-      </button>
+      />
       <div className="mx-1 h-4 w-px bg-white/20" />
-      <button
-        type="button"
-        aria-label="Exit video editor"
-        onClick={onDismiss}
-        className="flex h-8 w-8 items-center justify-center rounded-md text-white transition-colors hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-      >
-        <X className="h-3.5 w-3.5" />
-      </button>
+      <div className="relative">
+        <ToolbarButton
+          label="Video fit"
+          icon={<Minimize2 className="h-3.5 w-3.5" />}
+          active={showFitMenu}
+          onClick={() => setShowFitMenu((v) => !v)}
+        />
+        {showFitMenu && (
+          <div
+            className="absolute top-full left-1/2 -translate-x-1/2 mt-2 flex gap-0.5 rounded-lg px-1 py-1 bg-neutral-900/95 shadow-xl ring-1 ring-white/10 backdrop-blur-sm"
+            onMouseDown={(e) => e.stopPropagation()}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {VIDEO_FIT_OPTIONS.map((opt) => {
+              const Icon = opt.icon;
+              return (
+                <ToolbarButton
+                  key={opt.id}
+                  label={opt.label}
+                  icon={<Icon className="h-3.5 w-3.5" />}
+                  active={currentFit === opt.id}
+                  onClick={() => { onFitChange(opt.id); setShowFitMenu(false); }}
+                />
+              );
+            })}
+          </div>
+        )}
+      </div>
+      <div className="mx-1 h-4 w-px bg-white/20" />
+      <ToolbarButton label="Exit video editor" icon={<X className="h-3.5 w-3.5" />} onClick={onDismiss} />
     </motion.div>
   );
 }
@@ -231,6 +287,7 @@ interface Props {
 
 export function VideoInlineEditor({ containerRef }: Props) {
   const blocks = useEditorStore((s) => s.blocks);
+  const updateBlock = useEditorStore((s) => s.updateBlock);
 
   const [active, setActive] = useState<{ blockId: string; blockRect: DOMRect } | null>(null);
   const [videoPanel, setVideoPanel] = useState(false);
@@ -319,6 +376,17 @@ export function VideoInlineEditor({ containerRef }: Props) {
     return () => document.removeEventListener("mousedown", handler, true);
   }, [active, dismiss, containerRef]);
 
+  const activeBlock = active ? blocks.find((b) => b.id === active.blockId) : null;
+  const activeCfg = parseCfg(activeBlock?.config);
+  const currentFit = typeof activeCfg.objectFit === "string" ? activeCfg.objectFit : "cover";
+
+  const handleFitChange = useCallback((fit: string) => {
+    if (!active) return;
+    const block = useEditorStore.getState().blocks.find((b) => b.id === active.blockId);
+    const cfg = parseCfg(block?.config);
+    updateBlock(active.blockId, { config: { ...cfg, objectFit: fit } });
+  }, [active, updateBlock]);
+
   const blockExists = active !== null && blocks.some((b) => b.id === active.blockId);
   if (!blockExists && active) {
     Promise.resolve().then(dismiss);
@@ -353,7 +421,9 @@ export function VideoInlineEditor({ containerRef }: Props) {
               key="toolbar"
               blockRect={active.blockRect}
               videoPanelOpen={videoPanel}
+              currentFit={currentFit}
               onVideoToggle={() => setVideoPanel((v) => !v)}
+              onFitChange={handleFitChange}
               onDismiss={dismiss}
             />
           )}
