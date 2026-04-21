@@ -121,6 +121,8 @@ export function EditorOverlay({ children, containerRef }: Props) {
 				if (!blockEl || blockEl.dataset.blockId !== state.selectedBlockId) return;
 				const currentId = state.selectedBlockId;
 
+				e.preventDefault();
+
 				pendingDragRef.current = {
 					blockId: currentId,
 					startX: e.clientX,
