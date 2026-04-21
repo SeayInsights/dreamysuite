@@ -32,6 +32,10 @@ import {
   Sparkles,
   X,
   ImagePlus,
+  Maximize,
+  Minimize2,
+  Square,
+  Move,
 } from "lucide-react";
 import { useEditorStore } from "@/app/stores/editorStore";
 import { parseCfg } from "@/lib/editableField";
@@ -263,21 +267,33 @@ function InlinePhotoPanel({
 
 // ─── FloatingToolbar ─────────────────────────────────────────────────────────
 
+const IMAGE_FIT_OPTIONS = [
+  { id: "fill", label: "Fill", icon: Maximize },
+  { id: "contain", label: "Fit", icon: Minimize2 },
+  { id: "cover", label: "Crop", icon: Square },
+  { id: "none", label: "None", icon: Move },
+] as const;
+
 function FloatingToolbar({
   imageRect,
   cropActive,
   replaceActive,
+  currentFit,
   onReplace,
   onCropToggle,
+  onFitChange,
   onDismiss,
 }: {
   imageRect: DOMRect;
   cropActive: boolean;
   replaceActive: boolean;
+  currentFit: string;
   onReplace(): void;
   onCropToggle(): void;
+  onFitChange(fit: string): void;
   onDismiss(): void;
 }) {
+  const [showFitMenu, setShowFitMenu] = useState(false);
   const spaceAbove = imageRect.top;
   const showBelow = spaceAbove < TOOLBAR_FLIP_THRESHOLD;
 
@@ -302,6 +318,34 @@ function FloatingToolbar({
       />
       <div className="mx-1 h-4 w-px bg-white/20" />
       <ToolbarButton label="Crop image" icon={<Crop className="h-3.5 w-3.5" />} active={cropActive} onClick={onCropToggle} />
+      <div className="relative">
+        <ToolbarButton
+          label="Image fit"
+          icon={<Minimize2 className="h-3.5 w-3.5" />}
+          active={showFitMenu}
+          onClick={() => setShowFitMenu((v) => !v)}
+        />
+        {showFitMenu && (
+          <div
+            className="absolute top-full left-1/2 -translate-x-1/2 mt-2 flex gap-0.5 rounded-lg px-1 py-1 bg-neutral-900/95 shadow-xl ring-1 ring-white/10 backdrop-blur-sm"
+            onMouseDown={(e) => e.stopPropagation()}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {IMAGE_FIT_OPTIONS.map((opt) => {
+              const Icon = opt.icon;
+              return (
+                <ToolbarButton
+                  key={opt.id}
+                  label={opt.label}
+                  icon={<Icon className="h-3.5 w-3.5" />}
+                  active={currentFit === opt.id}
+                  onClick={() => { onFitChange(opt.id); setShowFitMenu(false); }}
+                />
+              );
+            })}
+          </div>
+        )}
+      </div>
       <ToolbarButton label="Filter" icon={<Wand2 className="h-3.5 w-3.5" />} stub />
       <ToolbarButton label="Animate" icon={<Sparkles className="h-3.5 w-3.5" />} stub />
       <div className="mx-1 h-4 w-px bg-white/20" />
@@ -318,10 +362,19 @@ interface Props {
 
 export function ImageEditor({ containerRef }: Props) {
   const blocks = useEditorStore((s) => s.blocks);
+  const updateBlock = useEditorStore((s) => s.updateBlock);
 
   const [active, setActive] = useState<ActiveImage | null>(null);
   const [activeBlockType, setActiveBlockType] = useState<string>("");
-  const [cropMode, setCropMode] = useState(false);
+  const [cropMode, setCropModeLocal] = useState(false);
+  const setIsCropping = useEditorStore((s) => s.setIsCropping);
+  const setCropMode = useCallback((v: boolean | ((prev: boolean) => boolean)) => {
+    setCropModeLocal((prev) => {
+      const next = typeof v === "function" ? v(prev) : v;
+      setIsCropping(next);
+      return next;
+    });
+  }, [setIsCropping]);
   const [photoPanel, setPhotoPanel] = useState(false);
   const rafRef = useRef<number | null>(null);
 
@@ -330,7 +383,7 @@ export function ImageEditor({ containerRef }: Props) {
     setActiveBlockType("");
     setCropMode(false);
     setPhotoPanel(false);
-  }, []);
+  }, [setCropMode]);
 
   useEffect(() => {
     if (!active) return;
@@ -419,6 +472,17 @@ export function ImageEditor({ containerRef }: Props) {
     return () => document.removeEventListener("mousedown", handler, true);
   }, [active, photoPanel, dismiss, containerRef]);
 
+  const activeBlock = active ? blocks.find((b) => b.id === active.blockId) : null;
+  const activeCfg = parseCfg(activeBlock?.config);
+  const currentFit = typeof activeCfg.imageFit === "string" ? activeCfg.imageFit : "cover";
+
+  const handleFitChange = useCallback((fit: string) => {
+    if (!active) return;
+    const block = useEditorStore.getState().blocks.find((b) => b.id === active.blockId);
+    const cfg = parseCfg(block?.config);
+    updateBlock(active.blockId, { config: { ...cfg, imageFit: fit } });
+  }, [active, updateBlock]);
+
   const containerHeight = containerRef.current?.clientHeight ?? 0;
   const blockExists = active !== null && blocks.some((b) => b.id === active.blockId);
 
@@ -457,8 +521,10 @@ export function ImageEditor({ containerRef }: Props) {
               imageRect={active.imageRect}
               cropActive={cropMode}
               replaceActive={photoPanel}
+              currentFit={currentFit}
               onReplace={() => setPhotoPanel((v) => !v)}
               onCropToggle={() => setCropMode((v) => !v)}
+              onFitChange={handleFitChange}
               onDismiss={dismiss}
             />
           )}

@@ -36,6 +36,7 @@
 /* ── Layout ── */
 .site-wrapper { max-width: var(--max-width); margin: 0 auto; padding: 0 1.25rem; }
 .block { padding: 3.5rem 1.25rem; }
+.block > * { flex: 1; min-height: 0; }
 .block-images, .block-video { padding-left: 0; padding-right: 0; }
 
 /* ── Hero ── */

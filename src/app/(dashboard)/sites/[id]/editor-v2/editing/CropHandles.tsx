@@ -11,8 +11,8 @@
  *   blockId  – store ID to write cropDelta into
  *   rect     – DOMRect of the image element, relative to the canvas container
  *
- * The cropDelta stored on the block represents pixel insets from each edge:
- *   { top, left, right, bottom }  — all positive = crop inward
+ * The cropDelta stored on the block represents normalized 0-1 insets from each
+ * edge: { top, left, right, bottom } — e.g. top: 0.1 = crop 10% from top.
  */
 
 import { useRef, useCallback, type RefObject } from "react";
@@ -114,12 +114,25 @@ export function CropHandles({ blockId, rect, containerRef }: Props) {
   // Read existing cropDelta so we accumulate correctly across drags
   const currentDelta = useRef<CropDelta>({ top: 0, left: 0, right: 0, bottom: 0 });
 
-  // Sync currentDelta from store on each render
+  // Sync currentDelta from store on each render, normalizing legacy pixel values
   const block = blocks.find((b) => b.id === blockId);
   const blockCfg = parseCfg(block?.config);
   if (blockCfg.cropDelta) {
     const cd = blockCfg.cropDelta as CropDelta;
-    currentDelta.current = { ...cd };
+    const isLegacy = cd.top > 1 || cd.left > 1 || cd.right > 1 || cd.bottom > 1;
+    if (isLegacy) {
+      const w = rect.width || 1;
+      const h = rect.height || 1;
+      currentDelta.current = {
+        top: cd.top / h,
+        left: cd.left / w,
+        right: cd.right / w,
+        bottom: cd.bottom / h,
+      };
+      updateBlock(blockId, { config: { ...blockCfg, cropDelta: currentDelta.current } });
+    } else {
+      currentDelta.current = { ...cd };
+    }
   }
 
   const buildPointerHandlers = useCallback(
@@ -133,19 +146,22 @@ export function CropHandles({ blockId, rect, containerRef }: Props) {
         const dy = e.clientY - startY;
         const { axes } = handle;
 
+        const w = rect.width || 1;
+        const h = rect.height || 1;
+
         const next: CropDelta = { ...startDelta };
 
         if (axes.deltaTop !== undefined) {
-          next.top = Math.max(0, startDelta.top + dy * axes.deltaTop);
+          next.top = Math.min(1, Math.max(0, startDelta.top + (dy * axes.deltaTop) / h));
         }
         if (axes.deltaBottom !== undefined) {
-          next.bottom = Math.max(0, startDelta.bottom - dy * axes.deltaBottom);
+          next.bottom = Math.min(1, Math.max(0, startDelta.bottom - (dy * axes.deltaBottom) / h));
         }
         if (axes.deltaLeft !== undefined) {
-          next.left = Math.max(0, startDelta.left + dx * axes.deltaLeft);
+          next.left = Math.min(1, Math.max(0, startDelta.left + (dx * axes.deltaLeft) / w));
         }
         if (axes.deltaRight !== undefined) {
-          next.right = Math.max(0, startDelta.right - dx * axes.deltaRight);
+          next.right = Math.min(1, Math.max(0, startDelta.right - (dx * axes.deltaRight) / w));
         }
 
         currentDelta.current = next;
@@ -179,21 +195,39 @@ export function CropHandles({ blockId, rect, containerRef }: Props) {
     [blockId, updateBlock],
   );
 
-  // rect is now viewport-relative (getBoundingClientRect). The overlay is
-  // position:fixed (from ImageEditor), so top/left map directly to the viewport.
+  const cd = currentDelta.current;
+  const cropTop = cd.top * rect.height;
+  const cropLeft = cd.left * rect.width;
+  const cropRight = cd.right * rect.width;
+  const cropBottom = cd.bottom * rect.height;
+
   return (
-    <div
-      className="pointer-events-none absolute z-20"
-      style={{
-        top: rect.top,
-        left: rect.left,
-        width: rect.width,
-        height: rect.height,
-      }}
-      aria-hidden
-    >
-      {/* Crop overlay — semi-transparent border to indicate crop region */}
-      <div className="absolute inset-0 border-2 border-primary/70" />
+    <>
+      {/* Dimmed overlay outside the crop region */}
+      <div
+        className="pointer-events-none absolute z-20"
+        style={{
+          top: rect.top,
+          left: rect.left,
+          width: rect.width,
+          height: rect.height,
+          background: "rgba(0,0,0,0.45)",
+          clipPath: `polygon(0 0, 100% 0, 100% 100%, 0 100%, 0 0, ${(cd.left * 100)}% ${(cd.top * 100)}%, ${(cd.left * 100)}% ${((1 - cd.bottom) * 100)}%, ${((1 - cd.right) * 100)}% ${((1 - cd.bottom) * 100)}%, ${((1 - cd.right) * 100)}% ${(cd.top * 100)}%, ${(cd.left * 100)}% ${(cd.top * 100)}%)`,
+        }}
+        aria-hidden
+      />
+      {/* Crop handle container — tracks the cropped region */}
+      <div
+        className="pointer-events-none absolute z-20"
+        style={{
+          top: rect.top + cropTop,
+          left: rect.left + cropLeft,
+          width: rect.width - cropLeft - cropRight,
+          height: rect.height - cropTop - cropBottom,
+        }}
+        aria-hidden
+      >
+        <div className="absolute inset-0 border-2 border-primary" />
 
       {HANDLES.map((handle) => {
         const handlers = buildPointerHandlers(handle);
@@ -212,6 +246,7 @@ export function CropHandles({ blockId, rect, containerRef }: Props) {
           />
         );
       })}
-    </div>
+      </div>
+    </>
   );
 }

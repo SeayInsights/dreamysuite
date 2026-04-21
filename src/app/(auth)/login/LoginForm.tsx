@@ -94,6 +94,17 @@ export default function LoginForm({ action }: Props) {
             >
               Password
             </label>
+            <Link
+              href="/forgot-password"
+              style={{
+                fontSize: "0.8rem",
+                color: "#B8921A",
+                textDecoration: "none",
+                fontWeight: 500,
+              }}
+            >
+              Forgot password?
+            </Link>
           </div>
           <input
             id="password"
