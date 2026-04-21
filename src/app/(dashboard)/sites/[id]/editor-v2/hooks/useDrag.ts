@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { useEditorStore } from "@/app/stores/editorStore";
+import { parseCfg } from "@/lib/editableField";
 import { flushOps } from "./useBlockSync";
 
 // ─── Types ─────────────────────────────────────────────────────────────────
@@ -27,11 +28,14 @@ interface DragSession {
 	// Move (free positioning)
 	startOffsetX?: number;
 	startOffsetY?: number;
-	// Resize
-	startWidthPct?: number;
-	startMarginLeftPct?: number;
-	startHeightPx?: number;
+	// Resize — frozen edges at pointerdown (derived from DOM rects)
 	containerWidth?: number;
+	hadBlockHeightAtStart?: boolean;
+	leftEdgePct?: number;
+	rightEdgePct?: number;
+	topEdgePx?: number;
+	bottomEdgePx?: number;
+	naturalTopPx?: number;
 	/** The most-recent config patch applied during this drag (committed on pointerup). */
 	lastConfig?: Record<string, unknown>;
 }
@@ -102,49 +106,7 @@ export function useDrag(
 	const collidingIds = useEditorStore((s) => s.collidingIds);
 	const setCollidingIds = useEditorStore((s) => s.setCollidingIds);
 
-	// ── Helpers ────────────────────────────────────────────────────────────
 
-	function getBlockLayout(
-		blockId: string,
-		container: HTMLElement,
-	): { widthPct: number; marginLeftPct: number; heightPx: number } {
-		const block = blocks.find((b) => b.id === blockId);
-		const config = block?.config ?? {};
-
-		const rawWidth = config.blockWidth;
-		const rawHeight = config.blockHeight;
-		const rawMarginLeft = config.blockMarginLeft;
-
-		const widthPct =
-			typeof rawWidth === "number"
-				? rawWidth
-				: typeof rawWidth === "string"
-					? parseFloat(rawWidth) || 100
-					: 100;
-
-		const marginLeftPct =
-			typeof rawMarginLeft === "number"
-				? rawMarginLeft
-				: typeof rawMarginLeft === "string"
-					? parseFloat(rawMarginLeft) || 0
-					: 0;
-
-		const el = container.querySelector<HTMLElement>(
-			`[data-block-id="${blockId}"]`,
-		);
-		const heightPx =
-			typeof rawHeight === "number"
-				? rawHeight
-				: (() => {
-						if (!el) return 0;
-						const cs = window.getComputedStyle(el);
-						const pt = parseFloat(cs.paddingTop) || 0;
-						const pb = parseFloat(cs.paddingBottom) || 0;
-						return Math.max(20, (el.offsetHeight || 0) - pt - pb);
-					})();
-
-		return { widthPct, marginLeftPct, heightPx };
-	}
 
 	// ── End drag ───────────────────────────────────────────────────────────
 
@@ -156,6 +118,15 @@ export function useDrag(
 		// one tracked write — exactly one history entry for the whole drag.
 		if (session?.lastConfig !== undefined) {
 			temporalStore.getState().resume();
+
+			const handle = session.handle;
+			const affectsWidth = handle && ["nw", "ne", "e", "se", "sw", "w"].includes(handle);
+			const affectsHeight = handle && ["nw", "n", "ne", "se", "s", "sw"].includes(handle);
+			if (affectsWidth && !affectsHeight && !session.hadBlockHeightAtStart && session.lastConfig.blockHeight !== undefined) {
+				delete session.lastConfig.blockHeight;
+				delete session.lastConfig.blockOffsetY;
+			}
+
 			updateBlock(session.blockId, { config: session.lastConfig });
 			// Flush immediately so the save isn't lost if the user navigates
 			// away within the 1.5 s debounce window.
@@ -194,8 +165,7 @@ export function useDrag(
 			if (session.kind === "move") {
 				const block = blocks.find((b) => b.id === session.blockId);
 				if (!block) return;
-				const config = block.config;
-				// Apply snap-to-grid for move operations
+				const config = parseCfg(block.config);
 				const rawX = (session.startOffsetX ?? 0) + dx;
 				const rawY = (session.startOffsetY ?? 0) + dy;
 				const newConfig = {
@@ -206,7 +176,6 @@ export function useDrag(
 				session.lastConfig = newConfig;
 				updateBlock(session.blockId, { config: newConfig });
 
-				// Detect collisions with other blocks
 				const container = containerRef.current;
 				if (container) {
 					const el = container.querySelector<HTMLElement>(`[data-block-id="${session.blockId}"]`);
@@ -227,41 +196,37 @@ export function useDrag(
 				const affectsHeight = ["nw", "n", "ne", "se", "s", "sw"].includes(handle);
 				const isWest = ["nw", "sw", "w"].includes(handle);
 
-				if (affectsWidth && session.startWidthPct !== undefined && session.startMarginLeftPct !== undefined) {
+				if (affectsWidth && session.leftEdgePct !== undefined && session.rightEdgePct !== undefined) {
 					const deltaPct = (dx / session.containerWidth) * 100;
 
 					if (isWest) {
-						const newMargin = Math.max(0, session.startMarginLeftPct + deltaPct);
-						const newWidth = session.startWidthPct - (newMargin - session.startMarginLeftPct);
-						const clampedWidth = Math.max(COL_PCT, Math.min(100, newWidth));
-						patch.blockMarginLeft = Math.max(0, Math.min(100 - clampedWidth, newMargin));
-						patch.blockWidth = clampedWidth;
+						const newLeftEdge = Math.max(0, Math.min(session.rightEdgePct - COL_PCT, session.leftEdgePct + deltaPct));
+						patch.blockMarginLeft = newLeftEdge;
+						patch.blockWidth = session.rightEdgePct - newLeftEdge;
 					} else {
-						const rawPct = session.startWidthPct + deltaPct;
-						const maxWidth = 100 - session.startMarginLeftPct;
-						const clampedWidth = Math.max(COL_PCT, Math.min(maxWidth, rawPct));
-						patch.blockWidth = clampedWidth;
-						// blockMarginLeft intentionally not patched — preserves CSS centering
+						const newRightEdge = session.rightEdgePct + deltaPct;
+						patch.blockWidth = Math.max(COL_PCT, Math.min(100 - session.leftEdgePct, newRightEdge - session.leftEdgePct));
 					}
+					patch.blockOffsetX = 0;
 				}
 
-				if (affectsHeight && session.startHeightPx !== undefined) {
+				if (affectsHeight && session.topEdgePx !== undefined && session.bottomEdgePx !== undefined && session.naturalTopPx !== undefined) {
 					const isTop = ["nw", "n", "ne"].includes(handle);
-					const sign = isTop ? -1 : 1;
-					const newHeight = Math.max(20, session.startHeightPx + dy * sign);
-					patch.blockHeight = Math.round(newHeight);
+
 					if (isTop) {
-						const heightDelta = newHeight - session.startHeightPx;
-						patch.blockOffsetY = (session.startOffsetY ?? 0) - heightDelta;
+						const newTopEdge = Math.min(session.bottomEdgePx - 20, session.topEdgePx + dy);
+						patch.blockOffsetY = Math.round(newTopEdge - session.naturalTopPx);
+						patch.blockHeight = Math.round(session.bottomEdgePx - newTopEdge);
+					} else {
+						const newBottomEdge = session.bottomEdgePx + dy;
+						patch.blockHeight = Math.round(Math.max(20, newBottomEdge - session.topEdgePx));
 					}
-				} else if (affectsWidth && !affectsHeight && session.startHeightPx !== undefined) {
-					patch.blockHeight = Math.round(session.startHeightPx);
 				}
 
 				if (Object.keys(patch).length > 0) {
-					const block = blocks.find((b) => b.id === session.blockId);
-					const config = block?.config ?? {};
-					const newConfig = { ...config, ...patch };
+					const liveBlock = useEditorStore.getState().blocks.find((b) => b.id === session.blockId);
+					const liveConfig = parseCfg(liveBlock?.config);
+					const newConfig = { ...liveConfig, ...patch };
 					session.lastConfig = newConfig;
 					updateBlock(session.blockId, { config: newConfig });
 				}
@@ -324,7 +289,7 @@ export function useDrag(
 			e.stopPropagation();
 
 			const block = blocks.find((b) => b.id === blockId);
-			const config = block?.config ?? {};
+			const config = parseCfg(block?.config);
 
 			// Pause undo tracking for the duration of the drag. All intermediate
 			// pointermove updates are silent; a single entry is committed on pointerup.
@@ -357,9 +322,22 @@ export function useDrag(
 			if (!container) return;
 
 			const block = blocks.find((b) => b.id === blockId);
-			const config = block?.config ?? {};
+			const config = parseCfg(block?.config);
 
-			const { widthPct, marginLeftPct, heightPx } = getBlockLayout(blockId, container);
+			const blockEl = container.querySelector<HTMLElement>(`[data-block-id="${blockId}"]`);
+			if (!blockEl) return;
+
+			const blockRect = blockEl.getBoundingClientRect();
+			const containerRect = container.getBoundingClientRect();
+			const containerWidth = containerRect.width;
+
+			const leftEdgePct = ((blockRect.left - containerRect.left) / containerWidth) * 100;
+			const rightEdgePct = ((blockRect.right - containerRect.left) / containerWidth) * 100;
+
+			const topEdgePx = blockRect.top - containerRect.top;
+			const bottomEdgePx = blockRect.bottom - containerRect.top;
+			const currentOffsetY = typeof config.blockOffsetY === "number" ? config.blockOffsetY : 0;
+			const naturalTopPx = topEdgePx - currentOffsetY;
 
 			temporalStore.getState().pause();
 
@@ -369,11 +347,13 @@ export function useDrag(
 				handle,
 				startX: e.clientX,
 				startY: e.clientY,
-				startOffsetY: typeof config.blockOffsetY === "number" ? config.blockOffsetY : 0,
-				startWidthPct: widthPct,
-				startMarginLeftPct: marginLeftPct,
-				startHeightPx: heightPx,
-				containerWidth: container.offsetWidth,
+				containerWidth,
+				hadBlockHeightAtStart: typeof config.blockHeight === "number",
+				leftEdgePct,
+				rightEdgePct,
+				topEdgePx,
+				bottomEdgePx,
+				naturalTopPx,
 			};
 
 			setDrag({ kind: "block", id: blockId });

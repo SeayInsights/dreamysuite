@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState, useLayoutEffect } from "react";
+import { memo, useMemo, useRef, useState, useLayoutEffect } from "react";
 import { BLOCK_COMPONENTS } from "@/app/components/blocks";
 import { useEditorStore } from "@/app/stores/editorStore";
 import { TRANSLATABLE_FIELDS } from "@/lib/translations";
@@ -43,6 +43,45 @@ function useTranslatedBlocks(blocks: SiteBlock[]): SiteBlock[] {
 		});
 	}, [blocks, displayLang, translations]);
 }
+
+const MemoBlock = memo(function MemoBlock({
+	block,
+	anchorTop,
+	isAnchored,
+}: {
+	block: SiteBlock;
+	anchorTop: number | undefined;
+	isAnchored: boolean;
+}) {
+	const Component = BLOCK_COMPONENTS[block.type];
+
+	const wrapperStyle: React.CSSProperties | undefined = isAnchored
+		? { position: "absolute", top: `${anchorTop ?? 0}px`, left: 0, width: "100%" }
+		: undefined;
+
+	if (!Component) {
+		return (
+			<div
+				data-block-wrapper={block.id}
+				data-block-id={block.id}
+				data-block-type={block.type}
+				data-block-label={block.type}
+				style={wrapperStyle}
+				className="flex h-12 items-center justify-center border border-dashed border-border text-xs text-muted-foreground"
+			>
+				Unknown block: {block.type}
+			</div>
+		);
+	}
+
+	return (
+		<div data-block-wrapper={block.id} style={wrapperStyle}>
+			<BlockTransitionWrapper>
+				<Component block={block} />
+			</BlockTransitionWrapper>
+		</div>
+	);
+});
 
 export function SiteRenderer({ blocks, ordered = false }: Props) {
 	const sectionSpacing = useEditorStore((s) => s.settings.sectionSpacing);
@@ -107,36 +146,14 @@ export function SiteRenderer({ blocks, ordered = false }: Props) {
 					: { display: "flex", flexDirection: "column", gap: gap > 0 ? `${gap}px` : undefined }
 			}
 		>
-			{translated.map((block) => {
-				const Component = BLOCK_COMPONENTS[block.type];
-				const wrapperStyle: React.CSSProperties | undefined = isAnchored
-					? { position: "absolute", top: `${anchors[block.id] ?? 0}px`, left: 0, width: "100%" }
-					: undefined;
-
-				if (!Component) {
-					return (
-						<div
-							key={block.id}
-							data-block-wrapper={block.id}
-							data-block-id={block.id}
-							data-block-type={block.type}
-							data-block-label={block.type}
-							style={wrapperStyle}
-							className="flex h-12 items-center justify-center border border-dashed border-border text-xs text-muted-foreground"
-						>
-							Unknown block: {block.type}
-						</div>
-					);
-				}
-
-				return (
-					<div key={block.id} data-block-wrapper={block.id} style={wrapperStyle}>
-						<BlockTransitionWrapper>
-							<Component block={block} />
-						</BlockTransitionWrapper>
-					</div>
-				);
-			})}
+			{translated.map((block) => (
+				<MemoBlock
+					key={block.id}
+					block={block}
+					anchorTop={anchors?.[block.id]}
+					isAnchored={isAnchored}
+				/>
+			))}
 		</div>
 	);
 }

@@ -224,7 +224,18 @@ function Outline({ rect, label, variant, blockId }: OutlineProps) {
 							onPointerDown={(e) => e.stopPropagation()}
 							onClick={(e) => {
 								e.stopPropagation();
-								setEditingPanel(pencilActive ? null : blockId);
+								if (pencilActive) {
+									setEditingPanel(null);
+									return;
+								}
+								const frame = document.querySelector<HTMLElement>(`[data-block-id="${blockId}"]`);
+								const blockType = frame?.dataset.blockType;
+								const IMAGE_TYPES = new Set(["images", "photo-split", "home-hero", "gallery"]);
+								if (frame && blockType && IMAGE_TYPES.has(blockType)) {
+									frame.dispatchEvent(new MouseEvent("dblclick", { bubbles: true }));
+								} else {
+									setEditingPanel(blockId);
+								}
 							}}
 						>
 							<Pencil className="size-2.5" />

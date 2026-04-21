@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 
 import { useEditorStore } from "@/app/stores/editorStore";
 import { parseCfg } from "@/lib/editableField";
@@ -31,7 +32,6 @@ function measureBlock(
 		`[data-block-id="${blockId}"]`,
 	);
 	if (!el) return null;
-	const containerBox = container.getBoundingClientRect();
 
 	const block = useEditorStore.getState().blocks.find((b) => b.id === blockId);
 	const cfg = parseCfg(block?.config);
@@ -50,8 +50,8 @@ function measureBlock(
 		const cropR = isLegacy ? r : r * contentBox.width;
 		const cropB = isLegacy ? b : b * contentBox.height;
 		return {
-			top: contentBox.top - containerBox.top + container.scrollTop + cropT,
-			left: contentBox.left - containerBox.left + cropL,
+			top: contentBox.top + cropT,
+			left: contentBox.left + cropL,
 			width: contentBox.width - cropL - cropR,
 			height: contentBox.height - cropT - cropB,
 		};
@@ -59,8 +59,8 @@ function measureBlock(
 
 	const elBox = el.getBoundingClientRect();
 	return {
-		top: elBox.top - containerBox.top + container.scrollTop,
-		left: elBox.left - containerBox.left,
+		top: elBox.top,
+		left: elBox.left,
 		width: elBox.width,
 		height: elBox.height,
 	};
@@ -139,9 +139,10 @@ export function DragHandles({ containerRef }: Props) {
 	}, [selectedBlockConfig, measure]);
 
 	if (!selectedBlockId || !rect || isCropping) return null;
+	if (typeof document === "undefined") return null;
 
-	return (
-		<div className="pointer-events-none absolute inset-0 z-[45] overflow-hidden" aria-hidden="true">
+	return createPortal(
+		<div className="pointer-events-none fixed inset-0 z-[60]" aria-hidden="true">
 			{RESIZE_HANDLES.map(({ pos, x, y, cursor, label }) => {
 				const visualLeft = rect.left + x * rect.width - HANDLE_OFFSET;
 				const visualTop = rect.top + y * rect.height - HANDLE_OFFSET;
@@ -157,7 +158,7 @@ export function DragHandles({ containerRef }: Props) {
 							startResize(selectedBlockId, pos, e);
 						}}
 						onClick={(e) => e.stopPropagation()}
-						className="pointer-events-auto absolute"
+						className="pointer-events-auto fixed"
 						style={{
 							left: visualLeft - hitPad,
 							top: visualTop - hitPad,
@@ -182,6 +183,7 @@ export function DragHandles({ containerRef }: Props) {
 					</div>
 				);
 			})}
-		</div>
+		</div>,
+		document.body,
 	);
 }

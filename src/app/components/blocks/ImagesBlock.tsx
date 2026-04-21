@@ -7,13 +7,14 @@ export function ImagesBlock({ block }: { block: Block }) {
   const urls = Array.isArray(cfg.urls) ? (cfg.urls as string[]) : [];
   const imageSlot = cfg.imageSlot as string | undefined;
   const sized = typeof cfg.blockHeight === "number" && cfg.blockHeight > 0;
+  const imageFit = (typeof cfg.imageFit === "string" ? cfg.imageFit : "cover") as React.CSSProperties["objectFit"];
 
   return (
     <section className="block block-images" data-block-id={block.id} data-block-type={block.type} style={blockSectionStyle(cfg)}>
       {urls.length > 0 || imageSlot ? (
-        <div style={{ display: "grid", gap: "0.5rem", gridTemplateColumns: urls.length > 1 ? "1fr 1fr" : "1fr", ...(sized ? { flex: 1, minHeight: 0 } : {}) }}>
+        <div style={{ display: "grid", gap: "0.5rem", gridTemplateColumns: urls.length > 1 ? "1fr 1fr" : "1fr", ...(sized ? { minHeight: 0, height: "100%", width: "100%", gridAutoRows: "1fr" } : {}) }}>
           {(imageSlot ? [imageSlot] : urls).map((url, i) => (
-            <img key={i} src={url} alt="" style={{ width: "100%", borderRadius: "8px", objectFit: sized ? "contain" : "cover", ...(sized ? { height: "100%" } : {}) }} />
+            <img key={i} src={url} alt="" style={{ width: "100%", height: "100%", borderRadius: "8px", objectFit: imageFit, objectPosition: "center", display: "block" }} />
           ))}
         </div>
       ) : (

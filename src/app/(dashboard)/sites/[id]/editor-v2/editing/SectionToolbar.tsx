@@ -474,7 +474,7 @@ export function SectionToolbar({
     });
   }
 
-  function openPopover(which: "bg" | "padding" | "animation" | "arrange" | "format", btnEl: HTMLElement) {
+  function openPopover(which: "bg" | "padding" | "animation" | "arrange" | "format", btnEl: HTMLElement): void {
     const btnBox = btnEl.getBoundingClientRect();
     setPopoverPos({ top: btnBox.bottom + 6, left: btnBox.left });
     setActivePopover((prev) => (prev === which ? null : which));

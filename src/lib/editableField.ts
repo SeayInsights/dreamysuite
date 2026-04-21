@@ -109,30 +109,33 @@ export function blockSectionStyle(cfg: Record<string, unknown>): CSSProperties {
 
   const hasOffsetX = typeof cfg.blockOffsetX === "number" && cfg.blockOffsetX !== 0;
   const hasOffsetY = typeof cfg.blockOffsetY === "number" && cfg.blockOffsetY !== 0;
+  const hasRotation = typeof cfg.blockRotation === "number" && cfg.blockRotation !== 0;
+
+  const transforms: string[] = [];
   if (hasOffsetX || hasOffsetY) {
     const ox = hasOffsetX ? (cfg.blockOffsetX as number) : 0;
     const oy = hasOffsetY ? (cfg.blockOffsetY as number) : 0;
-    style.position = "relative";
-    style.left = `${ox}px`;
-    style.top = `${oy}px`;
+    transforms.push(`translate(${ox}px, ${oy}px)`);
+  }
+  if (hasRotation) {
+    transforms.push(`rotate(${cfg.blockRotation}deg)`);
+  }
+  if (transforms.length > 0) {
+    style.transform = transforms.join(" ");
   }
 
   if (typeof cfg.blockZIndex === "number") {
-    if (!style.position) style.position = "relative";
+    style.position = "relative";
     style.zIndex = cfg.blockZIndex;
-  }
-
-  if (typeof cfg.blockRotation === "number" && cfg.blockRotation !== 0) {
-    style.transform = `rotate(${cfg.blockRotation}deg)`;
   }
 
   if (typeof cfg.blockHeight === "number" && cfg.blockHeight > 0) {
     style.height = `${cfg.blockHeight}px`;
     style.paddingTop = "0";
     style.paddingBottom = "0";
-    style.overflow = "hidden";
     style.display = "flex";
     style.flexDirection = "column";
+    style.alignItems = "stretch";
   }
 
   const pad = cfg.padding;

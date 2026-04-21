@@ -164,10 +164,10 @@ export function Canvas({ siteId }: Props) {
 						<GridOverlay />
 						{/* Editing overlays inside containerRef so absolute coords are correct */}
 						<SectionToolbar containerRef={containerRef} />
-						<DragHandles containerRef={containerRef} />
 					</EditorOverlay>
 				</BreakpointFrame>
 
+				<DragHandles containerRef={containerRef} />
 				<TextEditor containerRef={containerRef} />
 				<ImageEditor containerRef={containerRef} />
 				<VideoInlineEditor containerRef={containerRef} />
