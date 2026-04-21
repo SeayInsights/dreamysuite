@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useRef, useState, useLayoutEffect } from "react";
 import { BLOCK_COMPONENTS } from "@/app/components/blocks";
 import { useEditorStore } from "@/app/stores/editorStore";
 import { TRANSLATABLE_FIELDS } from "@/lib/translations";
@@ -54,34 +54,87 @@ export function SiteRenderer({ blocks, ordered = false }: Props) {
 
 	const translated = useTranslatedBlocks(visible);
 
+	const containerRef = useRef<HTMLDivElement>(null);
+	const translatedRef = useRef(translated);
+	translatedRef.current = translated;
+
+	const [anchors, setAnchors] = useState<Record<string, number> | null>(null);
+	const [totalHeight, setTotalHeight] = useState(0);
+
+	const blockIdKey = translated.map((b) => b.id).join(",");
+	const breakpoint = useEditorStore((s) => s.breakpoint);
+
+	// Reset anchors when block list or breakpoint changes
+	useLayoutEffect(() => {
+		setAnchors(null);
+		setTotalHeight(0);
+	}, [blockIdKey, breakpoint]);
+
+	// Measure block positions from flex layout, then anchor them absolutely
+	useLayoutEffect(() => {
+		if (anchors !== null) return;
+		const el = containerRef.current;
+		if (!el) return;
+
+		const currentBlocks = translatedRef.current;
+		const measured: Record<string, number> = {};
+		let maxBottom = 0;
+
+		for (const block of currentBlocks) {
+			const wrapper = el.querySelector<HTMLElement>(`[data-block-wrapper="${block.id}"]`);
+			if (wrapper) {
+				measured[block.id] = wrapper.offsetTop;
+				maxBottom = Math.max(maxBottom, wrapper.offsetTop + wrapper.offsetHeight);
+			}
+		}
+
+		if (Object.keys(measured).length > 0) {
+			setAnchors(measured);
+			setTotalHeight(maxBottom);
+		}
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [anchors]);
+
+	const isAnchored = anchors !== null;
+
 	return (
 		<div
-			className="site-renderer"
-			style={{
-				display: "flex",
-				flexDirection: "column",
-				gap: gap > 0 ? `${gap}px` : undefined,
-			}}
+			ref={containerRef}
+			className="site-renderer relative"
+			style={
+				isAnchored
+					? { position: "relative", minHeight: `${totalHeight}px` }
+					: { display: "flex", flexDirection: "column", gap: gap > 0 ? `${gap}px` : undefined }
+			}
 		>
 			{translated.map((block) => {
 				const Component = BLOCK_COMPONENTS[block.type];
+				const wrapperStyle: React.CSSProperties | undefined = isAnchored
+					? { position: "absolute", top: `${anchors[block.id] ?? 0}px`, left: 0, width: "100%" }
+					: undefined;
+
 				if (!Component) {
 					return (
 						<div
 							key={block.id}
+							data-block-wrapper={block.id}
 							data-block-id={block.id}
 							data-block-type={block.type}
 							data-block-label={block.type}
+							style={wrapperStyle}
 							className="flex h-12 items-center justify-center border border-dashed border-border text-xs text-muted-foreground"
 						>
 							Unknown block: {block.type}
 						</div>
 					);
 				}
+
 				return (
-					<BlockTransitionWrapper key={block.id}>
-						<Component block={block} />
-					</BlockTransitionWrapper>
+					<div key={block.id} data-block-wrapper={block.id} style={wrapperStyle}>
+						<BlockTransitionWrapper>
+							<Component block={block} />
+						</BlockTransitionWrapper>
+					</div>
 				);
 			})}
 		</div>

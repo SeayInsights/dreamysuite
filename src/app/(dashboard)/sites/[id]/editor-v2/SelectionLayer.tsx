@@ -55,10 +55,13 @@ function labelFor(frame: HTMLElement | null, id: string | null): string | null {
 
 export function SelectionLayer({ frameRef }: Props) {
 	const { selectedBlockId, hoveredBlockId } = useSelection();
+	const collidingIds = useEditorStore((s) => s.collidingIds);
+	const breakpoint = useEditorStore((s) => s.breakpoint);
 	const [selectedRect, setSelectedRect] = useState<Rect | null>(null);
 	const [hoverRect, setHoverRect] = useState<Rect | null>(null);
 	const [selectedLabel, setSelectedLabel] = useState<string | null>(null);
 	const [hoverLabel, setHoverLabel] = useState<string | null>(null);
+	const [collisionRects, setCollisionRects] = useState<Map<string, Rect>>(new Map());
 	const rafRef = useRef<number | null>(null);
 
 	useEffect(() => {
@@ -68,6 +71,13 @@ export function SelectionLayer({ frameRef }: Props) {
 			setHoverRect(findRect(frame, hoveredBlockId));
 			setSelectedLabel(labelFor(frame, selectedBlockId));
 			setHoverLabel(labelFor(frame, hoveredBlockId));
+
+			const rects = new Map<string, Rect>();
+			for (const id of collidingIds) {
+				const r = findRect(frame, id);
+				if (r) rects.set(id, r);
+			}
+			setCollisionRects(rects);
 		}
 		measure();
 		const onResize = () => {
@@ -81,7 +91,7 @@ export function SelectionLayer({ frameRef }: Props) {
 			window.removeEventListener("scroll", onResize, true);
 			if (rafRef.current) cancelAnimationFrame(rafRef.current);
 		};
-	}, [frameRef, selectedBlockId, hoveredBlockId]);
+	}, [frameRef, selectedBlockId, hoveredBlockId, collidingIds, breakpoint]);
 
 	const hoverVisible =
 		hoverRect && hoveredBlockId && hoveredBlockId !== selectedBlockId;
@@ -103,6 +113,18 @@ export function SelectionLayer({ frameRef }: Props) {
 					blockId={selectedBlockId}
 				/>
 			)}
+			{Array.from(collisionRects.entries()).map(([id, rect]) => (
+				<div
+					key={`collision-${id}`}
+					className="absolute ring-2 ring-red-500 rounded-sm"
+					style={{
+						top: rect.top,
+						left: rect.left,
+						width: rect.width,
+						height: rect.height,
+					}}
+				/>
+			))}
 		</div>
 	);
 }

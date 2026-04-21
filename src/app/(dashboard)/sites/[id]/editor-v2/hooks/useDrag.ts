@@ -36,11 +36,12 @@ interface DragSession {
 	lastConfig?: Record<string, unknown>;
 }
 
-// ─── Column snap ───────────────────────────────────────────────────────────
+// ─── Snap helpers ─────────────────────────────────────────────────────────
 
 const COLUMNS = 12;
 const COL_PCT = 100 / COLUMNS; // 8.3333…%
 const SNAP_THRESHOLD_PX = 8;
+const GRID_SIZE_PX = 8; // Snap grid for move operations
 
 function snapWidth(rawPct: number, containerWidth: number): number {
 	const rawPx = (rawPct / 100) * containerWidth;
@@ -54,11 +55,40 @@ function snapWidth(rawPct: number, containerWidth: number): number {
 	return clampedRaw;
 }
 
+function snapToGrid(value: number, gridSize: number, threshold: number): number {
+	const nearest = Math.round(value / gridSize) * gridSize;
+	if (Math.abs(value - nearest) <= threshold) return nearest;
+	return value;
+}
+
+function rectsOverlap(a: DOMRect, b: DOMRect): boolean {
+	return !(a.right < b.left || a.left > b.right || a.bottom < b.top || a.top > b.bottom);
+}
+
+function detectCollisions(
+	blockId: string,
+	newBounds: DOMRect,
+	allBlocks: Array<{ id: string; type: string; config: Record<string, unknown> }>,
+	container: HTMLElement,
+): string[] {
+	const collisions: string[] = [];
+	for (const block of allBlocks) {
+		if (block.id === blockId) continue;
+		const el = container.querySelector<HTMLElement>(`[data-block-id="${block.id}"]`);
+		if (!el) continue;
+		const otherBounds = el.getBoundingClientRect();
+		if (rectsOverlap(newBounds, otherBounds)) {
+			collisions.push(block.id);
+		}
+	}
+	return collisions;
+}
+
 // ─── Hook ──────────────────────────────────────────────────────────────────
 
 export function useDrag(
 	containerRef: React.RefObject<HTMLElement | null>,
-): { isDragging: boolean; draggedId: string | null; startMove: (blockId: string, e: React.PointerEvent) => void; startResize: (blockId: string, handle: HandlePosition, e: React.PointerEvent) => void } {
+): { isDragging: boolean; draggedId: string | null; collidingIds: string[]; startMove: (blockId: string, e: React.PointerEvent) => void; startResize: (blockId: string, handle: HandlePosition, e: React.PointerEvent) => void } {
 	const blocks = useEditorStore((s) => s.blocks);
 	const updateBlock = useEditorStore((s) => s.updateBlock);
 	const setDrag = useEditorStore((s) => s.setDrag);
@@ -69,6 +99,8 @@ export function useDrag(
 
 	const [isDragging, setIsDragging] = useState(false);
 	const [draggedId, setDraggedId] = useState<string | null>(null);
+	const collidingIds = useEditorStore((s) => s.collidingIds);
+	const setCollidingIds = useEditorStore((s) => s.setCollidingIds);
 
 	// ── Helpers ────────────────────────────────────────────────────────────
 
@@ -141,6 +173,7 @@ export function useDrag(
 		sessionRef.current = null;
 		setIsDragging(false);
 		setDraggedId(null);
+		setCollidingIds([]);
 
 		if (cleanupRef.current) {
 			cleanupRef.current();
@@ -162,13 +195,27 @@ export function useDrag(
 				const block = blocks.find((b) => b.id === session.blockId);
 				if (!block) return;
 				const config = block.config;
+				// Apply snap-to-grid for move operations
+				const rawX = (session.startOffsetX ?? 0) + dx;
+				const rawY = (session.startOffsetY ?? 0) + dy;
 				const newConfig = {
 					...config,
-					blockOffsetX: (session.startOffsetX ?? 0) + dx,
-					blockOffsetY: (session.startOffsetY ?? 0) + dy,
+					blockOffsetX: snapToGrid(rawX, GRID_SIZE_PX, SNAP_THRESHOLD_PX),
+					blockOffsetY: snapToGrid(rawY, GRID_SIZE_PX, SNAP_THRESHOLD_PX),
 				};
 				session.lastConfig = newConfig;
 				updateBlock(session.blockId, { config: newConfig });
+
+				// Detect collisions with other blocks
+				const container = containerRef.current;
+				if (container) {
+					const el = container.querySelector<HTMLElement>(`[data-block-id="${session.blockId}"]`);
+					if (el) {
+						const bounds = el.getBoundingClientRect();
+						const collisions = detectCollisions(session.blockId, bounds, blocks, container);
+						setCollidingIds(collisions);
+					}
+				}
 			} else if (session.kind === "resize" && session.handle) {
 				const container = containerRef.current;
 				if (!container || session.containerWidth === undefined) return;
@@ -238,9 +285,15 @@ export function useDrag(
 		const target = e.currentTarget as HTMLElement;
 		target.setPointerCapture(e.pointerId);
 
+		const preventSelect = (ev: Event) => ev.preventDefault();
+		document.addEventListener("selectstart", preventSelect);
+		document.body.style.userSelect = "none";
+
 		const move = (ev: PointerEvent) => onPointerMove(ev);
 		const up = () => {
 			onPointerUp();
+			document.removeEventListener("selectstart", preventSelect);
+			document.body.style.userSelect = "";
 			window.removeEventListener("pointermove", move);
 			window.removeEventListener("pointerup", up);
 		};
@@ -249,6 +302,8 @@ export function useDrag(
 		window.addEventListener("pointerup", up);
 
 		cleanupRef.current = () => {
+			document.removeEventListener("selectstart", preventSelect);
+			document.body.style.userSelect = "";
 			window.removeEventListener("pointermove", move);
 			window.removeEventListener("pointerup", up);
 		};
@@ -321,5 +376,5 @@ export function useDrag(
 		[blocks, containerRef, onPointerMove, onPointerUp, setDrag, temporalStore],
 	);
 
-	return { isDragging, draggedId, startMove, startResize };
+	return { isDragging, draggedId, collidingIds, startMove, startResize };
 }
