@@ -2,10 +2,8 @@
 
 import { parseCfg } from "@/lib/editableField";
 import { type Block } from "@/app/stores/editorStore";
-import { FaqEditor } from "./editors/FaqEditor";
+import { ContentCardEditor } from "./editors/ContentCardEditor";
 import { ScheduleEditor } from "./editors/ScheduleEditor";
-import { FunFactsEditor } from "./editors/FunFactsEditor";
-import { TravelEditor } from "./editors/TravelEditor";
 import { VideoEditor } from "./editors/VideoEditor";
 import { GalleryEditor } from "./editors/GalleryEditor";
 
@@ -27,13 +25,12 @@ export function BlockContentPanel({ block, updateBlock }: Props) {
 
   switch (block.type) {
     case "faq":
-      return <FaqEditor cfg={cfg} updateConfig={updateConfig} />;
+    case "fun-facts":
+    case "travel":
+    case "content-card":
+      return <ContentCardEditor cfg={cfg} updateConfig={updateConfig} />;
     case "schedule":
       return <ScheduleEditor cfg={cfg} updateConfig={updateConfig} />;
-    case "fun-facts":
-      return <FunFactsEditor cfg={cfg} updateConfig={updateConfig} />;
-    case "travel":
-      return <TravelEditor cfg={cfg} updateConfig={updateConfig} />;
     case "video":
       return <VideoEditor cfg={{ ...cfg, _type: "video" }} updateConfig={updateConfig} />;
     case "media-video":
