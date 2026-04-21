@@ -125,7 +125,7 @@ export function blockSectionStyle(cfg: Record<string, unknown>): CSSProperties {
   }
 
   if (typeof cfg.blockZIndex === "number") {
-    style.position = "relative";
+    if (!style.position) style.position = "relative";
     style.zIndex = cfg.blockZIndex;
   }
 
