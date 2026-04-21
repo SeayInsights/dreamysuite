@@ -11,7 +11,6 @@ interface FunFactItem {
   id?: string;
   question?: string;
   icon?: string;
-  title?: string;
   body?: string;
 }
 
@@ -71,7 +70,6 @@ export function FunFactsBlock({ block }: { block: Block }) {
     const newItem: FunFactItem = {
       id: crypto.randomUUID(),
       question: question || "",
-      title: "",
       body: "",
     };
     const currentCfg = parseCfg(block.config);
@@ -162,12 +160,6 @@ export function FunFactsBlock({ block }: { block: Block }) {
                   >
                     {item.question || "Double-click to add question"}
                   </p>
-                )}
-                {item.title && (
-                  <h4 style={{ margin: "0 0 0.25rem", fontSize: "0.95rem", fontWeight: 600 }}
-                      data-editable-item-index={i} data-editable-item-field="title" data-editable-array-key="items">
-                    {item.title}
-                  </h4>
                 )}
                 {(item.body || editing) && (
                   <p style={{

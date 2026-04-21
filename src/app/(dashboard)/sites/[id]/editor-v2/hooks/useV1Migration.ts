@@ -42,7 +42,7 @@ const MIGRATION_MAP: Record<
   "fun-facts": {
     contentKey: "tidbits",
     configKey: "items",
-    // V1 tidbits are {title, body, icon} — matches FunFactItem directly
+    // V1 tidbits are {title, body, icon} — title maps to question in v2
     transform: (items) =>
       items.map((raw) => ({ id: crypto.randomUUID(), ...(raw as Record<string, unknown>) })),
   },
