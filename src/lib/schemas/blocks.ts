@@ -183,7 +183,6 @@ const FunFactsConfig = z.object({
   items: z.array(z.object({
     id: z.string().optional(),
     question: z.string().optional(),
-    title: z.string().optional(),
     body: z.string().optional(),
     icon: z.string().optional(),
   })).optional(),
