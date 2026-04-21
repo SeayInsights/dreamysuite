@@ -146,31 +146,57 @@ const GuestBookConfig = z.object({
   placeholder: z.string().optional(),
 }).catchall(passthrough);
 
-// ─── Format-picker blocks (Task 3) ──────────────────────────────────────────
+// ─── New block schemas (Task 3) ─────────────────────────────────────────────
 
 const FaqConfig = z.object({
   heading: z.string().optional(),
-  displayMode: z.enum(["list", "accordion"]).optional(),
-  items: z.array(z.unknown()).optional(),
+  displayMode: z.enum(["accordion", "list"]).optional(),
+  items: z.array(z.object({
+    id: z.string().optional(),
+    question: z.string().optional(),
+    answer: z.string().optional(),
+    category: z.string().optional(),
+  })).optional(),
 }).catchall(passthrough);
 
 const ScheduleConfig = z.object({
   heading: z.string().optional(),
   displayMode: z.enum(["timeline", "cards"]).optional(),
-  events: z.array(z.unknown()).optional(),
+  events: z.array(z.object({
+    id: z.string().optional(),
+    name: z.string().optional(),
+    date: z.string().optional(),
+    time: z.string().optional(),
+    endTime: z.string().optional(),
+    location: z.string().optional(),
+    description: z.string().optional(),
+    dressCode: z.string().optional(),
+    icon: z.string().optional(),
+    mapsUrl: z.string().optional(),
+  })).optional(),
 }).catchall(passthrough);
 
 const FunFactsConfig = z.object({
   heading: z.string().optional(),
-  columns: z.enum(["2", "3", "auto"]).optional(),
-  cardStyle: z.enum(["card", "bordered", "flat", "numbered"]).optional(),
-  items: z.array(z.unknown()).optional(),
+  columns: z.union([z.literal("auto"), z.literal("2"), z.literal("3"), z.literal("4"), z.string()]).optional(),
+  cardStyle: z.enum(["card", "minimal"]).optional(),
+  items: z.array(z.object({
+    id: z.string().optional(),
+    title: z.string().optional(),
+    body: z.string().optional(),
+    icon: z.string().optional(),
+  })).optional(),
 }).catchall(passthrough);
 
 const TravelConfig = z.object({
   heading: z.string().optional(),
-  displayMode: z.enum(["cards", "list"]).optional(),
-  items: z.array(z.unknown()).optional(),
+  items: z.array(z.object({
+    id: z.string().optional(),
+    title: z.string().optional(),
+    body: z.string().optional(),
+    icon: z.string().optional(),
+    url: z.string().optional(),
+  })).optional(),
 }).catchall(passthrough);
 
 // ─── Registry ─────────────────────────────────────────────────────────────────
@@ -200,7 +226,7 @@ export const BLOCK_TYPES = [
   "rsvp-form",
   "story-timeline",
   "guest-book",
-  // Format-picker (Task 3)
+  // New (Task 3)
   "faq",
   "schedule",
   "fun-facts",
@@ -230,11 +256,11 @@ const CONFIG_BY_TYPE: Record<BlockType, z.ZodTypeAny> = {
   "info-card": InfoCardConfig,
   // Legacy alias
   rsvp: RsvpFormConfig,
-  // New
+  // New (Task 19)
   "rsvp-form": RsvpFormConfig,
   "story-timeline": StoryTimelineConfig,
   "guest-book": GuestBookConfig,
-  // Format-picker (Task 3)
+  // New (Task 3)
   faq: FaqConfig,
   schedule: ScheduleConfig,
   "fun-facts": FunFactsConfig,
