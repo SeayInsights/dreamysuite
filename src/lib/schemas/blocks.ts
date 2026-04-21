@@ -179,9 +179,10 @@ const ScheduleConfig = z.object({
 const FunFactsConfig = z.object({
   heading: z.string().optional(),
   columns: z.union([z.literal("auto"), z.literal("2"), z.literal("3"), z.literal("4"), z.string()]).optional(),
-  cardStyle: z.enum(["card", "minimal"]).optional(),
+  cardStyle: z.enum(["card", "bordered", "flat", "numbered"]).optional(),
   items: z.array(z.object({
     id: z.string().optional(),
+    question: z.string().optional(),
     title: z.string().optional(),
     body: z.string().optional(),
     icon: z.string().optional(),
