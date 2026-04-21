@@ -230,8 +230,8 @@ function Outline({ rect, label, variant, blockId }: OutlineProps) {
 								}
 								const frame = document.querySelector<HTMLElement>(`[data-block-id="${blockId}"]`);
 								const blockType = frame?.dataset.blockType;
-								const IMAGE_TYPES = new Set(["images", "photo-split", "home-hero", "gallery"]);
-								if (frame && blockType && IMAGE_TYPES.has(blockType)) {
+								const INLINE_EDITOR_TYPES = new Set(["images", "photo-split", "home-hero", "gallery", "media-video", "video", "youtube"]);
+								if (frame && blockType && INLINE_EDITOR_TYPES.has(blockType)) {
 									frame.dispatchEvent(new MouseEvent("dblclick", { bubbles: true }));
 								} else {
 									setEditingPanel(blockId);
