@@ -4,7 +4,6 @@ interface FunFactItem {
   id?: string;
   question?: string;
   icon?: string;
-  title?: string;
   body?: string;
 }
 
@@ -51,23 +50,6 @@ export function FunFactCard({ item, index, cardStyle, editing, onDelete }: Props
         </p>
       )}
 
-      {(item.title || editing) && (
-        <h4
-          style={{
-            margin: "0 0 0.375rem",
-            fontSize: "0.95rem",
-            fontWeight: 600,
-            opacity: item.title ? 1 : 0.4,
-            fontStyle: item.title ? "normal" : "italic",
-          }}
-          data-editable-item-index={index}
-          data-editable-item-field="title"
-          data-editable-array-key="items"
-        >
-          {item.title || "Double-click to add title"}
-        </h4>
-      )}
-
       {(item.body || editing) && (
         <p
           style={{
@@ -86,7 +68,7 @@ export function FunFactCard({ item, index, cardStyle, editing, onDelete }: Props
         </p>
       )}
 
-      {!item.title && !item.body && !item.icon && !item.question && !editing && (
+      {!item.question && !item.body && !item.icon && !editing && (
         <span style={{ color: "var(--muted)", fontStyle: "italic", fontSize: "0.85rem" }}>
           Empty fact
         </span>
