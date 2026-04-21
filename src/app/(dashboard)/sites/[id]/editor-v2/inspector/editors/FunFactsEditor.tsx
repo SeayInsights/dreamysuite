@@ -8,7 +8,6 @@ interface FunFactItem {
   id: string;
   question?: string;
   icon?: string;
-  title?: string;
   body?: string;
 }
 
