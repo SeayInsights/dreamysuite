@@ -130,7 +130,9 @@ export function blockSectionStyle(cfg: Record<string, unknown>): CSSProperties {
     style.height = `${cfg.blockHeight}px`;
     style.paddingTop = "0";
     style.paddingBottom = "0";
-    style.overflowY = "hidden";
+    style.overflow = "hidden";
+    style.display = "flex";
+    style.flexDirection = "column";
   }
 
   const pad = cfg.padding;
@@ -173,7 +175,7 @@ export function resolveBreakpointConfig(
 	return resolved;
 }
 
-/** Clip-path derived from a cfg.cropDelta = { top, left, right, bottom } (px). */
+/** Clip-path derived from cfg.cropDelta = { top, left, right, bottom } (0-1 normalized). */
 export function cropClipPath(cfg: Record<string, unknown>): string | undefined {
   const d = cfg.cropDelta as
     | { top?: number; left?: number; right?: number; bottom?: number }
@@ -184,5 +186,9 @@ export function cropClipPath(cfg: Record<string, unknown>): string | undefined {
   const r = Math.max(0, d.right ?? 0);
   const b = Math.max(0, d.bottom ?? 0);
   if (t + l + r + b === 0) return undefined;
-  return `inset(${t}px ${r}px ${b}px ${l}px)`;
+  // Legacy pixel values (any > 1) use px units; normalized values use %
+  if (t > 1 || l > 1 || r > 1 || b > 1) {
+    return `inset(${t}px ${r}px ${b}px ${l}px)`;
+  }
+  return `inset(${t * 100}% ${r * 100}% ${b * 100}% ${l * 100}%)`;
 }

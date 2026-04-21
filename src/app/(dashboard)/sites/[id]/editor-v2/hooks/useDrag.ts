@@ -246,9 +246,16 @@ export function useDrag(
 				}
 
 				if (affectsHeight && session.startHeightPx !== undefined) {
-					const sign = ["nw", "n", "ne"].includes(handle) ? -1 : 1;
+					const isTop = ["nw", "n", "ne"].includes(handle);
+					const sign = isTop ? -1 : 1;
 					const newHeight = Math.max(20, session.startHeightPx + dy * sign);
 					patch.blockHeight = Math.round(newHeight);
+					if (isTop) {
+						const heightDelta = newHeight - session.startHeightPx;
+						patch.blockOffsetY = (session.startOffsetY ?? 0) - heightDelta;
+					}
+				} else if (affectsWidth && !affectsHeight && session.startHeightPx !== undefined) {
+					patch.blockHeight = Math.round(session.startHeightPx);
 				}
 
 				if (Object.keys(patch).length > 0) {
@@ -349,10 +356,11 @@ export function useDrag(
 			const container = containerRef.current;
 			if (!container) return;
 
+			const block = blocks.find((b) => b.id === blockId);
+			const config = block?.config ?? {};
+
 			const { widthPct, marginLeftPct, heightPx } = getBlockLayout(blockId, container);
 
-			// Pause undo tracking for the duration of the resize. A single entry
-			// is committed on pointerup.
 			temporalStore.getState().pause();
 
 			sessionRef.current = {
@@ -361,6 +369,7 @@ export function useDrag(
 				handle,
 				startX: e.clientX,
 				startY: e.clientY,
+				startOffsetY: typeof config.blockOffsetY === "number" ? config.blockOffsetY : 0,
 				startWidthPct: widthPct,
 				startMarginLeftPct: marginLeftPct,
 				startHeightPx: heightPx,

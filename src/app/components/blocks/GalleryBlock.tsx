@@ -7,6 +7,7 @@ export function GalleryBlock({ block }: { block: Block }) {
   const cfg = parseCfg(block.config);
   const layout = String(cfg.layout ?? "grid");
   const clipPath = cropClipPath(cfg);
+  const sized = typeof cfg.blockHeight === "number" && cfg.blockHeight > 0;
 
   if (layout === "split") {
     const imageUrl = cfg.imageUrl as string | undefined;
@@ -21,10 +22,11 @@ export function GalleryBlock({ block }: { block: Block }) {
           flexDirection: imageLayout === "right" ? "row-reverse" : "row",
           gap: "1.5rem",
           alignItems: "center",
+          ...(sized ? { flex: 1, minHeight: 0 } : {}),
         }}>
-          <div style={{ flex: 1 }}>
+          <div style={{ flex: 1, ...(sized ? { minHeight: 0, overflow: "hidden" } : {}) }}>
             {imageUrl ? (
-              <img src={imageUrl} alt="" style={{ width: "100%", borderRadius: "8px", objectFit: "cover", ...(clipPath ? { clipPath } : {}) }} />
+              <img src={imageUrl} alt="" style={{ width: "100%", borderRadius: "8px", objectFit: sized ? "contain" : "cover", ...(clipPath ? { clipPath } : {}), ...(sized ? { height: "100%" } : {}) }} />
             ) : (
               <div style={{ background: "#f5f0eb", borderRadius: "8px", height: "200px", display: "flex", alignItems: "center", justifyContent: "center", color: "#9b8e85" }}>
                 Photo
@@ -50,9 +52,9 @@ export function GalleryBlock({ block }: { block: Block }) {
   return (
     <section className="block block-gallery" data-block-id={block.id} data-block-type={block.type} style={blockSectionStyle(cfg)}>
       {images.length > 0 ? (
-        <div style={{ display: "grid", gap: "0.5rem", gridTemplateColumns: images.length > 1 ? "1fr 1fr" : "1fr" }}>
+        <div style={{ display: "grid", gap: "0.5rem", gridTemplateColumns: images.length > 1 ? "1fr 1fr" : "1fr", ...(sized ? { flex: 1, minHeight: 0 } : {}) }}>
           {images.map((url, i) => (
-            <img key={i} src={url} alt="" style={{ width: "100%", borderRadius: "8px", objectFit: "cover", ...(clipPath ? { clipPath } : {}) }} />
+            <img key={i} src={url} alt="" style={{ width: "100%", borderRadius: "8px", objectFit: sized ? "contain" : "cover", ...(clipPath ? { clipPath } : {}), ...(sized ? { height: "100%" } : {}) }} />
           ))}
         </div>
       ) : (

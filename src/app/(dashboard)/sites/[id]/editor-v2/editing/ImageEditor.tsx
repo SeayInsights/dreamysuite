@@ -321,7 +321,15 @@ export function ImageEditor({ containerRef }: Props) {
 
   const [active, setActive] = useState<ActiveImage | null>(null);
   const [activeBlockType, setActiveBlockType] = useState<string>("");
-  const [cropMode, setCropMode] = useState(false);
+  const [cropMode, setCropModeLocal] = useState(false);
+  const setIsCropping = useEditorStore((s) => s.setIsCropping);
+  const setCropMode = useCallback((v: boolean | ((prev: boolean) => boolean)) => {
+    setCropModeLocal((prev) => {
+      const next = typeof v === "function" ? v(prev) : v;
+      setIsCropping(next);
+      return next;
+    });
+  }, [setIsCropping]);
   const [photoPanel, setPhotoPanel] = useState(false);
   const rafRef = useRef<number | null>(null);
 
@@ -330,7 +338,7 @@ export function ImageEditor({ containerRef }: Props) {
     setActiveBlockType("");
     setCropMode(false);
     setPhotoPanel(false);
-  }, []);
+  }, [setCropMode]);
 
   useEffect(() => {
     if (!active) return;
