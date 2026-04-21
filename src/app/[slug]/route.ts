@@ -1892,7 +1892,9 @@ function renderBlock(
     }
 
     case "fun-facts": {
-      const items = Array.isArray(cfg.items) ? (cfg.items as Array<{ icon?: string; title?: string; body?: string }>) : [];
+      const cfgItems = Array.isArray(cfg.items) ? (cfg.items as Array<{ icon?: string; title?: string; body?: string }>) : [];
+      const legacyItems = Array.isArray(pageContent?.tidbits) ? (pageContent.tidbits as Array<{ icon?: string; title?: string; body?: string }>) : [];
+      const items = cfgItems.length > 0 ? cfgItems : legacyItems;
       const cols = String(cfg.columns ?? "auto");
       const colsCss = cols === "2" ? "repeat(2,1fr)" : cols === "3" ? "repeat(3,1fr)" : "repeat(auto-fill,minmax(200px,1fr))";
       const cardStyle = String(cfg.cardStyle ?? "card");
