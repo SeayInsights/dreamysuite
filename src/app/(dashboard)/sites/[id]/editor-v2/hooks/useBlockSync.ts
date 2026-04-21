@@ -123,9 +123,11 @@ export function useBlockSync(siteId: string) {
             markClean();
             setSaveError(null);
           } else {
-            // Leave the store dirty so the next debounce cycle retries.
             setSaveError("Some changes could not be saved. Retrying…");
           }
+        },
+        () => {
+          setSaveError("Save failed — check your connection and try again.");
         },
       );
     }, DEBOUNCE_MS);

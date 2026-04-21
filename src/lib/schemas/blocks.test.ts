@@ -34,11 +34,11 @@ const MINIMAL: Record<BlockType, Record<string, unknown>> = {
   "rsvp-form": { heading: "RSVP", siteId: "site_001" },
   "story-timeline": { heading: "Our Story", events: [] },
   "guest-book": { heading: "Guest Book" },
-  // Format-picker (Task 3)
-  faq: { heading: "FAQ", items: [] },
-  schedule: { heading: "Schedule", events: [] },
-  "fun-facts": { heading: "Fun Facts", items: [] },
-  travel: { heading: "Getting Here", items: [] },
+  // New (Task 3)
+  faq: { heading: "FAQ", displayMode: "accordion", items: [] },
+  schedule: { heading: "Schedule", displayMode: "timeline", events: [] },
+  "fun-facts": { heading: "Fun Facts", columns: "auto", cardStyle: "card", items: [] },
+  travel: { heading: "Getting There", items: [] },
 };
 
 /**
@@ -64,15 +64,15 @@ const INVALID: Record<BlockType, Record<string, unknown>> = {
   "media-video": { provider: "vimeo" },
   gallery: { layout: "masonry" },
   "info-card": { variant: "venue" },
-  // New
+  // New (Task 19)
   "rsvp-form": { heading: 42 },
   "story-timeline": { events: "not-an-array" },
   "guest-book": { heading: false },
-  // Format-picker (Task 3)
-  faq: { displayMode: "unknown" },
-  schedule: { displayMode: "unknown" },
-  "fun-facts": { cardStyle: "unknown" },
-  travel: { displayMode: "unknown" },
+  // New (Task 3)
+  faq: { displayMode: "both" },
+  schedule: { displayMode: "table" },
+  "fun-facts": { cardStyle: "fancy" },
+  travel: { heading: 123 },
 };
 
 describe("parseBlockConfig — per-type coverage", () => {
