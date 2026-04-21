@@ -183,7 +183,7 @@ export const BLOCK_REGISTRY: Record<string, BlockRegistryEntry> = {
     displayName: "FAQ",
     icon: "HelpCircle",
     category: "Simple",
-    defaultData: { heading: "Questions & Answers", displayMode: "accordion", items: [] },
+    defaultData: { heading: "Frequently Asked Questions", displayMode: "faq", cardStyle: "bordered", items: [] },
     visible: true,
   },
   "schedule": {
@@ -199,7 +199,7 @@ export const BLOCK_REGISTRY: Record<string, BlockRegistryEntry> = {
     displayName: "Fun Facts",
     icon: "Lightbulb",
     category: "Simple",
-    defaultData: { heading: "Fun Facts", columns: "auto", cardStyle: "card", items: [] },
+    defaultData: { heading: "Fun Facts About Us", displayMode: "facts", columns: "auto", cardStyle: "card", items: [] },
     visible: true,
   },
   "travel": {
@@ -207,7 +207,15 @@ export const BLOCK_REGISTRY: Record<string, BlockRegistryEntry> = {
     displayName: "Travel",
     icon: "MapPin",
     category: "Simple",
-    defaultData: { heading: "Getting There", items: [] },
+    defaultData: { heading: "Travel Guide", displayMode: "travel", cardStyle: "card", items: [] },
+    visible: true,
+  },
+  "content-card": {
+    component: BLOCK_COMPONENTS["content-card"],
+    displayName: "Content Card",
+    icon: "LayoutGrid",
+    category: "Simple",
+    defaultData: { heading: "Content", displayMode: "general", columns: "auto", cardStyle: "card", items: [] },
     visible: true,
   },
 };
