@@ -34,6 +34,11 @@ const MINIMAL: Record<BlockType, Record<string, unknown>> = {
   "rsvp-form": { heading: "RSVP", siteId: "site_001" },
   "story-timeline": { heading: "Our Story", events: [] },
   "guest-book": { heading: "Guest Book" },
+  // Format-picker (Task 3)
+  faq: { heading: "FAQ", items: [] },
+  schedule: { heading: "Schedule", events: [] },
+  "fun-facts": { heading: "Fun Facts", items: [] },
+  travel: { heading: "Getting Here", items: [] },
 };
 
 /**
@@ -63,6 +68,11 @@ const INVALID: Record<BlockType, Record<string, unknown>> = {
   "rsvp-form": { heading: 42 },
   "story-timeline": { events: "not-an-array" },
   "guest-book": { heading: false },
+  // Format-picker (Task 3)
+  faq: { displayMode: "unknown" },
+  schedule: { displayMode: "unknown" },
+  "fun-facts": { cardStyle: "unknown" },
+  travel: { displayMode: "unknown" },
 };
 
 describe("parseBlockConfig — per-type coverage", () => {
