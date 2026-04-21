@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { createAuth } from "@/app/lib/auth.server";
 import ResetPasswordForm from "./ResetPasswordForm";
@@ -54,5 +55,9 @@ export default function ResetPasswordPage() {
     return { error: null, success: true };
   }
 
-  return <ResetPasswordForm action={resetAction} />;
+  return (
+    <Suspense>
+      <ResetPasswordForm action={resetAction} />
+    </Suspense>
+  );
 }
