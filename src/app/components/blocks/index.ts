@@ -19,10 +19,8 @@ import { RsvpFormBlock } from './RsvpFormBlock'
 import { StoryTimelineBlock } from './StoryTimelineBlock'
 import { GuestBookBlock } from './GuestBookBlock'
 // New (Task 3)
-import { FaqBlock } from './FaqBlock'
 import { ScheduleBlock } from './ScheduleBlock'
-import { FunFactsBlock } from './FunFactsBlock'
-import { TravelBlock } from './TravelBlock'
+import { ContentCardBlock } from './ContentCardBlock'
 
 interface Block {
   id: string
@@ -55,10 +53,11 @@ export const BLOCK_COMPONENTS: Record<string, React.ComponentType<{ block: Block
   'story-timeline': StoryTimelineBlock,
   'guest-book':    GuestBookBlock,
   // New (Task 3)
-  'faq':           FaqBlock,
+  'faq':           ContentCardBlock,
   'schedule':      ScheduleBlock,
-  'fun-facts':     FunFactsBlock,
-  'travel':        TravelBlock,
+  'fun-facts':     ContentCardBlock,
+  'travel':        ContentCardBlock,
+  'content-card':  ContentCardBlock,
 }
 
 export {
@@ -80,8 +79,6 @@ export {
   RsvpFormBlock,
   StoryTimelineBlock,
   GuestBookBlock,
-  FaqBlock,
   ScheduleBlock,
-  FunFactsBlock,
-  TravelBlock,
+  ContentCardBlock,
 }

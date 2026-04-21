@@ -148,16 +148,26 @@ const GuestBookConfig = z.object({
 
 // ─── New block schemas (Task 3) ─────────────────────────────────────────────
 
-const FaqConfig = z.object({
+const ContentCardConfig = z.object({
   heading: z.string().optional(),
-  displayMode: z.enum(["accordion", "list"]).optional(),
+  displayMode: z.enum(["facts", "faq", "travel", "general", "accordion", "list"]).optional(),
+  columns: z.union([z.literal("auto"), z.literal("2"), z.literal("3"), z.literal("4")]).optional(),
+  cardStyle: z.enum(["card", "bordered", "flat", "numbered"]).optional(),
   items: z.array(z.object({
     id: z.string().optional(),
     question: z.string().optional(),
-    answer: z.string().optional(),
-    category: z.string().optional(),
+    body: z.string().optional(),
+    icon: z.string().optional(),
+    links: z.array(z.object({
+      label: z.string(),
+      url: z.string(),
+    })).optional(),
   })).optional(),
 }).catchall(passthrough);
+
+const FaqConfig = ContentCardConfig;
+const FunFactsConfig = ContentCardConfig;
+const TravelConfig = ContentCardConfig;
 
 const ScheduleConfig = z.object({
   heading: z.string().optional(),
@@ -173,29 +183,6 @@ const ScheduleConfig = z.object({
     dressCode: z.string().optional(),
     icon: z.string().optional(),
     mapsUrl: z.string().optional(),
-  })).optional(),
-}).catchall(passthrough);
-
-const FunFactsConfig = z.object({
-  heading: z.string().optional(),
-  columns: z.union([z.literal("auto"), z.literal("2"), z.literal("3"), z.literal("4"), z.string()]).optional(),
-  cardStyle: z.enum(["card", "bordered", "flat", "numbered"]).optional(),
-  items: z.array(z.object({
-    id: z.string().optional(),
-    question: z.string().optional(),
-    body: z.string().optional(),
-    icon: z.string().optional(),
-  })).optional(),
-}).catchall(passthrough);
-
-const TravelConfig = z.object({
-  heading: z.string().optional(),
-  items: z.array(z.object({
-    id: z.string().optional(),
-    title: z.string().optional(),
-    body: z.string().optional(),
-    icon: z.string().optional(),
-    url: z.string().optional(),
   })).optional(),
 }).catchall(passthrough);
 
@@ -231,6 +218,7 @@ export const BLOCK_TYPES = [
   "schedule",
   "fun-facts",
   "travel",
+  "content-card",
 ] as const;
 
 export type BlockType = (typeof BLOCK_TYPES)[number];
@@ -265,6 +253,7 @@ const CONFIG_BY_TYPE: Record<BlockType, z.ZodTypeAny> = {
   schedule: ScheduleConfig,
   "fun-facts": FunFactsConfig,
   travel: TravelConfig,
+  "content-card": ContentCardConfig,
 };
 
 export function isKnownBlockType(type: string): type is BlockType {

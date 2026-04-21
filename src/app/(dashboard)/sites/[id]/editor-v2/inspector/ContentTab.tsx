@@ -158,7 +158,7 @@ function DateTimeInput({
   );
 }
 
-const CONTENT_BLOCK_TYPES = new Set(["faq", "schedule", "fun-facts", "travel", "video", "media-video"]);
+const CONTENT_BLOCK_TYPES = new Set(["faq", "schedule", "fun-facts", "travel", "video", "media-video", "content-card"]);
 
 export function ContentTab() {
   const settings = useEditorStore((s) => s.settings);
