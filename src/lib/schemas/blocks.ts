@@ -146,6 +146,33 @@ const GuestBookConfig = z.object({
   placeholder: z.string().optional(),
 }).catchall(passthrough);
 
+// ─── Format-picker blocks (Task 3) ──────────────────────────────────────────
+
+const FaqConfig = z.object({
+  heading: z.string().optional(),
+  displayMode: z.enum(["list", "accordion"]).optional(),
+  items: z.array(z.unknown()).optional(),
+}).catchall(passthrough);
+
+const ScheduleConfig = z.object({
+  heading: z.string().optional(),
+  displayMode: z.enum(["timeline", "cards"]).optional(),
+  events: z.array(z.unknown()).optional(),
+}).catchall(passthrough);
+
+const FunFactsConfig = z.object({
+  heading: z.string().optional(),
+  columns: z.enum(["2", "3", "auto"]).optional(),
+  cardStyle: z.enum(["card", "bordered", "flat", "numbered"]).optional(),
+  items: z.array(z.unknown()).optional(),
+}).catchall(passthrough);
+
+const TravelConfig = z.object({
+  heading: z.string().optional(),
+  displayMode: z.enum(["cards", "list"]).optional(),
+  items: z.array(z.unknown()).optional(),
+}).catchall(passthrough);
+
 // ─── Registry ─────────────────────────────────────────────────────────────────
 
 export const BLOCK_TYPES = [
@@ -173,6 +200,11 @@ export const BLOCK_TYPES = [
   "rsvp-form",
   "story-timeline",
   "guest-book",
+  // Format-picker (Task 3)
+  "faq",
+  "schedule",
+  "fun-facts",
+  "travel",
 ] as const;
 
 export type BlockType = (typeof BLOCK_TYPES)[number];
@@ -202,6 +234,11 @@ const CONFIG_BY_TYPE: Record<BlockType, z.ZodTypeAny> = {
   "rsvp-form": RsvpFormConfig,
   "story-timeline": StoryTimelineConfig,
   "guest-book": GuestBookConfig,
+  // Format-picker (Task 3)
+  faq: FaqConfig,
+  schedule: ScheduleConfig,
+  "fun-facts": FunFactsConfig,
+  travel: TravelConfig,
 };
 
 export function isKnownBlockType(type: string): type is BlockType {
