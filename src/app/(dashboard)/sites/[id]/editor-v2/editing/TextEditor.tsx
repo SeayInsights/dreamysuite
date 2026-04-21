@@ -394,6 +394,32 @@ export function TextEditor({
   }, [editState, commit]);
 
   // -------------------------------------------------------------------------
+  // Paste → strip HTML, insert plain text only
+  // -------------------------------------------------------------------------
+
+  useEffect(() => {
+    if (!editState) return;
+    const el = editState.element;
+
+    function handlePaste(e: ClipboardEvent) {
+      e.preventDefault();
+      const text = e.clipboardData?.getData("text/plain") ?? "";
+      const sel = window.getSelection();
+      if (sel && sel.rangeCount > 0) {
+        const range = sel.getRangeAt(0);
+        range.deleteContents();
+        range.insertNode(document.createTextNode(text));
+        range.collapse(false);
+        sel.removeAllRanges();
+        sel.addRange(range);
+      }
+    }
+
+    el.addEventListener("paste", handlePaste);
+    return () => el.removeEventListener("paste", handlePaste);
+  }, [editState]);
+
+  // -------------------------------------------------------------------------
   // Keyboard shortcuts while editing
   // -------------------------------------------------------------------------
 
