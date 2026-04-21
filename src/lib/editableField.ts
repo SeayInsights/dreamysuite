@@ -118,7 +118,7 @@ export function blockSectionStyle(cfg: Record<string, unknown>): CSSProperties {
   }
 
   if (typeof cfg.blockZIndex === "number") {
-    style.position = "relative";
+    if (!style.position) style.position = "relative";
     style.zIndex = cfg.blockZIndex;
   }
 
@@ -162,6 +162,12 @@ export function resolveBreakpointConfig(
 	for (const key of Object.keys(cfg)) {
 		if (key.endsWith(suffix)) {
 			resolved[key.slice(0, -suffix.length)] = cfg[key];
+		}
+	}
+	// Reset position offsets on non-desktop breakpoints unless explicitly overridden
+	for (const key of ["blockOffsetX", "blockOffsetY", "blockMarginLeft"]) {
+		if (cfg[`${key}${suffix}`] === undefined) {
+			resolved[key] = 0;
 		}
 	}
 	return resolved;
