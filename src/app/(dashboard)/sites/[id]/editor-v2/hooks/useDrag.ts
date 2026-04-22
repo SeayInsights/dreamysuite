@@ -4,7 +4,6 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import { useEditorStore } from "@/app/stores/editorStore";
 import { parseCfg } from "@/lib/editableField";
-import { flushOps } from "./useBlockSync";
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 
@@ -128,12 +127,6 @@ export function useDrag(
 			}
 
 			updateBlock(session.blockId, { config: session.lastConfig });
-			// Flush immediately so the save isn't lost if the user navigates
-			// away within the 1.5 s debounce window.
-			const s = useEditorStore.getState();
-			if (s.siteId && s.currentPageId) {
-				flushOps(s.siteId, s.currentPageId, s.pendingOps, s.blocks);
-			}
 		} else {
 			// No move happened (pointer up immediately) — just resume without
 			// writing so no spurious history entry is created.
