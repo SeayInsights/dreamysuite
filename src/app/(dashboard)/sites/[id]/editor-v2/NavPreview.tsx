@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useEditorStore } from "@/app/stores/editorStore";
 import { getEffectComponent } from "@/lib/effects/loader";
 
@@ -86,6 +86,170 @@ function LangToggle({ mainLang, langs, font, color, highlight }: { mainLang: str
 	);
 }
 
+function HamburgerIcon({ open }: { open: boolean }) {
+	return (
+		<svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+			{open ? (
+				<>
+					<line x1="4" y1="4" x2="18" y2="18" />
+					<line x1="18" y1="4" x2="4" y2="18" />
+				</>
+			) : (
+				<>
+					<line x1="3" y1="6" x2="19" y2="6" />
+					<line x1="3" y1="11" x2="19" y2="11" />
+					<line x1="3" y1="16" x2="19" y2="16" />
+				</>
+			)}
+		</svg>
+	);
+}
+
+function MobileNav({
+	pages,
+	currentPageId,
+	setCurrentPageId,
+	showBrand,
+	eventName,
+	headingFont,
+	bodyFont,
+	bg,
+	brandColor,
+	linkColor,
+	highlight,
+	material,
+	additionalLangs,
+	mainLang,
+}: {
+	pages: { id: string; label: string; slug: string }[];
+	currentPageId: string | null;
+	setCurrentPageId: (id: string) => void;
+	showBrand: boolean;
+	eventName: string;
+	headingFont: string;
+	bodyFont: string;
+	bg: string;
+	brandColor: string;
+	linkColor: string;
+	highlight: string;
+	material: Material;
+	additionalLangs: string[];
+	mainLang: string;
+}) {
+	const [menuOpen, setMenuOpen] = useState(false);
+
+	return (
+		<nav
+			style={{
+				...materialStyles(material, bg),
+				borderBottom: materialBorder(material, bg, "bar"),
+				flexShrink: 0,
+				position: "relative",
+				zIndex: 20,
+			}}
+		>
+			<div
+				style={{
+					display: "flex",
+					justifyContent: "space-between",
+					alignItems: "center",
+					padding: "0.625rem 1rem",
+				}}
+			>
+				{showBrand ? (
+					<span
+						style={{
+							fontFamily: headingFont,
+							fontSize: "0.95rem",
+							fontWeight: "normal",
+							fontStyle: "italic",
+							color: brandColor,
+							whiteSpace: "nowrap",
+							overflow: "hidden",
+							textOverflow: "ellipsis",
+							maxWidth: "60%",
+						}}
+					>
+						{eventName}
+					</span>
+				) : (
+					<div />
+				)}
+				<button
+					type="button"
+					onClick={() => setMenuOpen(!menuOpen)}
+					style={{
+						background: "none",
+						border: "none",
+						color: linkColor,
+						cursor: "pointer",
+						padding: "0.25rem",
+						display: "flex",
+						alignItems: "center",
+						justifyContent: "center",
+					}}
+					aria-label={menuOpen ? "Close menu" : "Open menu"}
+				>
+					<HamburgerIcon open={menuOpen} />
+				</button>
+			</div>
+			{menuOpen && (
+				<div
+					style={{
+						position: "absolute",
+						top: "100%",
+						left: 0,
+						right: 0,
+						background: "rgba(255,255,255,0.18)",
+						backdropFilter: "blur(16px) saturate(1.3)",
+						WebkitBackdropFilter: "blur(16px) saturate(1.3)",
+						borderBottom: "1px solid rgba(255,255,255,0.25)",
+						boxShadow: "0 8px 32px rgba(0,0,0,0.12)",
+						padding: "0.5rem 0",
+						zIndex: 21,
+					}}
+				>
+					{pages.map((page) => {
+						const isActive = page.id === currentPageId;
+						return (
+							<button
+								key={page.id}
+								type="button"
+								onClick={() => {
+									setCurrentPageId(page.id);
+									setMenuOpen(false);
+								}}
+								style={{
+									display: "block",
+									width: "100%",
+									padding: "0.75rem 1.25rem",
+									fontSize: "0.9rem",
+									fontFamily: bodyFont,
+									fontWeight: isActive ? 600 : 400,
+									color: isActive ? highlight : linkColor,
+									background: "none",
+									border: "none",
+									textAlign: "left",
+									cursor: "pointer",
+									letterSpacing: "0.03em",
+									transition: "color 0.15s",
+								}}
+							>
+								{page.label || page.slug}
+							</button>
+						);
+					})}
+					{additionalLangs.length > 0 && (
+						<div style={{ padding: "0.25rem 1.25rem", borderTop: "1px solid rgba(255,255,255,0.15)" }}>
+							<LangToggle mainLang={mainLang} langs={additionalLangs} font={bodyFont} color={linkColor} highlight={highlight} />
+						</div>
+					)}
+				</div>
+			)}
+		</nav>
+	);
+}
+
 function materialShadow(material: Material, shape: string): string | undefined {
 	if (material === "glass" && (shape === "pill" || shape === "floating"))
 		return "0 2px 16px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.3)";
@@ -114,7 +278,7 @@ export function NavPreview() {
 	const visiblePages = pages.filter((p) => p.isVisible !== 0);
 	if (visiblePages.length < 1) return null;
 
-	if (NavStyleEffect) {
+	if (NavStyleEffect && breakpoint === "desktop") {
 		const eventName = settings.eventName ?? "My Site";
 		const initials = eventName.split(/[\s&+]+/).map((w: string) => w.charAt(0)).filter(Boolean).join("").toUpperCase().slice(0, 3);
 		const accent = settings.navHighlightColor ?? themeTokens.colors.primary ?? "#B8921A";
@@ -148,7 +312,7 @@ export function NavPreview() {
 					headingFont={headingFont}
 					bodyFont={bodyFont}
 					brandName={eventName}
-					compact={breakpoint === "mobile"}
+					compact={false}
 				/>
 				{additionalLangs.length > 0 && (
 					<div style={{ position: "absolute", left: "75%", top: "50%", transform: "translate(-50%, -50%)", zIndex: 25 }}>
@@ -175,6 +339,28 @@ export function NavPreview() {
 	const bodyFont = themeTokens.typography.bodyFont || "system-ui, sans-serif";
 
 	const isPillOrFloating = shape === "pill" || shape === "floating";
+	const isMobileOrTablet = breakpoint === "mobile" || breakpoint === "tablet";
+
+	if (isMobileOrTablet) {
+		return (
+			<MobileNav
+				pages={visiblePages}
+				currentPageId={currentPageId}
+				setCurrentPageId={setCurrentPageId}
+				showBrand={showBrand}
+				eventName={eventName}
+				headingFont={headingFont}
+				bodyFont={bodyFont}
+				bg={bg}
+				brandColor={brandColor}
+				linkColor={linkColor}
+				highlight={highlight}
+				material={material}
+				additionalLangs={additionalLangs}
+				mainLang={settings.mainLanguage || "en"}
+			/>
+		);
+	}
 
 	const linkStyle = (isActive: boolean): React.CSSProperties => ({
 		display: "block",
