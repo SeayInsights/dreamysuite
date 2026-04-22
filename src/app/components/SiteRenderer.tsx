@@ -102,6 +102,7 @@ export function SiteRenderer({ blocks, ordered = false }: Props) {
 
 	const blockIdKey = translated.map((b) => b.id).join(",");
 	const breakpoint = useEditorStore((s) => s.breakpoint);
+	const isDesktop = breakpoint === "desktop";
 
 	// Reset anchors when block list or breakpoint changes
 	useLayoutEffect(() => {
@@ -110,8 +111,9 @@ export function SiteRenderer({ blocks, ordered = false }: Props) {
 	}, [blockIdKey, breakpoint]);
 
 	// Measure block positions from flex layout, then anchor them absolutely
+	// Skip on non-desktop breakpoints — blocks should stack in normal flow
 	useLayoutEffect(() => {
-		if (anchors !== null) return;
+		if (!isDesktop || anchors !== null) return;
 		const el = containerRef.current;
 		if (!el) return;
 
@@ -132,9 +134,9 @@ export function SiteRenderer({ blocks, ordered = false }: Props) {
 			setTotalHeight(maxBottom);
 		}
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [anchors]);
+	}, [anchors, isDesktop]);
 
-	const isAnchored = anchors !== null;
+	const isAnchored = isDesktop && anchors !== null;
 
 	return (
 		<div

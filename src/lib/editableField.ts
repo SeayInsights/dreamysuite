@@ -169,8 +169,8 @@ export function resolveBreakpointConfig(
 			resolved[key.slice(0, -suffix.length)] = cfg[key];
 		}
 	}
-	// Reset position offsets on non-desktop breakpoints unless explicitly overridden
-	for (const key of ["blockOffsetX", "blockOffsetY", "blockMarginLeft"]) {
+	// Reset position/size values on non-desktop breakpoints unless explicitly overridden
+	for (const key of ["blockOffsetX", "blockOffsetY", "blockMarginLeft", "blockWidth"]) {
 		if (cfg[`${key}${suffix}`] === undefined) {
 			resolved[key] = 0;
 		}
