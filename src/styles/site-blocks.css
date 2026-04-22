@@ -322,28 +322,46 @@
   container-type: inline-size;
 }
 
+/* Renderer container padding on mobile/tablet */
+[data-breakpoint="mobile"] .site-renderer,
+[data-breakpoint="tablet"] .site-renderer {
+  padding: 0 10px;
+}
+
 /* Blocks stack full-width with standard padding */
 [data-breakpoint="mobile"] .block,
 [data-breakpoint="tablet"] .block {
   width: 100% !important;
+  max-width: 100% !important;
   margin-left: 0 !important;
   margin-right: 0 !important;
   transform: none !important;
-  padding-left: 1rem;
-  padding-right: 1rem;
-  box-sizing: border-box;
+  height: auto !important;
+  position: static !important;
+  z-index: auto !important;
+  padding-left: 10px !important;
+  padding-right: 10px !important;
+  box-sizing: border-box !important;
+  background-size: cover !important;
+  background-position: center !important;
 }
 
-/* Images: full width, sensible aspect ratio */
-[data-breakpoint="mobile"] .block-images img,
-[data-breakpoint="tablet"] .block-images img {
+/* Images: full width, sensible aspect ratio, capped height */
+[data-breakpoint="mobile"] .block img,
+[data-breakpoint="mobile"] .block video,
+[data-breakpoint="tablet"] .block img,
+[data-breakpoint="tablet"] .block video {
   width: 100% !important;
-  aspect-ratio: 4 / 3;
-  object-fit: cover !important;
   height: auto !important;
+  max-height: 60vh;
+  object-fit: cover !important;
 }
 [data-breakpoint="mobile"] .block-images > div,
 [data-breakpoint="tablet"] .block-images > div {
+  grid-template-columns: 1fr !important;
+}
+[data-breakpoint="mobile"] [style*="grid-template-columns"],
+[data-breakpoint="tablet"] [style*="grid-template-columns"] {
   grid-template-columns: 1fr !important;
 }
 
@@ -351,12 +369,40 @@
 [data-breakpoint="mobile"] .block-photo-split > div {
   flex-direction: column !important;
 }
-[data-breakpoint="mobile"] .block-photo-split img,
-[data-breakpoint="tablet"] .block-photo-split img {
-  width: 100% !important;
-  aspect-ratio: 4 / 3;
-  object-fit: cover !important;
-  height: auto !important;
+
+/* Schedule timeline: stack time above events */
+[data-breakpoint="mobile"] .timeline > [aria-hidden="true"],
+[data-breakpoint="tablet"] .timeline > [aria-hidden="true"] {
+  display: none !important;
+}
+[data-breakpoint="mobile"] .timeline-item,
+[data-breakpoint="tablet"] .timeline-item {
+  flex-direction: column !important;
+  gap: 0.25rem !important;
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border, #e7e5e4);
+}
+[data-breakpoint="mobile"] .timeline-item:last-child,
+[data-breakpoint="tablet"] .timeline-item:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+[data-breakpoint="mobile"] .timeline-item > [aria-hidden="true"],
+[data-breakpoint="tablet"] .timeline-item > [aria-hidden="true"] {
+  display: none !important;
+}
+[data-breakpoint="mobile"] .timeline-time,
+[data-breakpoint="tablet"] .timeline-time {
+  width: auto !important;
+  min-width: unset !important;
+  text-align: left !important;
+  flex-shrink: unset !important;
+}
+[data-breakpoint="mobile"] .timeline-content,
+[data-breakpoint="tablet"] .timeline-content {
+  padding-left: 0 !important;
 }
 
 /* Headings: scale down proportionally via container query units */
