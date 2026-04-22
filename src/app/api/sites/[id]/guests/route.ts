@@ -8,6 +8,18 @@ const GuestSchema = z.object({
   lastName: z.string().max(100).optional(),
   party: z.number().int().nonnegative().optional(),
   notes: z.string().max(2000).optional(),
+  address: z.string().nullable().optional(),
+  phone: z.string().nullable().optional(),
+  email: z.string().nullable().optional(),
+  invitedBy: z.string().nullable().optional(),
+  category: z.string().nullable().optional(),
+  invited: z.number().int().min(0).max(1).optional(),
+  ceremonyOrReception: z.enum(["both", "ceremony", "reception"]).optional(),
+  invitationType: z.enum(["digital", "printed", "both"]).optional(),
+  tableNumber: z.string().nullable().optional(),
+  giftDescription: z.string().nullable().optional(),
+  thankYouSent: z.number().int().min(0).max(1).optional(),
+  customResponses: z.string().nullable().optional(),
 });
 
 export async function GET(
@@ -65,7 +77,7 @@ export async function POST(
     );
   }
 
-  const { firstName, lastName, party, notes } = result.data;
+  const { firstName, lastName, party, notes, address, phone, email, invitedBy, category, invited, ceremonyOrReception, invitationType, tableNumber, giftDescription, thankYouSent, customResponses } = result.data;
 
   const id = crypto.randomUUID();
   const now = Date.now();
@@ -79,9 +91,9 @@ export async function POST(
 
   const guest = await env.DB
     .prepare(
-      "INSERT INTO guest (id, siteId, firstName, lastName, party, rsvpStatus, notes, sortOrder, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, 'pending', ?, ?, ?, ?) RETURNING *"
+      "INSERT INTO guest (id, siteId, firstName, lastName, party, rsvpStatus, notes, sortOrder, createdAt, updatedAt, address, phone, email, invitedBy, category, invited, ceremonyOrReception, invitationType, tableNumber, giftDescription, thankYouSent, customResponses) VALUES (?, ?, ?, ?, ?, 'pending', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING *"
     )
-    .bind(id, siteId, firstName, lastName ?? null, party ?? null, notes ?? null, sortOrder, now, now)
+    .bind(id, siteId, firstName, lastName ?? null, party ?? null, notes ?? null, sortOrder, now, now, address ?? null, phone ?? null, email ?? null, invitedBy ?? null, category ?? null, invited ?? 0, ceremonyOrReception ?? "both", invitationType ?? "digital", tableNumber ?? null, giftDescription ?? null, thankYouSent ?? 0, customResponses ?? null)
     .first();
 
   return NextResponse.json({ guest }, { status: 201 });
