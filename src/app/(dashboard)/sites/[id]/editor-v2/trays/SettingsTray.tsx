@@ -276,58 +276,95 @@ function CollaboratorsPanel({ onBack }: { onBack: () => void }) {
 
 // ── Guests Panel ───────────────────────────────────────────────────────────
 
+interface Guest { id: string; firstName: string; lastName: string | null; party: number | null; rsvpStatus: "pending" | "yes" | "no"; notes: string | null; email: string | null; phone: string | null; address: string | null; invitedBy: string | null; category: string | null; invited: number; ceremonyOrReception: string; invitationType: string; tableNumber: string | null; giftDescription: string | null; thankYouSent: number; customResponses: string | null; }
+
+const COLS = [["#","#","#"],["firstName","Name","Tên"],["email","Email","Email"],["phone","Phone","Điện thoại"],["category","Category","Nhóm"],["rsvpStatus","RSVP","Phản hồi"],["invited","Invited","Đã mời"],["invitationType","Type","Loại thiệp"],["tableNumber","Table","Bàn"],["notes","Notes","Ghi chú"]] as const;
+const BLANK = { firstName: "", lastName: "", email: "", phone: "", category: "", invitedBy: "", ceremonyOrReception: "both", invitationType: "digital", tableNumber: "" };
+const IN = "rounded-md border border-border bg-background px-2 py-1.5 text-sm outline-none focus:border-ring";
+const LB = "flex flex-col gap-0.5 text-[11px] font-medium uppercase tracking-wider text-muted-foreground";
+
 function GuestsPanel({ onBack }: { onBack: () => void }) {
 	const siteId = useEditorStore((s) => s.siteId);
-	const [guests, setGuests] = useState<Record<string, unknown>[]>([]);
+	const lang = useEditorStore((s) => s.settings?.mainLanguage ?? "en");
+	const [guests, setGuests] = useState<Guest[]>([]);
 	const [loading, setLoading] = useState(true);
+	const [showModal, setShowModal] = useState(false);
+	const [form, setForm] = useState(BLANK);
+	const [saving, setSaving] = useState(false);
 
 	useEffect(() => {
 		if (!siteId) return;
 		fetch(`/api/sites/${siteId}/guests`)
 			.then((r) => (r.ok ? r.json() : Promise.reject()))
-			.then((d) => setGuests((d as { guests: Record<string, unknown>[] }).guests))
+			.then((d) => setGuests((d as { guests: Guest[] }).guests))
 			.catch(() => {})
 			.finally(() => setLoading(false));
 	}, [siteId]);
 
+	async function deleteGuest(id: string) {
+		if (!siteId) return;
+		await fetch(`/api/sites/${siteId}/guests/${id}`, { method: "DELETE" });
+		setGuests((prev) => prev.filter((g) => g.id !== id));
+	}
+
+	async function addGuest(e: { preventDefault(): void }) {
+		e.preventDefault();
+		if (!siteId) return;
+		setSaving(true);
+		try {
+			const res = await fetch(`/api/sites/${siteId}/guests`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(form) });
+			if (!res.ok) return;
+			const { guest } = (await res.json()) as { guest: Guest };
+			setGuests((prev) => [guest, ...prev]);
+			setShowModal(false);
+			setForm(BLANK);
+		} finally { setSaving(false); }
+	}
+
+	const cnt = (fn: (g: Guest) => boolean) => guests.filter(fn).length;
+	const badge = (s: Guest["rsvpStatus"]) => <span className="rounded-full px-2 py-0.5 text-[10px] font-medium" style={{ background: s==="yes"?"#dcfce7":s==="no"?"#fef2f2":"#f5f5f4", color: s==="yes"?"#166534":s==="no"?"#991b1b":"#78716c" }}>{s==="yes"?"Attending":s==="no"?"Declined":"Pending"}</span>;
+	const set = (k: keyof typeof BLANK) => (e: { target: { value: string } }) => setForm((p) => ({ ...p, [k]: e.target.value }));
+	const fld = (lbl: string, k: keyof typeof BLANK, t = "text") => <label className={LB}>{lbl}<input type={t} value={form[k]} onChange={set(k)} className={IN} /></label>;
+	const sel = (lbl: string, k: keyof typeof BLANK, opts: string[]) => <label className={`${LB} flex-1`}>{lbl}<select value={form[k]} onChange={set(k)} className={IN}>{opts.map((o) => <option key={o} value={o}>{o[0].toUpperCase()+o.slice(1)}</option>)}</select></label>;
+
 	return (
 		<div className="flex h-full flex-col">
-			<PanelHeader label="Guests" onBack={onBack} />
-			<div className="flex-1 overflow-y-auto px-3 py-1">
-				<div className="flex flex-col gap-3">
-					<div className="flex items-center justify-between">
-						<label className="text-[11px] font-medium uppercase leading-none tracking-wider text-muted-foreground">
-							{loading ? "Loading..." : `${guests.length} guest${guests.length === 1 ? "" : "s"}`}
-						</label>
-					</div>
-					{guests.length === 0 && !loading ? (
-						<p className="rounded-md border border-dashed border-border px-3 py-2 text-center text-xs text-muted-foreground">
-							No guests yet. Full guest management coming soon.
-						</p>
-					) : (
-						<ul className="flex flex-col gap-1">
-							{guests.map((g) => (
-								<li
-									key={String(g.id)}
-									className="flex items-center gap-2 rounded-md border border-border px-3 py-2"
-								>
-									<span className="flex-1 truncate text-sm">
-										{String(g.firstName ?? "")} {String(g.lastName ?? "")}
-									</span>
-									<span className="shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium"
-										style={{
-											background: g.rsvpStatus === "yes" ? "#dcfce7" : g.rsvpStatus === "no" ? "#fef2f2" : "#f5f5f4",
-											color: g.rsvpStatus === "yes" ? "#166534" : g.rsvpStatus === "no" ? "#991b1b" : "#78716c",
-										}}
-									>
-										{g.rsvpStatus === "yes" ? "Attending" : g.rsvpStatus === "no" ? "Declined" : "Pending"}
-									</span>
-								</li>
-							))}
-						</ul>
-					)}
-				</div>
+			<div className="flex items-center gap-2 border-b border-border px-3 py-2">
+				<button type="button" onClick={onBack} className="rounded p-0.5 hover:bg-accent/50"><ChevronLeft className="size-4 text-muted-foreground" /></button>
+				<h2 className="flex-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Guests</h2>
+				<button type="button" onClick={() => setShowModal(true)} className="flex items-center gap-1 rounded-md bg-foreground px-2 py-1 text-[11px] font-medium text-background hover:opacity-90"><Plus className="size-3" /> Add</button>
 			</div>
+			<div className="flex flex-wrap gap-x-3 border-b border-border px-3 py-1.5 text-[11px]">
+				<span>Total <b>{guests.length}</b></span>
+				<span style={{ color: "#166534" }}>Attending <b>{cnt((g) => g.rsvpStatus === "yes")}</b></span>
+				<span style={{ color: "#991b1b" }}>Declined <b>{cnt((g) => g.rsvpStatus === "no")}</b></span>
+				<span className="text-muted-foreground">Pending <b>{cnt((g) => g.rsvpStatus === "pending")}</b></span>
+				<span className="text-muted-foreground">Printed <b>{cnt((g) => g.invitationType === "printed" || g.invitationType === "both")}</b></span>
+			</div>
+			<div className="flex-1 overflow-auto">
+				{loading ? <p className="px-3 py-4 text-center text-xs text-muted-foreground">Loading...</p>
+				: guests.length === 0 ? <p className="mx-3 my-3 rounded-md border border-dashed border-border px-3 py-2 text-center text-xs text-muted-foreground">No guests yet. Click Add to get started.</p>
+				: <table className="w-full border-collapse text-xs"><thead><tr className="border-b border-border bg-muted/30">{COLS.map(([k,en,vi]) => <th key={k} className="whitespace-nowrap px-2 py-1.5 text-left font-medium text-muted-foreground">{en}{lang==="vi"&&<><br/><span className="font-normal opacity-70">{vi}</span></>}</th>)}<th className="w-6 px-2 py-1.5"/></tr></thead>
+				<tbody>{guests.map((g,i) => <tr key={g.id} className="group border-b border-border/50 hover:bg-accent/20"><td className="px-2 py-1.5 text-muted-foreground">{i+1}</td><td className="whitespace-nowrap px-2 py-1.5">{g.firstName} {g.lastName??""}</td><td className="max-w-[100px] truncate px-2 py-1.5">{g.email??"—"}</td><td className="whitespace-nowrap px-2 py-1.5">{g.phone??"—"}</td><td className="px-2 py-1.5">{g.category??"—"}</td><td className="px-2 py-1.5">{badge(g.rsvpStatus)}</td><td className="px-2 py-1.5">{g.invited}</td><td className="px-2 py-1.5">{g.invitationType}</td><td className="px-2 py-1.5">{g.tableNumber??"—"}</td><td className="max-w-[80px] truncate px-2 py-1.5">{g.notes??"—"}</td><td className="px-2 py-1.5"><button type="button" onClick={() => deleteGuest(g.id)} className="rounded p-0.5 opacity-0 hover:text-destructive group-hover:opacity-100"><Trash2 className="size-3"/></button></td></tr>)}</tbody></table>}
+			</div>
+			{showModal && (
+				<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={() => setShowModal(false)}>
+					<form onSubmit={addGuest} onClick={(e) => e.stopPropagation()} className="flex w-80 flex-col gap-3 rounded-lg border border-border bg-background p-4 shadow-xl">
+						<h3 className="text-sm font-semibold">Add Guest</h3>
+						<div className="flex gap-2">{fld("First Name","firstName")}{fld("Last Name","lastName")}</div>
+						{fld("Email","email","email")}
+						{fld("Phone","phone","tel")}
+						{fld("Category","category")}
+						{fld("Invited By","invitedBy")}
+						<div className="flex gap-2">{sel("Ceremony/Reception","ceremonyOrReception",["ceremony","reception","both"])}{sel("Invitation Type","invitationType",["digital","printed","both"])}</div>
+						{fld("Table #","tableNumber")}
+						<div className="flex justify-end gap-2">
+							<button type="button" onClick={() => setShowModal(false)} className="rounded-md border border-border px-3 py-1.5 text-xs hover:bg-accent/30">Cancel</button>
+							<button type="submit" disabled={saving||!form.firstName.trim()} className="rounded-md bg-foreground px-3 py-1.5 text-xs font-medium text-background hover:opacity-90 disabled:opacity-50">{saving?"Saving…":"Add Guest"}</button>
+						</div>
+					</form>
+				</div>
+			)}
 		</div>
 	);
 }
