@@ -334,6 +334,18 @@ function EventCard({
     e.stopPropagation();
   }
 
+  function handleDescriptionBlur(e: React.FocusEvent<HTMLDivElement>) {
+    onUpdate(event.id, { description: e.currentTarget.textContent ?? "" });
+  }
+
+  function handleDescriptionKeyDown(e: React.KeyboardEvent<HTMLDivElement>) {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      (e.currentTarget as HTMLElement).blur();
+    }
+    e.stopPropagation();
+  }
+
   function handleDressCodeBlur(e: React.FocusEvent<HTMLDivElement>) {
     onUpdate(event.id, { dressCode: e.currentTarget.textContent ?? "" });
   }
@@ -502,6 +514,24 @@ function EventCard({
               {formatTime(event.time)}{event.endTime ? ` – ${formatTime(event.endTime)}` : ""}
             </p>
           )}
+        </div>
+      )}
+
+      {/* Description */}
+      {(event.description || editing) && (
+        <div
+          contentEditable={editing}
+          suppressContentEditableWarning
+          onBlur={handleDescriptionBlur}
+          onKeyDown={handleDescriptionKeyDown}
+          style={{
+            fontSize: "0.82rem", color: "var(--body-color)", lineHeight: 1.55,
+            outline: "none", whiteSpace: "pre-wrap",
+            borderBottom: editing ? "1px dashed var(--border)" : "none",
+            cursor: editing ? "text" : "default",
+          }}
+        >
+          {event.description || (editing ? <span style={{ opacity: 0.4, fontStyle: "italic" }}>+ Description</span> : null)}
         </div>
       )}
 
@@ -879,6 +909,25 @@ export function ScheduleBlock({ block }: { block: Block }) {
                       </p>
                     )
                   )
+                )}
+
+                {/* Description */}
+                {(event.description || editing) && (
+                  <p style={{ margin: "0.125rem 0 0", fontSize: "0.82rem", color: "var(--body-color)", lineHeight: 1.55 }}>
+                    <span
+                      contentEditable={editing}
+                      suppressContentEditableWarning
+                      onBlur={(e) => updateEvent(event.id, { description: e.currentTarget.textContent ?? "" })}
+                      onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); (e.currentTarget as HTMLElement).blur(); } e.stopPropagation(); }}
+                      style={{
+                        outline: "none", whiteSpace: "pre-wrap",
+                        borderBottom: editing ? "1px dashed var(--border)" : "none",
+                        cursor: editing ? "text" : "default",
+                      }}
+                    >
+                      {event.description || (editing ? <span style={{ opacity: 0.4, fontStyle: "italic" }}>+ Description</span> : null)}
+                    </span>
+                  </p>
                 )}
 
                 {/* Dress code */}
