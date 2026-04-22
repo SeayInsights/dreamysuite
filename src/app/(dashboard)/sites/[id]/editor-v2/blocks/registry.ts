@@ -60,7 +60,7 @@ export const BLOCK_REGISTRY: Record<string, BlockRegistryEntry> = {
     displayName: "Venue Map",
     icon: "MapPin",
     category: "Simple",
-    defaultData: { venueName: "", embedUrl: "", mapUrl: "" },
+    defaultData: { heading: "Venue", hotels: [] },
     visible: true,
   },
   // ── Legacy (existing DB records — hidden from block picker) ───────────────
