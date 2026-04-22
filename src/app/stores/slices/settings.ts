@@ -66,11 +66,13 @@ export const createSettingsSlice: StateCreator<SettingsSlice & ThemeSlice, [], [
       if (!res.ok) {
         const text = await res.text().catch(() => "");
         console.error("[settings:save] PUT failed", res.status, text);
+        set({ settingsDirty: false });
         return;
       }
       set({ settingsDirty: false });
     } catch (e) {
       console.error("[settings:save] network error:", e);
+      set({ settingsDirty: false });
     }
   },
 

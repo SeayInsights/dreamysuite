@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { DatePicker } from "@/components/ui/DatePicker";
+import { TimePicker } from "@/components/ui/TimePicker";
 
 export function PanelTextInput({
   label,
@@ -97,12 +99,10 @@ export function PanelDateInput({
       <label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
         {label}
       </label>
-      <input
-        type="date"
+      <DatePicker
         value={value}
-        onChange={(e) => onChange(e.target.value)}
+        onChange={onChange}
         onKeyDown={(e) => e.stopPropagation()}
-        className="h-8 w-full rounded border border-input bg-background px-2 text-xs focus:outline-none focus:ring-1 focus:ring-ring"
       />
     </div>
   );
@@ -151,12 +151,10 @@ export function PanelTimeInput({
       <label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
         {label}
       </label>
-      <input
-        type="time"
+      <TimePicker
         value={value}
-        onChange={(e) => onChange(e.target.value)}
+        onChange={onChange}
         onKeyDown={(e) => e.stopPropagation()}
-        className="h-8 w-full rounded border border-input bg-background px-2 text-xs focus:outline-none focus:ring-1 focus:ring-ring"
       />
     </div>
   );

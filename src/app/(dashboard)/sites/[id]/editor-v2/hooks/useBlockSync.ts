@@ -92,9 +92,10 @@ export async function flushOps(
 
 export function useBlockSync(siteId: string) {
   const isDirty = useEditorStore((s) => s.isDirty);
-  const markClean = useEditorStore((s) => s.markClean);
+  const markFlushed = useEditorStore((s) => s.markFlushed);
   const setSaveError = useEditorStore((s) => s.setSaveError);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const retryRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const siteIdRef = useRef(siteId);
   siteIdRef.current = siteId;
 
@@ -105,36 +106,46 @@ export function useBlockSync(siteId: string) {
     const pageId = state.currentPageId;
     if (!state.isDirty || !pageId) return;
     flushOps(siteIdRef.current, pageId, state.pendingOps, state.blocks);
-    // markClean intentionally omitted — keepalive fetch continues after unload;
-    // debounce path awaits before marking clean on normal navigation.
   }, []);
+
+  const debouncedFlush = useCallback(() => {
+    const state = useEditorStore.getState();
+    const pageId = state.currentPageId;
+    if (!state.isDirty || !pageId) return;
+    const opsSnapshot: PendingOps = {
+      updated: new Set(state.pendingOps.updated),
+      inserted: new Set(state.pendingOps.inserted),
+      removed: new Set(state.pendingOps.removed),
+      reordered: state.pendingOps.reordered,
+    };
+    flushOps(siteIdRef.current, pageId, opsSnapshot, state.blocks).then(
+      (allSucceeded) => {
+        if (allSucceeded) {
+          markFlushed(opsSnapshot);
+          setSaveError(null);
+        } else {
+          setSaveError("Some changes could not be saved. Retrying…");
+          retryRef.current = setTimeout(debouncedFlush, DEBOUNCE_MS * 2);
+        }
+      },
+      () => {
+        setSaveError("Save failed — retrying…");
+        retryRef.current = setTimeout(debouncedFlush, DEBOUNCE_MS * 2);
+      },
+    );
+  }, [markFlushed, setSaveError]);
 
   useEffect(() => {
     if (!isDirty) return;
     if (timerRef.current) clearTimeout(timerRef.current);
     timerRef.current = setTimeout(() => {
       timerRef.current = null;
-      const state = useEditorStore.getState();
-      const pageId = state.currentPageId;
-      if (!state.isDirty || !pageId) return;
-      flushOps(siteIdRef.current, pageId, state.pendingOps, state.blocks).then(
-        (allSucceeded) => {
-          if (allSucceeded) {
-            markClean();
-            setSaveError(null);
-          } else {
-            setSaveError("Some changes could not be saved. Retrying…");
-          }
-        },
-        () => {
-          setSaveError("Save failed — check your connection and try again.");
-        },
-      );
+      debouncedFlush();
     }, DEBOUNCE_MS);
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
     };
-  }, [isDirty, markClean, setSaveError]);
+  }, [isDirty, debouncedFlush]);
 
   useEffect(() => {
     window.addEventListener("beforeunload", flushNow);
@@ -144,11 +155,9 @@ export function useBlockSync(siteId: string) {
     };
   }, [flushNow]);
 
-  // Safety net: flush every 10s if dirty in case debounce or beforeunload missed
   useEffect(() => {
-    const id = setInterval(() => {
-      if (useEditorStore.getState().isDirty) flushNow();
-    }, 10_000);
-    return () => clearInterval(id);
-  }, [flushNow]);
+    return () => {
+      if (retryRef.current) clearTimeout(retryRef.current);
+    };
+  }, []);
 }

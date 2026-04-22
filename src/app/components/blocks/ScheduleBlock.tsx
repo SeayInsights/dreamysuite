@@ -5,6 +5,8 @@ import { createPortal } from "react-dom";
 import { blockSectionStyle, editableProps, parseCfg } from "@/lib/editableField";
 import { TextEffectWrapper } from "@/app/components/TextEffectWrapper";
 import { useEditorStore } from "@/app/stores/editorStore";
+import { DatePicker } from "@/components/ui/DatePicker";
+import { TimePicker } from "@/components/ui/TimePicker";
 
 interface ScheduleEvent {
   id: string;
@@ -121,12 +123,11 @@ function DatePickerPopover({ anchorRect, value, onSave, onClose }: DatePickerPro
       onClick={(e) => e.stopPropagation()}
     >
       <label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Date</label>
-      <input
-        type="date"
+      <DatePicker
         value={local}
-        onChange={(e) => setLocal(e.target.value)}
+        onChange={setLocal}
         onKeyDown={(e) => { e.stopPropagation(); if (e.key === "Enter") { onSave(local); onClose(); } }}
-        className="mt-1 h-7 w-full rounded border border-input bg-background px-2 text-xs focus:outline-none focus:ring-1 focus:ring-ring"
+        className="mt-1 h-7"
         autoFocus
       />
       <div className="mt-2 flex gap-2">
@@ -176,12 +177,11 @@ function TimePickerPopover({ anchorRect, value, label, onSave, onClose }: TimePi
       onClick={(e) => e.stopPropagation()}
     >
       <label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{label}</label>
-      <input
-        type="time"
+      <TimePicker
         value={local}
-        onChange={(e) => setLocal(e.target.value)}
+        onChange={setLocal}
         onKeyDown={(e) => { e.stopPropagation(); if (e.key === "Enter") { onSave(local); onClose(); } }}
-        className="mt-1 h-7 w-full rounded border border-input bg-background px-2 text-xs focus:outline-none focus:ring-1 focus:ring-ring"
+        className="mt-1 h-7"
         autoFocus
       />
       <div className="mt-2 flex gap-2">

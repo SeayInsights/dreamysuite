@@ -1460,11 +1460,15 @@ function renderBlock(
   }
   const _ox = typeof cfg.blockOffsetX === "number" && cfg.blockOffsetX !== 0 ? cfg.blockOffsetX : 0;
   const _oy = typeof cfg.blockOffsetY === "number" && cfg.blockOffsetY !== 0 ? cfg.blockOffsetY : 0;
-  if (_ox || _oy) _bsParts.push(`position:relative`, `left:${_ox}px`, `top:${_oy}px`);
+  const _rot = typeof cfg.blockRotation === "number" && cfg.blockRotation !== 0 ? cfg.blockRotation : 0;
+  const _transforms: string[] = [];
+  if (_ox || _oy) _transforms.push(`translate(${_ox}px,${_oy}px)`);
+  if (_rot) _transforms.push(`rotate(${_rot}deg)`);
+  if (_transforms.length) _bsParts.push(`transform:${_transforms.join(' ')}`);
   const _zi = typeof cfg.blockZIndex === "number" ? cfg.blockZIndex : 0;
-  if (_zi) _bsParts.push(`position:relative`, `z-index:${_zi}`);
+  if (_zi) { if (!_transforms.length) _bsParts.push(`position:relative`); _bsParts.push(`z-index:${_zi}`); }
   const _bh = typeof cfg.blockHeight === "number" && cfg.blockHeight > 0 ? cfg.blockHeight : 0;
-  if (_bh) _bsParts.push(`height:${_bh}px`, `padding-top:0`, `padding-bottom:0`, `overflow-y:hidden`);
+  if (_bh) _bsParts.push(`height:${_bh}px`, `padding-top:0`, `padding-bottom:0`, `display:flex`, `flex-direction:column`, `align-items:stretch`);
   const _pad = cfg.padding as Record<string, unknown> | null | undefined;
   if (_pad && typeof _pad === "object" && !Array.isArray(_pad)) {
     _bsParts.push(`padding:0`);
