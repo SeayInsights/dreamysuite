@@ -5,6 +5,7 @@ import { useEditorStore } from "@/app/stores/editorStore";
 import type { PendingOps, Block } from "@/app/stores/slices/document";
 
 const DEBOUNCE_MS = 1_500;
+const DEBUG_SYNC = true;
 
 /**
  * Returns true if all operations succeeded, false if any failed.
@@ -53,6 +54,9 @@ export async function flushOps(
     if (!block) continue;
     const payload: Record<string, unknown> = { type: block.type, config: block.config };
     if (block.isVisible !== undefined) payload.isVisible = block.isVisible !== 0;
+    if (DEBUG_SYNC) {
+      console.log(`[useBlockSync] PUT block=${id} type=${block.type} config=`, JSON.parse(JSON.stringify(block.config)));
+    }
     promises.push(
       fetch(`/api/sites/${siteId}/blocks/${id}`, {
         method: "PUT",
@@ -79,6 +83,14 @@ export async function flushOps(
     }
   }
 
+  if (DEBUG_SYNC) {
+    console.group(`[useBlockSync] flushOps — ${promises.length} request(s)`);
+    console.log("updated:", [...ops.updated]);
+    console.log("inserted:", [...ops.inserted]);
+    console.log("removed:", [...ops.removed]);
+    console.log("reordered:", ops.reordered);
+  }
+
   const results = await Promise.allSettled(promises);
 
   const failures = results.filter(
@@ -86,6 +98,21 @@ export async function flushOps(
       r.status === "rejected" ||
       (r.status === "fulfilled" && !r.value.ok),
   );
+
+  if (DEBUG_SYNC) {
+    for (let i = 0; i < results.length; i++) {
+      const r = results[i];
+      if (r.status === "rejected") {
+        console.error(`[useBlockSync] request ${i} rejected:`, r.reason);
+      } else if (!r.value.ok) {
+        r.value.text().then((body) => {
+          console.error(`[useBlockSync] request ${i} HTTP ${r.value.status}:`, body);
+        });
+      }
+    }
+    console.log(`[useBlockSync] result: ${failures.length === 0 ? "SUCCESS" : `FAILED (${failures.length} failures)`}`);
+    console.groupEnd();
+  }
 
   return failures.length === 0;
 }

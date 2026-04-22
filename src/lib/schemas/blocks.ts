@@ -115,7 +115,7 @@ const PhotoSplitConfig = z.object({
 // ─── Consolidated schemas (Task 18) ──────────────────────────────────────────
 
 const MediaVideoConfig = z.object({
-  provider: z.enum(["direct", "youtube"]).optional(),
+  provider: z.enum(["direct", "youtube", "vimeo", "gif"]).optional(),
   url: z.string().optional(),
   height: z.string().optional(),
 }).catchall(passthrough);
