@@ -21,19 +21,20 @@ export async function getSession(
   headers: Headers,
   env: Env,
 ): Promise<SessionResult | null> {
-  const auth = createAuth(env);
-  const baseURL = env.APP_URL || "https://dreamysuite.com";
-  const res = await auth.handler(
-    new Request(`${baseURL}/api/auth/get-session`, { headers }),
-  );
-  if (!res.ok) return null;
   try {
+    const auth = createAuth(env);
+    const baseURL = env.APP_URL || "https://dreamysuite.com";
+    const res = await auth.handler(
+      new Request(`${baseURL}/api/auth/get-session`, { headers }),
+    );
+    if (!res.ok) return null;
     const data = await res.json();
     if (data && typeof data === "object" && "user" in data) {
       return data as SessionResult;
     }
     return null;
-  } catch {
+  } catch (e) {
+    console.error("[getSession] auth.handler threw:", e instanceof Error ? e.message : String(e));
     return null;
   }
 }

@@ -69,6 +69,7 @@
 
 /* ── Section heading ── */
 .section-heading {
+  flex: none;
   font-family: var(--heading-font);
   font-size: clamp(1.5rem, 3.5vw, 2rem);
   font-weight: normal;
@@ -77,6 +78,7 @@
   margin-bottom: 0.75rem;
 }
 .section-rule {
+  flex: none;
   width: 3rem; height: 1px;
   background: var(--accent);
   margin: 0 auto 2.5rem;

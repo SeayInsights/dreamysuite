@@ -25,6 +25,7 @@ export interface DocumentSlice {
 	removeBlock: (id: string) => void;
 	reorderBlocks: (fromIndex: number, toIndex: number) => void;
 	markClean: () => void;
+	markFlushed: (flushedOps: PendingOps) => void;
 }
 
 const emptyOps = (): PendingOps => ({
@@ -80,4 +81,15 @@ export const createDocumentSlice: StateCreator<DocumentSlice> = (set) => ({
 			return { blocks, isDirty: true, pendingOps: { ...state.pendingOps, reordered: true } };
 		}),
 	markClean: () => set({ isDirty: false, pendingOps: emptyOps() }),
+	markFlushed: (flushedOps) =>
+		set((state) => {
+			const remaining: PendingOps = {
+				updated: new Set([...state.pendingOps.updated].filter((id) => !flushedOps.updated.has(id))),
+				inserted: new Set([...state.pendingOps.inserted].filter((id) => !flushedOps.inserted.has(id))),
+				removed: new Set([...state.pendingOps.removed].filter((id) => !flushedOps.removed.has(id))),
+				reordered: state.pendingOps.reordered && !flushedOps.reordered,
+			};
+			const stillDirty = remaining.updated.size > 0 || remaining.inserted.size > 0 || remaining.removed.size > 0 || remaining.reordered;
+			return { isDirty: stillDirty, pendingOps: remaining };
+		}),
 });
