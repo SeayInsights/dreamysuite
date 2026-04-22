@@ -278,7 +278,8 @@ export function NavPreview() {
 	const visiblePages = pages.filter((p) => p.isVisible !== 0);
 	if (visiblePages.length < 1) return null;
 
-	if (NavStyleEffect && breakpoint === "desktop") {
+	if (NavStyleEffect) {
+		const isCompact = breakpoint === "mobile" || breakpoint === "tablet";
 		const eventName = settings.eventName ?? "My Site";
 		const initials = eventName.split(/[\s&+]+/).map((w: string) => w.charAt(0)).filter(Boolean).join("").toUpperCase().slice(0, 3);
 		const accent = settings.navHighlightColor ?? themeTokens.colors.primary ?? "#B8921A";
@@ -300,7 +301,15 @@ export function NavPreview() {
 			};
 		});
 		return (
-			<div style={{ flexShrink: 0, position: "relative", zIndex: 20, minHeight: 56, width: "100%" }}>
+			<div style={{
+				flexShrink: 0,
+				position: "relative",
+				zIndex: 20,
+				minHeight: isCompact ? 44 : 56,
+				width: isCompact ? "auto" : "100%",
+				alignSelf: isCompact ? "flex-start" : undefined,
+				padding: isCompact ? "4px 0 0 4px" : undefined,
+			}}>
 				<NavStyleEffect
 					items={navItems}
 					logo={logoSvg}
@@ -312,9 +321,9 @@ export function NavPreview() {
 					headingFont={headingFont}
 					bodyFont={bodyFont}
 					brandName={eventName}
-					compact={false}
+					compact={isCompact}
 				/>
-				{additionalLangs.length > 0 && (
+				{additionalLangs.length > 0 && !isCompact && (
 					<div style={{ position: "absolute", left: "75%", top: "50%", transform: "translate(-50%, -50%)", zIndex: 25 }}>
 						<LangToggle mainLang={settings.mainLanguage || "en"} langs={additionalLangs} font={bodyFont} color={linkColor} highlight={accent} />
 					</div>
