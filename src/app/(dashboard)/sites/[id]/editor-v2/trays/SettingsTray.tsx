@@ -286,6 +286,8 @@ const LB = "flex flex-col gap-0.5 text-[11px] font-medium uppercase tracking-wid
 function GuestsPanel({ onBack }: { onBack: () => void }) {
 	const siteId = useEditorStore((s) => s.siteId);
 	const lang = useEditorStore((s) => s.settings?.mainLanguage ?? "en");
+	const settings = useEditorStore((s) => s.settings);
+	const updateSettings = useEditorStore((s) => s.updateSettings);
 	const [guests, setGuests] = useState<Guest[]>([]);
 	const [loading, setLoading] = useState(true);
 	const [showModal, setShowModal] = useState(false);
@@ -293,6 +295,16 @@ function GuestsPanel({ onBack }: { onBack: () => void }) {
 	const [saving, setSaving] = useState(false);
 	const [editing, setEditing] = useState<{ id: string; field: string } | null>(null);
 	const [editVal, setEditVal] = useState("");
+	const [showCatMgr, setShowCatMgr] = useState(false);
+	const [newCat, setNewCat] = useState("");
+	const [renamingIdx, setRenamingIdx] = useState<number | null>(null);
+	const [renameVal, setRenameVal] = useState("");
+	const DEFAULT_CATS = ["Family","Friends","Coworkers","Wedding Party"];
+	const categories: string[] = (() => { try { const p = JSON.parse(settings?.guestCategories ?? ""); return Array.isArray(p) && p.length ? p : DEFAULT_CATS; } catch { return DEFAULT_CATS; } })();
+	function saveCats(cats: string[]) { updateSettings({ guestCategories: JSON.stringify(cats) }); }
+	function addCat() { const t = newCat.trim(); if (!t || categories.includes(t)) return; saveCats([...categories, t]); setNewCat(""); }
+	function deleteCat(i: number) { if (guests.some((g) => g.category === categories[i])) return; saveCats(categories.filter((_,j) => j !== i)); }
+	function renameCat(i: number) { const t = renameVal.trim(); if (!t) return; const next = [...categories]; next[i] = t; saveCats(next); setRenamingIdx(null); }
 
 	useEffect(() => {
 		if (!siteId) return;
@@ -339,10 +351,10 @@ function GuestsPanel({ onBack }: { onBack: () => void }) {
 	const badge = (s: Guest["rsvpStatus"]) => <span className="rounded-full px-2 py-0.5 text-[10px] font-medium" style={{ background: s==="yes"?"#dcfce7":s==="no"?"#fef2f2":"#f5f5f4", color: s==="yes"?"#166534":s==="no"?"#991b1b":"#78716c" }}>{s==="yes"?"Attending":s==="no"?"Declined":"Pending"}</span>;
 	const set = (k: keyof typeof BLANK) => (e: { target: { value: string } }) => setForm((p) => ({ ...p, [k]: e.target.value }));
 	const fld = (lbl: string, k: keyof typeof BLANK, t = "text") => <label className={LB}>{lbl}<input type={t} value={form[k]} onChange={set(k)} className={IN} /></label>;
-	const sel = (lbl: string, k: keyof typeof BLANK, opts: string[]) => <label className={`${LB} flex-1`}>{lbl}<select value={form[k]} onChange={set(k)} className={IN}>{opts.map((o) => <option key={o} value={o}>{o[0].toUpperCase()+o.slice(1)}</option>)}</select></label>;
+	const sel = (lbl: string, k: keyof typeof BLANK, opts: string[]) => <label className={`${LB} flex-1`}>{lbl}<select value={form[k]} onChange={set(k)} className={IN}>{opts.map((o) => <option key={o} value={o}>{o ? o[0].toUpperCase()+o.slice(1) : "— Select —"}</option>)}</select></label>;
 
 	const TEXT_FIELDS = ["firstName","lastName","email","phone","address","invitedBy","tableNumber","giftDescription","notes"] as const;
-	const DROP_FIELDS: Record<string, string[]> = { rsvpStatus: ["pending","yes","no"], invitationType: ["digital","printed","both"], ceremonyOrReception: ["ceremony","reception","both"], category: [] };
+	const DROP_FIELDS: Record<string, string[]> = { rsvpStatus: ["pending","yes","no"], invitationType: ["digital","printed","both"], ceremonyOrReception: ["ceremony","reception","both"], category: categories };
 
 	function cell(g: Guest, field: string, display: ReactNode, tdClass = "px-2 py-1.5") {
 		const isEditing = editing?.id === g.id && editing?.field === field;
@@ -362,6 +374,7 @@ function GuestsPanel({ onBack }: { onBack: () => void }) {
 			<div className="flex items-center gap-2 border-b border-border px-3 py-2">
 				<button type="button" onClick={onBack} className="rounded p-0.5 hover:bg-accent/50"><ChevronLeft className="size-4 text-muted-foreground" /></button>
 				<h2 className="flex-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Guests</h2>
+				<button type="button" onClick={() => setShowCatMgr(true)} className="rounded-md border border-border px-2 py-1 text-[11px] text-muted-foreground hover:bg-accent/30">Categories</button>
 				<button type="button" onClick={() => setShowModal(true)} className="flex items-center gap-1 rounded-md bg-foreground px-2 py-1 text-[11px] font-medium text-background hover:opacity-90"><Plus className="size-3" /> Add</button>
 			</div>
 			<div className="flex flex-wrap gap-x-3 border-b border-border px-3 py-1.5 text-[11px]">
@@ -401,7 +414,7 @@ function GuestsPanel({ onBack }: { onBack: () => void }) {
 						<div className="flex gap-2">{fld("First Name","firstName")}{fld("Last Name","lastName")}</div>
 						{fld("Email","email","email")}
 						{fld("Phone","phone","tel")}
-						{fld("Category","category")}
+						{sel("Category","category",["", ...categories])}
 						{fld("Invited By","invitedBy")}
 						<div className="flex gap-2">{sel("Ceremony/Reception","ceremonyOrReception",["ceremony","reception","both"])}{sel("Invitation Type","invitationType",["digital","printed","both"])}</div>
 						{fld("Table #","tableNumber")}
@@ -410,6 +423,28 @@ function GuestsPanel({ onBack }: { onBack: () => void }) {
 							<button type="submit" disabled={saving||!form.firstName.trim()} className="rounded-md bg-foreground px-3 py-1.5 text-xs font-medium text-background hover:opacity-90 disabled:opacity-50">{saving?"Saving…":"Add Guest"}</button>
 						</div>
 					</form>
+				</div>
+			)}
+			{showCatMgr && (
+				<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={() => setShowCatMgr(false)}>
+					<div onClick={(e) => e.stopPropagation()} className="flex w-72 flex-col gap-3 rounded-lg border border-border bg-background p-4 shadow-xl">
+						<h3 className="text-sm font-semibold">Manage Categories</h3>
+						<ul className="flex flex-col gap-1 max-h-48 overflow-y-auto">
+							{categories.map((cat, i) => (
+								<li key={cat} className="flex items-center gap-1 rounded-md border border-border px-2 py-1">
+									{renamingIdx === i
+										? <input autoFocus className="flex-1 rounded border border-ring bg-background px-1 py-0.5 text-xs outline-none" value={renameVal} onChange={(e) => setRenameVal(e.target.value)} onBlur={() => renameCat(i)} onKeyDown={(e) => { if (e.key==="Enter") renameCat(i); else if (e.key==="Escape") setRenamingIdx(null); }} />
+										: <span className="flex-1 cursor-pointer text-sm" onClick={() => { setRenamingIdx(i); setRenameVal(cat); }}>{cat}</span>}
+									<button type="button" onClick={() => deleteCat(i)} title={guests.some((g) => g.category === cat) ? "In use" : "Delete"} className="shrink-0 rounded p-0.5 text-muted-foreground hover:text-destructive disabled:opacity-30" disabled={guests.some((g) => g.category === cat)}><Trash2 className="size-3" /></button>
+								</li>
+							))}
+						</ul>
+						<div className="flex gap-2">
+							<input value={newCat} onChange={(e) => setNewCat(e.target.value)} onKeyDown={(e) => { if (e.key==="Enter") addCat(); }} placeholder="New category…" className={`${IN} flex-1`} />
+							<button type="button" onClick={addCat} disabled={!newCat.trim()} className="flex items-center gap-1 rounded-md bg-foreground px-2 py-1.5 text-xs font-medium text-background hover:opacity-90 disabled:opacity-50"><Plus className="size-3" /></button>
+						</div>
+						<div className="flex justify-end"><button type="button" onClick={() => setShowCatMgr(false)} className="rounded-md border border-border px-3 py-1.5 text-xs hover:bg-accent/30">Done</button></div>
+					</div>
 				</div>
 			)}
 		</div>
