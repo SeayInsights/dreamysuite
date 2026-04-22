@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { useEditorStore } from "@/app/stores/editorStore";
 import { duration, EASING } from "@/lib/motion";
 
+import { ContentTab } from "./inspector/ContentTab";
 import { LayoutTab } from "./inspector/LayoutTab";
 import { StyleTab } from "./inspector/StyleTab";
 import { MotionTab } from "./inspector/MotionTab";
@@ -15,8 +16,9 @@ import { AssistantTab } from "./inspector/AssistantTab";
 
 const PANEL_WIDTH = 320;
 
-type TabId = "layout" | "style" | "motion" | "assistant";
+type TabId = "info" | "layout" | "style" | "motion" | "assistant";
 const TABS: { id: TabId; label: string }[] = [
+	{ id: "info", label: "Info" },
 	{ id: "layout", label: "Layout" },
 	{ id: "style", label: "Style" },
 	{ id: "motion", label: "Motion" },
@@ -42,7 +44,7 @@ export function Inspector() {
 	const setInspectorOpen = useEditorStore((s) => s.setInspectorOpen);
 	const mode = useEditorStore((s) => s.mode);
 	const settingsLoaded = useEditorStore((s) => s.settingsLoaded);
-	const [tab, setTab] = useState<TabId>("layout");
+	const [tab, setTab] = useState<TabId>("info");
 
 	const visibleTabs = TABS.filter((t) => {
 		if (mode === "simple" && t.id === "assistant") return false;
@@ -148,6 +150,8 @@ export function Inspector() {
 					<div className="flex items-center justify-center p-8">
 						<div className="h-5 w-5 animate-spin rounded-full border-2 border-muted-foreground border-t-foreground" />
 					</div>
+				) : tab === "info" ? (
+					<ContentTab />
 				) : tab === "layout" ? (
 					<LayoutTab />
 				) : tab === "style" ? (
