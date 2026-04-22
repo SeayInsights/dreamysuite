@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getEnv } from "@/lib/cloudflare";
-import { createAuth, type Env } from "@/app/lib/auth.server";
+import { getSession } from "@/lib/api/get-session";
 import { requireSiteOwnership } from "@/lib/api/site-auth";
 
 // Cloudflare at-cost registrar pricing (USD/yr) for common TLDs
@@ -30,8 +30,7 @@ function parseDomain(input: string): { name: string; tld: string } | null {
 export async function GET(req: NextRequest) {
   const env = await getEnv();
 
-  const auth = createAuth(env);
-  const session = await auth.api.getSession({ headers: req.headers });
+  const session = await getSession(req.headers, env);
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const url = new URL(req.url);
