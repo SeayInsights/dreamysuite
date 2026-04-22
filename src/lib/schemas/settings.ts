@@ -95,6 +95,11 @@ export const SettingsSchema = z.object({
   effectColor1: z.string().nullable().default(null),
   effectColor2: z.string().nullable().default(null),
   effectColor3: z.string().nullable().default(null),
+  venueName: z.string().nullable().default(null),
+  venuePlaceId: z.string().nullable().default(null),
+  venueCoordinates: z.string().nullable().default(null),
+  venueHotels: z.string().nullable().default(null),
+  venueNote: z.string().nullable().default(null),
 });
 
 /** All settings with defaults applied. Single source — no duplicate object. */
