@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import {
 	Globe,
 	Users,
@@ -291,6 +291,8 @@ function GuestsPanel({ onBack }: { onBack: () => void }) {
 	const [showModal, setShowModal] = useState(false);
 	const [form, setForm] = useState(BLANK);
 	const [saving, setSaving] = useState(false);
+	const [editing, setEditing] = useState<{ id: string; field: string } | null>(null);
+	const [editVal, setEditVal] = useState("");
 
 	useEffect(() => {
 		if (!siteId) return;
@@ -305,6 +307,18 @@ function GuestsPanel({ onBack }: { onBack: () => void }) {
 		if (!siteId) return;
 		await fetch(`/api/sites/${siteId}/guests/${id}`, { method: "DELETE" });
 		setGuests((prev) => prev.filter((g) => g.id !== id));
+	}
+
+	async function patchGuest(guestId: string, field: string, value: string | number) {
+		if (!siteId) return;
+		const prev = guests.find((g) => g.id === guestId);
+		if (!prev) return;
+		setGuests((gs) => gs.map((g) => g.id === guestId ? { ...g, [field]: value } : g));
+		try {
+			const res = await fetch(`/api/sites/${siteId}/guests/${guestId}`, { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify({ [field]: value }) });
+			if (!res.ok) setGuests((gs) => gs.map((g) => g.id === guestId ? prev : g));
+		} catch { setGuests((gs) => gs.map((g) => g.id === guestId ? prev : g)); }
+		setEditing(null);
 	}
 
 	async function addGuest(e: { preventDefault(): void }) {
@@ -327,6 +341,22 @@ function GuestsPanel({ onBack }: { onBack: () => void }) {
 	const fld = (lbl: string, k: keyof typeof BLANK, t = "text") => <label className={LB}>{lbl}<input type={t} value={form[k]} onChange={set(k)} className={IN} /></label>;
 	const sel = (lbl: string, k: keyof typeof BLANK, opts: string[]) => <label className={`${LB} flex-1`}>{lbl}<select value={form[k]} onChange={set(k)} className={IN}>{opts.map((o) => <option key={o} value={o}>{o[0].toUpperCase()+o.slice(1)}</option>)}</select></label>;
 
+	const TEXT_FIELDS = ["firstName","lastName","email","phone","address","invitedBy","tableNumber","giftDescription","notes"] as const;
+	const DROP_FIELDS: Record<string, string[]> = { rsvpStatus: ["pending","yes","no"], invitationType: ["digital","printed","both"], ceremonyOrReception: ["ceremony","reception","both"], category: [] };
+
+	function cell(g: Guest, field: string, display: ReactNode, tdClass = "px-2 py-1.5") {
+		const isEditing = editing?.id === g.id && editing?.field === field;
+		const startEdit = () => { setEditing({ id: g.id, field }); setEditVal(String((g as unknown as Record<string, unknown>)[field] ?? "")); };
+		if (isEditing && TEXT_FIELDS.includes(field as typeof TEXT_FIELDS[number])) {
+			return <td key={field} className={tdClass}><input autoFocus className="w-full rounded border border-ring bg-background px-1 py-0.5 text-xs outline-none" value={editVal} onChange={(e) => setEditVal(e.target.value)} onBlur={() => patchGuest(g.id, field, editVal)} onKeyDown={(e) => { if (e.key==="Enter") { e.currentTarget.blur(); } else if (e.key==="Escape") setEditing(null); }} /></td>;
+		}
+		if (isEditing && field in DROP_FIELDS) {
+			const opts = DROP_FIELDS[field]!;
+			return <td key={field} className={tdClass}><select autoFocus className="rounded border border-ring bg-background px-1 py-0.5 text-xs outline-none" value={editVal} onChange={(e) => { patchGuest(g.id, field, e.target.value); }} onBlur={() => setEditing(null)} onKeyDown={(e) => { if (e.key==="Escape") setEditing(null); }}>{opts.map((o) => <option key={o} value={o}>{o[0].toUpperCase()+o.slice(1)}</option>)}</select></td>;
+		}
+		return <td key={field} className={`${tdClass} cursor-pointer`} onClick={startEdit}>{display}</td>;
+	}
+
 	return (
 		<div className="flex h-full flex-col">
 			<div className="flex items-center gap-2 border-b border-border px-3 py-2">
@@ -345,7 +375,24 @@ function GuestsPanel({ onBack }: { onBack: () => void }) {
 				{loading ? <p className="px-3 py-4 text-center text-xs text-muted-foreground">Loading...</p>
 				: guests.length === 0 ? <p className="mx-3 my-3 rounded-md border border-dashed border-border px-3 py-2 text-center text-xs text-muted-foreground">No guests yet. Click Add to get started.</p>
 				: <table className="w-full border-collapse text-xs"><thead><tr className="border-b border-border bg-muted/30">{COLS.map(([k,en,vi]) => <th key={k} className="whitespace-nowrap px-2 py-1.5 text-left font-medium text-muted-foreground">{en}{lang==="vi"&&<><br/><span className="font-normal opacity-70">{vi}</span></>}</th>)}<th className="w-6 px-2 py-1.5"/></tr></thead>
-				<tbody>{guests.map((g,i) => <tr key={g.id} className="group border-b border-border/50 hover:bg-accent/20"><td className="px-2 py-1.5 text-muted-foreground">{i+1}</td><td className="whitespace-nowrap px-2 py-1.5">{g.firstName} {g.lastName??""}</td><td className="max-w-[100px] truncate px-2 py-1.5">{g.email??"—"}</td><td className="whitespace-nowrap px-2 py-1.5">{g.phone??"—"}</td><td className="max-w-[100px] truncate px-2 py-1.5">{g.address??"—"}</td><td className="px-2 py-1.5">{g.category??"—"}</td><td className="max-w-[80px] truncate px-2 py-1.5">{g.invitedBy??"—"}</td><td className="px-2 py-1.5">{badge(g.rsvpStatus)}</td><td className="px-2 py-1.5">{g.invited===1?<Check className="size-3 text-green-600"/>:<span className="inline-block size-3 rounded-full border border-muted-foreground/40"/>}</td><td className="px-2 py-1.5">{g.invitationType}</td><td className="px-2 py-1.5">{g.ceremonyOrReception}</td><td className="px-2 py-1.5">{g.tableNumber??"—"}</td><td className="max-w-[80px] truncate px-2 py-1.5">{g.giftDescription??"—"}</td><td className="px-2 py-1.5">{g.thankYouSent===1?<Check className="size-3 text-green-600"/>:<span className="inline-block size-3 rounded-full border border-muted-foreground/40"/>}</td><td className="max-w-[80px] truncate px-2 py-1.5">{g.notes??"—"}</td><td className="px-2 py-1.5"><button type="button" onClick={() => deleteGuest(g.id)} className="rounded p-0.5 opacity-0 hover:text-destructive group-hover:opacity-100"><Trash2 className="size-3"/></button></td></tr>)}</tbody></table>}
+				<tbody>{guests.map((g,i) => <tr key={g.id} className="group border-b border-border/50 hover:bg-accent/20">
+					<td className="px-2 py-1.5 text-muted-foreground">{i+1}</td>
+					{cell(g,"firstName",<>{g.firstName} {g.lastName??""}</>,"whitespace-nowrap px-2 py-1.5")}
+					{cell(g,"email",g.email??"—","max-w-[100px] truncate px-2 py-1.5")}
+					{cell(g,"phone",g.phone??"—","whitespace-nowrap px-2 py-1.5")}
+					{cell(g,"address",g.address??"—","max-w-[100px] truncate px-2 py-1.5")}
+					{cell(g,"category",g.category??"—")}
+					{cell(g,"invitedBy",g.invitedBy??"—","max-w-[80px] truncate px-2 py-1.5")}
+					{cell(g,"rsvpStatus",badge(g.rsvpStatus))}
+					<td className="px-2 py-1.5 cursor-pointer" onClick={() => patchGuest(g.id,"invited",g.invited===1?0:1)}>{g.invited===1?<Check className="size-3 text-green-600"/>:<span className="inline-block size-3 rounded-full border border-muted-foreground/40"/>}</td>
+					{cell(g,"invitationType",g.invitationType)}
+					{cell(g,"ceremonyOrReception",g.ceremonyOrReception)}
+					{cell(g,"tableNumber",g.tableNumber??"—")}
+					{cell(g,"giftDescription",g.giftDescription??"—","max-w-[80px] truncate px-2 py-1.5")}
+					<td className="px-2 py-1.5 cursor-pointer" onClick={() => patchGuest(g.id,"thankYouSent",g.thankYouSent===1?0:1)}>{g.thankYouSent===1?<Check className="size-3 text-green-600"/>:<span className="inline-block size-3 rounded-full border border-muted-foreground/40"/>}</td>
+					{cell(g,"notes",g.notes??"—","max-w-[80px] truncate px-2 py-1.5")}
+					<td className="px-2 py-1.5"><button type="button" onClick={() => deleteGuest(g.id)} className="rounded p-0.5 opacity-0 hover:text-destructive group-hover:opacity-100"><Trash2 className="size-3"/></button></td>
+				</tr>)}</tbody></table>}
 			</div>
 			{showModal && (
 				<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={() => setShowModal(false)}>
