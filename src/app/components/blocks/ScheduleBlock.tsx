@@ -526,12 +526,12 @@ function EventCard({
           onKeyDown={handleDescriptionKeyDown}
           style={{
             fontSize: "0.82rem", color: "var(--body-color)", lineHeight: 1.55,
-            outline: "none", whiteSpace: "pre-wrap",
+            outline: "none", whiteSpace: "pre-wrap", minHeight: "1.3em",
             borderBottom: editing ? "1px dashed var(--border)" : "none",
             cursor: editing ? "text" : "default",
           }}
         >
-          {event.description || (editing ? <span style={{ opacity: 0.4, fontStyle: "italic" }}>+ Description</span> : null)}
+          {event.description || (editing ? <span style={{ color: "var(--muted)", opacity: 0.5, fontStyle: "italic" }}>+ Description</span> : null)}
         </div>
       )}
 
@@ -599,6 +599,8 @@ export function ScheduleBlock({ block }: { block: Block }) {
   const fullPreview = useEditorStore((s) => s.fullPreview);
   const updateBlock = useEditorStore((s) => s.updateBlock);
   const editing = !fullPreview;
+
+  console.log("[ScheduleBlock] events data:", events.map((e) => ({ id: e.id, name: e.name, description: e.description })));
 
   const [popover, setPopover] = useState<PopoverState | null>(null);
   const [dragIndex, setDragIndex] = useState<number | null>(null);
@@ -913,7 +915,7 @@ export function ScheduleBlock({ block }: { block: Block }) {
 
                 {/* Description */}
                 {(event.description || editing) && (
-                  <p style={{ margin: "0.125rem 0 0", fontSize: "0.82rem", color: "var(--body-color)", lineHeight: 1.55 }}>
+                  <p style={{ margin: "0.125rem 0 0", fontSize: "0.82rem", color: "var(--body-color)", lineHeight: 1.55, minHeight: "1.3em" }}>
                     <span
                       contentEditable={editing}
                       suppressContentEditableWarning
@@ -925,7 +927,7 @@ export function ScheduleBlock({ block }: { block: Block }) {
                         cursor: editing ? "text" : "default",
                       }}
                     >
-                      {event.description || (editing ? <span style={{ opacity: 0.4, fontStyle: "italic" }}>+ Description</span> : null)}
+                      {event.description || (editing ? <span style={{ color: "var(--muted)", opacity: 0.5, fontStyle: "italic" }}>+ Description</span> : null)}
                     </span>
                   </p>
                 )}
