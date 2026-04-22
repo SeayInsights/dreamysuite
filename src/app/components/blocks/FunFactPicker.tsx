@@ -175,18 +175,21 @@ export function FunFactPicker({ open, onSelect, onCustom, onClose, anchorRect, d
 
   const isFaq = displayMode === "faq";
   const isTravel = displayMode === "travel";
+  const isFacts = displayMode === "facts";
 
   const subtitle = isFaq
     ? "Or write your own FAQ"
     : isTravel
       ? "Or add your own"
-      : "Or write your own fun fact";
+      : isFacts
+        ? "Or write your own fun fact"
+        : "Add a custom card";
 
   const customLabel = isFaq
     ? "Add Your Own FAQ"
     : isTravel
       ? "Add Your Own"
-      : "Write your own";
+      : "Add Your Own";
 
   return createPortal(
     <div
@@ -208,9 +211,9 @@ export function FunFactPicker({ open, onSelect, onCustom, onClose, anchorRect, d
         <FaqBody onSelect={onSelect} />
       ) : isTravel ? (
         <TravelBody onSelect={onSelect} />
-      ) : (
+      ) : isFacts ? (
         <FactsBody onSelect={onSelect} />
-      )}
+      ) : null}
       <div className="border-t border-border p-3">
         <button
           type="button"
