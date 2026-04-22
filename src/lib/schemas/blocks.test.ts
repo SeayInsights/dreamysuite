@@ -35,7 +35,7 @@ const MINIMAL: Record<BlockType, Record<string, unknown>> = {
   "story-timeline": { heading: "Our Story", events: [] },
   "guest-book": { heading: "Guest Book" },
   // New (Task 3)
-  faq: { heading: "FAQ", displayMode: "accordion", items: [] },
+  faq: { heading: "FAQ", displayMode: "faq", cardStyle: "accordion", items: [] },
   schedule: { heading: "Schedule", displayMode: "timeline", events: [] },
   "fun-facts": { heading: "Fun Facts", columns: "auto", cardStyle: "card", items: [] },
   travel: { heading: "Getting There", items: [] },

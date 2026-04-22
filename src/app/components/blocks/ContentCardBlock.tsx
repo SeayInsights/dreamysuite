@@ -419,9 +419,9 @@ export function ContentCardBlock({ block }: { block: Block }) {
   const anchorRect = addBtnRef.current?.getBoundingClientRect() ?? null;
 
   // ── Accordion / FAQ modes ────────────────────────────────────────────────
-  const isAccordionMode = displayMode === "accordion" || displayMode === "faq";
+  const isAccordionMode = cardStyle === "accordion";
   // ── List mode ───────────────────────────────────────────────────────────
-  const isListMode = displayMode === "list";
+  const isListMode = cardStyle === "list";
   // ── Travel mode ─────────────────────────────────────────────────────────
   const isTravelMode = displayMode === "travel";
 
@@ -434,6 +434,7 @@ export function ContentCardBlock({ block }: { block: Block }) {
         onCustom={handleCustom}
         onClose={() => setPickerOpen(false)}
         anchorRect={anchorRect}
+        displayMode={displayMode}
       />
     </div>
   ) : items.length === 0 ? null : null;
@@ -531,6 +532,7 @@ export function ContentCardBlock({ block }: { block: Block }) {
                 onCustom={handleCustom}
                 onClose={() => setPickerOpen(false)}
                 anchorRect={anchorRect}
+                displayMode={displayMode}
               />
             </div>
           )}
@@ -579,6 +581,7 @@ export function ContentCardBlock({ block }: { block: Block }) {
                 onCustom={handleCustom}
                 onClose={() => setPickerOpen(false)}
                 anchorRect={anchorRect}
+                displayMode={displayMode}
               />
             </div>
           )}
@@ -637,6 +640,7 @@ export function ContentCardBlock({ block }: { block: Block }) {
                 onCustom={handleCustom}
                 onClose={() => setPickerOpen(false)}
                 anchorRect={anchorRect}
+                displayMode={displayMode}
               />
             </div>
           )}
@@ -721,6 +725,7 @@ export function ContentCardBlock({ block }: { block: Block }) {
               onCustom={handleCustom}
               onClose={() => setPickerOpen(false)}
               anchorRect={anchorRect}
+              displayMode={displayMode}
             />
           )}
         </>
@@ -784,6 +789,7 @@ export function ContentCardBlock({ block }: { block: Block }) {
                 onCustom={handleCustom}
                 onClose={() => setPickerOpen(false)}
                 anchorRect={anchorRect}
+                displayMode={displayMode}
               />
             </div>
           )}
@@ -826,6 +832,7 @@ export function ContentCardBlock({ block }: { block: Block }) {
               onCustom={handleCustom}
               onClose={() => setPickerOpen(false)}
               anchorRect={anchorRect}
+              displayMode={displayMode}
             />
           )}
         </>

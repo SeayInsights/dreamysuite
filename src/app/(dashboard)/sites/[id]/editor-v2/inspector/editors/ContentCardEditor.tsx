@@ -2,8 +2,8 @@
 
 import { PanelTextInput } from "../PanelInputs";
 
-type DisplayMode = "facts" | "faq" | "travel" | "general" | "accordion" | "list";
-type CardStyle = "card" | "bordered" | "flat" | "numbered";
+type DisplayMode = "facts" | "faq" | "travel" | "general";
+type CardStyle = "card" | "bordered" | "flat" | "numbered" | "accordion" | "list";
 
 interface ContentCardItem {
   id: string;
@@ -31,8 +31,6 @@ export function normalizeContentCardConfig(cfg: Record<string, unknown>): Conten
       dm === "faq" ? "faq"
       : dm === "travel" ? "travel"
       : dm === "general" ? "general"
-      : dm === "accordion" ? "accordion"
-      : dm === "list" ? "list"
       : "facts",
     columns:
       cols === "2" ? "2"
@@ -43,6 +41,8 @@ export function normalizeContentCardConfig(cfg: Record<string, unknown>): Conten
       style === "bordered" ? "bordered"
       : style === "flat" ? "flat"
       : style === "numbered" ? "numbered"
+      : style === "accordion" ? "accordion"
+      : style === "list" ? "list"
       : "card",
     items: Array.isArray(cfg.items)
       ? (cfg.items as ContentCardItem[]).filter(
@@ -53,12 +53,19 @@ export function normalizeContentCardConfig(cfg: Record<string, unknown>): Conten
 }
 
 const DISPLAY_MODES: Array<{ value: DisplayMode; label: string }> = [
-  { value: "facts", label: "Card" },
-  { value: "general", label: "General" },
-  { value: "accordion", label: "Accordion" },
-  { value: "list", label: "List" },
+  { value: "facts", label: "Facts" },
   { value: "faq", label: "FAQ" },
   { value: "travel", label: "Travel" },
+  { value: "general", label: "General" },
+];
+
+const CARD_STYLES: Array<{ value: CardStyle; label: string }> = [
+  { value: "card", label: "Card" },
+  { value: "bordered", label: "Bordered" },
+  { value: "flat", label: "Flat" },
+  { value: "numbered", label: "Numbered" },
+  { value: "accordion", label: "Accordion" },
+  { value: "list", label: "List" },
 ];
 
 export function ContentCardEditor({
@@ -107,7 +114,7 @@ export function ContentCardEditor({
         <label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
           Display Mode
         </label>
-        <div className="grid grid-cols-3 gap-1.5">
+        <div className="grid grid-cols-2 gap-1.5">
           {DISPLAY_MODES.map(({ value, label }) => (
             <button
               key={value}
@@ -115,6 +122,29 @@ export function ContentCardEditor({
               onClick={() => updateConfig({ displayMode: value })}
               className={`rounded-md border py-1 text-xs transition-colors ${
                 card.displayMode === value
+                  ? "border-primary bg-primary text-primary-foreground"
+                  : "border-border text-muted-foreground hover:bg-accent/50"
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Card Style toggle */}
+      <div className="space-y-1">
+        <label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+          Card Style
+        </label>
+        <div className="grid grid-cols-3 gap-1.5">
+          {CARD_STYLES.map(({ value, label }) => (
+            <button
+              key={value}
+              type="button"
+              onClick={() => updateConfig({ cardStyle: value })}
+              className={`rounded-md border py-1 text-xs transition-colors ${
+                card.cardStyle === value
                   ? "border-primary bg-primary text-primary-foreground"
                   : "border-border text-muted-foreground hover:bg-accent/50"
               }`}
