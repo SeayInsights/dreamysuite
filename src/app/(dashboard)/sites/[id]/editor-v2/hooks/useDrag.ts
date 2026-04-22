@@ -39,6 +39,9 @@ interface DragSession {
 	lastConfig?: Record<string, unknown>;
 }
 
+// ─── Debug flag — flip to true to trace east-resize in console ────────────
+const DEBUG_DRAG = true;
+
 // ─── Snap helpers ─────────────────────────────────────────────────────────
 
 const COLUMNS = 12;
@@ -112,9 +115,13 @@ export function useDrag(
 	const endDrag = useCallback(() => {
 		const session = sessionRef.current;
 
-		// Commit the drag as a single undo entry. Tracking was paused at drag
-		// start; resuming re-enables it. The subsequent updateBlock call is the
-		// one tracked write — exactly one history entry for the whole drag.
+		if (DEBUG_DRAG && session) {
+			console.group(`[useDrag] endDrag handle=${session.handle} block=${session.blockId}`);
+			console.log("lastConfig:", session.lastConfig ? JSON.parse(JSON.stringify(session.lastConfig)) : "(none — no move)");
+			console.log("hadBlockHeightAtStart:", session.hadBlockHeightAtStart);
+			console.groupEnd();
+		}
+
 		if (session?.lastConfig !== undefined) {
 			temporalStore.getState().resume();
 
@@ -189,17 +196,31 @@ export function useDrag(
 				const affectsHeight = ["nw", "n", "ne", "se", "s", "sw"].includes(handle);
 				const isWest = ["nw", "sw", "w"].includes(handle);
 
+				if (DEBUG_DRAG) {
+					console.log(`[useDrag] move handle=${handle} dx=${dx} dy=${dy} affectsWidth=${affectsWidth} affectsHeight=${affectsHeight} isWest=${isWest}`);
+				}
+
 				if (affectsWidth && session.leftEdgePct !== undefined && session.rightEdgePct !== undefined) {
 					const deltaPct = (dx / session.containerWidth) * 100;
+
+					if (DEBUG_DRAG) {
+						console.log(`[useDrag]   width: deltaPct=${deltaPct.toFixed(2)} leftEdge=${session.leftEdgePct.toFixed(2)} rightEdge=${session.rightEdgePct.toFixed(2)}`);
+					}
 
 					if (isWest) {
 						const newLeftEdge = Math.max(0, Math.min(session.rightEdgePct - COL_PCT, session.leftEdgePct + deltaPct));
 						patch.blockMarginLeft = newLeftEdge;
 						patch.blockWidth = session.rightEdgePct - newLeftEdge;
 						patch.blockOffsetX = 0;
+						if (DEBUG_DRAG) {
+							console.log(`[useDrag]   west: newLeftEdge=${newLeftEdge.toFixed(2)} → marginLeft=${patch.blockMarginLeft} width=${patch.blockWidth}`);
+						}
 					} else {
 						const newRightEdge = session.rightEdgePct + deltaPct;
 						patch.blockWidth = Math.max(COL_PCT, Math.min(100 - session.leftEdgePct, newRightEdge - session.leftEdgePct));
+						if (DEBUG_DRAG) {
+							console.log(`[useDrag]   east: newRightEdge=${newRightEdge.toFixed(2)} → width=${patch.blockWidth} (min=${COL_PCT.toFixed(2)} max=${(100 - session.leftEdgePct).toFixed(2)})`);
+						}
 					}
 				}
 
@@ -220,6 +241,12 @@ export function useDrag(
 					const liveBlock = useEditorStore.getState().blocks.find((b) => b.id === session.blockId);
 					const liveConfig = parseCfg(liveBlock?.config);
 					const newConfig = { ...liveConfig, ...patch };
+
+					if (DEBUG_DRAG) {
+						console.log(`[useDrag]   patch:`, JSON.parse(JSON.stringify(patch)));
+						console.log(`[useDrag]   final config:`, JSON.parse(JSON.stringify(newConfig)));
+					}
+
 					session.lastConfig = newConfig;
 					updateBlock(session.blockId, { config: newConfig });
 				}
@@ -334,6 +361,19 @@ export function useDrag(
 			const bottomEdgePx = blockRect.bottom - containerRect.top;
 			const currentOffsetY = typeof config.blockOffsetY === "number" ? config.blockOffsetY : 0;
 			const naturalTopPx = topEdgePx - currentOffsetY;
+
+			if (DEBUG_DRAG) {
+				console.group(`[useDrag] startResize handle=${handle} block=${blockId}`);
+				console.log("block type:", block?.type);
+				console.log("current config:", JSON.parse(JSON.stringify(config)));
+				console.log("containerWidth (px):", containerWidth);
+				console.log("blockRect:", { left: blockRect.left, right: blockRect.right, width: blockRect.width, top: blockRect.top, bottom: blockRect.bottom });
+				console.log("containerRect:", { left: containerRect.left, right: containerRect.right, width: containerRect.width });
+				console.log("leftEdgePct:", leftEdgePct.toFixed(2), "rightEdgePct:", rightEdgePct.toFixed(2));
+				console.log("blockOffsetX:", config.blockOffsetX, "blockOffsetY:", config.blockOffsetY);
+				console.log("blockMarginLeft:", config.blockMarginLeft, "blockWidth:", config.blockWidth);
+				console.groupEnd();
+			}
 
 			temporalStore.getState().pause();
 
