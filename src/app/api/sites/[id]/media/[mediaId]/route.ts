@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getEnv } from "@/lib/cloudflare";
-import { createAuth, type Env } from "@/app/lib/auth.server";
+import { getSession } from "@/lib/api/get-session";
 
 export async function DELETE(
   req: NextRequest,
@@ -9,8 +9,7 @@ export async function DELETE(
   const env = await getEnv();
   const { id: siteId, mediaId } = await params;
 
-  const auth = createAuth(env);
-  const session = await auth.api.getSession({ headers: req.headers });
+  const session = await getSession(req.headers, env);
   if (!session) {
     return NextResponse.json({ error: { code: "UNAUTHORIZED", message: "Not authenticated" } }, { status: 401 });
   }
