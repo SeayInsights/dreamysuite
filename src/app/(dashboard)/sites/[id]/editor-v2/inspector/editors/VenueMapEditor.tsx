@@ -25,7 +25,7 @@ function usePlacesSearch() {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<PlaceResult[]>([]);
   const [loading, setLoading] = useState(false);
-  const timerRef = useRef<ReturnType<typeof setTimeout>>();
+  const timerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   useEffect(() => {
     if (query.length < 2) {
@@ -38,9 +38,11 @@ function usePlacesSearch() {
       try {
         const res = await fetch(`/api/places/search?q=${encodeURIComponent(query)}`);
         if (res.ok) {
-          const data = await res.json();
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const data: any = await res.json();
           setResults(
-            (data.results ?? data.predictions ?? []).map((r: Record<string, unknown>) => ({
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (data.results ?? data.predictions ?? []).map((r: any) => ({
               placeId: r.place_id ?? r.placeId ?? "",
               name: r.name ?? r.description ?? "",
               address: r.formatted_address ?? r.address ?? "",
@@ -70,7 +72,8 @@ async function fetchPlaceDetails(placeId: string): Promise<{ name: string; photo
   try {
     const res = await fetch(`/api/places/details?placeId=${encodeURIComponent(placeId)}`);
     if (!res.ok) return null;
-    const data = await res.json();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const data: any = await res.json();
     const result = data.result ?? data;
     return {
       name: result.name ?? "",
