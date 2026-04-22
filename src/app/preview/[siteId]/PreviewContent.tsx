@@ -226,6 +226,13 @@ const RESPONSIVE_CSS = `
 .ds-reflow .block iframe {
   width: 100% !important;
 }
+.ds-reflow .block-video {
+  position: relative !important;
+  overflow: hidden !important;
+  max-height: 60vh !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
 .ds-reflow [style*="grid-template-columns"] {
   grid-template-columns: 1fr !important;
 }

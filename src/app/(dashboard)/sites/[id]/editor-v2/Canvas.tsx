@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useEditorStore } from "@/app/stores/editorStore";
 import { parseCfg, resolveBreakpointConfig } from "@/lib/editableField";
-import { isDecorativeOffscreen } from "@/lib/responsiveScale";
 import type { Block } from "@/app/stores/slices/document";
 import { consolidateBlocks } from "@/lib/migrations/blockConsolidation";
 import { trackEditorError } from "@/lib/telemetry/editor";
@@ -39,19 +38,11 @@ export function Canvas({ siteId }: Props) {
 	const settingsLoaded = useEditorStore((s) => s.settingsLoaded);
 
 	const blocks = useMemo(
-		() => {
-			const isNonDesktop = breakpoint !== "desktop";
-			return rawBlocks
-				.filter((b) => {
-					if (!isNonDesktop) return true;
-					const raw = parseCfg(b.config);
-					return !isDecorativeOffscreen(raw, 1280);
-				})
-				.map((b) => ({
-					...b,
-					config: resolveBreakpointConfig(parseCfg(b.config), breakpoint),
-				}));
-		},
+		() =>
+			rawBlocks.map((b) => ({
+				...b,
+				config: resolveBreakpointConfig(parseCfg(b.config), breakpoint),
+			})),
 		[rawBlocks, breakpoint],
 	);
 
