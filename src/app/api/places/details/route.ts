@@ -38,7 +38,7 @@ export async function GET(req: NextRequest) {
         rating: r.rating,
         geometry: r.geometry ? { location: r.geometry.location } : undefined,
         photo: r.photos?.[0]?.photo_reference,
-        photoRefs: (r.photos ?? []).slice(0, 5).map((p: any) => p.photo_reference),
+        photoRefs: (r.photos ?? []).slice(0, 5).map((p: { photo_reference: string }) => p.photo_reference),
       },
     });
     console.log("[PlacesDetails] Response CORS headers:", Object.fromEntries(response.headers.entries()));
