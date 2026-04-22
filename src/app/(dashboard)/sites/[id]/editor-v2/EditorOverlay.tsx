@@ -119,6 +119,10 @@ export function EditorOverlay({ children, containerRef }: Props) {
 
 				const blockEl = (e.target as HTMLElement).closest<HTMLElement>("[data-block-id]");
 				if (!blockEl || blockEl.dataset.blockId !== state.selectedBlockId) return;
+
+				const draggableAncestor = (e.target as HTMLElement).closest<HTMLElement>("[draggable='true']");
+				if (draggableAncestor && blockEl.contains(draggableAncestor)) return;
+
 				const currentId = state.selectedBlockId;
 
 				e.preventDefault();
