@@ -4,6 +4,7 @@ import { getEnv } from "@/lib/cloudflare";
 import { createAuth } from "@/app/lib/auth.server";
 import { settingsToTheme } from "@/app/stores/slices/theme";
 import { parseCfg } from "@/lib/editableField";
+import { detectDesignedAtWidth } from "@/lib/responsiveScale";
 import { PreviewContent } from "./PreviewContent";
 
 interface RawBlock {
@@ -73,12 +74,14 @@ export default async function PreviewPage({ params }: { params: Promise<{ siteId
 
   const theme = settingsToTheme(settings ?? {});
   const blocks = rawBlocks.map((b) => ({ ...b, config: parseCfg(b.config) }));
+  const designedAtWidth = detectDesignedAtWidth(blocks);
 
   return (
     <PreviewContent
       blocks={blocks}
       settings={settings ?? {}}
       theme={theme}
+      designedAtWidth={designedAtWidth}
     />
   );
 }
