@@ -1,15 +1,8 @@
 "use client";
 
-import { useEffect, useRef } from "react";
 import { blockSectionStyle, parseCfg } from "@/lib/editableField";
 import { TextEffectWrapper } from "@/app/components/TextEffectWrapper";
 import { useEditorStore } from "@/app/stores/editorStore";
-
-interface GMaps {
-  Map: new (el: HTMLElement, opts: Record<string, unknown>) => { setCenter(c: { lat: number; lng: number }): void };
-  Marker: new (opts: Record<string, unknown>) => unknown;
-}
-interface WindowWithGoogle extends Window { google?: { maps: GMaps } }
 
 interface Block { id: string; type: string; [key: string]: unknown }
 
@@ -65,60 +58,17 @@ function StarRating({ rating }: { rating: number }) {
   );
 }
 
-function GoogleMap({ coordinates, venueName }: { coordinates: Coordinates; venueName: string }) {
-  const mapRef = useRef<HTMLDivElement>(null);
-  const mapInstanceRef = useRef<InstanceType<GMaps["Map"]> | null>(null);
-  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY ?? "";
-
-  useEffect(() => {
-    if (!apiKey || !mapRef.current) return;
-    if (mapInstanceRef.current) {
-      mapInstanceRef.current.setCenter(coordinates);
-      return;
-    }
-
-    const id = "google-maps-script";
-    let script = document.getElementById(id) as HTMLScriptElement | null;
-    if (!script) {
-      script = document.createElement("script");
-      script.id = id;
-      script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}`;
-      script.async = true;
-      document.head.appendChild(script);
-    }
-
-    function init() {
-      const w = window as WindowWithGoogle;
-      if (!mapRef.current || !w.google) return;
-      const map = new w.google.maps.Map(mapRef.current, {
-        center: coordinates,
-        zoom: 15,
-        disableDefaultUI: true,
-        zoomControl: true,
-        styles: [
-          { featureType: "poi", stylers: [{ visibility: "off" }] },
-        ],
-      });
-      new w.google.maps.Marker({ position: coordinates, map, title: venueName });
-      mapInstanceRef.current = map;
-    }
-
-    if ((window as WindowWithGoogle).google?.maps) {
-      init();
-    } else {
-      script.addEventListener("load", init);
-    }
-  }, [coordinates, venueName, apiKey]);
-
-  if (!apiKey) {
-    return (
-      <div className="flex h-full items-center justify-center rounded-lg bg-muted/30 text-xs text-muted-foreground">
-        Maps API key not configured
-      </div>
-    );
-  }
-
-  return <div ref={mapRef} className="h-full w-full rounded-lg" style={{ minHeight: 300 }} />;
+function EmbeddedMap({ placeId }: { placeId: string }) {
+  return (
+    <iframe
+      src={`/api/maps/embed?placeId=${encodeURIComponent(placeId)}`}
+      width="100%"
+      height="100%"
+      style={{ border: 0, minHeight: 300, borderRadius: "12px" }}
+      allowFullScreen
+      loading="lazy"
+    />
+  );
 }
 
 function HotelCard({ hotel, venueCoords }: { hotel: Hotel; venueCoords?: Coordinates }) {
@@ -132,7 +82,7 @@ function HotelCard({ hotel, venueCoords }: { hotel: Hotel; venueCoords?: Coordin
       {hotel.photo && (
         <div
           className="h-16 w-16 shrink-0 rounded-md bg-cover bg-center"
-          style={{ backgroundImage: `url(${hotel.photo})` }}
+          style={{ backgroundImage: `url(/api/places/photo?ref=${encodeURIComponent(hotel.photo)})` }}
         />
       )}
       <div className="min-w-0 flex-1">
@@ -159,6 +109,7 @@ export function VenueMapBlock({ block }: { block: Block }) {
   const cfg = parseCfg(block.config);
   const heading = String(cfg.heading ?? "Venue");
   const venueName = typeof cfg.venueName === "string" ? cfg.venueName : "";
+  const venuePlaceId = typeof cfg.venuePlaceId === "string" ? cfg.venuePlaceId : "";
   const coords = cfg.venueCoordinates as Coordinates | undefined;
   const dateStart = typeof cfg.dateStart === "string" ? cfg.dateStart : undefined;
   const dateEnd = typeof cfg.dateEnd === "string" ? cfg.dateEnd : undefined;
@@ -171,7 +122,7 @@ export function VenueMapBlock({ block }: { block: Block }) {
   const editing = !fullPreview;
 
   const dateRange = formatDateRange(dateStart, dateEnd);
-  const hasVenue = !!venueName && !!coords;
+  const hasVenue = !!venueName && (!!venuePlaceId || !!coords);
 
   return (
     <section
@@ -197,8 +148,12 @@ export function VenueMapBlock({ block }: { block: Block }) {
       >
         {/* Left — Map */}
         <div style={{ minHeight: 300, borderRadius: "12px", overflow: "hidden" }}>
-          {hasVenue ? (
-            <GoogleMap coordinates={coords} venueName={venueName} />
+          {hasVenue && venuePlaceId ? (
+            <EmbeddedMap placeId={venuePlaceId} />
+          ) : hasVenue ? (
+            <div className="flex h-full items-center justify-center rounded-lg bg-muted/30 text-xs text-muted-foreground" style={{ minHeight: 300 }}>
+              Map requires a place ID — re-search the venue to load it.
+            </div>
           ) : (
             <div
               className="flex h-full items-center justify-center rounded-lg border-2 border-dashed border-border"
