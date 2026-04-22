@@ -15,6 +15,7 @@ import {
 	Eye,
 	EyeOff,
 	Lock,
+	X,
 	type LucideIcon,
 } from "lucide-react";
 
@@ -439,29 +440,33 @@ function GuestsPanel({ onBack }: { onBack: () => void }) {
 		} finally { setImporting(false); }
 	}
 
+	const siteName = settings?.eventName ?? "Site";
+
 	return (
-		<div className="flex h-full flex-col">
-			<div className="flex items-center gap-2 border-b border-border px-3 py-2">
-				<button type="button" onClick={onBack} className="rounded p-0.5 hover:bg-accent/50"><ChevronLeft className="size-4 text-muted-foreground" /></button>
-				<h2 className="flex-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Guests</h2>
-				<button type="button" onClick={() => setShowCatMgr(true)} className="rounded-md border border-border px-2 py-1 text-[11px] text-muted-foreground hover:bg-accent/30">Categories</button>
-				<button type="button" onClick={exportCsv} className="rounded-md border border-border px-2 py-1 text-[11px] text-muted-foreground hover:bg-accent/30">Export</button>
-				<label className="rounded-md border border-border px-2 py-1 text-[11px] text-muted-foreground hover:bg-accent/30 cursor-pointer">Import<input type="file" accept=".csv" className="hidden" onChange={handleFileSelect} /></label>
-				<button type="button" onClick={() => setShowModal(true)} className="flex items-center gap-1 rounded-md bg-foreground px-2 py-1 text-[11px] font-medium text-background hover:opacity-90"><Plus className="size-3" /> Add</button>
+		<div className="fixed inset-0 z-[10000] flex flex-col bg-background text-foreground">
+			<div className="flex h-12 shrink-0 items-center gap-3 border-b border-border px-4">
+				<button type="button" onClick={onBack} className="rounded-md p-1.5 hover:bg-accent/50" aria-label="Back to editor">
+					<X className="size-5 text-muted-foreground" />
+				</button>
+				<h1 className="flex-1 text-sm font-semibold">{siteName} — Guest List</h1>
+				<button type="button" onClick={() => setShowCatMgr(true)} className="rounded-md border border-border px-2.5 py-1 text-xs text-muted-foreground hover:bg-accent/30">Categories</button>
+				<button type="button" onClick={exportCsv} className="rounded-md border border-border px-2.5 py-1 text-xs text-muted-foreground hover:bg-accent/30">Export</button>
+				<label className="rounded-md border border-border px-2.5 py-1 text-xs text-muted-foreground hover:bg-accent/30 cursor-pointer">Import<input type="file" accept=".csv" className="hidden" onChange={handleFileSelect} /></label>
+				<button type="button" onClick={() => setShowModal(true)} className="flex items-center gap-1.5 rounded-md bg-foreground px-3 py-1 text-xs font-medium text-background hover:opacity-90"><Plus className="size-3.5" /> Add Guest</button>
 			</div>
-			<div className="flex flex-wrap gap-x-3 border-b border-border px-3 py-1.5 text-[11px]">
+			<div className="flex items-center gap-4 border-b border-border px-4 py-2 text-xs">
 				<span>Total <b>{guests.length}</b></span>
 				<span style={{ color: "#166534" }}>Attending <b>{cnt((g) => g.rsvpStatus === "yes")}</b></span>
 				<span style={{ color: "#991b1b" }}>Declined <b>{cnt((g) => g.rsvpStatus === "no")}</b></span>
 				<span className="text-muted-foreground">Pending <b>{cnt((g) => g.rsvpStatus === "pending")}</b></span>
 				<span className="text-muted-foreground">Printed <b>{cnt((g) => g.invitationType === "printed" || g.invitationType === "both")}</b></span>
 			</div>
-			<div className="flex flex-wrap items-center gap-1 border-b border-border px-3 py-1.5">
-				<input placeholder="Search name…" value={search} onChange={(e) => setSearch(e.target.value)} className="rounded border border-border bg-background px-2 py-0.5 text-[11px] outline-none focus:border-ring min-w-[90px] flex-1" />
-				<select value={filterCat} onChange={(e) => setFilterCat(e.target.value)} className="rounded border border-border bg-background px-1.5 py-0.5 text-[11px] outline-none focus:border-ring"><option value="">All cats</option>{categories.map((c) => <option key={c} value={c}>{c}</option>)}</select>
-				<select value={filterRsvp} onChange={(e) => setFilterRsvp(e.target.value)} className="rounded border border-border bg-background px-1.5 py-0.5 text-[11px] outline-none focus:border-ring"><option value="">All RSVPs</option><option value="pending">Pending</option><option value="yes">Attending</option><option value="no">Declined</option></select>
-				<select value={filterCeremony} onChange={(e) => setFilterCeremony(e.target.value)} className="rounded border border-border bg-background px-1.5 py-0.5 text-[11px] outline-none focus:border-ring"><option value="">All events</option><option value="ceremony">Ceremony</option><option value="reception">Reception</option><option value="both">Both</option></select>
-				<select value={filterType} onChange={(e) => setFilterType(e.target.value)} className="rounded border border-border bg-background px-1.5 py-0.5 text-[11px] outline-none focus:border-ring"><option value="">All types</option><option value="digital">Digital</option><option value="printed">Printed</option><option value="both">Both</option></select>
+			<div className="flex flex-wrap items-center gap-2 border-b border-border px-4 py-2">
+				<input placeholder="Search name…" value={search} onChange={(e) => setSearch(e.target.value)} className="rounded-md border border-border bg-background px-2.5 py-1 text-xs outline-none focus:border-ring min-w-[140px] max-w-xs flex-1" />
+				<select value={filterCat} onChange={(e) => setFilterCat(e.target.value)} className="rounded-md border border-border bg-background px-2 py-1 text-xs outline-none focus:border-ring"><option value="">All categories</option>{categories.map((c) => <option key={c} value={c}>{c}</option>)}</select>
+				<select value={filterRsvp} onChange={(e) => setFilterRsvp(e.target.value)} className="rounded-md border border-border bg-background px-2 py-1 text-xs outline-none focus:border-ring"><option value="">All RSVPs</option><option value="pending">Pending</option><option value="yes">Attending</option><option value="no">Declined</option></select>
+				<select value={filterCeremony} onChange={(e) => setFilterCeremony(e.target.value)} className="rounded-md border border-border bg-background px-2 py-1 text-xs outline-none focus:border-ring"><option value="">All events</option><option value="ceremony">Ceremony</option><option value="reception">Reception</option><option value="both">Both</option></select>
+				<select value={filterType} onChange={(e) => setFilterType(e.target.value)} className="rounded-md border border-border bg-background px-2 py-1 text-xs outline-none focus:border-ring"><option value="">All types</option><option value="digital">Digital</option><option value="printed">Printed</option><option value="both">Both</option></select>
 			</div>
 			<div className="flex-1 overflow-auto">
 				{loading ? <p className="px-3 py-4 text-center text-xs text-muted-foreground">Loading...</p>
