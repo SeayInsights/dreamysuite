@@ -3802,8 +3802,9 @@ window.__dsTextDone=(async()=>{
       items.push({label:label,href:'#',pageId:pageId,icon:label.charAt(0).toUpperCase(),color:accent,isActive:a.classList.contains('active')||a.getAttribute('aria-current')==='page',onClick:function(){if(pageId)showPage(pageId)}});
     });
     if(!items.length) return;
+    var isCompact=window.innerWidth<768;
     var wrap=document.createElement('div');
-    wrap.style.cssText='width:100%';
+    wrap.style.cssText=isCompact?'width:auto;display:inline-block;padding:4px 0 0 4px;':'width:100%';
     var restoreEl=navEl||target;
     var savedHtml=restoreEl.innerHTML;
     var savedStyle=restoreEl.getAttribute('style')||'';
