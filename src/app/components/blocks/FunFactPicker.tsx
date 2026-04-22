@@ -148,6 +148,37 @@ function TravelBody({ onSelect }: { onSelect: (q: string) => void }) {
   );
 }
 
+const PANEL_WIDTH = 320;
+const GAP = 8;
+
+function computePosition(anchorRect: DOMRect | null | undefined) {
+  if (!anchorRect) return { top: "50%", left: "50%", transform: "translate(-50%, -50%)" } as React.CSSProperties;
+
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+
+  let top = anchorRect.bottom + GAP;
+  let left = anchorRect.left + anchorRect.width / 2 - PANEL_WIDTH / 2;
+  let flipAbove = false;
+
+  if (top + 300 > vh) {
+    top = anchorRect.top - GAP;
+    flipAbove = true;
+  }
+
+  if (left + PANEL_WIDTH > vw) {
+    left = anchorRect.right - PANEL_WIDTH;
+  }
+  if (left < 0) left = 0;
+
+  return {
+    position: "fixed" as const,
+    top: flipAbove ? undefined : top,
+    bottom: flipAbove ? vh - top : undefined,
+    left,
+  };
+}
+
 export function FunFactPicker({ open, onSelect, onCustom, onClose, anchorRect, displayMode }: Props) {
   const panelRef = useRef<HTMLDivElement>(null);
 
@@ -170,8 +201,9 @@ export function FunFactPicker({ open, onSelect, onCustom, onClose, anchorRect, d
 
   if (!open) return null;
 
-  const top = anchorRect ? anchorRect.bottom + 8 : "50%";
-  const left = anchorRect ? anchorRect.left + anchorRect.width / 2 : "50%";
+  console.log("[FunFactPicker] displayMode prop:", displayMode);
+
+  const pos = computePosition(anchorRect);
 
   const isFaq = displayMode === "faq";
   const isTravel = displayMode === "travel";
@@ -194,12 +226,8 @@ export function FunFactPicker({ open, onSelect, onCustom, onClose, anchorRect, d
   return createPortal(
     <div
       ref={panelRef}
-      className="fixed z-[9999] w-80 rounded-lg border border-border bg-popover shadow-lg"
-      style={{
-        top,
-        left,
-        transform: anchorRect ? "translateX(-50%)" : "translate(-50%, -50%)",
-      }}
+      className="z-[9999] w-80 rounded-lg border border-border bg-popover shadow-lg"
+      style={pos}
       onMouseDown={(e) => e.stopPropagation()}
       onClick={(e) => e.stopPropagation()}
     >
