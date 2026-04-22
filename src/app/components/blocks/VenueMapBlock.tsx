@@ -139,7 +139,7 @@ function HotelCard({ hotel, venueCoords }: { hotel: Hotel; venueCoords?: Coordin
           )}
           {hotel.stayingHere && (
             <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-medium text-emerald-600">
-              We're staying here
+              We&apos;re staying here
             </span>
           )}
         </div>

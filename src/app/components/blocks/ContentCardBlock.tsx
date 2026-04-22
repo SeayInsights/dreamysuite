@@ -6,7 +6,6 @@ import { blockSectionStyle, editableProps, parseCfg } from "@/lib/editableField"
 import { TextEffectWrapper } from "@/app/components/TextEffectWrapper";
 import { useEditorStore } from "@/app/stores/editorStore";
 import { FunFactPicker } from "./FunFactPicker";
-import { FunFactCard } from "./FunFactCard";
 
 interface LinkItem {
   label: string;
@@ -658,18 +657,14 @@ export function ContentCardBlock({ block }: { block: Block }) {
         <>
           <div style={{
             display: "grid",
-            gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))",
+            gridTemplateColumns: columnsValue(columns),
             gap: "1.25rem",
             maxWidth: "900px",
             margin: "2rem auto 0",
           }}>
             {items.map((item, i) => (
               <div key={item.id ?? i} style={{
-                background: "var(--bg, #fff)",
-                border: "1px solid var(--border)",
-                borderRadius: "10px",
-                padding: "1.5rem",
-                boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
+                ...cardBorderStyle(cardStyle),
                 display: "flex",
                 flexDirection: "column",
                 gap: "0.5rem",
