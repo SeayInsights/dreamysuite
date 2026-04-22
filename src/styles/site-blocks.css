@@ -312,3 +312,70 @@
   .timeline-item { flex-direction: column; gap: 0.25rem; }
   .timeline-time { min-width: unset; }
 }
+
+/* ── Viewport preview: tablet & mobile ── */
+[data-breakpoint="mobile"],
+[data-breakpoint="tablet"] {
+  container-type: inline-size;
+}
+
+/* Blocks stack full-width with standard padding */
+[data-breakpoint="mobile"] .block,
+[data-breakpoint="tablet"] .block {
+  width: 100% !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  transform: none !important;
+  padding-left: 1rem;
+  padding-right: 1rem;
+  box-sizing: border-box;
+}
+
+/* Images: full width, sensible aspect ratio */
+[data-breakpoint="mobile"] .block-images img,
+[data-breakpoint="tablet"] .block-images img {
+  width: 100% !important;
+  aspect-ratio: 4 / 3;
+  object-fit: cover !important;
+  height: auto !important;
+}
+[data-breakpoint="mobile"] .block-images > div,
+[data-breakpoint="tablet"] .block-images > div {
+  grid-template-columns: 1fr !important;
+}
+
+/* Photo-split: stack vertically on mobile */
+[data-breakpoint="mobile"] .block-photo-split > div {
+  flex-direction: column !important;
+}
+[data-breakpoint="mobile"] .block-photo-split img,
+[data-breakpoint="tablet"] .block-photo-split img {
+  width: 100% !important;
+  aspect-ratio: 4 / 3;
+  object-fit: cover !important;
+  height: auto !important;
+}
+
+/* Headings: scale down proportionally via container query units */
+[data-breakpoint="mobile"] .block h1,
+[data-breakpoint="mobile"] .block .hero-title,
+[data-breakpoint="tablet"] .block h1,
+[data-breakpoint="tablet"] .block .hero-title {
+  font-size: clamp(1.5rem, 8cqi, 3.5rem) !important;
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+[data-breakpoint="mobile"] .block h2,
+[data-breakpoint="mobile"] .block .section-heading,
+[data-breakpoint="tablet"] .block h2,
+[data-breakpoint="tablet"] .block .section-heading {
+  font-size: clamp(1.2rem, 6cqi, 2.5rem) !important;
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+[data-breakpoint="mobile"] .block h3,
+[data-breakpoint="tablet"] .block h3 {
+  font-size: clamp(1rem, 5cqi, 1.75rem) !important;
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
