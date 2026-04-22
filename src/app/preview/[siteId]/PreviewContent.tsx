@@ -5,6 +5,7 @@ import type { CSSProperties } from "react";
 import { useEffect, useRef, useState, useCallback } from "react";
 import { BLOCK_COMPONENTS } from "@/app/components/blocks";
 import { parseCfg } from "@/lib/editableField";
+import { isDecorativeOffscreen } from "@/lib/responsiveScale";
 import type { ThemeTokens } from "@/app/stores/slices/theme";
 
 interface Block {
@@ -61,18 +62,6 @@ function useResponsiveScale(designedAtWidth: number) {
   }, [update]);
 
   return { mode, scale };
-}
-
-function isDecorativeOffscreen(cfg: Record<string, unknown>, dw: number): boolean {
-  const bw = typeof cfg.blockWidth === "number" ? cfg.blockWidth : 100;
-  const ml = typeof cfg.blockMarginLeft === "number" ? cfg.blockMarginLeft : 0;
-  const ox = typeof cfg.blockOffsetX === "number" ? cfg.blockOffsetX : 0;
-  const widthPx = (bw / 100) * dw;
-  if (widthPx <= 0) return false;
-  const leftPx = (ml / 100) * dw + ox;
-  const visLeft = Math.max(0, leftPx);
-  const visRight = Math.min(dw, leftPx + widthPx);
-  return Math.max(0, visRight - visLeft) / widthPx < 0.2;
 }
 
 export function PreviewContent({ blocks, settings, theme, designedAtWidth = 1440 }: Props) {
