@@ -306,6 +306,9 @@ function GuestsPanel({ onBack }: { onBack: () => void }) {
 	const [filterRsvp, setFilterRsvp] = useState("");
 	const [filterCeremony, setFilterCeremony] = useState("");
 	const [filterType, setFilterType] = useState("");
+	const [importModal, setImportModal] = useState<{ headers: string[]; rows: Record<string, string>[]; mapping: Record<string, string> } | null>(null);
+	const [importResult, setImportResult] = useState<{ imported: number; skipped: number } | null>(null);
+	const [importing, setImporting] = useState(false);
 	const DEFAULT_CATS = ["Family","Friends","Coworkers","Wedding Party"];
 	const categories: string[] = (() => { try { const p = JSON.parse(settings?.guestCategories ?? ""); return Array.isArray(p) && p.length ? p : DEFAULT_CATS; } catch { return DEFAULT_CATS; } })();
 	function saveCats(cats: string[]) { updateSettings({ guestCategories: JSON.stringify(cats) }); }
@@ -389,12 +392,61 @@ function GuestsPanel({ onBack }: { onBack: () => void }) {
 
 	function toggleSort(col: string) { if (col === "#") return; setSortCol((p) => { if (p === col) { setSortDir((d) => d === "asc" ? "desc" : "asc"); return col; } setSortDir("asc"); return col; }); }
 
+	const EXPORT_FIELDS = ["firstName","lastName","email","phone","address","category","invitedBy","rsvpStatus","invitationType","ceremonyOrReception","tableNumber","giftDescription","notes"] as const;
+	const GUEST_FIELDS = ["firstName","lastName","email","phone","address","category","invitedBy","ceremonyOrReception","invitationType","tableNumber","notes","giftDescription"];
+
+	function parseCsv(text: string) {
+		const lines = text.split(/\r?\n/).filter((l) => l.trim());
+		const headers = lines[0].split(",").map((h) => h.trim().replace(/^"|"$/g, ""));
+		const rows = lines.slice(1).map((line) => { const vals = line.split(",").map((v) => v.trim().replace(/^"|"$/g, "")); const row: Record<string, string> = {}; headers.forEach((h, i) => { row[h] = vals[i] ?? ""; }); return row; });
+		return { headers, rows };
+	}
+
+	function exportCsv() {
+		const header = EXPORT_FIELDS.join(",");
+		const csvRows = guests.map((g) => EXPORT_FIELDS.map((f) => { const v = String((g as unknown as Record<string, unknown>)[f] ?? ""); return v.includes(",") ? `"${v}"` : v; }).join(","));
+		const blob = new Blob([[header, ...csvRows].join("\n")], { type: "text/csv" });
+		const url = URL.createObjectURL(blob);
+		const a = document.createElement("a"); a.href = url; a.download = "guests.csv"; a.click();
+		URL.revokeObjectURL(url);
+	}
+
+	function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
+		const file = e.target.files?.[0]; if (!file) return;
+		e.target.value = "";
+		const reader = new FileReader();
+		reader.onload = (ev) => {
+			const text = ev.target?.result as string;
+			const { headers, rows } = parseCsv(text);
+			const mapping: Record<string, string> = {};
+			headers.forEach((h) => { const match = GUEST_FIELDS.find((f) => f.toLowerCase() === h.toLowerCase()); mapping[h] = match ?? ""; });
+			setImportModal({ headers, rows, mapping });
+		};
+		reader.readAsText(file);
+	}
+
+	async function submitImport() {
+		if (!importModal || !siteId) return;
+		setImporting(true);
+		try {
+			const res = await fetch(`/api/sites/${siteId}/guests/import`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ rows: importModal.rows, mapping: importModal.mapping }) });
+			if (!res.ok) return;
+			const data = (await res.json()) as { imported: number; skipped: number };
+			setImportResult(data);
+			const r = await fetch(`/api/sites/${siteId}/guests`);
+			if (r.ok) { const d = (await r.json()) as { guests: Guest[] }; setGuests(d.guests); }
+			setTimeout(() => { setImportModal(null); setImportResult(null); }, 2500);
+		} finally { setImporting(false); }
+	}
+
 	return (
 		<div className="flex h-full flex-col">
 			<div className="flex items-center gap-2 border-b border-border px-3 py-2">
 				<button type="button" onClick={onBack} className="rounded p-0.5 hover:bg-accent/50"><ChevronLeft className="size-4 text-muted-foreground" /></button>
 				<h2 className="flex-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Guests</h2>
 				<button type="button" onClick={() => setShowCatMgr(true)} className="rounded-md border border-border px-2 py-1 text-[11px] text-muted-foreground hover:bg-accent/30">Categories</button>
+				<button type="button" onClick={exportCsv} className="rounded-md border border-border px-2 py-1 text-[11px] text-muted-foreground hover:bg-accent/30">Export</button>
+				<label className="rounded-md border border-border px-2 py-1 text-[11px] text-muted-foreground hover:bg-accent/30 cursor-pointer">Import<input type="file" accept=".csv" className="hidden" onChange={handleFileSelect} /></label>
 				<button type="button" onClick={() => setShowModal(true)} className="flex items-center gap-1 rounded-md bg-foreground px-2 py-1 text-[11px] font-medium text-background hover:opacity-90"><Plus className="size-3" /> Add</button>
 			</div>
 			<div className="flex flex-wrap gap-x-3 border-b border-border px-3 py-1.5 text-[11px]">
@@ -471,6 +523,40 @@ function GuestsPanel({ onBack }: { onBack: () => void }) {
 							<button type="button" onClick={addCat} disabled={!newCat.trim()} className="flex items-center gap-1 rounded-md bg-foreground px-2 py-1.5 text-xs font-medium text-background hover:opacity-90 disabled:opacity-50"><Plus className="size-3" /></button>
 						</div>
 						<div className="flex justify-end"><button type="button" onClick={() => setShowCatMgr(false)} className="rounded-md border border-border px-3 py-1.5 text-xs hover:bg-accent/30">Done</button></div>
+					</div>
+				</div>
+			)}
+			{importModal && (
+				<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={() => setImportModal(null)}>
+					<div onClick={(e) => e.stopPropagation()} className="flex w-[480px] max-w-[96vw] flex-col gap-3 rounded-lg border border-border bg-background p-4 shadow-xl max-h-[90vh] overflow-y-auto">
+						<h3 className="text-sm font-semibold">Import Guests</h3>
+						{importResult ? (
+							<p className="rounded-md bg-emerald-50 px-3 py-2 text-sm text-emerald-700">Imported {importResult.imported}, skipped {importResult.skipped}</p>
+						) : (<>
+							<div className="flex flex-col gap-1">
+								<p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Preview (first 5 rows)</p>
+								<div className="overflow-x-auto rounded-md border border-border">
+									<table className="w-full border-collapse text-xs"><thead><tr className="bg-muted/30">{importModal.headers.map((h) => <th key={h} className="whitespace-nowrap px-2 py-1 text-left font-medium">{h}</th>)}</tr></thead>
+									<tbody>{importModal.rows.slice(0,5).map((row,i) => <tr key={i} className="border-t border-border/50">{importModal.headers.map((h) => <td key={h} className="max-w-[80px] truncate px-2 py-1">{row[h]}</td>)}</tr>)}</tbody></table>
+								</div>
+							</div>
+							<div className="flex flex-col gap-1">
+								<p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Column mapping</p>
+								<div className="flex flex-col gap-1">{importModal.headers.map((h) => (
+									<div key={h} className="flex items-center gap-2">
+										<span className="w-28 shrink-0 truncate text-xs text-muted-foreground">{h}</span>
+										<span className="text-xs text-muted-foreground">→</span>
+										<select value={importModal.mapping[h] ?? ""} onChange={(e) => setImportModal((p) => p ? { ...p, mapping: { ...p.mapping, [h]: e.target.value } } : p)} className="flex-1 rounded border border-border bg-background px-1.5 py-0.5 text-xs outline-none focus:border-ring">
+											<option value="">(skip)</option>{GUEST_FIELDS.map((f) => <option key={f} value={f}>{f}</option>)}
+										</select>
+									</div>
+								))}</div>
+							</div>
+							<div className="flex justify-end gap-2">
+								<button type="button" onClick={() => setImportModal(null)} className="rounded-md border border-border px-3 py-1.5 text-xs hover:bg-accent/30">Cancel</button>
+								<button type="button" onClick={submitImport} disabled={importing} className="rounded-md bg-foreground px-3 py-1.5 text-xs font-medium text-background hover:opacity-90 disabled:opacity-50">{importing ? "Importing…" : `Import ${importModal.rows.length} rows`}</button>
+							</div>
+						</>)}
 					</div>
 				</div>
 			)}
