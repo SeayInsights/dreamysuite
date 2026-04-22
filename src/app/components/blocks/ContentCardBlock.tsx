@@ -319,7 +319,7 @@ export function ContentCardBlock({ block }: { block: Block }) {
   const heading = String(cfg.heading ?? "Fun Facts About Us");
   const columns = String(cfg.columns ?? "auto");
   const cardStyle = String(cfg.cardStyle ?? "card");
-  const displayMode = String(cfg.displayMode ?? "facts");
+  const displayMode = String(cfg.displayMode ?? "general");
   const items: ContentCardItem[] = Array.isArray(cfg.items)
     ? (cfg.items as ContentCardItem[]).filter((i) => i && typeof i === "object" && typeof i.id === "string")
     : [];
