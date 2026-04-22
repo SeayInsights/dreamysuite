@@ -137,10 +137,17 @@ export function BreakpointFrame({ children, nav }: Props) {
 
 	const isDesktop = breakpoint === "desktop";
 
-	const mT = Number(settings.marginTop ?? 0) || 0;
-	const mR = Number(settings.marginRight ?? 0) || 0;
-	const mB = Number(settings.marginBottom ?? 0) || 0;
-	const mL = Number(settings.marginLeft ?? 0) || 0;
+	const rawMT = Number(settings.marginTop ?? 0) || 0;
+	const rawMR = Number(settings.marginRight ?? 0) || 0;
+	const rawMB = Number(settings.marginBottom ?? 0) || 0;
+	const rawML = Number(settings.marginLeft ?? 0) || 0;
+
+	const scale = WIDTHS[breakpoint] / WIDTHS.desktop;
+	const hCap = breakpoint === "mobile" ? 10 : breakpoint === "tablet" ? 40 : Infinity;
+	const mT = Math.round(rawMT * scale);
+	const mR = Math.min(Math.round(rawMR * scale), hCap);
+	const mB = Math.round(rawMB * scale);
+	const mL = Math.min(Math.round(rawML * scale), hCap);
 	const hasMargins = mT > 0 || mR > 0 || mB > 0 || mL > 0;
 	const curtainBg = settings.bgColor ?? themeTokens.colors.background;
 	const bgImage = settings.bgImage as string | null;
@@ -156,7 +163,7 @@ export function BreakpointFrame({ children, nav }: Props) {
 			<div
 				ref={ref}
 				data-breakpoint={breakpoint}
-				className={`relative max-w-full overflow-hidden ${isDesktop ? "h-full w-full" : "h-full rounded-lg border border-border shadow-sm"}`}
+				className={`relative max-w-full ${isDesktop ? "h-full w-full overflow-hidden" : "h-full overflow-x-hidden overflow-y-hidden rounded-lg border border-border shadow-sm"}`}
 				style={{
 					...(isDesktop ? {} : { width: WIDTHS[breakpoint] }),
 					...themeVars(themeTokens.colors, themeTokens.typography),
