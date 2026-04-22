@@ -96,6 +96,8 @@ const VenueMapConfig = z.object({
     placeId: z.string(),
     name: z.string(),
     photo: z.string().optional(),
+    photoRefs: z.array(z.string()).optional(),
+    photoIndex: z.number().optional(),
     rating: z.number().optional(),
     featured: z.boolean().optional(),
     stayingHere: z.boolean().optional(),

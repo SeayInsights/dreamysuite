@@ -3,6 +3,7 @@
 import { parseCfg } from "@/lib/editableField";
 import { type Block } from "@/app/stores/editorStore";
 import { ContentCardEditor } from "./editors/ContentCardEditor";
+import { CountdownEditor } from "./editors/CountdownEditor";
 import { ScheduleEditor } from "./editors/ScheduleEditor";
 import { VideoEditor } from "./editors/VideoEditor";
 import { GalleryEditor } from "./editors/GalleryEditor";
@@ -39,6 +40,8 @@ export function BlockContentPanel({ block, updateBlock }: Props) {
     case "gallery":
     case "images":
       return <GalleryEditor cfg={cfg} updateConfig={updateConfig} />;
+    case "countdown":
+      return <CountdownEditor cfg={cfg} updateConfig={updateConfig} />;
     case "venue-map":
       return <VenueMapEditor cfg={cfg} updateConfig={updateConfig} />;
     default:
