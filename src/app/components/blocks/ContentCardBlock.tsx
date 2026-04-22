@@ -174,13 +174,14 @@ interface CardWithLinksProps {
   index: number;
   cardStyle: React.CSSProperties;
   editing: boolean;
+  displayMode: string;
   onDelete: (id: string) => void;
   onAddLink: (itemId: string, link: LinkItem) => void;
   onEditLink: (itemId: string, linkIndex: number, link: LinkItem) => void;
   onDeleteLink: (itemId: string, linkIndex: number) => void;
 }
 
-function CardWithLinks({ item, index, cardStyle, editing, onDelete, onAddLink, onEditLink, onDeleteLink }: CardWithLinksProps) {
+function CardWithLinks({ item, index, cardStyle, editing, displayMode, onDelete, onAddLink, onEditLink, onDeleteLink }: CardWithLinksProps) {
   const [linkPopover, setLinkPopover] = useState<{ rect: DOMRect; linkIndex?: number } | null>(null);
   const addBtnRef = useRef<HTMLButtonElement>(null);
 
@@ -241,6 +242,7 @@ function CardWithLinks({ item, index, cardStyle, editing, onDelete, onAddLink, o
             lineHeight: 1.55,
             opacity: item.body ? 1 : 0.4,
             fontStyle: item.body ? "normal" : "italic",
+            whiteSpace: "pre-wrap",
           }}
           data-editable-item-index={index}
           data-editable-item-field="body"
@@ -273,8 +275,8 @@ function CardWithLinks({ item, index, cardStyle, editing, onDelete, onAddLink, o
         </div>
       )}
 
-      {/* Add Button trigger (edit mode only) */}
-      {editing && (
+      {/* Add Button trigger — only travel/general modes */}
+      {editing && (displayMode === "travel" || displayMode === "general") && (
         <button
           ref={addBtnRef}
           type="button"
@@ -515,7 +517,7 @@ export function ContentCardBlock({ block }: { block: Block }) {
                 </button>
                 {isOpen && (
                   <div
-                    style={{ paddingBottom: "1rem", color: "var(--body-color)", lineHeight: 1.6, fontSize: "0.9rem" }}
+                    style={{ paddingBottom: "1rem", color: "var(--body-color)", lineHeight: 1.6, fontSize: "0.9rem", whiteSpace: "pre-wrap" }}
                     data-editable-item-index={i}
                     data-editable-item-field="body"
                     data-editable-array-key="items"
@@ -566,7 +568,7 @@ export function ContentCardBlock({ block }: { block: Block }) {
                 {item.question || <span style={{ color: "var(--muted)", fontStyle: "italic" }}>Question</span>}
               </dt>
               <dd
-                style={{ margin: 0, color: "var(--body-color)", lineHeight: 1.6 }}
+                style={{ margin: 0, color: "var(--body-color)", lineHeight: 1.6, whiteSpace: "pre-wrap" }}
                 data-editable-item-index={i}
                 data-editable-item-field="body"
                 data-editable-array-key="items"
@@ -626,7 +628,7 @@ export function ContentCardBlock({ block }: { block: Block }) {
                   </p>
                 )}
                 {(item.body || editing) && (
-                  <p style={{ margin: 0, fontSize: "0.82rem", color: "var(--body-color)", lineHeight: 1.5 }}
+                  <p style={{ margin: 0, fontSize: "0.82rem", color: "var(--body-color)", lineHeight: 1.5, whiteSpace: "pre-wrap" }}
                      data-editable-item-index={i} data-editable-item-field="body" data-editable-array-key="items">
                     {item.body || <span style={{ color: "var(--muted)", fontStyle: "italic" }}>Details</span>}
                   </p>
@@ -702,7 +704,7 @@ export function ContentCardBlock({ block }: { block: Block }) {
                 )}
                 {(item.body || editing) && (
                   <p
-                    style={{ margin: 0, fontSize: "0.85rem", color: "var(--body-color)", lineHeight: 1.55 }}
+                    style={{ margin: 0, fontSize: "0.85rem", color: "var(--body-color)", lineHeight: 1.55, whiteSpace: "pre-wrap" }}
                     data-editable-item-index={i}
                     data-editable-item-field="body"
                     data-editable-array-key="items"
@@ -775,6 +777,7 @@ export function ContentCardBlock({ block }: { block: Block }) {
                       margin: 0, fontSize: "0.85rem", color: "var(--body-color)", lineHeight: 1.55,
                       opacity: item.body ? 1 : 0.4,
                       fontStyle: item.body ? "normal" : "italic",
+                      whiteSpace: "pre-wrap",
                     }}
                      data-editable-item-index={i} data-editable-item-field="body" data-editable-array-key="items">
                     {item.body || "Double-click to add answer"}
@@ -817,6 +820,7 @@ export function ContentCardBlock({ block }: { block: Block }) {
                 index={i}
                 cardStyle={cardBorderStyle(cardStyle)}
                 editing={editing}
+                displayMode={displayMode}
                 onDelete={deleteItem}
                 onAddLink={addLink}
                 onEditLink={editLink}
