@@ -593,67 +593,8 @@ export function ContentCardBlock({ block }: { block: Block }) {
         </dl>
       )}
 
-      {/* ── Travel mode ── */}
-      {isTravelMode && cardStyle === "list" && (
-        <div style={{ maxWidth: "680px", margin: "2rem auto 0" }}>
-          {items.map((item, i) => (
-            <div key={item.id ?? i} style={{
-              display: "flex", gap: "1rem", alignItems: "flex-start",
-              padding: "0.875rem 0", borderBottom: "1px solid var(--border)",
-              position: "relative",
-            }} className="group/fact">
-              {editing && item.id && (
-                <button
-                  type="button"
-                  onClick={() => deleteItem(item.id!)}
-                  className="absolute -right-2 -top-1 hidden h-5 w-5 items-center justify-center rounded-full border border-border bg-popover text-[10px] text-muted-foreground shadow-sm transition-colors hover:bg-destructive/10 hover:text-destructive group-hover/fact:flex"
-                >
-                  ✕
-                </button>
-              )}
-              <div style={{ flex: 1, minWidth: 0 }}>
-                {item.icon && (
-                  <p style={{
-                    margin: "0 0 0.2rem", fontSize: "0.72rem", fontWeight: 700,
-                    color: "var(--accent, #B8921A)", textTransform: "uppercase", letterSpacing: "0.06em",
-                  }}>
-                    {item.icon}
-                  </p>
-                )}
-                {(item.question || editing) && (
-                  <p style={{ margin: "0 0 0.2rem", fontWeight: 600, fontSize: "0.9rem" }}
-                     data-editable-item-index={i} data-editable-item-field="question" data-editable-array-key="items">
-                    {item.question || <span style={{ color: "var(--muted)", fontStyle: "italic" }}>Heading</span>}
-                  </p>
-                )}
-                {(item.body || editing) && (
-                  <p style={{ margin: 0, fontSize: "0.82rem", color: "var(--body-color)", lineHeight: 1.5, whiteSpace: "pre-wrap" }}
-                     data-editable-item-index={i} data-editable-item-field="body" data-editable-array-key="items">
-                    {item.body || <span style={{ color: "var(--muted)", fontStyle: "italic" }}>Details</span>}
-                  </p>
-                )}
-                {(item.links ?? []).length > 0 && <LinkButtons links={item.links!} />}
-              </div>
-            </div>
-          ))}
-          {editing && (
-            <div ref={addBtnRef} style={{ marginTop: "1rem" }}>
-              <AddButton onClick={openPicker} />
-              <FunFactPicker
-                open={pickerOpen}
-                onSelect={handleSelect}
-                onCustom={handleCustom}
-                onClose={() => setPickerOpen(false)}
-                anchorRect={anchorRect}
-                displayMode={displayMode}
-              />
-            </div>
-          )}
-        </div>
-      )}
-
       {/* ── Travel card grid ── */}
-      {isTravelMode && cardStyle !== "list" && (
+      {isTravelMode && !isAccordionMode && !isListMode && cardStyle !== "numbered" && (
         <>
           <div style={{
             display: "grid",
@@ -732,8 +673,8 @@ export function ContentCardBlock({ block }: { block: Block }) {
         </>
       )}
 
-      {/* ── Numbered mode (facts/general) ── */}
-      {!isAccordionMode && !isListMode && !isTravelMode && cardStyle === "numbered" && (
+      {/* ── Numbered mode (facts/general/travel) ── */}
+      {!isAccordionMode && !isListMode && cardStyle === "numbered" && (
         <div style={{ maxWidth: "680px", margin: "2rem auto 0" }}>
           {items.map((item, i) => (
             <div key={item.id ?? i} style={{ display: "flex", gap: "1.5rem", alignItems: "flex-start", marginBottom: "1.75rem", position: "relative" }} className="group/fact">
