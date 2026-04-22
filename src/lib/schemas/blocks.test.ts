@@ -40,6 +40,7 @@ const MINIMAL: Record<BlockType, Record<string, unknown>> = {
   "fun-facts": { heading: "Fun Facts", columns: "auto", cardStyle: "card", items: [] },
   travel: { heading: "Getting There", items: [] },
   "content-card": { heading: "Content", displayMode: "general", columns: "auto", cardStyle: "card", items: [] },
+  registry: { heading: "Registry", displayMode: "grid", items: [] },
 };
 
 /**
@@ -75,6 +76,7 @@ const INVALID: Record<BlockType, Record<string, unknown>> = {
   "fun-facts": { cardStyle: "fancy" },
   travel: { heading: 123 },
   "content-card": { displayMode: "unknown-mode" },
+  registry: { displayMode: "mosaic" },
 };
 
 describe("parseBlockConfig — per-type coverage", () => {

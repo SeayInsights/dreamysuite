@@ -218,6 +218,19 @@ export const BLOCK_REGISTRY: Record<string, BlockRegistryEntry> = {
     defaultData: { heading: "Content", displayMode: "general", columns: "auto", cardStyle: "card", items: [] },
     visible: true,
   },
+  "registry": {
+    component: BLOCK_COMPONENTS["registry"],
+    displayName: "Registry",
+    icon: "Gift",
+    category: "Simple",
+    defaultData: {
+      heading: "Registry",
+      subheading: "Your presence is the greatest gift. But if you'd like to give something, we're registered at the following places.",
+      displayMode: "grid",
+      items: [],
+    },
+    visible: true,
+  },
 };
 
 // Compile-time check: every BlockType must have a registry entry.
