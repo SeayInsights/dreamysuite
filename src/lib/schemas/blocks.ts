@@ -81,10 +81,25 @@ const HotelCardConfig = z.object({
 }).catchall(passthrough);
 
 const VenueMapConfig = z.object({
-  name: z.string().optional(),
+  heading: z.string().optional(),
   venueName: z.string().optional(),
-  embedUrl: z.string().optional(),
-  mapUrl: z.string().optional(),
+  venuePlaceId: z.string().optional(),
+  venueCoordinates: z.object({
+    lat: z.number(),
+    lng: z.number(),
+  }).optional(),
+  dateStart: z.string().optional(),
+  dateEnd: z.string().optional(),
+  noteToGuests: z.string().optional(),
+  hotels: z.array(z.object({
+    id: z.string(),
+    placeId: z.string(),
+    name: z.string(),
+    photo: z.string().optional(),
+    rating: z.number().optional(),
+    featured: z.boolean().optional(),
+    stayingHere: z.boolean().optional(),
+  })).optional(),
 }).catchall(passthrough);
 
 const PhotoSplitConfig = z.object({

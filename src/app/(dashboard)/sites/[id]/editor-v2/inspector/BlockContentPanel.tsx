@@ -6,6 +6,7 @@ import { ContentCardEditor } from "./editors/ContentCardEditor";
 import { ScheduleEditor } from "./editors/ScheduleEditor";
 import { VideoEditor } from "./editors/VideoEditor";
 import { GalleryEditor } from "./editors/GalleryEditor";
+import { VenueMapEditor } from "./editors/VenueMapEditor";
 
 // ---------------------------------------------------------------------------
 // BlockContentPanel — public export, switch-dispatches to per-type editors
@@ -38,6 +39,8 @@ export function BlockContentPanel({ block, updateBlock }: Props) {
     case "gallery":
     case "images":
       return <GalleryEditor cfg={cfg} updateConfig={updateConfig} />;
+    case "venue-map":
+      return <VenueMapEditor cfg={cfg} updateConfig={updateConfig} />;
     default:
       return (
         <p className="p-4 text-xs text-muted-foreground italic">
