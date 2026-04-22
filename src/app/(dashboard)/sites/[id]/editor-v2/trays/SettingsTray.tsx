@@ -5,6 +5,7 @@ import {
 	Globe,
 	Users,
 	Shield,
+	UsersRound,
 	ChevronLeft,
 	ChevronRight,
 	Copy,
@@ -19,12 +20,13 @@ import {
 
 import { useEditorStore } from "@/app/stores/editorStore";
 
-type PanelId = "domain" | "collaborators" | "privacy";
+type PanelId = "domain" | "collaborators" | "privacy" | "guests";
 
 const SETTINGS: { id: PanelId; label: string; hint: string; Icon: LucideIcon }[] = [
 	{ id: "domain", label: "Domain", hint: "Custom URL + subdomain", Icon: Globe },
 	{ id: "collaborators", label: "Collaborators", hint: "Invite editors", Icon: Users },
 	{ id: "privacy", label: "Privacy", hint: "Visibility + password", Icon: Shield },
+	{ id: "guests", label: "Guests", hint: "RSVP & guest list", Icon: UsersRound },
 ];
 
 export function SettingsTray() {
@@ -33,6 +35,7 @@ export function SettingsTray() {
 	if (panel === "domain") return <DomainPanel onBack={() => setPanel(null)} />;
 	if (panel === "collaborators") return <CollaboratorsPanel onBack={() => setPanel(null)} />;
 	if (panel === "privacy") return <PrivacyPanel onBack={() => setPanel(null)} />;
+	if (panel === "guests") return <GuestsPanel onBack={() => setPanel(null)} />;
 
 	return (
 		<div className="flex h-full flex-col">
@@ -265,6 +268,64 @@ function CollaboratorsPanel({ onBack }: { onBack: () => void }) {
 							</ul>
 						)}
 					</div>
+				</div>
+			</div>
+		</div>
+	);
+}
+
+// ── Guests Panel ───────────────────────────────────────────────────────────
+
+function GuestsPanel({ onBack }: { onBack: () => void }) {
+	const siteId = useEditorStore((s) => s.siteId);
+	const [guests, setGuests] = useState<Record<string, unknown>[]>([]);
+	const [loading, setLoading] = useState(true);
+
+	useEffect(() => {
+		if (!siteId) return;
+		fetch(`/api/sites/${siteId}/guests`)
+			.then((r) => (r.ok ? r.json() : Promise.reject()))
+			.then((d) => setGuests((d as { guests: Record<string, unknown>[] }).guests))
+			.catch(() => {})
+			.finally(() => setLoading(false));
+	}, [siteId]);
+
+	return (
+		<div className="flex h-full flex-col">
+			<PanelHeader label="Guests" onBack={onBack} />
+			<div className="flex-1 overflow-y-auto px-3 py-1">
+				<div className="flex flex-col gap-3">
+					<div className="flex items-center justify-between">
+						<label className="text-[11px] font-medium uppercase leading-none tracking-wider text-muted-foreground">
+							{loading ? "Loading..." : `${guests.length} guest${guests.length === 1 ? "" : "s"}`}
+						</label>
+					</div>
+					{guests.length === 0 && !loading ? (
+						<p className="rounded-md border border-dashed border-border px-3 py-2 text-center text-xs text-muted-foreground">
+							No guests yet. Full guest management coming soon.
+						</p>
+					) : (
+						<ul className="flex flex-col gap-1">
+							{guests.map((g) => (
+								<li
+									key={String(g.id)}
+									className="flex items-center gap-2 rounded-md border border-border px-3 py-2"
+								>
+									<span className="flex-1 truncate text-sm">
+										{String(g.firstName ?? "")} {String(g.lastName ?? "")}
+									</span>
+									<span className="shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium"
+										style={{
+											background: g.rsvpStatus === "yes" ? "#dcfce7" : g.rsvpStatus === "no" ? "#fef2f2" : "#f5f5f4",
+											color: g.rsvpStatus === "yes" ? "#166534" : g.rsvpStatus === "no" ? "#991b1b" : "#78716c",
+										}}
+									>
+										{g.rsvpStatus === "yes" ? "Attending" : g.rsvpStatus === "no" ? "Declined" : "Pending"}
+									</span>
+								</li>
+							))}
+						</ul>
+					)}
 				</div>
 			</div>
 		</div>
