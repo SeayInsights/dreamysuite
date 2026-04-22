@@ -211,44 +211,75 @@ function CardWithLinks({ item, index, cardStyle, editing, displayMode, onDelete,
       )}
 
       {item.icon && (
-        <div style={{ fontSize: "1.75rem", marginBottom: "0.5rem" }}>{item.icon}</div>
+        displayMode === "travel" ? (
+          <p style={{
+            margin: 0, fontSize: "0.72rem", fontWeight: 700,
+            color: "var(--accent, #B8921A)", textTransform: "uppercase", letterSpacing: "0.06em",
+          }}>
+            {item.icon}
+          </p>
+        ) : (
+          <div style={{ fontSize: "1.75rem", marginBottom: "0.5rem" }}>{item.icon}</div>
+        )
       )}
 
       {(item.question || editing) && (
-        <p
-          style={{
-            margin: "0 0 0.5rem",
-            fontSize: "0.8rem",
-            fontWeight: 500,
-            color: "var(--accent, var(--muted))",
-            fontStyle: item.question ? "normal" : "italic",
-            opacity: item.question ? 1 : 0.4,
-          }}
-          data-editable-item-index={index}
-          data-editable-item-field="question"
-          data-editable-array-key="items"
-        >
-          {item.question || "Double-click to add question"}
-        </p>
+        displayMode === "travel" ? (
+          <h4
+            style={{ margin: 0, fontSize: "0.95rem", fontWeight: 600 }}
+            data-editable-item-index={index}
+            data-editable-item-field="question"
+            data-editable-array-key="items"
+          >
+            {item.question || <span style={{ color: "var(--muted)", fontStyle: "italic" }}>Heading</span>}
+          </h4>
+        ) : (
+          <p
+            style={{
+              margin: "0 0 0.5rem",
+              fontSize: "0.8rem",
+              fontWeight: 500,
+              color: "var(--accent, var(--muted))",
+              fontStyle: item.question ? "normal" : "italic",
+              opacity: item.question ? 1 : 0.4,
+            }}
+            data-editable-item-index={index}
+            data-editable-item-field="question"
+            data-editable-array-key="items"
+          >
+            {item.question || "Double-click to add question"}
+          </p>
+        )
       )}
 
       {(item.body || editing) && (
-        <p
-          style={{
-            margin: 0,
-            fontSize: "0.85rem",
-            color: "var(--body-color)",
-            lineHeight: 1.55,
-            opacity: item.body ? 1 : 0.4,
-            fontStyle: item.body ? "normal" : "italic",
-            whiteSpace: "pre-wrap",
-          }}
-          data-editable-item-index={index}
-          data-editable-item-field="body"
-          data-editable-array-key="items"
-        >
-          {item.body || "Double-click to add answer"}
-        </p>
+        displayMode === "travel" ? (
+          <p
+            style={{ margin: 0, fontSize: "0.85rem", color: "var(--body-color)", lineHeight: 1.55, whiteSpace: "pre-wrap" }}
+            data-editable-item-index={index}
+            data-editable-item-field="body"
+            data-editable-array-key="items"
+          >
+            {item.body || <span style={{ color: "var(--muted)", fontStyle: "italic" }}>Details</span>}
+          </p>
+        ) : (
+          <p
+            style={{
+              margin: 0,
+              fontSize: "0.85rem",
+              color: "var(--body-color)",
+              lineHeight: 1.55,
+              opacity: item.body ? 1 : 0.4,
+              fontStyle: item.body ? "normal" : "italic",
+              whiteSpace: "pre-wrap",
+            }}
+            data-editable-item-index={index}
+            data-editable-item-field="body"
+            data-editable-array-key="items"
+          >
+            {item.body || "Double-click to add answer"}
+          </p>
+        )
       )}
 
       {/* Link buttons */}
@@ -288,7 +319,7 @@ function CardWithLinks({ item, index, cardStyle, editing, displayMode, onDelete,
 
       {!item.question && !item.body && !item.icon && !editing && links.length === 0 && (
         <span style={{ color: "var(--muted)", fontStyle: "italic", fontSize: "0.85rem" }}>
-          Empty card
+          {displayMode === "travel" ? "Empty travel card" : "Empty card"}
         </span>
       )}
 
@@ -604,55 +635,18 @@ export function ContentCardBlock({ block }: { block: Block }) {
             margin: "2rem auto 0",
           }}>
             {items.map((item, i) => (
-              <div key={item.id ?? i} style={{
-                ...cardBorderStyle(cardStyle),
-                display: "flex",
-                flexDirection: "column",
-                gap: "0.5rem",
-                position: "relative",
-              }} className="group/fact">
-                {editing && item.id && (
-                  <button
-                    type="button"
-                    onClick={() => deleteItem(item.id!)}
-                    className="absolute -right-2 -top-2 hidden h-5 w-5 items-center justify-center rounded-full border border-border bg-popover text-[10px] text-muted-foreground shadow-sm transition-colors hover:bg-destructive/10 hover:text-destructive group-hover/fact:flex"
-                  >
-                    ✕
-                  </button>
-                )}
-                {item.icon && (
-                  <p style={{
-                    margin: 0, fontSize: "0.72rem", fontWeight: 700,
-                    color: "var(--accent, #B8921A)", textTransform: "uppercase", letterSpacing: "0.06em",
-                  }}>
-                    {item.icon}
-                  </p>
-                )}
-                {(item.question || editing) && (
-                  <h4
-                    style={{ margin: 0, fontSize: "0.95rem", fontWeight: 600 }}
-                    data-editable-item-index={i}
-                    data-editable-item-field="question"
-                    data-editable-array-key="items"
-                  >
-                    {item.question || <span style={{ color: "var(--muted)", fontStyle: "italic" }}>Heading</span>}
-                  </h4>
-                )}
-                {(item.body || editing) && (
-                  <p
-                    style={{ margin: 0, fontSize: "0.85rem", color: "var(--body-color)", lineHeight: 1.55, whiteSpace: "pre-wrap" }}
-                    data-editable-item-index={i}
-                    data-editable-item-field="body"
-                    data-editable-array-key="items"
-                  >
-                    {item.body || <span style={{ color: "var(--muted)", fontStyle: "italic" }}>Details</span>}
-                  </p>
-                )}
-                {(item.links ?? []).length > 0 && <LinkButtons links={item.links!} />}
-                {!item.question && !item.body && !item.icon && !editing && (item.links ?? []).length === 0 && (
-                  <span style={{ color: "var(--muted)", fontStyle: "italic", fontSize: "0.85rem" }}>Empty travel card</span>
-                )}
-              </div>
+              <CardWithLinks
+                key={item.id ?? i}
+                item={item}
+                index={i}
+                cardStyle={{ ...cardBorderStyle(cardStyle), display: "flex", flexDirection: "column", gap: "0.5rem" }}
+                editing={editing}
+                displayMode={displayMode}
+                onDelete={deleteItem}
+                onAddLink={addLink}
+                onEditLink={editLink}
+                onDeleteLink={deleteLink}
+              />
             ))}
             {editing && (
               <div ref={addBtnRef}>
