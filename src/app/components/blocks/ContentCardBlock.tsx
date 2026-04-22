@@ -333,6 +333,7 @@ export function ContentCardBlock({ block }: { block: Block }) {
   void isSelected;
 
   const [pickerOpen, setPickerOpen] = useState(false);
+  const [pickerAnchor, setPickerAnchor] = useState<DOMRect | null>(null);
   const [openAccordionId, setOpenAccordionId] = useState<string | null>(null);
   const addBtnRef = useRef<HTMLDivElement>(null);
 
@@ -403,6 +404,9 @@ export function ContentCardBlock({ block }: { block: Block }) {
 
   function openPicker(e: React.MouseEvent) {
     e.stopPropagation();
+    console.log("[ContentCardBlock] openPicker displayMode:", displayMode, "block.config.displayMode:", cfg.displayMode);
+    const el = e.currentTarget as HTMLElement;
+    setPickerAnchor(el.getBoundingClientRect());
     setPickerOpen(true);
   }
 
@@ -416,7 +420,7 @@ export function ContentCardBlock({ block }: { block: Block }) {
     pushItem();
   }
 
-  const anchorRect = addBtnRef.current?.getBoundingClientRect() ?? null;
+  const anchorRect = pickerAnchor;
 
   // ── Accordion / FAQ modes ────────────────────────────────────────────────
   const isAccordionMode = cardStyle === "accordion";
