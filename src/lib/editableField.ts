@@ -70,18 +70,48 @@ export function editableProps(
 }
 
 /** Parse block.config that may be string-JSON or object. */
+function isCharSpread(obj: Record<string, unknown>): string | null {
+  const keys = Object.keys(obj);
+  if (keys.length < 5) return null;
+  const allNumeric = keys.every((k) => /^\d+$/.test(k));
+  if (!allNumeric) return null;
+  const allSingleChar = keys.every((k) => typeof obj[k] === "string" && (obj[k] as string).length === 1);
+  if (!allSingleChar) return null;
+  const sorted = keys.sort((a, b) => Number(a) - Number(b));
+  const str = sorted.map((k) => obj[k]).join("");
+  return str;
+}
+
 export function parseCfg(raw: unknown): Record<string, unknown> {
   if (typeof raw === "string") {
     try {
       const parsed = raw.length === 0 ? {} : JSON.parse(raw);
-      return typeof parsed === "object" && parsed !== null
-        ? (parsed as Record<string, unknown>)
-        : {};
+      if (typeof parsed === "object" && parsed !== null) {
+        const recovered = isCharSpread(parsed as Record<string, unknown>);
+        if (recovered) {
+          try {
+            const reparsed = JSON.parse(recovered);
+            if (typeof reparsed === "object" && reparsed !== null) return reparsed as Record<string, unknown>;
+          } catch { /* fall through to parsed */ }
+        }
+        return parsed as Record<string, unknown>;
+      }
+      return {};
     } catch {
       return {};
     }
   }
-  if (raw && typeof raw === "object") return raw as Record<string, unknown>;
+  if (raw && typeof raw === "object") {
+    const obj = raw as Record<string, unknown>;
+    const recovered = isCharSpread(obj);
+    if (recovered) {
+      try {
+        const reparsed = JSON.parse(recovered);
+        if (typeof reparsed === "object" && reparsed !== null) return reparsed as Record<string, unknown>;
+      } catch { /* fall through */ }
+    }
+    return obj;
+  }
   return {};
 }
 
