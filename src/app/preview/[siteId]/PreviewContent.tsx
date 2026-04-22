@@ -4,6 +4,7 @@ import "@/styles/site-blocks.css";
 import type { CSSProperties } from "react";
 import { useEffect, useRef, useState, useCallback } from "react";
 import { BLOCK_COMPONENTS } from "@/app/components/blocks";
+import { parseCfg } from "@/lib/editableField";
 import type { ThemeTokens } from "@/app/stores/slices/theme";
 
 interface Block {
@@ -62,6 +63,18 @@ function useResponsiveScale(designedAtWidth: number) {
   return { mode, scale };
 }
 
+function isDecorativeOffscreen(cfg: Record<string, unknown>, dw: number): boolean {
+  const bw = typeof cfg.blockWidth === "number" ? cfg.blockWidth : 100;
+  const ml = typeof cfg.blockMarginLeft === "number" ? cfg.blockMarginLeft : 0;
+  const ox = typeof cfg.blockOffsetX === "number" ? cfg.blockOffsetX : 0;
+  const widthPx = (bw / 100) * dw;
+  if (widthPx <= 0) return false;
+  const leftPx = (ml / 100) * dw + ox;
+  const visLeft = Math.max(0, leftPx);
+  const visRight = Math.min(dw, leftPx + widthPx);
+  return Math.max(0, visRight - visLeft) / widthPx < 0.2;
+}
+
 export function PreviewContent({ blocks, settings, theme, designedAtWidth = 1440 }: Props) {
   const { mode, scale } = useResponsiveScale(designedAtWidth);
   const rendererRef = useRef<HTMLDivElement>(null);
@@ -82,6 +95,37 @@ export function PreviewContent({ blocks, settings, theme, designedAtWidth = 1440
     });
     return () => { cleanups.forEach((fn) => fn()); };
   }, [mode, scale]);
+
+  useEffect(() => {
+    if (mode !== "proportional" || !rendererRef.current) return;
+    const container = rendererRef.current;
+    const blockEls = Array.from(
+      container.querySelectorAll<HTMLElement>(":scope > .block, :scope > [data-block-id]"),
+    );
+    if (blockEls.length < 2) return;
+
+    for (const el of blockEls) el.style.removeProperty("margin-top");
+    void container.offsetHeight;
+
+    for (let i = 1; i < blockEls.length; i++) {
+      let maxPush = 0;
+      const cur = blockEls[i].getBoundingClientRect();
+      for (let j = 0; j < i; j++) {
+        const prev = blockEls[j].getBoundingClientRect();
+        if (cur.left < prev.right && cur.right > prev.left && cur.top < prev.bottom) {
+          maxPush = Math.max(maxPush, prev.bottom - cur.top + 8);
+        }
+      }
+      if (maxPush > 0) {
+        blockEls[i].style.marginTop = `${maxPush}px`;
+      }
+    }
+
+    return () => {
+      Array.from(container.querySelectorAll<HTMLElement>(":scope > .block, :scope > [data-block-id]"))
+        .forEach((el) => el.style.removeProperty("margin-top"));
+    };
+  }, [mode, scale, blocks]);
 
   const themeVars = {
     "--theme-primary": theme.colors.primary,
@@ -105,7 +149,7 @@ export function PreviewContent({ blocks, settings, theme, designedAtWidth = 1440
     zIndex: 2,
     ...(gap ? { display: "flex", flexDirection: "column", gap } : {}),
     ...(mode === "proportional" ? { zoom: scale } : {}),
-    ...(isReflow ? { display: "flex", flexDirection: "column" } : {}),
+    ...(isReflow ? { display: "flex", flexDirection: "column", padding: "0 10px" } : {}),
   };
 
   return (
@@ -117,6 +161,7 @@ export function PreviewContent({ blocks, settings, theme, designedAtWidth = 1440
         backgroundColor: settings.bgColor ?? "#ffffff",
         minHeight: "100vh",
         position: "relative",
+        ...(isReflow ? { overflowX: "hidden" as const } : {}),
       }}
     >
       {settings.bgImage && (
@@ -137,6 +182,7 @@ export function PreviewContent({ blocks, settings, theme, designedAtWidth = 1440
         {visible.map((block) => {
           const Component = BLOCK_COMPONENTS[block.type];
           if (!Component) return null;
+          if (isReflow && isDecorativeOffscreen(parseCfg(block.config), designedAtWidth)) return null;
           return <Component key={block.id} block={block} />;
         })}
       </div>
@@ -146,17 +192,28 @@ export function PreviewContent({ blocks, settings, theme, designedAtWidth = 1440
 }
 
 const RESPONSIVE_CSS = `
+/* === Proportional mode (tablet) === */
+.ds-proportional .block {
+  background-size: cover;
+  background-position: center;
+}
+
+/* === Reflow mode (mobile) === */
 .ds-reflow .block[data-block-id],
 .ds-reflow .block {
   width: 100% !important;
+  max-width: calc(100vw - 20px) !important;
   margin-left: 0 !important;
   margin-right: 0 !important;
   transform: none !important;
   height: auto !important;
   position: static !important;
   z-index: auto !important;
-  padding-left: 1rem !important;
-  padding-right: 1rem !important;
+  padding-left: 10px !important;
+  padding-right: 10px !important;
+  box-sizing: border-box !important;
+  background-size: cover !important;
+  background-position: center !important;
 }
 .ds-reflow .block h1,
 .ds-reflow .block h2,
@@ -174,7 +231,8 @@ const RESPONSIVE_CSS = `
 .ds-reflow .block video {
   width: 100% !important;
   height: auto !important;
-  object-fit: cover;
+  max-height: 60vh !important;
+  object-fit: cover !important;
 }
 .ds-reflow .block iframe {
   width: 100% !important;
@@ -182,7 +240,33 @@ const RESPONSIVE_CSS = `
 .ds-reflow [style*="grid-template-columns"] {
   grid-template-columns: 1fr !important;
 }
+
+/* Schedule timeline — stack time above events on mobile */
+.ds-reflow .timeline > [aria-hidden="true"] {
+  display: none !important;
+}
 .ds-reflow .timeline-item {
   flex-direction: column !important;
+  gap: 0.25rem !important;
+  margin-bottom: 1rem !important;
+  padding-bottom: 1rem !important;
+  border-bottom: 1px solid var(--border, #e7e5e4);
+}
+.ds-reflow .timeline-item:last-child {
+  border-bottom: none !important;
+  margin-bottom: 0 !important;
+  padding-bottom: 0 !important;
+}
+.ds-reflow .timeline-item > [aria-hidden="true"] {
+  display: none !important;
+}
+.ds-reflow .timeline-time {
+  width: auto !important;
+  min-width: unset !important;
+  text-align: left !important;
+  flex-shrink: unset !important;
+}
+.ds-reflow .timeline-content {
+  padding-left: 0 !important;
 }
 `;

@@ -310,7 +310,10 @@
   .block-home-hero { padding: 3.5rem 1rem 3rem; }
   .countdown-units { gap: 1rem; }
   .timeline-item { flex-direction: column; gap: 0.25rem; }
-  .timeline-time { min-width: unset; }
+  .timeline-time { min-width: unset; width: auto; text-align: left; }
+  .timeline-content { padding-left: 0; }
+  .timeline > [aria-hidden="true"] { display: none; }
+  .timeline-item > [aria-hidden="true"] { display: none; }
 }
 
 /* ── Viewport preview: tablet & mobile ── */
