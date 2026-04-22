@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import {
 	Globe,
 	Users,
@@ -442,7 +443,7 @@ function GuestsPanel({ onBack }: { onBack: () => void }) {
 
 	const siteName = settings?.eventName ?? "Site";
 
-	return (
+	return createPortal(
 		<div className="fixed inset-0 z-[10000] flex flex-col bg-background text-foreground">
 			<div className="flex h-12 shrink-0 items-center gap-3 border-b border-border px-4">
 				<button type="button" onClick={onBack} className="rounded-md p-1.5 hover:bg-accent/50" aria-label="Back to editor">
@@ -565,7 +566,8 @@ function GuestsPanel({ onBack }: { onBack: () => void }) {
 					</div>
 				</div>
 			)}
-		</div>
+		</div>,
+		document.body,
 	);
 }
 
