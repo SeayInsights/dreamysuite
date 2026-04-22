@@ -100,6 +100,7 @@ export const SettingsSchema = z.object({
   venueCoordinates: z.string().nullable().default(null),
   venueHotels: z.string().nullable().default(null),
   venueNote: z.string().nullable().default(null),
+  guestCategories: z.string().nullable().default(null),
 });
 
 /** All settings with defaults applied. Single source — no duplicate object. */
