@@ -346,6 +346,16 @@
   background-position: center !important;
 }
 
+/* Video blocks need position:relative for absolutely-positioned iframes */
+[data-breakpoint="mobile"] .block-video,
+[data-breakpoint="tablet"] .block-video {
+  position: relative !important;
+  overflow: hidden !important;
+  max-height: 60vh !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+
 /* Images: full width, sensible aspect ratio, capped height */
 [data-breakpoint="mobile"] .block img,
 [data-breakpoint="mobile"] .block video,
