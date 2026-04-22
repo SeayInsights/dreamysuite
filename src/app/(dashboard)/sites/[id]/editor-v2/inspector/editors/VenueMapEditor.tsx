@@ -35,11 +35,16 @@ function usePlacesSearch() {
     clearTimeout(timerRef.current);
     timerRef.current = setTimeout(async () => {
       setLoading(true);
+      const fetchUrl = `/api/places/search?q=${encodeURIComponent(query)}`;
+      console.log("[VenueSearch] Fetching:", fetchUrl);
       try {
-        const res = await fetch(`/api/places/search?q=${encodeURIComponent(query)}`);
+        const res = await fetch(fetchUrl);
+        console.log("[VenueSearch] Response status:", res.status);
+        const text = await res.text();
+        console.log("[VenueSearch] Raw response body:", text);
         if (res.ok) {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const data: any = await res.json();
+          const data: any = JSON.parse(text);
           setResults(
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             (data.results ?? data.predictions ?? []).map((r: any) => ({
@@ -51,7 +56,8 @@ function usePlacesSearch() {
             })),
           );
         }
-      } catch {
+      } catch (err) {
+        console.error("[VenueSearch] Caught error:", err);
         setResults([]);
       } finally {
         setLoading(false);
@@ -69,11 +75,16 @@ function usePlacesSearch() {
 }
 
 async function fetchPlaceDetails(placeId: string): Promise<{ name: string; photo?: string; rating?: number; lat?: number; lng?: number } | null> {
+  const fetchUrl = `/api/places/details?placeId=${encodeURIComponent(placeId)}`;
+  console.log("[VenueDetails] Fetching:", fetchUrl);
   try {
-    const res = await fetch(`/api/places/details?placeId=${encodeURIComponent(placeId)}`);
+    const res = await fetch(fetchUrl);
+    console.log("[VenueDetails] Response status:", res.status);
+    const text = await res.text();
+    console.log("[VenueDetails] Raw response body:", text);
     if (!res.ok) return null;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const data: any = await res.json();
+    const data: any = JSON.parse(text);
     const result = data.result ?? data;
     return {
       name: result.name ?? "",
@@ -82,7 +93,8 @@ async function fetchPlaceDetails(placeId: string): Promise<{ name: string; photo
       lat: result.geometry?.location?.lat,
       lng: result.geometry?.location?.lng,
     };
-  } catch {
+  } catch (err) {
+    console.error("[VenueDetails] Caught error:", err);
     return null;
   }
 }
