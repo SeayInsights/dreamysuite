@@ -5,6 +5,12 @@ import { blockSectionStyle, parseCfg } from "@/lib/editableField";
 import { TextEffectWrapper } from "@/app/components/TextEffectWrapper";
 import { useEditorStore } from "@/app/stores/editorStore";
 
+interface GMaps {
+  Map: new (el: HTMLElement, opts: Record<string, unknown>) => { setCenter(c: { lat: number; lng: number }): void };
+  Marker: new (opts: Record<string, unknown>) => unknown;
+}
+interface WindowWithGoogle extends Window { google?: { maps: GMaps } }
+
 interface Block { id: string; type: string; [key: string]: unknown }
 
 interface Hotel {
@@ -61,7 +67,7 @@ function StarRating({ rating }: { rating: number }) {
 
 function GoogleMap({ coordinates, venueName }: { coordinates: Coordinates; venueName: string }) {
   const mapRef = useRef<HTMLDivElement>(null);
-  const mapInstanceRef = useRef<google.maps.Map | null>(null);
+  const mapInstanceRef = useRef<InstanceType<GMaps["Map"]> | null>(null);
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY ?? "";
 
   useEffect(() => {
@@ -82,8 +88,9 @@ function GoogleMap({ coordinates, venueName }: { coordinates: Coordinates; venue
     }
 
     function init() {
-      if (!mapRef.current || !window.google) return;
-      const map = new google.maps.Map(mapRef.current, {
+      const w = window as WindowWithGoogle;
+      if (!mapRef.current || !w.google) return;
+      const map = new w.google.maps.Map(mapRef.current, {
         center: coordinates,
         zoom: 15,
         disableDefaultUI: true,
@@ -92,11 +99,11 @@ function GoogleMap({ coordinates, venueName }: { coordinates: Coordinates; venue
           { featureType: "poi", stylers: [{ visibility: "off" }] },
         ],
       });
-      new google.maps.Marker({ position: coordinates, map, title: venueName });
+      new w.google.maps.Marker({ position: coordinates, map, title: venueName });
       mapInstanceRef.current = map;
     }
 
-    if (window.google?.maps) {
+    if ((window as WindowWithGoogle).google?.maps) {
       init();
     } else {
       script.addEventListener("load", init);
