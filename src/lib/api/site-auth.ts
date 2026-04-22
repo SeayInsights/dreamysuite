@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createAuth, type Env } from "@/app/lib/auth.server";
+import { type Env } from "@/app/lib/auth.server";
+import { getSession } from "@/lib/api/get-session";
 
 export type ApiError = { code: string; message: string };
 export type OwnershipResult =
@@ -15,8 +16,7 @@ export async function requireSiteOwnership(
   env: Env,
   siteId: string,
 ): Promise<OwnershipResult> {
-  const auth = createAuth(env);
-  const session = await auth.api.getSession({ headers: req.headers });
+  const session = await getSession(req.headers, env);
   if (!session) {
     return {
       error: { code: "UNAUTHORIZED", message: "Not authenticated" },
@@ -41,19 +41,12 @@ export async function requireSiteOwnership(
   };
 }
 
-/**
- * Owner-only ownership check — rejects invitees even if they'd pass
- * requireSiteOwnership. Use for actions only the site owner should take
- * (e.g. sending invites, deleting invites). Returns site name + user
- * display name for callers that need them (invite emails).
- */
 export async function requireSiteOwner(
   req: NextRequest,
   env: Env,
   siteId: string,
 ): Promise<OwnerResult> {
-  const auth = createAuth(env);
-  const session = await auth.api.getSession({ headers: req.headers });
+  const session = await getSession(req.headers, env);
   if (!session) {
     return {
       error: { code: "UNAUTHORIZED", message: "Not authenticated" },
