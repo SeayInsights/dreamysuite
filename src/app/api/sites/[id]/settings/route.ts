@@ -35,7 +35,7 @@ export async function GET(
     }
     return NextResponse.json({ settings: { siteId, ...DEFAULTS } });
   } catch (e) {
-    console.error("[settings GET] db error:", e instanceof Error ? e.message : String(e));
+    console.error("[settings GET] error:", e instanceof Error ? e.stack ?? e.message : String(e));
     return apiError("DB_ERROR", "An internal error occurred. Please try again.", 500);
   }
 }
@@ -86,7 +86,7 @@ export async function PUT(
     const { guestPassword: _, ...safeUpdated } = (updated ?? {}) as Record<string, unknown> & { guestPassword?: unknown };
     return NextResponse.json({ settings: safeUpdated });
   } catch (e) {
-    console.error("[settings PUT] db error:", e instanceof Error ? e.message : String(e));
+    console.error("[settings PUT] error:", e instanceof Error ? e.stack ?? e.message : String(e));
     return apiError("DB_ERROR", "An internal error occurred. Please try again.", 500);
   }
 }

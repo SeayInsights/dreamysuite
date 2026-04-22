@@ -154,16 +154,16 @@ export function VenueMapBlock({ block }: { block: Block }) {
             <div className="flex h-full items-center justify-center rounded-lg bg-muted/30 text-xs text-muted-foreground" style={{ minHeight: 300 }}>
               Map requires a place ID — re-search the venue to load it.
             </div>
-          ) : (
+          ) : editing ? (
             <div
-              className="flex h-full items-center justify-center rounded-lg border-2 border-dashed border-border"
+              className="flex h-full items-center justify-center rounded-lg"
               style={{ minHeight: 300 }}
             >
               <p className="text-xs text-muted-foreground italic">
-                {editing ? "Search for a venue in the inspector to show the map." : "Venue location coming soon."}
+                Set your venue location in Page Settings &rarr; Info to show the map
               </p>
             </div>
-          )}
+          ) : null}
         </div>
 
         {/* Right — Info + Hotels */}

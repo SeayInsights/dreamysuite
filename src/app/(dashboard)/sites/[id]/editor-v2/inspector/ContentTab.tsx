@@ -4,6 +4,8 @@ import { useState, useEffect } from "react";
 import { useEditorStore } from "@/app/stores/editorStore";
 import { SitePhotoPicker } from "../SitePhotoPicker";
 import { BlockContentPanel } from "./BlockContentPanel";
+import { DatePicker } from "@/components/ui/DatePicker";
+import { TimePicker } from "@/components/ui/TimePicker";
 
 function TextInput({
   label,
@@ -129,19 +131,17 @@ function DateTimeInput({
         {label}
       </label>
       <div className="flex gap-1.5">
-        <input
-          type="date"
+        <DatePicker
           value={dateVal}
-          onChange={(e) => update(e.target.value, timeVal)}
+          onChange={(v) => update(v, timeVal)}
           onKeyDown={(e) => e.stopPropagation()}
-          className="h-8 flex-1 rounded border border-input bg-background px-2 text-xs focus:outline-none focus:ring-1 focus:ring-ring"
+          className="h-8 flex-1"
         />
-        <input
-          type="time"
+        <TimePicker
           value={timeVal}
-          onChange={(e) => update(dateVal, e.target.value)}
+          onChange={(v) => update(dateVal, v)}
           onKeyDown={(e) => e.stopPropagation()}
-          className="h-8 w-24 rounded border border-input bg-background px-2 text-xs focus:outline-none focus:ring-1 focus:ring-ring"
+          className="h-8 w-24"
           placeholder="Time"
         />
       </div>

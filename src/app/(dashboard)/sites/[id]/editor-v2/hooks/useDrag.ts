@@ -203,11 +203,11 @@ export function useDrag(
 						const newLeftEdge = Math.max(0, Math.min(session.rightEdgePct - COL_PCT, session.leftEdgePct + deltaPct));
 						patch.blockMarginLeft = newLeftEdge;
 						patch.blockWidth = session.rightEdgePct - newLeftEdge;
+						patch.blockOffsetX = 0;
 					} else {
 						const newRightEdge = session.rightEdgePct + deltaPct;
 						patch.blockWidth = Math.max(COL_PCT, Math.min(100 - session.leftEdgePct, newRightEdge - session.leftEdgePct));
 					}
-					patch.blockOffsetX = 0;
 				}
 
 				if (affectsHeight && session.topEdgePx !== undefined && session.bottomEdgePx !== undefined && session.naturalTopPx !== undefined) {
