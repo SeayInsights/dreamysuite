@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import {
 	Globe,
 	Users,
@@ -299,6 +299,13 @@ function GuestsPanel({ onBack }: { onBack: () => void }) {
 	const [newCat, setNewCat] = useState("");
 	const [renamingIdx, setRenamingIdx] = useState<number | null>(null);
 	const [renameVal, setRenameVal] = useState("");
+	const [sortCol, setSortCol] = useState<string | null>(null);
+	const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
+	const [search, setSearch] = useState("");
+	const [filterCat, setFilterCat] = useState("");
+	const [filterRsvp, setFilterRsvp] = useState("");
+	const [filterCeremony, setFilterCeremony] = useState("");
+	const [filterType, setFilterType] = useState("");
 	const DEFAULT_CATS = ["Family","Friends","Coworkers","Wedding Party"];
 	const categories: string[] = (() => { try { const p = JSON.parse(settings?.guestCategories ?? ""); return Array.isArray(p) && p.length ? p : DEFAULT_CATS; } catch { return DEFAULT_CATS; } })();
 	function saveCats(cats: string[]) { updateSettings({ guestCategories: JSON.stringify(cats) }); }
@@ -369,6 +376,19 @@ function GuestsPanel({ onBack }: { onBack: () => void }) {
 		return <td key={field} className={`${tdClass} cursor-pointer`} onClick={startEdit}>{display}</td>;
 	}
 
+	const filtered = useMemo(() => {
+		let list = guests;
+		if (search) list = list.filter((g) => `${g.firstName} ${g.lastName ?? ""}`.toLowerCase().includes(search.toLowerCase()));
+		if (filterCat) list = list.filter((g) => g.category === filterCat);
+		if (filterRsvp) list = list.filter((g) => g.rsvpStatus === filterRsvp);
+		if (filterCeremony) list = list.filter((g) => g.ceremonyOrReception === filterCeremony);
+		if (filterType) list = list.filter((g) => g.invitationType === filterType);
+		if (sortCol) list = [...list].sort((a, b) => { const av = (a as unknown as Record<string, unknown>)[sortCol] ?? ""; const bv = (b as unknown as Record<string, unknown>)[sortCol] ?? ""; return sortDir === "asc" ? String(av).localeCompare(String(bv)) : String(bv).localeCompare(String(av)); });
+		return list;
+	}, [guests, search, filterCat, filterRsvp, filterCeremony, filterType, sortCol, sortDir]);
+
+	function toggleSort(col: string) { if (col === "#") return; setSortCol((p) => { if (p === col) { setSortDir((d) => d === "asc" ? "desc" : "asc"); return col; } setSortDir("asc"); return col; }); }
+
 	return (
 		<div className="flex h-full flex-col">
 			<div className="flex items-center gap-2 border-b border-border px-3 py-2">
@@ -384,11 +404,18 @@ function GuestsPanel({ onBack }: { onBack: () => void }) {
 				<span className="text-muted-foreground">Pending <b>{cnt((g) => g.rsvpStatus === "pending")}</b></span>
 				<span className="text-muted-foreground">Printed <b>{cnt((g) => g.invitationType === "printed" || g.invitationType === "both")}</b></span>
 			</div>
+			<div className="flex flex-wrap items-center gap-1 border-b border-border px-3 py-1.5">
+				<input placeholder="Search name…" value={search} onChange={(e) => setSearch(e.target.value)} className="rounded border border-border bg-background px-2 py-0.5 text-[11px] outline-none focus:border-ring min-w-[90px] flex-1" />
+				<select value={filterCat} onChange={(e) => setFilterCat(e.target.value)} className="rounded border border-border bg-background px-1.5 py-0.5 text-[11px] outline-none focus:border-ring"><option value="">All cats</option>{categories.map((c) => <option key={c} value={c}>{c}</option>)}</select>
+				<select value={filterRsvp} onChange={(e) => setFilterRsvp(e.target.value)} className="rounded border border-border bg-background px-1.5 py-0.5 text-[11px] outline-none focus:border-ring"><option value="">All RSVPs</option><option value="pending">Pending</option><option value="yes">Attending</option><option value="no">Declined</option></select>
+				<select value={filterCeremony} onChange={(e) => setFilterCeremony(e.target.value)} className="rounded border border-border bg-background px-1.5 py-0.5 text-[11px] outline-none focus:border-ring"><option value="">All events</option><option value="ceremony">Ceremony</option><option value="reception">Reception</option><option value="both">Both</option></select>
+				<select value={filterType} onChange={(e) => setFilterType(e.target.value)} className="rounded border border-border bg-background px-1.5 py-0.5 text-[11px] outline-none focus:border-ring"><option value="">All types</option><option value="digital">Digital</option><option value="printed">Printed</option><option value="both">Both</option></select>
+			</div>
 			<div className="flex-1 overflow-auto">
 				{loading ? <p className="px-3 py-4 text-center text-xs text-muted-foreground">Loading...</p>
 				: guests.length === 0 ? <p className="mx-3 my-3 rounded-md border border-dashed border-border px-3 py-2 text-center text-xs text-muted-foreground">No guests yet. Click Add to get started.</p>
-				: <table className="w-full border-collapse text-xs"><thead><tr className="border-b border-border bg-muted/30">{COLS.map(([k,en,vi]) => <th key={k} className="whitespace-nowrap px-2 py-1.5 text-left font-medium text-muted-foreground">{en}{lang==="vi"&&<><br/><span className="font-normal opacity-70">{vi}</span></>}</th>)}<th className="w-6 px-2 py-1.5"/></tr></thead>
-				<tbody>{guests.map((g,i) => <tr key={g.id} className="group border-b border-border/50 hover:bg-accent/20">
+				: <table className="w-full border-collapse text-xs"><thead><tr className="border-b border-border bg-muted/30">{COLS.map(([k,en,vi]) => <th key={k} className={`whitespace-nowrap px-2 py-1.5 text-left font-medium text-muted-foreground${k!=="#"?" cursor-pointer select-none hover:text-foreground":""}`} onClick={() => toggleSort(k)}>{en}{sortCol===k&&<span className="ml-0.5 text-[10px]">{sortDir==="asc"?"▲":"▼"}</span>}{lang==="vi"&&<><br/><span className="font-normal opacity-70">{vi}</span></>}</th>)}<th className="w-6 px-2 py-1.5"/></tr></thead>
+				<tbody>{filtered.map((g,i) => <tr key={g.id} className="group border-b border-border/50 hover:bg-accent/20">
 					<td className="px-2 py-1.5 text-muted-foreground">{i+1}</td>
 					{cell(g,"firstName",<>{g.firstName} {g.lastName??""}</>,"whitespace-nowrap px-2 py-1.5")}
 					{cell(g,"email",g.email??"—","max-w-[100px] truncate px-2 py-1.5")}
