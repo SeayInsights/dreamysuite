@@ -186,6 +186,29 @@ const FaqConfig = ContentCardConfig;
 const FunFactsConfig = ContentCardConfig;
 const TravelConfig = ContentCardConfig;
 
+const RegistryItemConfig = z.object({
+  id: z.string(),
+  type: z.enum(["store", "fund"]),
+  store: z.string().optional(),
+  customName: z.string().optional(),
+  logoUrl: z.string().optional(),
+  url: z.string().optional(),
+  message: z.string().optional(),
+  fundTitle: z.string().optional(),
+  fundDescription: z.string().optional(),
+  fundGoal: z.number().optional(),
+  platform: z.enum(["paypal", "venmo", "zelle", "cashapp", "other"]).optional(),
+  platformUrl: z.string().optional(),
+  platformHandle: z.string().optional(),
+});
+
+const RegistryConfig = z.object({
+  heading: z.string().optional(),
+  subheading: z.string().optional(),
+  displayMode: z.enum(["grid", "list"]).optional(),
+  items: z.array(RegistryItemConfig).optional(),
+}).catchall(passthrough);
+
 const ScheduleConfig = z.object({
   heading: z.string().optional(),
   displayMode: z.enum(["timeline", "cards"]).optional(),
@@ -236,6 +259,7 @@ export const BLOCK_TYPES = [
   "fun-facts",
   "travel",
   "content-card",
+  "registry",
 ] as const;
 
 export type BlockType = (typeof BLOCK_TYPES)[number];
@@ -271,6 +295,7 @@ const CONFIG_BY_TYPE: Record<BlockType, z.ZodTypeAny> = {
   "fun-facts": FunFactsConfig,
   travel: TravelConfig,
   "content-card": ContentCardConfig,
+  registry: RegistryConfig,
 };
 
 export function isKnownBlockType(type: string): type is BlockType {

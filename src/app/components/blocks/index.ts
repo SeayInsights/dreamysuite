@@ -21,6 +21,7 @@ import { GuestBookBlock } from './GuestBookBlock'
 // New (Task 3)
 import { ScheduleBlock } from './ScheduleBlock'
 import { ContentCardBlock } from './ContentCardBlock'
+import { RegistryBlock } from './RegistryBlock'
 
 interface Block {
   id: string
@@ -58,6 +59,7 @@ export const BLOCK_COMPONENTS: Record<string, React.ComponentType<{ block: Block
   'fun-facts':     ContentCardBlock,
   'travel':        ContentCardBlock,
   'content-card':  ContentCardBlock,
+  'registry':      RegistryBlock,
 }
 
 export {
@@ -81,4 +83,5 @@ export {
   GuestBookBlock,
   ScheduleBlock,
   ContentCardBlock,
+  RegistryBlock,
 }
