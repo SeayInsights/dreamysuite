@@ -150,9 +150,9 @@ const GuestBookConfig = z.object({
 
 const ContentCardConfig = z.object({
   heading: z.string().optional(),
-  displayMode: z.enum(["facts", "faq", "travel", "general", "accordion", "list"]).optional(),
+  displayMode: z.enum(["facts", "faq", "travel", "general"]).optional(),
   columns: z.union([z.literal("auto"), z.literal("2"), z.literal("3"), z.literal("4")]).optional(),
-  cardStyle: z.enum(["card", "bordered", "flat", "numbered"]).optional(),
+  cardStyle: z.enum(["card", "bordered", "flat", "numbered", "accordion", "list"]).optional(),
   items: z.array(z.object({
     id: z.string().optional(),
     question: z.string().optional(),
