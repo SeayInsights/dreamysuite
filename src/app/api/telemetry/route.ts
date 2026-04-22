@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getEnv } from "@/lib/cloudflare";
-import { createAuth, type Env } from "@/app/lib/auth.server";
+import { getSession } from "@/lib/api/get-session";
 
 // Client must supply siteId per event so the server can verify ownership.
 // The server ignores any other siteId and re-derives it via an ownership check
@@ -17,8 +17,7 @@ interface TelemetryEvent {
 export async function POST(req: NextRequest) {
   const env = await getEnv();
 
-  const auth = createAuth(env);
-  const session = await auth.api.getSession({ headers: req.headers });
+  const session = await getSession(req.headers, env);
   if (!session) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }

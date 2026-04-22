@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getEnv } from "@/lib/cloudflare";
-import { createAuth, type Env } from "@/app/lib/auth.server";
+import { getSession } from "@/lib/api/get-session";
 
 async function generatePKCE(): Promise<{ verifier: string; challenge: string }> {
   const array = new Uint8Array(32);
@@ -17,8 +17,7 @@ async function generatePKCE(): Promise<{ verifier: string; challenge: string }> 
 export async function GET(req: NextRequest) {
   const env = await getEnv();
 
-  const auth = createAuth(env);
-  const session = await auth.api.getSession({ headers: req.headers });
+  const session = await getSession(req.headers, env);
   if (!session) return NextResponse.redirect(new URL("/login", req.url));
 
   const url = new URL(req.url);
