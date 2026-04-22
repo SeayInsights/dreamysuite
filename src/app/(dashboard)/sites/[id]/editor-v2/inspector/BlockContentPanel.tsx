@@ -8,6 +8,7 @@ import { ScheduleEditor } from "./editors/ScheduleEditor";
 import { VideoEditor } from "./editors/VideoEditor";
 import { GalleryEditor } from "./editors/GalleryEditor";
 import { VenueMapEditor } from "./editors/VenueMapEditor";
+import { RegistryEditor } from "./editors/RegistryEditor";
 
 // ---------------------------------------------------------------------------
 // BlockContentPanel — public export, switch-dispatches to per-type editors
@@ -44,6 +45,8 @@ export function BlockContentPanel({ block, updateBlock }: Props) {
       return <CountdownEditor cfg={cfg} updateConfig={updateConfig} />;
     case "venue-map":
       return <VenueMapEditor cfg={cfg} updateConfig={updateConfig} />;
+    case "registry":
+      return <RegistryEditor cfg={cfg} updateConfig={updateConfig} />;
     default:
       return (
         <p className="p-4 text-xs text-muted-foreground italic">
