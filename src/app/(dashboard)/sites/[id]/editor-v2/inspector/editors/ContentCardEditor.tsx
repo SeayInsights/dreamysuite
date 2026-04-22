@@ -1,7 +1,5 @@
 "use client";
 
-import { PanelTextInput } from "../PanelInputs";
-
 type DisplayMode = "facts" | "faq" | "travel" | "general";
 type CardStyle = "card" | "bordered" | "flat" | "numbered" | "accordion" | "list";
 
@@ -52,13 +50,6 @@ export function normalizeContentCardConfig(cfg: Record<string, unknown>): Conten
   };
 }
 
-const DISPLAY_MODES: Array<{ value: DisplayMode; label: string }> = [
-  { value: "facts", label: "Facts" },
-  { value: "faq", label: "FAQ" },
-  { value: "travel", label: "Travel" },
-  { value: "general", label: "General" },
-];
-
 const CARD_STYLES: Array<{ value: CardStyle; label: string }> = [
   { value: "card", label: "Card" },
   { value: "bordered", label: "Bordered" },
@@ -79,13 +70,6 @@ export function ContentCardEditor({
 
   return (
     <div className="space-y-4 p-4">
-      <PanelTextInput
-        label="Heading"
-        value={card.heading}
-        onChange={(v) => updateConfig({ heading: v })}
-        placeholder="Section Heading"
-      />
-
       {/* Columns toggle */}
       <div className="space-y-1">
         <label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
@@ -104,29 +88,6 @@ export function ContentCardEditor({
               }`}
             >
               {col === "auto" ? "Auto" : col}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Display Mode toggle */}
-      <div className="space-y-1">
-        <label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-          Display Mode
-        </label>
-        <div className="grid grid-cols-2 gap-1.5">
-          {DISPLAY_MODES.map(({ value, label }) => (
-            <button
-              key={value}
-              type="button"
-              onClick={() => updateConfig({ displayMode: value })}
-              className={`rounded-md border py-1 text-xs transition-colors ${
-                card.displayMode === value
-                  ? "border-primary bg-primary text-primary-foreground"
-                  : "border-border text-muted-foreground hover:bg-accent/50"
-              }`}
-            >
-              {label}
             </button>
           ))}
         </div>
