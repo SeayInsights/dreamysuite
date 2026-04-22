@@ -23,7 +23,7 @@ const MINIMAL: Record<BlockType, Record<string, unknown>> = {
   spacer: { height: "40px" },
   "registry-card": { name: "Registry" },
   "hotel-card": { name: "Hotel" },
-  "venue-map": { name: "Venue" },
+  "venue-map": { heading: "Venue", hotels: [] },
   "photo-split": { heading: "Us" },
   rsvp: { heading: "RSVP" },
   // Consolidated (Task 18)
@@ -58,7 +58,7 @@ const INVALID: Record<BlockType, Record<string, unknown>> = {
   spacer: { height: 0 },
   "registry-card": { name: [] },
   "hotel-card": { address: 5 },
-  "venue-map": { embedUrl: {} },
+  "venue-map": { heading: 42 },
   "photo-split": { layout: "upside-down" },
   rsvp: { heading: 42 },
   // Consolidated
