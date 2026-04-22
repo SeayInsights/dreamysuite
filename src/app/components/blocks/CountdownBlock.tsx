@@ -35,11 +35,19 @@ export function CountdownBlock({ block }: { block: Block }) {
   const hoursLabel = String(cfg.hoursLabel ?? "Hours");
   const minsLabel = String(cfg.minsLabel ?? "Minutes");
   const secsLabel = String(cfg.secsLabel ?? "Seconds");
+  const showRsvpButton = cfg.showRsvpButton === true;
   const eventDate = useEditorStore((s) => s.settings.eventDate);
   const fullPreview = useEditorStore((s) => s.fullPreview);
   const editing = !fullPreview;
   const { days, hours, mins, secs } = useCountdown(eventDate);
   const hasDate = !!eventDate;
+
+  function scrollToRsvp() {
+    const el =
+      document.querySelector('[data-block-type="rsvp-form"]') ??
+      document.querySelector('[data-block-type="rsvp"]');
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
 
   return (
     <section className="block block-countdown" data-block-id={block.id} data-block-type={block.type} style={blockSectionStyle(cfg)}>
@@ -50,6 +58,17 @@ export function CountdownBlock({ block }: { block: Block }) {
         <div className="countdown-unit"><span className="countdown-num">{hasDate ? mins : "--"}</span><span className="countdown-unit-label" data-editable-field="minsLabel">{minsLabel}</span></div>
         <div className="countdown-unit"><span className="countdown-num">{hasDate ? secs : "--"}</span><span className="countdown-unit-label" data-editable-field="secsLabel">{secsLabel}</span></div>
       </div>
+      {showRsvpButton && (
+        <div style={{ textAlign: "center", marginTop: "1.25rem" }}>
+          <button
+            type="button"
+            onClick={scrollToRsvp}
+            className="rounded-md bg-primary px-6 py-2.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+          >
+            RSVP
+          </button>
+        </div>
+      )}
       {!hasDate && editing && (
         <p style={{ fontSize: "0.75rem", color: "var(--muted, #9a8c7c)", marginTop: "0.75rem", textAlign: "center", fontStyle: "italic" }}>
           Set your event date in Page Settings &rarr; Info to start the countdown

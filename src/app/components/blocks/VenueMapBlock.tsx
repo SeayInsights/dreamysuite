@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useCallback } from "react";
 import { blockSectionStyle, parseCfg } from "@/lib/editableField";
 import { TextEffectWrapper } from "@/app/components/TextEffectWrapper";
 import { useEditorStore } from "@/app/stores/editorStore";
@@ -11,6 +12,8 @@ interface Hotel {
   placeId: string;
   name: string;
   photo?: string;
+  photoRefs?: string[];
+  photoIndex?: number;
   rating?: number;
   featured?: boolean;
   stayingHere?: boolean;
@@ -19,6 +22,37 @@ interface Hotel {
 interface Coordinates {
   lat: number;
   lng: number;
+}
+
+function parseHotels(raw: string | null | undefined): Hotel[] {
+  if (!raw) return [];
+  try {
+    const parsed = JSON.parse(raw) as unknown;
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter(
+      (h): h is Hotel => h !== null && typeof h === "object" && typeof (h as Hotel).id === "string",
+    );
+  } catch {
+    return [];
+  }
+}
+
+function parseCoords(raw: string | null | undefined): Coordinates | undefined {
+  if (!raw) return undefined;
+  try {
+    const parsed = JSON.parse(raw) as unknown;
+    if (
+      parsed !== null &&
+      typeof parsed === "object" &&
+      typeof (parsed as Record<string, unknown>).lat === "number" &&
+      typeof (parsed as Record<string, unknown>).lng === "number"
+    ) {
+      return parsed as Coordinates;
+    }
+  } catch {
+    /* ignore */
+  }
+  return undefined;
 }
 
 function haversineDistance(a: Coordinates, b: Coordinates): number {
@@ -71,19 +105,61 @@ function EmbeddedMap({ placeId }: { placeId: string }) {
   );
 }
 
-function HotelCard({ hotel, venueCoords }: { hotel: Hotel; venueCoords?: Coordinates }) {
+function HotelCard({
+  hotel,
+  venueCoords,
+  editing,
+  onPhotoIndexChange,
+}: {
+  hotel: Hotel;
+  venueCoords?: Coordinates;
+  editing: boolean;
+  onPhotoIndexChange: (id: string, index: number) => void;
+}) {
   const distance = venueCoords
     ? haversineDistance(venueCoords, { lat: 0, lng: 0 })
     : null;
   void distance;
 
+  const [hovered, setHovered] = useState(false);
+  const photoRefs = hotel.photoRefs ?? (hotel.photo ? [hotel.photo] : []);
+  const photoIndex = hotel.photoIndex ?? 0;
+  const currentPhotoRef = photoRefs[photoIndex] ?? hotel.photo;
+  const hasMultiple = photoRefs.length > 1;
+
   return (
-    <div className="flex gap-3 rounded-lg border border-border bg-background p-3">
-      {hotel.photo && (
-        <div
-          className="h-16 w-16 shrink-0 rounded-md bg-cover bg-center"
-          style={{ backgroundImage: `url(/api/places/photo?ref=${encodeURIComponent(hotel.photo)})` }}
-        />
+    <div
+      className="flex gap-3 rounded-lg border border-border bg-background p-3"
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
+      {currentPhotoRef && (
+        <div className="relative h-16 w-16 shrink-0">
+          <div
+            className="h-16 w-16 rounded-md bg-cover bg-center"
+            style={{ backgroundImage: `url(/api/places/photo?ref=${encodeURIComponent(currentPhotoRef)})` }}
+          />
+          {editing && hasMultiple && hovered && (
+            <>
+              <button
+                type="button"
+                onClick={() => onPhotoIndexChange(hotel.id, (photoIndex - 1 + photoRefs.length) % photoRefs.length)}
+                className="absolute left-0 top-1/2 -translate-y-1/2 flex h-5 w-5 items-center justify-center rounded-full bg-black/50 text-[9px] text-white hover:bg-black/70"
+                aria-label="Previous photo"
+              >
+                ‹
+              </button>
+              <button
+                type="button"
+                onClick={() => onPhotoIndexChange(hotel.id, (photoIndex + 1) % photoRefs.length)}
+                className="absolute right-0 top-1/2 -translate-y-1/2 flex h-5 w-5 items-center justify-center rounded-full bg-black/50 text-[9px] text-white hover:bg-black/70"
+                aria-label="Next photo"
+              >
+                ›
+              </button>
+            </>
+          )}
+        </div>
       )}
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-medium text-foreground">{hotel.name}</p>
@@ -107,22 +183,38 @@ function HotelCard({ hotel, venueCoords }: { hotel: Hotel; venueCoords?: Coordin
 
 export function VenueMapBlock({ block }: { block: Block }) {
   const cfg = parseCfg(block.config);
-  const heading = String(cfg.heading ?? "Venue");
-  const venueName = typeof cfg.venueName === "string" ? cfg.venueName : "";
-  const venuePlaceId = typeof cfg.venuePlaceId === "string" ? cfg.venuePlaceId : "";
-  const coords = cfg.venueCoordinates as Coordinates | undefined;
-  const dateStart = typeof cfg.dateStart === "string" ? cfg.dateStart : undefined;
-  const dateEnd = typeof cfg.dateEnd === "string" ? cfg.dateEnd : undefined;
-  const noteToGuests = typeof cfg.noteToGuests === "string" ? cfg.noteToGuests : "";
-  const hotels: Hotel[] = Array.isArray(cfg.hotels)
-    ? (cfg.hotels as Hotel[]).filter((h) => h && typeof h === "object" && typeof h.id === "string")
-    : [];
-
+  const settings = useEditorStore((s) => s.settings);
+  const updateSettings = useEditorStore((s) => s.updateSettings);
   const fullPreview = useEditorStore((s) => s.fullPreview);
   const editing = !fullPreview;
 
+  // Read from settings first, fall back to block config for backward compat
+  const heading = String(cfg.heading ?? "Venue");
+  const dateStart = typeof cfg.dateStart === "string" ? cfg.dateStart : undefined;
+  const dateEnd = typeof cfg.dateEnd === "string" ? cfg.dateEnd : undefined;
+
+  const venueName = settings.venueName ?? (typeof cfg.venueName === "string" ? cfg.venueName : "");
+  const venuePlaceId = settings.venuePlaceId ?? (typeof cfg.venuePlaceId === "string" ? cfg.venuePlaceId : "");
+  const coords = parseCoords(settings.venueCoordinates) ?? (cfg.venueCoordinates as Coordinates | undefined);
+  const noteToGuests = settings.venueNote ?? (typeof cfg.noteToGuests === "string" ? cfg.noteToGuests : "");
+
+  // Hotels from settings JSON, fall back to block config array
+  const settingsHotels = parseHotels(settings.venueHotels);
+  const cfgHotels: Hotel[] = Array.isArray(cfg.hotels)
+    ? (cfg.hotels as Hotel[]).filter((h) => h && typeof h === "object" && typeof h.id === "string")
+    : [];
+  const hotels = settingsHotels.length > 0 ? settingsHotels : cfgHotels;
+
   const dateRange = formatDateRange(dateStart, dateEnd);
   const hasVenue = !!venueName && (!!venuePlaceId || !!coords);
+
+  const handlePhotoIndexChange = useCallback(
+    (id: string, index: number) => {
+      const updated = hotels.map((h) => (h.id === id ? { ...h, photoIndex: index } : h));
+      updateSettings({ venueHotels: JSON.stringify(updated) });
+    },
+    [hotels, updateSettings],
+  );
 
   return (
     <section
@@ -192,11 +284,17 @@ export function VenueMapBlock({ block }: { block: Block }) {
                 </p>
                 <div className="mt-2 space-y-2">
                   {hotels.map((hotel) => (
-                    <HotelCard key={hotel.id} hotel={hotel} venueCoords={coords} />
+                    <HotelCard
+                      key={hotel.id}
+                      hotel={hotel}
+                      venueCoords={coords}
+                      editing={editing}
+                      onPhotoIndexChange={handlePhotoIndexChange}
+                    />
                   ))}
                   {hotels.length === 0 && editing && (
                     <p className="text-xs text-muted-foreground italic">
-                      Add hotels from the inspector panel.
+                      Add hotels from Page Settings &rarr; Info.
                     </p>
                   )}
                 </div>
