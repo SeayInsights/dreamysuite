@@ -13,6 +13,9 @@ export interface BlockRegistryEntry {
   visible: boolean;
 }
 
+// Default centered width: 8 of 12 columns (66.67%), centered with equal margins.
+const CENTERED_BLOCK = { blockWidth: 66.6667, blockMarginLeft: 16.6667 } as const;
+
 export const BLOCK_REGISTRY: Record<string, BlockRegistryEntry> = {
   // ── Core ─────────────────────────────────────────────────────────────────
   "home-hero": {
@@ -20,7 +23,7 @@ export const BLOCK_REGISTRY: Record<string, BlockRegistryEntry> = {
     displayName: "Hero",
     icon: "Sparkles",
     category: "Simple",
-    defaultData: { coupleNames: "Name & Name", dateText: "", locationText: "" },
+    defaultData: { coupleNames: "Name & Name", dateText: "", locationText: "", ...CENTERED_BLOCK },
     visible: true,
   },
   "header": {
@@ -28,7 +31,7 @@ export const BLOCK_REGISTRY: Record<string, BlockRegistryEntry> = {
     displayName: "Header",
     icon: "Heading",
     category: "Simple",
-    defaultData: { title: "Section Title", titleAlign: "center" },
+    defaultData: { title: "Section Title", titleAlign: "center", ...CENTERED_BLOCK },
     visible: true,
   },
   "multi-text": {
@@ -36,7 +39,7 @@ export const BLOCK_REGISTRY: Record<string, BlockRegistryEntry> = {
     displayName: "Text",
     icon: "AlignLeft",
     category: "Simple",
-    defaultData: { mode: "text", heading: "", body: "" },
+    defaultData: { mode: "text", heading: "", body: "", ...CENTERED_BLOCK },
     visible: true,
   },
   "countdown": {
@@ -44,7 +47,7 @@ export const BLOCK_REGISTRY: Record<string, BlockRegistryEntry> = {
     displayName: "Countdown",
     icon: "Timer",
     category: "Simple",
-    defaultData: { label: "Until the big day" },
+    defaultData: { label: "Until the big day", ...CENTERED_BLOCK },
     visible: true,
   },
   "spacer": {
@@ -52,7 +55,7 @@ export const BLOCK_REGISTRY: Record<string, BlockRegistryEntry> = {
     displayName: "Spacer",
     icon: "Minus",
     category: "Simple",
-    defaultData: { height: "48px" },
+    defaultData: { height: "48px", ...CENTERED_BLOCK },
     visible: true,
   },
   "venue-map": {
@@ -60,7 +63,7 @@ export const BLOCK_REGISTRY: Record<string, BlockRegistryEntry> = {
     displayName: "Venue Map",
     icon: "MapPin",
     category: "Simple",
-    defaultData: { heading: "Venue", hotels: [] },
+    defaultData: { heading: "Venue", hotels: [], ...CENTERED_BLOCK },
     visible: true,
   },
   // ── Legacy (existing DB records — hidden from block picker) ───────────────
@@ -134,7 +137,7 @@ export const BLOCK_REGISTRY: Record<string, BlockRegistryEntry> = {
     displayName: "Video",
     icon: "Video",
     category: "Simple",
-    defaultData: { provider: "youtube", url: "" },
+    defaultData: { provider: "youtube", url: "", ...CENTERED_BLOCK },
     visible: true,
   },
   "gallery": {
@@ -142,7 +145,7 @@ export const BLOCK_REGISTRY: Record<string, BlockRegistryEntry> = {
     displayName: "Gallery",
     icon: "Images",
     category: "Simple",
-    defaultData: { layout: "grid", urls: [] },
+    defaultData: { layout: "grid", urls: [], ...CENTERED_BLOCK },
     visible: true,
   },
   "info-card": {
@@ -150,7 +153,7 @@ export const BLOCK_REGISTRY: Record<string, BlockRegistryEntry> = {
     displayName: "Info Card",
     icon: "CreditCard",
     category: "Simple",
-    defaultData: { variant: "registry", name: "", url: "" },
+    defaultData: { variant: "registry", name: "", url: "", ...CENTERED_BLOCK },
     visible: true,
   },
   // ── New blocks ────────────────────────────────────────────────────────────
@@ -159,7 +162,7 @@ export const BLOCK_REGISTRY: Record<string, BlockRegistryEntry> = {
     displayName: "RSVP Form",
     icon: "ClipboardCheck",
     category: "Simple",
-    defaultData: { heading: "RSVP", subheading: "We hope to see you there!" },
+    defaultData: { heading: "RSVP", subheading: "We hope to see you there!", ...CENTERED_BLOCK },
     visible: true,
   },
   "story-timeline": {
@@ -167,7 +170,7 @@ export const BLOCK_REGISTRY: Record<string, BlockRegistryEntry> = {
     displayName: "Story Timeline",
     icon: "BookOpen",
     category: "Simple",
-    defaultData: { heading: "Our Story", events: [] },
+    defaultData: { heading: "Our Story", events: [], ...CENTERED_BLOCK },
     visible: true,
   },
   "guest-book": {
@@ -175,7 +178,7 @@ export const BLOCK_REGISTRY: Record<string, BlockRegistryEntry> = {
     displayName: "Guest Book",
     icon: "BookHeart",
     category: "Pro",
-    defaultData: { heading: "Guest Book", placeholder: "Leave a message for the happy couple…" },
+    defaultData: { heading: "Guest Book", placeholder: "Leave a message for the happy couple…", ...CENTERED_BLOCK },
     visible: true,
   },
   "faq": {
@@ -183,7 +186,7 @@ export const BLOCK_REGISTRY: Record<string, BlockRegistryEntry> = {
     displayName: "FAQ",
     icon: "HelpCircle",
     category: "Simple",
-    defaultData: { heading: "Frequently Asked Questions", displayMode: "faq", cardStyle: "bordered", items: [] },
+    defaultData: { heading: "Frequently Asked Questions", displayMode: "faq", cardStyle: "bordered", items: [], ...CENTERED_BLOCK },
     visible: true,
   },
   "schedule": {
@@ -191,7 +194,7 @@ export const BLOCK_REGISTRY: Record<string, BlockRegistryEntry> = {
     displayName: "Schedule",
     icon: "Clock",
     category: "Simple",
-    defaultData: { heading: "The Day", events: [] },
+    defaultData: { heading: "The Day", events: [], ...CENTERED_BLOCK },
     visible: true,
   },
   "fun-facts": {
@@ -199,7 +202,7 @@ export const BLOCK_REGISTRY: Record<string, BlockRegistryEntry> = {
     displayName: "Fun Facts",
     icon: "Lightbulb",
     category: "Simple",
-    defaultData: { heading: "Fun Facts About Us", displayMode: "facts", columns: "auto", cardStyle: "card", items: [] },
+    defaultData: { heading: "Fun Facts About Us", displayMode: "facts", columns: "auto", cardStyle: "card", items: [], ...CENTERED_BLOCK },
     visible: true,
   },
   "travel": {
@@ -207,7 +210,7 @@ export const BLOCK_REGISTRY: Record<string, BlockRegistryEntry> = {
     displayName: "Travel",
     icon: "MapPin",
     category: "Simple",
-    defaultData: { heading: "Travel Guide", displayMode: "travel", cardStyle: "card", items: [] },
+    defaultData: { heading: "Travel Guide", displayMode: "travel", cardStyle: "card", items: [], ...CENTERED_BLOCK },
     visible: true,
   },
   "content-card": {
@@ -215,7 +218,7 @@ export const BLOCK_REGISTRY: Record<string, BlockRegistryEntry> = {
     displayName: "Content Card",
     icon: "LayoutGrid",
     category: "Simple",
-    defaultData: { heading: "Content", displayMode: "general", columns: "auto", cardStyle: "card", items: [] },
+    defaultData: { heading: "Content", displayMode: "general", columns: "auto", cardStyle: "card", items: [], ...CENTERED_BLOCK },
     visible: true,
   },
   "registry": {
@@ -228,6 +231,7 @@ export const BLOCK_REGISTRY: Record<string, BlockRegistryEntry> = {
       subheading: "Your presence is the greatest gift. But if you'd like to give something, we're registered at the following places.",
       displayMode: "grid",
       items: [],
+      ...CENTERED_BLOCK,
     },
     visible: true,
   },
