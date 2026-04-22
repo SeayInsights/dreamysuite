@@ -190,6 +190,7 @@ interface GuestRow {
   rsvpStatus: "pending" | "yes" | "no";
   notes: string | null;
   rsvpSubmittedAt: number | null;
+  customResponses: string | null;
   sortOrder: number;
   createdAt: number;
   updatedAt: number;
@@ -216,6 +217,7 @@ export async function POST(
   let attending: string | undefined;
   let notes: string | undefined;
   let guestEmail: string | undefined;
+  let customResponses: string | undefined;
 
   const contentType = req.headers.get("content-type") ?? "";
   if (contentType.includes("application/json")) {
@@ -233,6 +235,7 @@ export async function POST(
     attending = body.attending;
     notes = body.notes;
     guestEmail = body.email || undefined;
+    customResponses = body.customResponses ? JSON.stringify(body.customResponses) : undefined;
   } else {
     // application/x-www-form-urlencoded or multipart/form-data
     let formData: FormData;
@@ -299,28 +302,18 @@ export async function POST(
     .bind(site.id, firstNameClean, lastNameClean)
     .first<GuestRow>();
 
-  if (!guest) {
-    return new Response(
-      JSON.stringify({ ok: false, error: { code: "NOT_FOUND", message: "We couldn't find your name on the list" } }),
-      { status: 404, headers: { "content-type": "application/json", "cache-control": "no-store" } }
-    );
-  }
-
-  if (guest.rsvpStatus !== "pending") {
-    return new Response(
-      JSON.stringify({ ok: false, error: { code: "ALREADY_SUBMITTED", message: "You've already submitted your RSVP" } }),
-      { status: 409, headers: { "content-type": "application/json", "cache-control": "no-store" } }
-    );
-  }
-
-  // Update the guest record
+  // Upsert: create guest if not found, overwrite if already submitted
   const now = Date.now();
-  await db
-    .prepare(
-      "UPDATE guest SET rsvpStatus = ?, notes = ?, rsvpSubmittedAt = ?, updatedAt = ? WHERE id = ?"
-    )
-    .bind(attending, notes ?? null, now, now, guest.id)
-    .run();
+  if (!guest) {
+    const newId = crypto.randomUUID();
+    const maxOrder = await db.prepare("SELECT COALESCE(MAX(sortOrder), -1) as maxOrder FROM guest WHERE siteId = ?").bind(site.id).first<{ maxOrder: number }>();
+    const sortOrder = (maxOrder?.maxOrder ?? -1) + 1;
+    await db.prepare("INSERT INTO guest (id, siteId, firstName, lastName, rsvpStatus, notes, rsvpSubmittedAt, customResponses, sortOrder, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
+      .bind(newId, site.id, firstNameClean, lastNameClean, attending, notes ?? null, now, customResponses ?? null, sortOrder, now, now).run();
+  } else {
+    await db.prepare("UPDATE guest SET rsvpStatus = ?, notes = ?, rsvpSubmittedAt = ?, customResponses = ?, updatedAt = ? WHERE id = ?")
+      .bind(attending, notes ?? null, now, customResponses ?? null, now, guest.id).run();
+  }
 
   // Send email notifications via Resend (fire and forget)
   const resendKey = (env as unknown as Record<string, string>).RESEND_API_KEY;
