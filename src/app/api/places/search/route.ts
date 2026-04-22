@@ -15,7 +15,7 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    const url = `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(q)}&key=${apiKey}`;
+    const url = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${encodeURIComponent(q)}&key=${apiKey}`;
     console.log("[PlacesSearch] Google API URL:", url.replace(apiKey, "REDACTED"));
     const upstream = await fetch(url);
     console.log("[PlacesSearch] Google response status:", upstream.status);
@@ -28,13 +28,14 @@ export async function GET(req: NextRequest) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const raw: any = JSON.parse(rawText);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const predictions = (raw.predictions ?? []).slice(0, 5).map((p: any) => ({
-      place_id: p.place_id,
-      description: p.description,
-      structured_formatting: p.structured_formatting,
+    const results = (raw.results ?? []).slice(0, 5).map((r: any) => ({
+      place_id: r.place_id,
+      name: r.name,
+      formatted_address: r.formatted_address,
+      geometry: r.geometry ? { location: r.geometry.location } : undefined,
     }));
 
-    const response = Response.json({ predictions });
+    const response = Response.json({ results });
     console.log("[PlacesSearch] Response CORS headers:", Object.fromEntries(response.headers.entries()));
     return response;
   } catch (err) {
