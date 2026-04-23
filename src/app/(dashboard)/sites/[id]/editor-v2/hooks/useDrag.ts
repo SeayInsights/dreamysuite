@@ -102,18 +102,51 @@ export function useDrag(
 
 	const sessionRef = useRef<DragSession | null>(null);
 	const cleanupRef = useRef<(() => void) | null>(null);
+	const rafRef = useRef<number | null>(null);
+	const pendingUpdateRef = useRef<{ config: Record<string, unknown>; collisions?: string[] } | null>(null);
 
 	const [isDragging, setIsDragging] = useState(false);
 	const [draggedId, setDraggedId] = useState<string | null>(null);
 	const collidingIds = useEditorStore((s) => s.collidingIds);
 	const setCollidingIds = useEditorStore((s) => s.setCollidingIds);
 
+	// ── Apply batched update in rAF ────────────────────────────────────────
 
+	const applyUpdate = useCallback(() => {
+		const session = sessionRef.current;
+		const pending = pendingUpdateRef.current;
+
+		if (!session || !pending) {
+			rafRef.current = null;
+			return;
+		}
+
+		updateBlock(session.blockId, { config: pending.config });
+		session.lastConfig = pending.config;
+
+		if (pending.collisions !== undefined) {
+			setCollidingIds(pending.collisions);
+		}
+
+		pendingUpdateRef.current = null;
+		rafRef.current = null;
+	}, [updateBlock, setCollidingIds]);
 
 	// ── End drag ───────────────────────────────────────────────────────────
 
 	const endDrag = useCallback(() => {
 		const session = sessionRef.current;
+
+		// Cancel any pending frame
+		if (rafRef.current !== null) {
+			cancelAnimationFrame(rafRef.current);
+			rafRef.current = null;
+		}
+
+		// Apply any final pending update before ending
+		if (pendingUpdateRef.current) {
+			applyUpdate();
+		}
 
 		if (DEBUG_DRAG && session) {
 			console.group(`[useDrag] endDrag handle=${session.handle} block=${session.blockId}`);
@@ -150,7 +183,7 @@ export function useDrag(
 			cleanupRef.current();
 			cleanupRef.current = null;
 		}
-	}, [setDrag, temporalStore, updateBlock]);
+	}, [applyUpdate, setDrag, temporalStore, updateBlock]);
 
 	// ── Pointer move ───────────────────────────────────────────────────────
 
@@ -173,17 +206,23 @@ export function useDrag(
 					blockOffsetX: snapToGrid(rawX, GRID_SIZE_PX, SNAP_THRESHOLD_PX),
 					blockOffsetY: snapToGrid(rawY, GRID_SIZE_PX, SNAP_THRESHOLD_PX),
 				};
-				session.lastConfig = newConfig;
-				updateBlock(session.blockId, { config: newConfig });
 
 				const container = containerRef.current;
+				let collisions: string[] | undefined;
 				if (container) {
 					const el = container.querySelector<HTMLElement>(`[data-block-id="${session.blockId}"]`);
 					if (el) {
 						const bounds = el.getBoundingClientRect();
-						const collisions = detectCollisions(session.blockId, bounds, blocks, container);
-						setCollidingIds(collisions);
+						collisions = detectCollisions(session.blockId, bounds, blocks, container);
 					}
+				}
+
+				// Store pending update instead of applying immediately
+				pendingUpdateRef.current = { config: newConfig, collisions };
+
+				// Schedule rAF if not already scheduled
+				if (rafRef.current === null) {
+					rafRef.current = requestAnimationFrame(applyUpdate);
 				}
 			} else if (session.kind === "resize" && session.handle) {
 				const container = containerRef.current;
@@ -247,13 +286,18 @@ export function useDrag(
 						console.log(`[useDrag]   final config:`, JSON.parse(JSON.stringify(newConfig)));
 					}
 
-					session.lastConfig = newConfig;
-					updateBlock(session.blockId, { config: newConfig });
+					// Store pending update instead of applying immediately
+					pendingUpdateRef.current = { config: newConfig };
+
+					// Schedule rAF if not already scheduled
+					if (rafRef.current === null) {
+						rafRef.current = requestAnimationFrame(applyUpdate);
+					}
 				}
 			}
 		},
-		 
-		[blocks, containerRef, updateBlock],
+
+		[applyUpdate, blocks, containerRef],
 	);
 
 	const onPointerUp = useCallback(() => {
@@ -264,6 +308,10 @@ export function useDrag(
 
 	useEffect(() => {
 		return () => {
+			if (rafRef.current !== null) {
+				cancelAnimationFrame(rafRef.current);
+				rafRef.current = null;
+			}
 			if (cleanupRef.current) {
 				cleanupRef.current();
 				cleanupRef.current = null;
