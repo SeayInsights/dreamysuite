@@ -77,7 +77,7 @@ export function createAuth(env: Env) {
     baseURL: env.APP_URL,
     advanced: {
       defaultCookieAttributes: {
-        sameSite: "Strict",
+        sameSite: "Lax",
       },
     },
   });
