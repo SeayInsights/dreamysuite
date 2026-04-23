@@ -33,7 +33,7 @@ export function createAuth(env: Env) {
             Authorization: `Bearer ${env.RESEND_API_KEY}`,
           },
           body: JSON.stringify({
-            from: "DreamySuite <notifications@dreamysuite.com>",
+            from: "DreamySuite <hello@mail.dreamysuite.com>",
             to: [user.email],
             subject: "Verify your DreamySuite email",
             html: `<div style="font-family:Georgia,serif;max-width:520px;margin:0 auto;padding:2rem;color:#292524"><h2 style="font-weight:normal">Verify your email</h2><p>Click below to activate your DreamySuite account:</p><a href="${url}" style="display:inline-block;margin:1rem 0;padding:.75rem 1.5rem;background:#B8921A;color:#fff;text-decoration:none;border-radius:6px;font-family:inherit">Verify Email</a><p style="color:#a8a29e;font-size:.8rem;margin-top:1.5rem">If you didn't create an account, you can safely ignore this email.</p></div>`,
@@ -48,7 +48,7 @@ export function createAuth(env: Env) {
             Authorization: `Bearer ${env.RESEND_API_KEY}`,
           },
           body: JSON.stringify({
-            from: "DreamySuite <notifications@dreamysuite.com>",
+            from: "DreamySuite <hello@mail.dreamysuite.com>",
             to: [user.email],
             subject: "Reset your DreamySuite password",
             html: `<div style="font-family:Georgia,serif;max-width:520px;margin:0 auto;padding:2rem;color:#292524"><h2 style="font-weight:normal">Reset your password</h2><p>Click below to set a new password for your DreamySuite account:</p><a href="${url}" style="display:inline-block;margin:1rem 0;padding:.75rem 1.5rem;background:#B8921A;color:#fff;text-decoration:none;border-radius:6px;font-family:inherit">Reset Password</a><p style="color:#a8a29e;font-size:.8rem;margin-top:1.5rem">This link expires in 1 hour. If you didn't request a password reset, you can safely ignore this email.</p></div>`,
