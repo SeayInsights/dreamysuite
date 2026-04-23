@@ -47,8 +47,14 @@ export default async function LoginPage() {
       response.headers.forEach((value, key) => {
         if (key.toLowerCase() === "set-cookie") {
           // Parse "name=value; ..." and set via Next.js cookies API
-          const [nameValue, ...parts] = value.split(";");
-          const [cookieName, cookieValue] = nameValue.split("=");
+          const firstSemicolon = value.indexOf(";");
+          const nameValue = firstSemicolon === -1 ? value : value.slice(0, firstSemicolon);
+          const parts = firstSemicolon === -1 ? [] : value.slice(firstSemicolon + 1).split(";");
+
+          const firstEquals = nameValue.indexOf("=");
+          const cookieName = nameValue.slice(0, firstEquals);
+          const cookieValue = nameValue.slice(firstEquals + 1); // Don't trim or modify!
+
           const options: Record<string, unknown> = { path: "/" };
           parts.forEach((part) => {
             const p = part.trim().toLowerCase();
@@ -59,8 +65,8 @@ export default async function LoginPage() {
             if (p.startsWith("samesite="))
               options.sameSite = p.slice(9) as "lax" | "strict" | "none";
           });
-          console.log('[login] setting cookie:', cookieName.trim(), 'options:', options);
-          cookieStore.set(cookieName.trim(), cookieValue?.trim() ?? "", options);
+          console.log('[login] setting cookie:', cookieName, 'value length:', cookieValue.length, 'options:', options);
+          cookieStore.set(cookieName, cookieValue, options);
           setCookieCount++;
         }
       });
