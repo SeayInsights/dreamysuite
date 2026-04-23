@@ -94,6 +94,26 @@ export function BreakpointFrame({ children, nav }: Props) {
 	}), [settings.effectColor1, settings.effectColor2, settings.effectColor3, themeTokens.colors]);
 
 	const [frameReady, setFrameReady] = useState(false);
+	const [devicePixelRatio, setDevicePixelRatio] = useState(1);
+
+	useEffect(() => {
+		const updateDPR = () => {
+			setDevicePixelRatio(window.devicePixelRatio || 1);
+		};
+		updateDPR();
+
+		const mediaQuery = window.matchMedia(`(resolution: ${window.devicePixelRatio}dppx)`);
+		const handler = () => updateDPR();
+
+		if (mediaQuery.addEventListener) {
+			mediaQuery.addEventListener("change", handler);
+			return () => mediaQuery.removeEventListener("change", handler);
+		} else {
+			// Fallback for older browsers
+			mediaQuery.addListener(handler);
+			return () => mediaQuery.removeListener(handler);
+		}
+	}, []);
 
 	useEffect(() => {
 		const el = ref.current;
@@ -110,10 +130,12 @@ export function BreakpointFrame({ children, nav }: Props) {
 		const el = ref.current;
 		if (!el) return;
 		const dur = duration("traySlide") / 1000;
-		const target = { width: `${WIDTHS[breakpoint]}px` };
+		const safeDPR = devicePixelRatio || 1;
+		const normalizedWidth = WIDTHS[breakpoint] / safeDPR;
+		const target = { width: `${normalizedWidth}px` };
 		const anim = animate(el, target, { duration: dur, ease: EASING.standard });
 		anim.finished.then(() => window.dispatchEvent(new Event("resize")));
-	}, [breakpoint]);
+	}, [breakpoint, devicePixelRatio]);
 
 	useEffect(() => {
 		const fonts = [themeTokens.typography.headingFont, themeTokens.typography.bodyFont]
@@ -136,6 +158,8 @@ export function BreakpointFrame({ children, nav }: Props) {
 	}, [themeTokens.typography.headingFont, themeTokens.typography.bodyFont]);
 
 	const isDesktop = breakpoint === "desktop";
+	const safeDPR = devicePixelRatio || 1;
+	const normalizedWidth = WIDTHS[breakpoint] / safeDPR;
 
 	const rawMT = Number(settings.marginTop ?? 0) || 0;
 	const rawMR = Number(settings.marginRight ?? 0) || 0;
@@ -165,7 +189,7 @@ export function BreakpointFrame({ children, nav }: Props) {
 				data-breakpoint={breakpoint}
 				className={`relative max-w-full h-full overflow-x-hidden overflow-y-hidden ${isDesktop ? "" : "rounded-lg border border-border shadow-sm"}`}
 				style={{
-					width: WIDTHS[breakpoint],
+					width: `${normalizedWidth}px`,
 					...themeVars(themeTokens.colors, themeTokens.typography),
 					background: pageBgDisabled ? "transparent" : curtainBg,
 				}}
