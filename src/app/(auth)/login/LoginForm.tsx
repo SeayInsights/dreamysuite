@@ -1,17 +1,51 @@
 "use client";
 
-import { useActionState } from "react";
+import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 
-type State = { error: string | null };
+export default function LoginForm() {
+  const [error, setError] = useState<string | null>(null);
+  const [isPending, startTransition] = useTransition();
+  const router = useRouter();
 
-interface Props {
-  action: (prevState: State, formData: FormData) => Promise<State>;
-}
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setError(null);
 
-export default function LoginForm({ action }: Props) {
-  const [state, formAction, pending] = useActionState(action, { error: null });
-  const error = state?.error ?? null;
+    const formData = new FormData(e.currentTarget);
+    const email = String(formData.get("email") ?? "");
+    const password = String(formData.get("password") ?? "");
+
+    if (!email || !password) {
+      setError("Email and password are required.");
+      return;
+    }
+
+    startTransition(async () => {
+      try {
+        const res = await fetch("/api/auth/sign-in/email", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password }),
+          credentials: "include", // Important: include cookies
+        });
+
+        if (!res.ok) {
+          setError("Invalid email or password.");
+          return;
+        }
+
+        // Success - redirect to dashboard
+        router.push("/");
+        router.refresh(); // Refresh to pick up new session
+      } catch {
+        setError("Invalid email or password.");
+      }
+    });
+  }
+
+  const pending = isPending;
 
   return (
     <div
@@ -41,7 +75,7 @@ export default function LoginForm({ action }: Props) {
       </p>
 
       <form
-        action={formAction}
+        onSubmit={handleSubmit}
         style={{ display: "flex", flexDirection: "column", gap: "1rem" }}
       >
         <div>
