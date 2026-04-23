@@ -18,10 +18,12 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     return NextResponse.json({ error: { code: "BAD_REQUEST", message: "rows must be an array and mapping must be an object" } }, { status: 400 });
   }
 
-  const existing = await env.DB.prepare("SELECT firstName, lastName FROM guest WHERE siteId = ?").bind(siteId).all<{ firstName: string; lastName: string | null }>();
-  const seen = new Set(existing.results.map(g => `${g.firstName.toLowerCase()}|${(g.lastName ?? "").toLowerCase()}`));
+  // Get existing contacts to avoid duplicates
+  const existing = await env.DB.prepare("SELECT name FROM contact WHERE site_id = ? AND contact_type = 'guest'").bind(siteId).all<{ name: string }>();
+  const seen = new Set(existing.results.map(c => c.name.toLowerCase()));
 
-  const maxRow = await env.DB.prepare("SELECT COALESCE(MAX(sortOrder), -1) as m FROM guest WHERE siteId = ?").bind(siteId).first<{ m: number }>();
+  // Get max sortOrder
+  const maxRow = await env.DB.prepare("SELECT COALESCE(MAX(CAST(json_extract(metadata, '$.sortOrder') AS INTEGER)), -1) as m FROM contact WHERE site_id = ? AND contact_type = 'guest'").bind(siteId).first<{ m: number }>();
   let nextOrder = (maxRow?.m ?? -1) + 1;
   const now = Date.now();
   const map = mapping as Record<string, string>;
@@ -43,19 +45,36 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     const fn = f.firstName as string | undefined;
     if (!fn) continue;
     const ln = (f.lastName as string | undefined) ?? null;
-    const key = `${fn.toLowerCase()}|${(ln ?? "").toLowerCase()}`;
+    const name = `${fn}${ln ? ' ' + ln : ''}`;
+    const key = name.toLowerCase();
     if (seen.has(key)) continue;
     seen.add(key);
-    toInsert.push({ ...f, _id: crypto.randomUUID(), _ln: ln, _fn: fn, _order: nextOrder++ });
+    toInsert.push({ ...f, _id: crypto.randomUUID(), _name: name, _order: nextOrder++ });
   }
 
   if (toInsert.length > 0) {
     const g = (f: Row, k: string) => (f[k] as unknown) ?? null;
-    const stmts = toInsert.map(f =>
-      env.DB.prepare(
-        "INSERT INTO guest (id,siteId,firstName,lastName,party,rsvpStatus,notes,address,phone,email,invitedBy,category,invited,ceremonyOrReception,invitationType,tableNumber,giftDescription,thankYouSent,sortOrder,createdAt,updatedAt) VALUES (?,?,?,?,?,'pending',?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
-      ).bind(g(f,"_id"),siteId,g(f,"_fn"),g(f,"_ln"),null,g(f,"notes"),g(f,"address"),g(f,"phone"),g(f,"email"),g(f,"invitedBy"),g(f,"category"),g(f,"invited"),g(f,"ceremonyOrReception"),g(f,"invitationType"),g(f,"tableNumber"),g(f,"giftDescription"),g(f,"thankYouSent"),g(f,"_order"),now,now)
-    );
+    const stmts = toInsert.map(f => {
+      const metadata = JSON.stringify({
+        rsvpStatus: 'pending',
+        party: null,
+        notes: g(f, "notes"),
+        address: g(f, "address"),
+        invitedBy: g(f, "invitedBy"),
+        category: g(f, "category"),
+        invited: g(f, "invited") ?? 0,
+        ceremonyOrReception: g(f, "ceremonyOrReception") ?? 'both',
+        invitationType: g(f, "invitationType") ?? 'digital',
+        tableNumber: g(f, "tableNumber"),
+        giftDescription: g(f, "giftDescription"),
+        thankYouSent: g(f, "thankYouSent") ?? 0,
+        sortOrder: g(f, "_order"),
+      });
+
+      return env.DB.prepare(
+        "INSERT INTO contact (id, site_id, name, email, phone, contact_type, metadata, status, created_at, updated_at) VALUES (?, ?, ?, ?, ?, 'guest', ?, 'active', ?, ?)"
+      ).bind(g(f, "_id"), siteId, g(f, "_name"), g(f, "email"), g(f, "phone"), metadata, now, now);
+    });
     await env.DB.batch(stmts);
   }
 

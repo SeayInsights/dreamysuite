@@ -14,15 +14,15 @@ export async function GET(
 
   const db = env.DB;
 
-  // RSVP stats
+  // RSVP stats from contact table
   const rsvpStats = await db
     .prepare(
       `SELECT
         COUNT(*) as total,
-        SUM(CASE WHEN rsvpStatus = 'yes' THEN 1 ELSE 0 END) as accepted,
-        SUM(CASE WHEN rsvpStatus = 'no' THEN 1 ELSE 0 END) as declined,
-        SUM(CASE WHEN rsvpStatus = 'pending' THEN 1 ELSE 0 END) as pending
-       FROM guest WHERE siteId = ?`
+        SUM(CASE WHEN json_extract(metadata, '$.rsvpStatus') = 'yes' THEN 1 ELSE 0 END) as accepted,
+        SUM(CASE WHEN json_extract(metadata, '$.rsvpStatus') = 'no' THEN 1 ELSE 0 END) as declined,
+        SUM(CASE WHEN json_extract(metadata, '$.rsvpStatus') = 'pending' THEN 1 ELSE 0 END) as pending
+       FROM contact WHERE site_id = ? AND contact_type = 'guest'`
     )
     .bind(siteId)
     .first<{ total: number; accepted: number; declined: number; pending: number }>();

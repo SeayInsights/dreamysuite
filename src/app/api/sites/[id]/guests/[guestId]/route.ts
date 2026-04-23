@@ -2,6 +2,44 @@ import { NextRequest, NextResponse } from "next/server";
 import { getEnv } from "@/lib/cloudflare";
 import { requireSiteOwnership, apiOwnershipError } from "@/lib/api/site-auth";
 
+// Helper to transform contact row to legacy guest format
+function contactToGuest(contact: any) {
+  let metadata: any = {};
+  try {
+    metadata = typeof contact.metadata === 'string' ? JSON.parse(contact.metadata) : (contact.metadata || {});
+  } catch (error) {
+    console.error('[GUEST] Failed to parse contact metadata:', error);
+    metadata = {};
+  }
+  const [firstName, ...lastNameParts] = (contact.name || '').split(' ');
+
+  return {
+    id: contact.id,
+    siteId: contact.site_id,
+    firstName: firstName || '',
+    lastName: lastNameParts.join(' ') || null,
+    email: contact.email || null,
+    phone: contact.phone || null,
+    rsvpStatus: metadata.rsvpStatus || 'pending',
+    party: metadata.party ?? null,
+    notes: metadata.notes || null,
+    address: metadata.address || null,
+    invitedBy: metadata.invitedBy || null,
+    category: metadata.category || null,
+    invited: metadata.invited ?? 0,
+    ceremonyOrReception: metadata.ceremonyOrReception || 'both',
+    invitationType: metadata.invitationType || 'digital',
+    tableNumber: metadata.tableNumber || null,
+    giftDescription: metadata.giftDescription || null,
+    thankYouSent: metadata.thankYouSent ?? 0,
+    customResponses: metadata.customResponses || null,
+    sortOrder: metadata.sortOrder ?? 0,
+    rsvpSubmittedAt: metadata.rsvpSubmittedAt || null,
+    createdAt: contact.created_at,
+    updatedAt: contact.updated_at,
+  };
+}
+
 export async function DELETE(
   req: NextRequest,
   { params }: { params: Promise<{ id: string; guestId: string }> }
@@ -12,17 +50,17 @@ export async function DELETE(
   const check = await requireSiteOwnership(req, env, siteId);
   if ("error" in check) return apiOwnershipError(check);
 
-  const guest = await env.DB
-    .prepare("SELECT * FROM guest WHERE id = ? AND siteId = ?")
+  const contact = await env.DB
+    .prepare("SELECT * FROM contact WHERE id = ? AND site_id = ? AND contact_type = 'guest'")
     .bind(guestId, siteId)
     .first();
 
-  if (!guest) {
+  if (!contact) {
     return NextResponse.json({ error: { code: "NOT_FOUND", message: "Guest not found" } }, { status: 404 });
   }
 
   await env.DB
-    .prepare("DELETE FROM guest WHERE id = ?")
+    .prepare("DELETE FROM contact WHERE id = ?")
     .bind(guestId)
     .run();
 
@@ -39,12 +77,12 @@ export async function PATCH(
   const check = await requireSiteOwnership(req, env, siteId);
   if ("error" in check) return apiOwnershipError(check);
 
-  const guest = await env.DB
-    .prepare("SELECT * FROM guest WHERE id = ? AND siteId = ?")
+  const contact = await env.DB
+    .prepare("SELECT * FROM contact WHERE id = ? AND site_id = ? AND contact_type = 'guest'")
     .bind(guestId, siteId)
-    .first();
+    .first<{ id: string; site_id: string; name: string; email: string | null; phone: string | null; metadata: string; created_at: number; updated_at: number }>();
 
-  if (!guest) {
+  if (!contact) {
     return NextResponse.json({ error: { code: "NOT_FOUND", message: "Guest not found" } }, { status: 404 });
   }
 
@@ -84,49 +122,76 @@ export async function PATCH(
     return NextResponse.json({ error: { code: "BAD_REQUEST", message: "invitationType must be digital, printed, or both" } }, { status: 400 });
   }
 
+  // Parse existing metadata
+  let metadata: any = {};
+  try {
+    metadata = typeof contact.metadata === 'string' ? JSON.parse(contact.metadata) : (contact.metadata || {});
+  } catch (error) {
+    console.error('[GUEST] Failed to parse contact metadata:', error);
+    metadata = {};
+  }
+  let nameUpdated = false;
+  let newName = contact.name;
+
+  // Update metadata fields
+  if (body.firstName !== undefined || body.lastName !== undefined) {
+    const [currentFirstName, ...currentLastNameParts] = contact.name.split(' ');
+    const firstName = body.firstName ?? currentFirstName;
+    const lastName = body.lastName !== undefined ? body.lastName : currentLastNameParts.join(' ');
+    newName = `${firstName}${lastName ? ' ' + lastName : ''}`;
+    nameUpdated = true;
+  }
+
+  if (body.party !== undefined) metadata.party = body.party;
+  if (body.notes !== undefined) metadata.notes = body.notes;
+  if (body.rsvpStatus !== undefined) {
+    metadata.rsvpStatus = body.rsvpStatus;
+    metadata.rsvpSubmittedAt = Date.now();
+  }
+  if (body.address !== undefined) metadata.address = body.address;
+  if (body.invitedBy !== undefined) metadata.invitedBy = body.invitedBy;
+  if (body.category !== undefined) metadata.category = body.category;
+  if (body.invited !== undefined) metadata.invited = body.invited;
+  if (body.ceremonyOrReception !== undefined) metadata.ceremonyOrReception = body.ceremonyOrReception;
+  if (body.invitationType !== undefined) metadata.invitationType = body.invitationType;
+  if (body.tableNumber !== undefined) metadata.tableNumber = body.tableNumber;
+  if (body.giftDescription !== undefined) metadata.giftDescription = body.giftDescription;
+  if (body.thankYouSent !== undefined) metadata.thankYouSent = body.thankYouSent;
+  if (body.customResponses !== undefined) metadata.customResponses = body.customResponses;
+
+  // Build update query
   const fields: string[] = [];
   const values: unknown[] = [];
 
-  if (body.firstName !== undefined) { fields.push("firstName = ?"); values.push(body.firstName); }
-  if (body.lastName !== undefined) { fields.push("lastName = ?"); values.push(body.lastName); }
-  if (body.party !== undefined) { fields.push("party = ?"); values.push(body.party); }
-  if (body.notes !== undefined) { fields.push("notes = ?"); values.push(body.notes); }
-  if (body.rsvpStatus !== undefined) {
-    fields.push("rsvpStatus = ?");
-    values.push(body.rsvpStatus);
-    fields.push("rsvpSubmittedAt = ?");
-    values.push(Date.now());
+  if (nameUpdated) {
+    fields.push("name = ?");
+    values.push(newName);
   }
-  if (body.address !== undefined) { fields.push("address = ?"); values.push(body.address); }
-  if (body.phone !== undefined) { fields.push("phone = ?"); values.push(body.phone); }
-  if (body.email !== undefined) { fields.push("email = ?"); values.push(body.email); }
-  if (body.invitedBy !== undefined) { fields.push("invitedBy = ?"); values.push(body.invitedBy); }
-  if (body.category !== undefined) { fields.push("category = ?"); values.push(body.category); }
-  if (body.invited !== undefined) { fields.push("invited = ?"); values.push(body.invited); }
-  if (body.ceremonyOrReception !== undefined) { fields.push("ceremonyOrReception = ?"); values.push(body.ceremonyOrReception); }
-  if (body.invitationType !== undefined) { fields.push("invitationType = ?"); values.push(body.invitationType); }
-  if (body.tableNumber !== undefined) { fields.push("tableNumber = ?"); values.push(body.tableNumber); }
-  if (body.giftDescription !== undefined) { fields.push("giftDescription = ?"); values.push(body.giftDescription); }
-  if (body.thankYouSent !== undefined) { fields.push("thankYouSent = ?"); values.push(body.thankYouSent); }
-  if (body.customResponses !== undefined) { fields.push("customResponses = ?"); values.push(body.customResponses); }
-
-  if (fields.length === 0) {
-    return NextResponse.json({ error: { code: "BAD_REQUEST", message: "No fields to update" } }, { status: 400 });
+  if (body.email !== undefined) {
+    fields.push("email = ?");
+    values.push(body.email);
+  }
+  if (body.phone !== undefined) {
+    fields.push("phone = ?");
+    values.push(body.phone);
   }
 
-  fields.push("updatedAt = ?");
+  fields.push("metadata = ?");
+  values.push(JSON.stringify(metadata));
+  fields.push("updated_at = ?");
   values.push(Date.now());
   values.push(guestId);
 
   await env.DB
-    .prepare(`UPDATE guest SET ${fields.join(", ")} WHERE id = ?`)
+    .prepare(`UPDATE contact SET ${fields.join(", ")} WHERE id = ?`)
     .bind(...values)
     .run();
 
   const updated = await env.DB
-    .prepare("SELECT * FROM guest WHERE id = ?")
+    .prepare("SELECT * FROM contact WHERE id = ?")
     .bind(guestId)
     .first();
 
-  return NextResponse.json({ guest: updated });
+  const guest = contactToGuest(updated);
+  return NextResponse.json({ guest });
 }
