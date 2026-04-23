@@ -1,0 +1,96 @@
+
+> dreamysuite@0.1.0 build
+> node scripts/build-public-effects.mjs && next build --webpack
+
+Building Preact runtime...
+Runtime built
+
+Built 101 effects
+Skipped 3: Carousel, ScrollStack, GradualBlur
+⚠ Warning: Next.js inferred your workspace root, but it may not be correct.
+ We detected multiple lockfiles and selected the directory of C:\Users\Dannis Seay\package-lock.json as the root directory.
+ To silence this warning, set `outputFileTracingRoot` in your Next.js config, or consider removing one of the lockfiles if it's not needed.
+   See https://nextjs.org/docs/app/api-reference/config/next-config-js/output#caveats for more information.
+ Detected additional lockfiles: 
+   * C:\Users\Dannis Seay\builds\dreamysuite\package-lock.json
+
+Using secrets defined in .dev.vars
+▲ Next.js 16.2.3 (webpack)
+- Environments: .env.local
+
+⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+  Creating an optimized production build ...
+✓ Compiled successfully in 20.8s
+  Running TypeScript ...
+  Finished TypeScript in 14.7s ...
+  Collecting page data using 15 workers ...
+  Generating static pages using 15 workers (0/18) ...
+Using secrets defined in .dev.vars
+Using secrets defined in .dev.vars
+Using secrets defined in .dev.vars
+Using secrets defined in .dev.vars
+Using secrets defined in .dev.vars
+Using secrets defined in .dev.vars
+  Generating static pages using 15 workers (4/18) 
+  Generating static pages using 15 workers (8/18) 
+  Generating static pages using 15 workers (13/18) 
+✓ Generating static pages using 15 workers (18/18) in 3.5s
+  Finalizing page optimization ...
+  Collecting build traces ...
+
+Route (app)
+┌ ƒ /
+├ ○ /_not-found
+├ ƒ /[slug]
+├ ƒ /api/auth/[...all]
+├ ƒ /api/canva/callback
+├ ƒ /api/canva/connect
+├ ƒ /api/domain/check
+├ ƒ /api/domain/purchase
+├ ƒ /api/health
+├ ƒ /api/maps/embed
+├ ƒ /api/places/details
+├ ƒ /api/places/photo
+├ ƒ /api/places/search
+├ ƒ /api/public/[siteSlug]
+├ ƒ /api/public/[siteSlug]/guestbook
+├ ƒ /api/public/[siteSlug]/rsvp
+├ ƒ /api/sites/[id]/analytics
+├ ƒ /api/sites/[id]/blocks
+├ ƒ /api/sites/[id]/blocks/[blockId]
+├ ƒ /api/sites/[id]/blocks/reorder
+├ ƒ /api/sites/[id]/canva/designs
+├ ƒ /api/sites/[id]/canva/import
+├ ƒ /api/sites/[id]/content
+├ ƒ /api/sites/[id]/guestbook
+├ ƒ /api/sites/[id]/guests
+├ ƒ /api/sites/[id]/guests/[guestId]
+├ ƒ /api/sites/[id]/guests/import
+├ ƒ /api/sites/[id]/invites
+├ ƒ /api/sites/[id]/media
+├ ƒ /api/sites/[id]/media/[mediaId]
+├ ƒ /api/sites/[id]/pages
+├ ƒ /api/sites/[id]/pages/[pageId]
+├ ƒ /api/sites/[id]/photos
+├ ƒ /api/sites/[id]/photos/[photoId]
+├ ƒ /api/sites/[id]/rsvp
+├ ƒ /api/sites/[id]/settings
+├ ƒ /api/sites/[id]/templates
+├ ƒ /api/sites/[id]/templates/[templateId]
+├ ƒ /api/sites/[id]/translate
+├ ƒ /api/sites/[id]/translations
+├ ƒ /api/telemetry
+├ ○ /forgot-password
+├ ƒ /login
+├ ƒ /preview/[siteId]
+├ ○ /reset-password
+├ ƒ /signup
+├ ƒ /sites/[id]
+└ ƒ /sites/new
+
+
+ƒ Proxy (Middleware)
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+
