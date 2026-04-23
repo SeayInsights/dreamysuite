@@ -24,7 +24,7 @@ export async function POST(
     );
   }
 
-  let body: { firstName?: string; lastName?: string; email?: string; rsvpStatus?: string };
+  let body: { firstName?: string; lastName?: string; email?: string; rsvpStatus?: string; notes?: string; customResponses?: Record<string, unknown> };
   try {
     body = await req.json();
   } catch {
@@ -34,7 +34,7 @@ export async function POST(
     );
   }
 
-  const { firstName, lastName, email, rsvpStatus } = body;
+  const { firstName, lastName, email, rsvpStatus, notes, customResponses } = body;
   if (!firstName?.trim()) {
     return NextResponse.json(
       { error: { code: "BAD_REQUEST", message: "firstName is required" } },
@@ -54,27 +54,94 @@ export async function POST(
   const VALID_STATUSES = ["pending", "yes", "no"];
   const status = VALID_STATUSES.includes(rsvpStatus ?? "") ? rsvpStatus! : "pending";
 
-  const id = crypto.randomUUID();
+  const firstNameClean = firstName.trim();
+  const lastNameClean = lastName?.trim() ?? "";
+  const emailClean = email?.trim() || null;
+  const notesClean = notes?.trim() || null;
   const now = Date.now();
 
-  const maxOrder = await env.DB
-    .prepare("SELECT COALESCE(MAX(sortOrder), -1) as maxOrder FROM guest WHERE siteId = ?")
-    .bind(siteId)
-    .first<{ maxOrder: number }>();
+  // Upsert contact: match by email first (if provided), fallback to name
+  let contactId: string;
+  let existingContact: { id: string } | null = null;
 
-  const sortOrder = (maxOrder?.maxOrder ?? -1) + 1;
+  if (emailClean) {
+    existingContact = await env.DB
+      .prepare("SELECT id FROM contact WHERE site_id = ? AND email = ?")
+      .bind(siteId, emailClean)
+      .first<{ id: string }>();
+  }
 
+  if (!existingContact) {
+    existingContact = await env.DB
+      .prepare("SELECT id FROM contact WHERE site_id = ? AND LOWER(name) = LOWER(?)")
+      .bind(siteId, `${firstNameClean} ${lastNameClean}`)
+      .first<{ id: string }>();
+  }
+
+  if (existingContact) {
+    // Update existing contact
+    contactId = existingContact.id;
+    await env.DB
+      .prepare(
+        "UPDATE contact SET name = ?, email = ?, metadata = ?, updated_at = ? WHERE id = ?"
+      )
+      .bind(
+        `${firstNameClean} ${lastNameClean}`,
+        emailClean,
+        JSON.stringify({
+          rsvpStatus: status === "yes" ? "attending" : status === "no" ? "not-attending" : "pending",
+          customResponses: customResponses ?? {},
+          notes: notesClean
+        }),
+        now,
+        contactId
+      )
+      .run();
+  } else {
+    // Create new contact
+    contactId = crypto.randomUUID();
+    await env.DB
+      .prepare(
+        "INSERT INTO contact (id, site_id, name, email, contact_type, metadata, status, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
+      )
+      .bind(
+        contactId,
+        siteId,
+        `${firstNameClean} ${lastNameClean}`,
+        emailClean,
+        'guest',
+        JSON.stringify({
+          rsvpStatus: status === "yes" ? "attending" : status === "no" ? "not-attending" : "pending",
+          customResponses: customResponses ?? {},
+          notes: notesClean
+        }),
+        'active',
+        now,
+        now
+      )
+      .run();
+  }
+
+  // Create submission record
+  const submissionId = crypto.randomUUID();
   await env.DB
     .prepare(
-      "INSERT INTO guest (id, siteId, firstName, lastName, email, rsvpStatus, rsvpSubmittedAt, sortOrder, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+      "INSERT INTO submission (id, site_id, contact_id, submission_type, data, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)"
     )
     .bind(
-      id, siteId,
-      firstName.trim(),
-      lastName?.trim() ?? null,
-      email?.trim() ?? null,
-      status,
-      now, sortOrder, now, now,
+      submissionId,
+      siteId,
+      contactId,
+      'rsvp',
+      JSON.stringify({
+        attending: status === "yes",
+        firstName: firstNameClean,
+        lastName: lastNameClean,
+        notes: notesClean,
+        customResponses: customResponses ?? {}
+      }),
+      now,
+      now
     )
     .run();
 

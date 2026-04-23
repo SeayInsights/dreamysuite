@@ -15,6 +15,7 @@ import {
 } from "@/lib/crypto/guestPassword";
 import { LANG_NATIVE } from "@/lib/languages";
 import { detectDesignedAtWidth } from "@/lib/responsiveScale";
+import { getSiteTypeSettings } from "@/lib/schemas/site-type-settings";
 
 const R3F_EFFECTS = new Set(["silk", "beams", "dither", "antigravity", "pixel-trail"]);
 
@@ -53,7 +54,12 @@ export async function GET(
     return new Response(notFoundHtml(), { status: 404, headers: { "content-type": "text/html; charset=utf-8" } });
   }
 
-  const settings = await db.prepare("SELECT siteId, accentColor, animation, bgColor, bgImage, bgImageBleed, bgImageLayer, bgImageOpacity, bodyColor, bodyFont, cardColor, cardImage, effectBg, effectCard, effectColor1, effectColor2, effectColor3, effectCursor, effectDecoration, effectNavStyle, effectText, effectTransition, envelopeColor, eventDate, eventLocation, eventName, greeting, guestPassword, headingColor, headingFont, isLive, mainLanguage, marginBottom, marginLeft, marginRight, marginTop, musicBtnBg, musicBtnColor, musicUrl, navBg, navBrandColor, navHighlightColor, navLinkColor, navLinkPadding, navMaterial, navPosition, navShape, navUnderline, ogImage, passwordPages, popupBundle, popupEnabled, popupTitle, popupTicker, sealInitials, sectionSpacing, seoDescription, seoTitle, secondLanguage, showNavBrand, siteBorderColor, siteLanguages, siteMaxWidth, siteTextColor FROM site_setting WHERE siteId = ?").bind(site.id).first<SiteSettingRow>();
+  // Fetch settings: merge universal settings with type-specific settings
+  const universalSettings = await db.prepare("SELECT * FROM site_setting WHERE siteId = ?").bind(site.id).first<SiteSettingRow>();
+  const typeSettings = await getSiteTypeSettings(db, site.id);
+  const settings = universalSettings && typeSettings
+    ? { ...universalSettings, ...typeSettings.settings }
+    : universalSettings;
 
   if (settings) {
     const effectKeys = ["effectBg", "effectText", "effectCard", "effectTransition", "effectCursor", "effectDecoration", "effectNavStyle"] as const;

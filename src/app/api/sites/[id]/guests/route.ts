@@ -22,6 +22,44 @@ const GuestSchema = z.object({
   customResponses: z.string().nullable().optional(),
 });
 
+// Helper to transform contact row to legacy guest format
+function contactToGuest(contact: any) {
+  let metadata: any = {};
+  try {
+    metadata = typeof contact.metadata === 'string' ? JSON.parse(contact.metadata) : (contact.metadata || {});
+  } catch (error) {
+    console.error('[GUEST] Failed to parse contact metadata:', error);
+    metadata = {};
+  }
+  const [firstName, ...lastNameParts] = (contact.name || '').split(' ');
+
+  return {
+    id: contact.id,
+    siteId: contact.site_id,
+    firstName: firstName || '',
+    lastName: lastNameParts.join(' ') || null,
+    email: contact.email || null,
+    phone: contact.phone || null,
+    rsvpStatus: metadata.rsvpStatus || 'pending',
+    party: metadata.party ?? null,
+    notes: metadata.notes || null,
+    address: metadata.address || null,
+    invitedBy: metadata.invitedBy || null,
+    category: metadata.category || null,
+    invited: metadata.invited ?? 0,
+    ceremonyOrReception: metadata.ceremonyOrReception || 'both',
+    invitationType: metadata.invitationType || 'digital',
+    tableNumber: metadata.tableNumber || null,
+    giftDescription: metadata.giftDescription || null,
+    thankYouSent: metadata.thankYouSent ?? 0,
+    customResponses: metadata.customResponses || null,
+    sortOrder: metadata.sortOrder ?? 0,
+    rsvpSubmittedAt: metadata.rsvpSubmittedAt || null,
+    createdAt: contact.created_at,
+    updatedAt: contact.updated_at,
+  };
+}
+
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -43,17 +81,18 @@ export async function GET(
   let result;
   if (statusFilter) {
     result = await env.DB
-      .prepare("SELECT * FROM guest WHERE siteId = ? AND rsvpStatus = ? ORDER BY sortOrder ASC, lastName ASC")
+      .prepare("SELECT * FROM contact WHERE site_id = ? AND contact_type = 'guest' AND json_extract(metadata, '$.rsvpStatus') = ? ORDER BY json_extract(metadata, '$.sortOrder') ASC, name ASC")
       .bind(siteId, statusFilter)
       .all();
   } else {
     result = await env.DB
-      .prepare("SELECT * FROM guest WHERE siteId = ? ORDER BY sortOrder ASC, lastName ASC")
+      .prepare("SELECT * FROM contact WHERE site_id = ? AND contact_type = 'guest' ORDER BY json_extract(metadata, '$.sortOrder') ASC, name ASC")
       .bind(siteId)
       .all();
   }
 
-  return NextResponse.json({ guests: result.results });
+  const guests = result.results.map(contactToGuest);
+  return NextResponse.json({ guests });
 }
 
 export async function POST(
@@ -82,19 +121,41 @@ export async function POST(
   const id = crypto.randomUUID();
   const now = Date.now();
 
+  // Get max sortOrder from existing contacts
   const maxOrder = await env.DB
-    .prepare("SELECT COALESCE(MAX(sortOrder), -1) as maxOrder FROM guest WHERE siteId = ?")
+    .prepare("SELECT COALESCE(MAX(CAST(json_extract(metadata, '$.sortOrder') AS INTEGER)), -1) as maxOrder FROM contact WHERE site_id = ? AND contact_type = 'guest'")
     .bind(siteId)
     .first<{ maxOrder: number }>();
 
   const sortOrder = (maxOrder?.maxOrder ?? -1) + 1;
 
-  const guest = await env.DB
+  // Build metadata JSON
+  const metadata = JSON.stringify({
+    rsvpStatus: 'pending',
+    party: party ?? null,
+    notes: notes ?? null,
+    address: address ?? null,
+    invitedBy: invitedBy ?? null,
+    category: category ?? null,
+    invited: invited ?? 0,
+    ceremonyOrReception: ceremonyOrReception ?? 'both',
+    invitationType: invitationType ?? 'digital',
+    tableNumber: tableNumber ?? null,
+    giftDescription: giftDescription ?? null,
+    thankYouSent: thankYouSent ?? 0,
+    customResponses: customResponses ?? null,
+    sortOrder,
+  });
+
+  const name = `${firstName}${lastName ? ' ' + lastName : ''}`;
+
+  const contact = await env.DB
     .prepare(
-      "INSERT INTO guest (id, siteId, firstName, lastName, party, rsvpStatus, notes, sortOrder, createdAt, updatedAt, address, phone, email, invitedBy, category, invited, ceremonyOrReception, invitationType, tableNumber, giftDescription, thankYouSent, customResponses) VALUES (?, ?, ?, ?, ?, 'pending', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING *"
+      "INSERT INTO contact (id, site_id, name, email, phone, contact_type, metadata, status, created_at, updated_at) VALUES (?, ?, ?, ?, ?, 'guest', ?, 'active', ?, ?) RETURNING *"
     )
-    .bind(id, siteId, firstName, lastName ?? null, party ?? null, notes ?? null, sortOrder, now, now, address ?? null, phone ?? null, email ?? null, invitedBy ?? null, category ?? null, invited ?? 0, ceremonyOrReception ?? "both", invitationType ?? "digital", tableNumber ?? null, giftDescription ?? null, thankYouSent ?? 0, customResponses ?? null)
+    .bind(id, siteId, name, email ?? null, phone ?? null, metadata, now, now)
     .first();
 
+  const guest = contactToGuest(contact);
   return NextResponse.json({ guest }, { status: 201 });
 }

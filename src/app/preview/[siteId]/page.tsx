@@ -5,6 +5,7 @@ import { createAuth } from "@/app/lib/auth.server";
 import { settingsToTheme } from "@/app/stores/slices/theme";
 import { parseCfg } from "@/lib/editableField";
 import { detectDesignedAtWidth } from "@/lib/responsiveScale";
+import { getSiteTypeSettings } from "@/lib/schemas/site-type-settings";
 import { PreviewContent } from "./PreviewContent";
 
 interface RawBlock {
@@ -67,10 +68,16 @@ export default async function PreviewPage({ params }: { params: Promise<{ siteId
         .all<RawBlock>()).results
     : [];
 
-  const settings = await env.DB
+  const universalSettings = await env.DB
     .prepare("SELECT accentColor, bgColor, bgImage, bgImageOpacity, sectionSpacing, headingFont, bodyFont, headingColor, siteTextColor, bodyColor FROM site_setting WHERE siteId = ?")
     .bind(siteId)
     .first<SiteSettings>();
+
+  const typeSettings = await getSiteTypeSettings(env.DB, siteId);
+
+  const settings = universalSettings && typeSettings
+    ? { ...universalSettings, ...typeSettings.settings }
+    : universalSettings;
 
   const theme = settingsToTheme(settings ?? {});
   const blocks = rawBlocks.map((b) => ({ ...b, config: parseCfg(b.config) }));

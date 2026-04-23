@@ -6,20 +6,30 @@ import { isRateLimited } from "@/lib/rateLimit";
 
 export async function GET(
   _req: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
+  { params }: { params: Promise<{ siteSlug: string }> },
 ) {
   const env = await getEnv();
-  const { id: siteId } = await params;
+  const { siteSlug } = await params;
 
-  const site = await env.DB.prepare("SELECT id FROM site WHERE id = ? AND status = 'published'").bind(siteId).first();
-  if (!site) return NextResponse.json({ error: { code: "NOT_FOUND", message: "Site not found" } }, { status: 404 });
+  // Look up the site by slug
+  const site = await env.DB
+    .prepare("SELECT id FROM site WHERE slug = ? AND status = 'published'")
+    .bind(siteSlug)
+    .first<{ id: string }>();
+
+  if (!site) {
+    return NextResponse.json(
+      { error: { code: "NOT_FOUND", message: "Site not found" } },
+      { status: 404 }
+    );
+  }
 
   try {
     const result = await env.DB
       .prepare(
         "SELECT id, data, created_at FROM submission WHERE site_id = ? AND submission_type = 'guestbook' AND status = 'approved' ORDER BY created_at DESC LIMIT 100",
       )
-      .bind(siteId)
+      .bind(site.id)
       .all<{ id: string; data: string; created_at: number }>();
 
     // Transform submissions to extract name/message from data JSON
@@ -45,7 +55,7 @@ export async function GET(
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
+  { params }: { params: Promise<{ siteSlug: string }> },
 ) {
   const env = await getEnv();
 
@@ -55,13 +65,14 @@ export async function POST(
     return NextResponse.json({ error: "Too many requests" }, { status: 429 });
   }
 
-  const { id: siteId } = await params;
+  const { siteSlug } = await params;
 
-  // Verify site exists
+  // Look up the site by slug
   const site = await env.DB
-    .prepare("SELECT id FROM site WHERE id = ? AND status = 'published'")
-    .bind(siteId)
-    .first();
+    .prepare("SELECT id FROM site WHERE slug = ? AND status = 'published'")
+    .bind(siteSlug)
+    .first<{ id: string }>();
+
   if (!site) {
     return NextResponse.json(
       { error: { code: "NOT_FOUND", message: "Site not found" } },
@@ -105,7 +116,7 @@ export async function POST(
       )
       .bind(
         id,
-        siteId,
+        site.id,
         null, // contact_id is null for anonymous guest book entries
         'guestbook',
         JSON.stringify({ name: name.trim(), message: message.trim() }),
