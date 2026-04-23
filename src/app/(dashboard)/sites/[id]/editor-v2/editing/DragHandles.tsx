@@ -160,8 +160,7 @@ export function DragHandles({ containerRef }: Props) {
 						onClick={(e) => e.stopPropagation()}
 						className="pointer-events-auto fixed"
 						style={{
-							left: visualLeft - hitPad,
-							top: visualTop - hitPad,
+							transform: `translate(${visualLeft - hitPad}px, ${visualTop - hitPad}px)`,
 							width: TOUCH_TARGET,
 							height: TOUCH_TARGET,
 							cursor,
@@ -170,6 +169,7 @@ export function DragHandles({ containerRef }: Props) {
 							display: "flex",
 							alignItems: "center",
 							justifyContent: "center",
+							willChange: "transform",
 						}}
 					>
 						<div

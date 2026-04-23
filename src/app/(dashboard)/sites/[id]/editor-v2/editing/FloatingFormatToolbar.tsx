@@ -24,8 +24,8 @@ export type FormatCommand =
   | { type: "justifyRight" };
 
 export interface FloatingFormatToolbarProps {
-  top: number;
-  left: number;
+  x: number;
+  y: number;
   onFormat: (cmd: FormatCommand) => void;
 }
 
@@ -93,7 +93,7 @@ function Divider() {
 /**
  * FloatingFormatToolbar
  *
- * Rendered as position:fixed so `top`/`left` are viewport-relative.
+ * Rendered as position:fixed with GPU-accelerated transform positioning.
  * All interactive elements use onMouseDown + e.preventDefault() to prevent the
  * contentEditable element from losing focus before the execCommand fires.
  *
@@ -101,8 +101,8 @@ function Divider() {
  * document.execCommand in response — keeping side-effects out of this component.
  */
 export function FloatingFormatToolbar({
-  top,
-  left,
+  x,
+  y,
   onFormat,
 }: FloatingFormatToolbarProps): JSX.Element {
   const colorRef = useRef<HTMLInputElement>(null);
@@ -170,7 +170,7 @@ export function FloatingFormatToolbar({
         "fixed z-50 flex items-center gap-0.5 rounded-lg border border-border",
         "bg-popover px-2 py-1.5 shadow-lg",
       )}
-      style={{ top, left }}
+      style={{ transform: `translate(${x}px, ${y}px)`, willChange: "transform" }}
       // Prevent any mouse interaction from stealing focus from the editable
       onMouseDown={(e) => e.preventDefault()}
     >
