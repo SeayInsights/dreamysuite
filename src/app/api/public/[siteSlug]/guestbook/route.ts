@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getEnv } from "@/lib/cloudflare";
 import { isRateLimited } from "@/lib/rateLimit";
 
-// Public guestbook endpoints — accessible via slug, no auth required
+// Public guest book endpoints — no auth required so site visitors can sign and read.
 
 export async function GET(
   _req: NextRequest,
@@ -11,17 +11,46 @@ export async function GET(
   const env = await getEnv();
   const { siteSlug } = await params;
 
-  const site = await env.DB.prepare("SELECT id FROM site WHERE slug = ? AND isLive = 1").bind(siteSlug).first<{ id: string }>();
-  if (!site) return NextResponse.json({ error: { code: "NOT_FOUND", message: "Site not found" } }, { status: 404 });
+  // Look up the site by slug
+  const site = await env.DB
+    .prepare("SELECT id FROM site WHERE slug = ? AND status = 'published'")
+    .bind(siteSlug)
+    .first<{ id: string }>();
 
-  const result = await env.DB
-    .prepare(
-      "SELECT id, name, message, createdAt FROM guest_book_entry WHERE siteId = ? ORDER BY createdAt DESC LIMIT 100",
-    )
-    .bind(site.id)
-    .all();
+  if (!site) {
+    return NextResponse.json(
+      { error: { code: "NOT_FOUND", message: "Site not found" } },
+      { status: 404 }
+    );
+  }
 
-  return NextResponse.json({ entries: result.results });
+  try {
+    const result = await env.DB
+      .prepare(
+        "SELECT id, data, created_at FROM submission WHERE site_id = ? AND submission_type = 'guestbook' AND status = 'approved' ORDER BY created_at DESC LIMIT 100",
+      )
+      .bind(site.id)
+      .all<{ id: string; data: string; created_at: number }>();
+
+    // Transform submissions to extract name/message from data JSON
+    const entries = result.results.map((row) => {
+      const data = JSON.parse(row.data) as { name: string; message: string };
+      return {
+        id: row.id,
+        name: data.name,
+        message: data.message,
+        createdAt: row.created_at,
+      };
+    });
+
+    return NextResponse.json({ entries });
+  } catch (error) {
+    console.error("[GUESTBOOK] Database error:", error);
+    return NextResponse.json(
+      { error: { code: "SERVER_ERROR", message: "Failed to load entries" } },
+      { status: 500 }
+    );
+  }
 }
 
 export async function POST(
@@ -30,7 +59,7 @@ export async function POST(
 ) {
   const env = await getEnv();
 
-  // Rate limit: 5 requests per 600s per IP on guestbook
+  // Rate limit: 5 requests per 600 s per IP on guestbook
   const ip = req.headers.get("cf-connecting-ip") ?? "unknown";
   if (await isRateLimited(env.KV, `guestbook:${ip}`, 5, 600)) {
     return NextResponse.json({ error: "Too many requests" }, { status: 429 });
@@ -38,11 +67,12 @@ export async function POST(
 
   const { siteSlug } = await params;
 
-  // Verify site exists and is live
+  // Look up the site by slug
   const site = await env.DB
-    .prepare("SELECT id FROM site WHERE slug = ? AND isLive = 1")
+    .prepare("SELECT id FROM site WHERE slug = ? AND status = 'published'")
     .bind(siteSlug)
     .first<{ id: string }>();
+
   if (!site) {
     return NextResponse.json(
       { error: { code: "NOT_FOUND", message: "Site not found" } },
@@ -79,15 +109,32 @@ export async function POST(
   const id = crypto.randomUUID();
   const now = Date.now();
 
-  await env.DB
-    .prepare(
-      "INSERT INTO guest_book_entry (id, siteId, name, message, createdAt) VALUES (?, ?, ?, ?, ?)",
-    )
-    .bind(id, site.id, name.trim(), message.trim(), now)
-    .run();
+  try {
+    await env.DB
+      .prepare(
+        "INSERT INTO submission (id, site_id, contact_id, submission_type, data, status, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+      )
+      .bind(
+        id,
+        site.id,
+        null, // contact_id is null for anonymous guest book entries
+        'guestbook',
+        JSON.stringify({ name: name.trim(), message: message.trim() }),
+        'approved',
+        now,
+        now
+      )
+      .run();
 
-  return NextResponse.json(
-    { entry: { id, name: name.trim(), message: message.trim(), createdAt: now } },
-    { status: 201 },
-  );
+    return NextResponse.json(
+      { entry: { id, name: name.trim(), message: message.trim(), createdAt: now } },
+      { status: 201 },
+    );
+  } catch (error) {
+    console.error("[GUESTBOOK] Database error:", error);
+    return NextResponse.json(
+      { error: { code: "SERVER_ERROR", message: "Failed to save entry" } },
+      { status: 500 }
+    );
+  }
 }

@@ -14,14 +14,33 @@ export async function GET(
   const site = await env.DB.prepare("SELECT id FROM site WHERE id = ? AND status = 'published'").bind(siteId).first();
   if (!site) return NextResponse.json({ error: { code: "NOT_FOUND", message: "Site not found" } }, { status: 404 });
 
-  const result = await env.DB
-    .prepare(
-      "SELECT id, name, message, createdAt FROM guest_book_entry WHERE siteId = ? ORDER BY createdAt DESC LIMIT 100",
-    )
-    .bind(siteId)
-    .all();
+  try {
+    const result = await env.DB
+      .prepare(
+        "SELECT id, data, created_at FROM submission WHERE site_id = ? AND submission_type = 'guestbook' AND status = 'approved' ORDER BY created_at DESC LIMIT 100",
+      )
+      .bind(siteId)
+      .all<{ id: string; data: string; created_at: number }>();
 
-  return NextResponse.json({ entries: result.results });
+    // Transform submissions to extract name/message from data JSON
+    const entries = result.results.map((row) => {
+      const data = JSON.parse(row.data) as { name: string; message: string };
+      return {
+        id: row.id,
+        name: data.name,
+        message: data.message,
+        createdAt: row.created_at,
+      };
+    });
+
+    return NextResponse.json({ entries });
+  } catch (error) {
+    console.error("[GUESTBOOK] Database error:", error);
+    return NextResponse.json(
+      { error: { code: "SERVER_ERROR", message: "Failed to load entries" } },
+      { status: 500 }
+    );
+  }
 }
 
 export async function POST(
@@ -79,15 +98,32 @@ export async function POST(
   const id = crypto.randomUUID();
   const now = Date.now();
 
-  await env.DB
-    .prepare(
-      "INSERT INTO guest_book_entry (id, siteId, name, message, createdAt) VALUES (?, ?, ?, ?, ?)",
-    )
-    .bind(id, siteId, name.trim(), message.trim(), now)
-    .run();
+  try {
+    await env.DB
+      .prepare(
+        "INSERT INTO submission (id, site_id, contact_id, submission_type, data, status, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+      )
+      .bind(
+        id,
+        siteId,
+        null, // contact_id is null for anonymous guest book entries
+        'guestbook',
+        JSON.stringify({ name: name.trim(), message: message.trim() }),
+        'approved',
+        now,
+        now
+      )
+      .run();
 
-  return NextResponse.json(
-    { entry: { id, name: name.trim(), message: message.trim(), createdAt: now } },
-    { status: 201 },
-  );
+    return NextResponse.json(
+      { entry: { id, name: name.trim(), message: message.trim(), createdAt: now } },
+      { status: 201 },
+    );
+  } catch (error) {
+    console.error("[GUESTBOOK] Database error:", error);
+    return NextResponse.json(
+      { error: { code: "SERVER_ERROR", message: "Failed to save entry" } },
+      { status: 500 }
+    );
+  }
 }
