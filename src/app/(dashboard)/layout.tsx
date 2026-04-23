@@ -1,7 +1,5 @@
-import { headers } from "next/headers";
 import { redirect } from "next/navigation";
-import { getCloudflareContext } from "@opennextjs/cloudflare";
-import { createAuth } from "@/app/lib/auth.server";
+import { getAuthSession } from "@/lib/auth-session";
 import DashboardShell from "./dashboard-shell";
 
 // Dashboard CSS — copied in Task 2.11
@@ -12,22 +10,9 @@ export default async function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  // Cloudflare bindings are fully wired in Task 2.9.
-  // getCloudflareContext() returns the CF env at runtime.
-  const { env } = await getCloudflareContext({ async: true });
-
-  const auth = createAuth(env as Parameters<typeof createAuth>[0]);
-  const requestHeaders = await headers();
-  const session = await auth.api.getSession({ headers: requestHeaders });
-
-  console.log('[dashboard] session check:', {
-    hasSession: !!session,
-    userId: session?.user?.id,
-    cookies: requestHeaders.get('cookie')?.split(';').filter(c => c.includes('auth')).join('; ') || 'no auth cookies'
-  });
+  const session = await getAuthSession();
 
   if (!session) {
-    console.log('[dashboard] no session, redirecting to login');
     redirect("/login");
   }
 
