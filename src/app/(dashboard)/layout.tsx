@@ -20,7 +20,14 @@ export default async function DashboardLayout({
   const requestHeaders = await headers();
   const session = await auth.api.getSession({ headers: requestHeaders });
 
+  console.log('[dashboard] session check:', {
+    hasSession: !!session,
+    userId: session?.user?.id,
+    cookies: requestHeaders.get('cookie')?.split(';').filter(c => c.includes('auth')).join('; ') || 'no auth cookies'
+  });
+
   if (!session) {
+    console.log('[dashboard] no session, redirecting to login');
     redirect("/login");
   }
 

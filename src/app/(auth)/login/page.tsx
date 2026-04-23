@@ -43,6 +43,7 @@ export default async function LoginPage() {
 
       // Forward set-cookie headers from better-auth into Next.js cookies
       const cookieStore = await cookies();
+      let setCookieCount = 0;
       response.headers.forEach((value, key) => {
         if (key.toLowerCase() === "set-cookie") {
           // Parse "name=value; ..." and set via Next.js cookies API
@@ -58,9 +59,12 @@ export default async function LoginPage() {
             if (p.startsWith("samesite="))
               options.sameSite = p.slice(9) as "lax" | "strict" | "none";
           });
+          console.log('[login] setting cookie:', cookieName.trim(), 'options:', options);
           cookieStore.set(cookieName.trim(), cookieValue?.trim() ?? "", options);
+          setCookieCount++;
         }
       });
+      console.log('[login] set', setCookieCount, 'cookies from better-auth response');
     } catch {
       return { error: "Invalid email or password." };
     }
