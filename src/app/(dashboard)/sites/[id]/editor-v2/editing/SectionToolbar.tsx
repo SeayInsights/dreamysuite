@@ -491,8 +491,8 @@ export function SectionToolbar({
         "bg-popover px-0 py-1 shadow-lg",
       )}
       style={{
-        top: (renderPos?.top ?? 0) + dragOffset.top,
-        left: (renderPos?.left ?? 0) + dragOffset.left,
+        transform: `translate(${(renderPos?.left ?? 0) + dragOffset.left}px, ${(renderPos?.top ?? 0) + dragOffset.top}px)`,
+        willChange: toolbarDragRef.current ? "transform" : undefined,
       }}
       onMouseDown={(e) => e.stopPropagation()}
       onClick={(e) => e.stopPropagation()}

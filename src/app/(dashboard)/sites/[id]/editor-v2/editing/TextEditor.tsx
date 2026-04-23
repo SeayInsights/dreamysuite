@@ -534,8 +534,8 @@ export function TextEditor({
         typeof document !== "undefined" &&
         createPortal(
           <FloatingFormatToolbar
-            top={toolbar.position.top}
-            left={toolbar.position.left}
+            x={toolbar.position.left}
+            y={toolbar.position.top}
             onFormat={handleFormat}
           />,
           document.body,
