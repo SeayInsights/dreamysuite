@@ -1,0 +1,74 @@
+project: dreamysuite-multi-type-refactor
+spec: .planning/database-architecture-patterns.md
+plan: .planning/multi-type-refactor-plan.md
+date: 2026-04-22
+
+requirements:
+  TR-001:
+    description: Create new tables (contact, submission, site_type_config, site_type_settings, template) and add site_type to site
+    priority: must
+    tasks: [1, 2]
+    status: implemented
+    commits: [1721c3d]
+
+  TR-002:
+    description: Drop empty legacy tables (guest, guest_book_entry)
+    priority: must
+    tasks: [1]
+    status: implemented
+    commits: [1721c3d]
+
+  TR-003:
+    description: Recreate site_setting as slim universal table, migrate 1 row, move wedding fields to site_type_settings JSON
+    priority: must
+    tasks: [1]
+    status: implemented
+    commits: [1721c3d]
+
+  TR-004:
+    description: RSVP block + public endpoint write to contact + submission instead of guest
+    priority: must
+    tasks: [3, 4]
+    status: pending
+
+  TR-005:
+    description: Guest book block + endpoint write to submission instead of guest_book_entry
+    priority: must
+    tasks: [3, 5]
+    status: pending
+
+  TR-006:
+    description: Guest admin UI reads from contact table
+    priority: must
+    tasks: [3, 6]
+    status: pending
+
+  TR-007:
+    description: Settings schema + API reads/writes site_setting + site_type_settings
+    priority: must
+    tasks: [7, 8]
+    status: pending
+
+  TR-008:
+    description: Block registry has siteTypes filtering
+    priority: should
+    tasks: [9]
+    status: pending
+
+  TR-009:
+    description: Create-site flow has site type selector
+    priority: should
+    tasks: [10]
+    status: pending
+
+  TR-010:
+    description: Public site renderer uses new tables
+    priority: must
+    tasks: [11]
+    status: pending
+
+  TR-011:
+    description: Analytics endpoint reads from contact/submission
+    priority: must
+    tasks: [6]
+    status: pending
