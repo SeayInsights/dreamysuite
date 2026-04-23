@@ -23,8 +23,18 @@ const GuestSchema = z.object({
 });
 
 // Helper to transform contact row to legacy guest format
-function contactToGuest(contact: any) {
-  let metadata: any = {};
+interface ContactRow {
+  id: string;
+  name: string;
+  email: string | null;
+  phone: string | null;
+  metadata: string | Record<string, unknown>;
+  created_at: string;
+  updated_at: string;
+}
+
+function contactToGuest(contact: ContactRow) {
+  let metadata: Record<string, unknown> = {};
   try {
     metadata = typeof contact.metadata === 'string' ? JSON.parse(contact.metadata) : (contact.metadata || {});
   } catch (error) {
