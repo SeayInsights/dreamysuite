@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getEnv } from "@/lib/cloudflare";
 import { safeBlockConfig } from "@/lib/schemas/blocks";
 import { isRateLimited } from "@/lib/rateLimit";
+import { getSiteTypeSettings } from "@/lib/schemas/site-type-settings";
 
 function escEmail(s: string): string {
   return s
@@ -88,13 +89,16 @@ export async function GET(
     return jsonResponse({ error: { code: "NOT_FOUND", message: "Site not found" } }, 404, false);
   }
 
-  // Fetch settings (guestPassword excluded — server-only field for [slug]/route.ts)
-  const settings = await db
-    .prepare(
-      "SELECT siteId, eventName, eventDate, eventLocation, greeting, musicUrl, mainLanguage, secondLanguage, isLive, headingFont, bodyFont, accentColor, bgColor, updatedAt, songPages, songResetPages, headingColor, bodyColor, siteTextColor, siteBorderColor, buttonStyle, buttonBorderWidth, headingFontVi, bodyFontVi, navBg, navPosition, navBrandColor, navLinkColor, navHighlightColor, animation, bgImage, envelopeColor, sealInitials, cardColor, cardImage, navShape, navLinkPadding, navUnderline, popupEnabled, popupTitle, popupTicker, popupAfterAnimation, musicBtnBg, musicBtnColor, popupBundle, marginTop, marginRight, marginBottom, marginLeft, bgImageLayer, bgImageOpacity, siteMaxWidth, showNavBrand, sectionSpacing, pageTemplate, seoTitle, seoDescription, ogImage, pageBgDisabled, defaultAnimation, navItemsConfig, passwordPages, siteLanguages, navMaterial, effectPreset, effectBg, effectNav, effectText, effectCard, effectTransition, effectCursor, effectDecoration, effectNavStyle, effectColor1, effectColor2, effectColor3, defaultAnimDuration, defaultAnimDelay, defaultAnimTrigger FROM site_setting WHERE siteId = ?"
-    )
+  // Fetch settings: merge universal settings with type-specific settings (guestPassword excluded — server-only field)
+  const universalSettings = await db
+    .prepare("SELECT siteId, eventName, eventDate, mainLanguage, timezone, navBg, navPosition, navBrandColor, navLinkColor, navHighlightColor, navItemsConfig, createdAt, updatedAt FROM site_setting WHERE siteId = ?")
     .bind(site.id)
     .first();
+
+  const typeSettings = await getSiteTypeSettings(db, site.id);
+  const settings = universalSettings && typeSettings
+    ? { ...universalSettings, ...(typeSettings?.settings ?? {}) }
+    : universalSettings;
 
   // Log the page view asynchronously (fire-and-forget) — Note: waitUntil not available in Next.js route handlers directly;
   // we use a non-blocking pattern here
@@ -181,21 +185,6 @@ export async function GET(
 
 // ── RSVP submission ───────────────────────────────────────────────────────────
 
-interface GuestRow {
-  id: string;
-  siteId: string;
-  firstName: string;
-  lastName: string | null;
-  party: string | null;
-  rsvpStatus: "pending" | "yes" | "no";
-  notes: string | null;
-  rsvpSubmittedAt: number | null;
-  customResponses: string | null;
-  sortOrder: number;
-  createdAt: number;
-  updatedAt: number;
-}
-
 export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ siteSlug: string }> }
@@ -217,25 +206,25 @@ export async function POST(
   let attending: string | undefined;
   let notes: string | undefined;
   let guestEmail: string | undefined;
-  let customResponses: string | undefined;
+  let customResponses: Record<string, unknown> | undefined;
 
   const contentType = req.headers.get("content-type") ?? "";
   if (contentType.includes("application/json")) {
-    let body: Record<string, string>;
+    let body: Record<string, unknown>;
     try {
-      body = await req.json() as Record<string, string>;
+      body = await req.json() as Record<string, unknown>;
     } catch {
       return new Response(
         JSON.stringify({ ok: false, error: { code: "BAD_REQUEST", message: "Invalid JSON body" } }),
         { status: 400, headers: { "content-type": "application/json", "cache-control": "no-store" } }
       );
     }
-    firstName = body.firstName;
-    lastName = body.lastName;
-    attending = body.attending;
-    notes = body.notes;
-    guestEmail = body.email || undefined;
-    customResponses = body.customResponses ? JSON.stringify(body.customResponses) : undefined;
+    firstName = body.firstName as string | undefined;
+    lastName = body.lastName as string | undefined;
+    attending = body.attending as string | undefined;
+    notes = body.notes as string | undefined;
+    guestEmail = (body.email as string) || undefined;
+    customResponses = body.customResponses as Record<string, unknown> | undefined;
   } else {
     // application/x-www-form-urlencoded or multipart/form-data
     let formData: FormData;
@@ -280,6 +269,8 @@ export async function POST(
 
   const firstNameClean = firstName.trim();
   const lastNameClean = lastName.trim();
+  const emailClean = guestEmail?.trim() || null;
+  const notesClean = notes?.trim() || null;
 
   // Look up the site
   const site = await db
@@ -294,26 +285,91 @@ export async function POST(
     );
   }
 
-  // Find guest by name (case-insensitive match on firstName + lastName)
-  const guest = await db
-    .prepare(
-      "SELECT * FROM guest WHERE siteId = ? AND LOWER(firstName) = LOWER(?) AND LOWER(COALESCE(lastName,'')) = LOWER(?)"
-    )
-    .bind(site.id, firstNameClean, lastNameClean)
-    .first<GuestRow>();
-
-  // Upsert: create guest if not found, overwrite if already submitted
+  // Upsert contact: match by email first (if provided), fallback to name
   const now = Date.now();
-  if (!guest) {
-    const newId = crypto.randomUUID();
-    const maxOrder = await db.prepare("SELECT COALESCE(MAX(sortOrder), -1) as maxOrder FROM guest WHERE siteId = ?").bind(site.id).first<{ maxOrder: number }>();
-    const sortOrder = (maxOrder?.maxOrder ?? -1) + 1;
-    await db.prepare("INSERT INTO guest (id, siteId, firstName, lastName, rsvpStatus, notes, rsvpSubmittedAt, customResponses, sortOrder, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
-      .bind(newId, site.id, firstNameClean, lastNameClean, attending, notes ?? null, now, customResponses ?? null, sortOrder, now, now).run();
-  } else {
-    await db.prepare("UPDATE guest SET rsvpStatus = ?, notes = ?, rsvpSubmittedAt = ?, customResponses = ?, updatedAt = ? WHERE id = ?")
-      .bind(attending, notes ?? null, now, customResponses ?? null, now, guest.id).run();
+  let contactId: string;
+  let existingContact: { id: string } | null = null;
+
+  if (emailClean) {
+    existingContact = await db
+      .prepare("SELECT id FROM contact WHERE site_id = ? AND email = ?")
+      .bind(site.id, emailClean)
+      .first<{ id: string }>();
   }
+
+  if (!existingContact) {
+    existingContact = await db
+      .prepare("SELECT id FROM contact WHERE site_id = ? AND LOWER(name) = LOWER(?)")
+      .bind(site.id, `${firstNameClean} ${lastNameClean}`)
+      .first<{ id: string }>();
+  }
+
+  if (existingContact) {
+    // Update existing contact
+    contactId = existingContact.id;
+    await db
+      .prepare(
+        "UPDATE contact SET name = ?, email = ?, metadata = ?, updated_at = ? WHERE id = ?"
+      )
+      .bind(
+        `${firstNameClean} ${lastNameClean}`,
+        emailClean,
+        JSON.stringify({
+          rsvpStatus: attending === "yes" ? "attending" : "not-attending",
+          customResponses: customResponses ?? {},
+          notes: notesClean
+        }),
+        now,
+        contactId
+      )
+      .run();
+  } else {
+    // Create new contact
+    contactId = crypto.randomUUID();
+    await db
+      .prepare(
+        "INSERT INTO contact (id, site_id, name, email, contact_type, metadata, status, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
+      )
+      .bind(
+        contactId,
+        site.id,
+        `${firstNameClean} ${lastNameClean}`,
+        emailClean,
+        'guest',
+        JSON.stringify({
+          rsvpStatus: attending === "yes" ? "attending" : "not-attending",
+          customResponses: customResponses ?? {},
+          notes: notesClean
+        }),
+        'active',
+        now,
+        now
+      )
+      .run();
+  }
+
+  // Create submission record
+  const submissionId = crypto.randomUUID();
+  await db
+    .prepare(
+      "INSERT INTO submission (id, site_id, contact_id, submission_type, data, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)"
+    )
+    .bind(
+      submissionId,
+      site.id,
+      contactId,
+      'rsvp',
+      JSON.stringify({
+        attending: attending === "yes",
+        firstName: firstNameClean,
+        lastName: lastNameClean,
+        notes: notesClean,
+        customResponses: customResponses ?? {}
+      }),
+      now,
+      now
+    )
+    .run();
 
   // Send email notifications via Resend (fire and forget)
   const resendKey = (env as unknown as Record<string, string>).RESEND_API_KEY;
