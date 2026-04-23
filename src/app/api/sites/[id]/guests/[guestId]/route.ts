@@ -134,7 +134,7 @@ export async function PATCH(
   }
 
   // Parse existing metadata
-  let metadata: any = {};
+  let metadata: Record<string, unknown> = {};
   try {
     metadata = typeof contact.metadata === 'string' ? JSON.parse(contact.metadata) : (contact.metadata || {});
   } catch (error) {
