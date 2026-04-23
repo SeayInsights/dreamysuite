@@ -25,6 +25,30 @@ export function createAuth(env: Env) {
     emailAndPassword: {
       enabled: true,
       requireEmailVerification: true,
+      sendResetPassword: async ({ user, url }: { user: { email: string }; url: string }) => {
+        const res = await fetch("https://api.resend.com/emails", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${env.RESEND_API_KEY}`,
+          },
+          body: JSON.stringify({
+            from: "DreamySuite <hello@mail.dreamysuite.com>",
+            to: [user.email],
+            subject: "Reset your DreamySuite password",
+            html: `<div style="font-family:Georgia,serif;max-width:520px;margin:0 auto;padding:2rem;color:#292524"><h2 style="font-weight:normal">Reset your password</h2><p>Click below to set a new password for your DreamySuite account:</p><a href="${url}" style="display:inline-block;margin:1rem 0;padding:.75rem 1.5rem;background:#B8921A;color:#fff;text-decoration:none;border-radius:6px;font-family:inherit">Reset Password</a><p style="color:#a8a29e;font-size:.8rem;margin-top:1.5rem">This link expires in 1 hour. If you didn't request a password reset, you can safely ignore this email.</p></div>`,
+          }),
+        }).catch((err) => {
+          console.error("[auth] reset password fetch failed:", err);
+          return null;
+        });
+        if (res && !res.ok) {
+          const body = await res.text().catch(() => "");
+          console.error(`[auth] reset password email rejected: ${res.status} ${body}`);
+        }
+      },
+    },
+    emailVerification: {
       sendVerificationEmail: async ({ user, url }: { user: { email: string }; url: string }) => {
         console.log(`[auth] sendVerificationEmail called for ${user.email}, url: ${url}`);
         const res = await fetch("https://api.resend.com/emails", {
@@ -46,28 +70,6 @@ export function createAuth(env: Env) {
         if (res && !res.ok) {
           const body = await res.text().catch(() => "");
           console.error(`[auth] verification email rejected: ${res.status} ${body}`);
-        }
-      },
-      sendResetPassword: async ({ user, url }: { user: { email: string }; url: string }) => {
-        const res = await fetch("https://api.resend.com/emails", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${env.RESEND_API_KEY}`,
-          },
-          body: JSON.stringify({
-            from: "DreamySuite <hello@mail.dreamysuite.com>",
-            to: [user.email],
-            subject: "Reset your DreamySuite password",
-            html: `<div style="font-family:Georgia,serif;max-width:520px;margin:0 auto;padding:2rem;color:#292524"><h2 style="font-weight:normal">Reset your password</h2><p>Click below to set a new password for your DreamySuite account:</p><a href="${url}" style="display:inline-block;margin:1rem 0;padding:.75rem 1.5rem;background:#B8921A;color:#fff;text-decoration:none;border-radius:6px;font-family:inherit">Reset Password</a><p style="color:#a8a29e;font-size:.8rem;margin-top:1.5rem">This link expires in 1 hour. If you didn't request a password reset, you can safely ignore this email.</p></div>`,
-          }),
-        }).catch((err) => {
-          console.error("[auth] reset password fetch failed:", err);
-          return null;
-        });
-        if (res && !res.ok) {
-          const body = await res.text().catch(() => "");
-          console.error(`[auth] reset password email rejected: ${res.status} ${body}`);
         }
       },
     },
