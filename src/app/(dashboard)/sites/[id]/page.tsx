@@ -1,19 +1,9 @@
-import { cache } from "react";
-import { headers } from "next/headers";
-import { redirect } from "next/navigation";
+import { redirect, notFound } from "next/navigation";
 import { getEnv } from "@/lib/cloudflare";
-import { createAuth } from "@/app/lib/auth.server";
+import { getAuthSession } from "@/lib/auth-session";
 import { flags } from "@/lib/flags";
 import { SiteEditor } from "./editor";
 import { SiteEditorV2 } from "./editor-v2";
-
-// Cache session to avoid calling headers() multiple times (causes double-encoding)
-const getCachedSession = cache(async () => {
-  const env = await getEnv();
-  const auth = createAuth(env);
-  const requestHeaders = await headers();
-  return auth.api.getSession({ headers: requestHeaders });
-});
 
 interface Site {
   id: string;
@@ -35,9 +25,8 @@ export default async function SiteEditorPage({ params }: { params: Promise<{ id:
   const { id } = await params;
   const env = await getEnv();
 
-  // Use cached session to avoid double-encoding from calling headers() twice
-  const session = await getCachedSession();
-
+  // Use shared cached session - prevents double-encoding
+  const session = await getAuthSession();
   if (!session) {
     redirect("/login");
   }
