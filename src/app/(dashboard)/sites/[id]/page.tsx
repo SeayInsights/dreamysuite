@@ -29,7 +29,16 @@ export default async function SiteEditorPage({ params }: { params: Promise<{ id:
   const auth = createAuth(env);
   const requestHeaders = await headers();
   const session = await auth.api.getSession({ headers: requestHeaders });
+
+  console.log('[site page] session check:', {
+    siteId: id,
+    hasSession: !!session,
+    userId: session?.user?.id,
+    cookies: requestHeaders.get('cookie')?.split(';').filter(c => c.includes('auth')).join('; ') || 'no auth cookies'
+  });
+
   if (!session) {
+    console.log('[site page] no session, redirecting to login');
     redirect("/login");
   }
 
