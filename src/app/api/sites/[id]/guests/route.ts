@@ -25,9 +25,13 @@ const GuestSchema = z.object({
 // Helper to transform contact row to legacy guest format
 interface ContactRow {
   id: string;
+  site_id: string;
   name: string;
   email: string | null;
   phone: string | null;
+  contact_type: string;
+  tags: string | null;
+  status: string;
   metadata: string | Record<string, unknown>;
   created_at: string;
   updated_at: string;
@@ -101,7 +105,7 @@ export async function GET(
       .all();
   }
 
-  const guests = result.results.map(contactToGuest);
+  const guests = (result.results as unknown as ContactRow[]).map(contactToGuest);
   return NextResponse.json({ guests });
 }
 
@@ -166,6 +170,6 @@ export async function POST(
     .bind(id, siteId, name, email ?? null, phone ?? null, metadata, now, now)
     .first();
 
-  const guest = contactToGuest(contact);
+  const guest = contactToGuest(contact as unknown as ContactRow);
   return NextResponse.json({ guest }, { status: 201 });
 }
