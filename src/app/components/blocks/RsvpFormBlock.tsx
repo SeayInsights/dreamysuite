@@ -30,7 +30,7 @@ export function RsvpFormBlock({ block }: { block: Block }) {
     for (const q of customQuestions) {
       customResponses[q.id] = String(data.get(`custom_${q.id}`) ?? "");
     }
-    const endpoint = siteSlug ? `/api/public/${siteSlug}` : `/api/sites/${siteId}/guests`;
+    const endpoint = siteSlug ? `/api/public/${siteSlug}/rsvp` : `/api/sites/${siteId}/rsvp`;
     try {
       const res = await fetch(endpoint, {
         method: "POST",
