@@ -110,7 +110,7 @@ export function BreakpointFrame({ children, nav }: Props) {
 		const el = ref.current;
 		if (!el) return;
 		const dur = duration("traySlide") / 1000;
-		const target = breakpoint === "desktop" ? { width: "100%" } : { width: `${WIDTHS[breakpoint]}px` };
+		const target = { width: `${WIDTHS[breakpoint]}px` };
 		const anim = animate(el, target, { duration: dur, ease: EASING.standard });
 		anim.finished.then(() => window.dispatchEvent(new Event("resize")));
 	}, [breakpoint]);
@@ -157,15 +157,15 @@ export function BreakpointFrame({ children, nav }: Props) {
 
 	return (
 		<div
-			className={`flex h-full w-full ${isDesktop ? "bg-background" : "justify-center bg-muted/40 p-6"}`}
+			className={`flex h-full w-full justify-center ${isDesktop ? "bg-background p-0" : "bg-muted/40 p-6"}`}
 			onClick={handleDeselect}
 		>
 			<div
 				ref={ref}
 				data-breakpoint={breakpoint}
-				className={`relative max-w-full ${isDesktop ? "h-full w-full overflow-hidden" : "h-full overflow-x-hidden overflow-y-hidden rounded-lg border border-border shadow-sm"}`}
+				className={`relative max-w-full h-full overflow-x-hidden overflow-y-hidden ${isDesktop ? "" : "rounded-lg border border-border shadow-sm"}`}
 				style={{
-					...(isDesktop ? {} : { width: WIDTHS[breakpoint] }),
+					width: WIDTHS[breakpoint],
 					...themeVars(themeTokens.colors, themeTokens.typography),
 					background: pageBgDisabled ? "transparent" : curtainBg,
 				}}
