@@ -89,9 +89,9 @@ describe("SettingsPatchSchema — type validation", () => {
   });
 
   it("accepts nullable field set to null", () => {
-    const res = SettingsPatchSchema.safeParse({ eventName: null });
+    const res = SettingsPatchSchema.safeParse({ seoTitle: null });
     expect(res.success).toBe(true);
-    if (res.success) expect(res.data.eventName).toBeNull();
+    if (res.success) expect(res.data.seoTitle).toBeNull();
   });
 });
 
@@ -120,7 +120,7 @@ describe("upsertSiteSettings", () => {
     expect(insertCall.values[headingIdx]).toBe(DEFAULTS.headingFont);
   });
 
-  it("INSERT includes all 54 columns — drift guard for new fields", async () => {
+  it("INSERT includes all base settings columns — drift guard for new fields", async () => {
     const { db, calls } = makeDbStub(null);
     await upsertSiteSettings(db, "site-1", {}, 1000);
 
@@ -141,17 +141,16 @@ describe("upsertSiteSettings", () => {
     await upsertSiteSettings(
       db,
       "site-1",
-      { accentColor: "#00FF00", eventName: "Wedding" },
+      { accentColor: "#00FF00", seoTitle: "Test Site" },
       2000,
     );
 
     expect(calls).toHaveLength(2);
     expect(calls[1].sql).toMatch(/^UPDATE site_setting/);
-    // bindings follow ALLOWED_FIELDS iteration order (schema declaration
-    // order), so eventName binds before accentColor, then updatedAt + siteId.
-    expect(calls[1].values).toEqual(["Wedding", "#00FF00", 2000, "site-1"]);
+    // bindings follow ALLOWED_FIELDS iteration order (schema declaration order)
+    expect(calls[1].values).toEqual(["#00FF00", "Test Site", 2000, "site-1"]);
     expect(calls[1].sql).toContain(`"accentColor" = ?`);
-    expect(calls[1].sql).toContain(`"eventName" = ?`);
+    expect(calls[1].sql).toContain(`"seoTitle" = ?`);
     // Other fields NOT in SQL
     expect(calls[1].sql).not.toContain(`"bgColor"`);
   });
@@ -168,9 +167,9 @@ describe("upsertSiteSettings", () => {
     const full = SettingsSchema.parse({ accentColor: "#ABCDEF" });
     await upsertSiteSettings(db, "site-1", full, 4000);
 
-    // All 54 fields updated
+    // All base settings fields updated
     expect(calls[1].sql).toMatch(/^UPDATE/);
-    // bindings: 54 values + updatedAt + siteId
+    // bindings: all field values + updatedAt + siteId
     expect(calls[1].values).toHaveLength(ALLOWED_FIELDS.length + 2);
     expect(calls[1].values.at(-1)).toBe("site-1");
     expect(calls[1].values.at(-2)).toBe(4000);

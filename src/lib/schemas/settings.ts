@@ -1,8 +1,10 @@
 import { z } from "zod";
 
 /**
- * Single source of truth for site_setting shape.
- * - DEFAULTS derived from `.parse({})` — remove duplicate 54-field constant.
+ * Base settings schema — site-type-agnostic fields only.
+ * Type-specific fields (wedding: eventName, eventDate, etc.) moved to site-type-settings.ts.
+ *
+ * - DEFAULTS derived from `.parse({})` — no duplicate constants.
  * - ALLOWED_FIELDS derived from `Object.keys(shape)` — no manual whitelist.
  * - Booleans (`isLive`, `showNavBrand`) stored as 0/1 integers in D1 but accepted
  *   as boolean OR integer at the API boundary via `.transform`.
@@ -15,11 +17,6 @@ const intBool = z.union([z.boolean(), z.number(), z.null()]).transform((v) => {
 });
 
 export const SettingsSchema = z.object({
-  eventName: z.string().nullable().default(null),
-  eventDate: z.string().nullable().default(null),
-  eventLocation: z.string().nullable().default(null),
-  greeting: z.string().nullable().default(null),
-  musicUrl: z.string().nullable().default(null),
   mainLanguage: z.string().default("en"),
   secondLanguage: z.string().nullable().default(null),
   guestPassword: z.string().nullable().default(null),
@@ -29,8 +26,6 @@ export const SettingsSchema = z.object({
   bodyFont: z.string().default("Inter"),
   accentColor: z.string().default("#B8921A"),
   bgColor: z.string().default("#ffffff"),
-  songPages: z.string().nullable().default(null),
-  songResetPages: z.string().nullable().default(null),
   headingColor: z.string().nullable().default(null),
   bodyColor: z.string().nullable().default(null),
   siteTextColor: z.string().nullable().default(null),
@@ -48,10 +43,6 @@ export const SettingsSchema = z.object({
   navItemsConfig: z.string().nullable().default(null),
   animation: z.string().nullable().default(null),
   bgImage: z.string().nullable().default(null),
-  envelopeColor: z.string().nullable().default(null),
-  sealInitials: z.string().nullable().default(null),
-  cardColor: z.string().nullable().default(null),
-  cardImage: z.string().nullable().default(null),
   navShape: z.string().nullable().default(null),
   navMaterial: z.string().nullable().default(null),
   navLinkPadding: z.string().nullable().default(null),
