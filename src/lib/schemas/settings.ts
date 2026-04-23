@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { WeddingSettingsSchema } from "./site-type-settings";
 
 /**
  * Base settings schema — site-type-agnostic fields only.
@@ -102,11 +103,26 @@ export const ALLOWED_FIELDS = Object.keys(SettingsSchema.shape) as Array<
   keyof typeof DEFAULTS
 >;
 
+/**
+ * Merged settings schema — combines universal settings with wedding-specific fields.
+ * Used by the frontend to handle the merged response from GET /api/sites/[id]/settings.
+ * The API merges site_setting + site_type_settings into a single object.
+ * Wedding fields are already nullable in WeddingSettingsSchema, so they're optional in merged object.
+ */
+const WeddingFieldsOnly = WeddingSettingsSchema.omit({ siteType: true });
+export const MergedSettingsSchema = SettingsSchema.merge(WeddingFieldsOnly);
+
+/** Merged defaults including wedding fields */
+export const MERGED_DEFAULTS = MergedSettingsSchema.parse({});
+
 /** Partial schema for PATCH-like updates — only validates fields that are present. */
 export const SettingsPatchSchema = SettingsSchema.partial();
+export const MergedSettingsPatchSchema = MergedSettingsSchema.partial();
 
 export type Settings = z.infer<typeof SettingsSchema>;
 export type SettingsPatch = z.infer<typeof SettingsPatchSchema>;
+export type MergedSettings = z.infer<typeof MergedSettingsSchema>;
+export type MergedSettingsPatch = z.infer<typeof MergedSettingsPatchSchema>;
 
 /**
  * Upsert site_setting row for `siteId` from a settings patch.

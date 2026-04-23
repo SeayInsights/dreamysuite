@@ -47,7 +47,8 @@ requirements:
     description: Settings schema + API reads/writes site_setting + site_type_settings
     priority: must
     tasks: [7, 8]
-    status: pending
+    status: implemented
+    checkpoint: docs/task-8-checkpoint.md
 
   TR-008:
     description: Block registry has siteTypes filtering

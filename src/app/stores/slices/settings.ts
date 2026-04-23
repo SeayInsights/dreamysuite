@@ -1,6 +1,6 @@
 import type { StateCreator } from "zustand";
-import type { Settings, SettingsPatch } from "@/lib/schemas/settings";
-import { DEFAULTS } from "@/lib/schemas/settings";
+import type { MergedSettings, MergedSettingsPatch } from "@/lib/schemas/settings";
+import { MERGED_DEFAULTS } from "@/lib/schemas/settings";
 import { settingsToTheme } from "./theme";
 import type { ThemeSlice } from "./theme";
 
@@ -19,17 +19,17 @@ function coerceDbRow(row: Record<string, unknown>): Record<string, unknown> {
 }
 
 export interface SettingsSlice {
-  settings: Settings;
+  settings: MergedSettings;
   settingsLoaded: boolean;
   settingsDirty: boolean;
   loadSettings: (siteId: string) => Promise<void>;
-  updateSettings: (patch: SettingsPatch) => void;
+  updateSettings: (patch: MergedSettingsPatch) => void;
   saveSettings: (siteId: string) => Promise<void>;
   markSettingsClean: () => void;
 }
 
 export const createSettingsSlice: StateCreator<SettingsSlice & ThemeSlice, [], [], SettingsSlice> = (set, get) => ({
-  settings: { ...DEFAULTS },
+  settings: { ...MERGED_DEFAULTS },
   settingsLoaded: false,
   settingsDirty: false,
 
@@ -41,8 +41,8 @@ export const createSettingsSlice: StateCreator<SettingsSlice & ThemeSlice, [], [
         return;
       }
       const { settings: raw } = (await res.json()) as { settings: Record<string, unknown> };
-      const settings = coerceDbRow(raw) as Settings;
-      const merged = { ...DEFAULTS, ...settings };
+      const settings = coerceDbRow(raw) as MergedSettings;
+      const merged = { ...MERGED_DEFAULTS, ...settings };
       set({ settings: merged, settingsLoaded: true, settingsDirty: false, themeTokens: settingsToTheme(merged) });
     } catch (e) {
       console.error("[settings:load] error:", e);
