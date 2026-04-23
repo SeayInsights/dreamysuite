@@ -9,6 +9,9 @@ interface ContactRow {
   name: string;
   email: string | null;
   phone: string | null;
+  contact_type: string;
+  tags: string | null;
+  status: string;
   metadata: string | Record<string, unknown>;
   created_at: string;
   updated_at: string;
@@ -203,6 +206,6 @@ export async function PATCH(
     .bind(guestId)
     .first();
 
-  const guest = contactToGuest(updated);
+  const guest = contactToGuest(updated as unknown as ContactRow);
   return NextResponse.json({ guest });
 }
