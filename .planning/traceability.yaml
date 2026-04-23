@@ -9,7 +9,7 @@ requirements:
     priority: must
     tasks: [1, 2]
     status: implemented
-    commits: [1721c3d]
+    commits: [1721c3d, dec9e7e]
 
   TR-002:
     description: Drop empty legacy tables (guest, guest_book_entry)
@@ -29,37 +29,43 @@ requirements:
     description: RSVP block + public endpoint write to contact + submission instead of guest
     priority: must
     tasks: [3, 4]
-    status: pending
+    status: implemented
+    commits: [fb1fc83, 6aa4a47]
 
   TR-005:
     description: Guest book block + endpoint write to submission instead of guest_book_entry
     priority: must
     tasks: [3, 5]
-    status: pending
+    status: in_progress
+    commits: [fb1fc83]
 
   TR-006:
     description: Guest admin UI reads from contact table
     priority: must
     tasks: [3, 6]
-    status: pending
+    status: in_progress
+    commits: [fb1fc83]
 
   TR-007:
     description: Settings schema + API reads/writes site_setting + site_type_settings
     priority: must
     tasks: [7, 8]
-    status: pending
+    status: in_progress
+    commits: [7b1d2ff]
 
   TR-008:
     description: Block registry has siteTypes filtering
     priority: should
     tasks: [9]
-    status: pending
+    status: implemented
+    commits: [b38decc, 533d323]
 
   TR-009:
     description: Create-site flow has site type selector
     priority: should
     tasks: [10]
-    status: pending
+    status: implemented
+    commits: [c0f3d6c, 533d323]
 
   TR-010:
     description: Public site renderer uses new tables
