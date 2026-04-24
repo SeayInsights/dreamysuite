@@ -95,6 +95,7 @@ export function BreakpointFrame({ children, nav }: Props) {
 
 	const [frameReady, setFrameReady] = useState(false);
 	const [devicePixelRatio, setDevicePixelRatio] = useState(1);
+	const isDesktop = breakpoint === "desktop";
 
 	useEffect(() => {
 		const updateDPR = () => {
@@ -132,10 +133,11 @@ export function BreakpointFrame({ children, nav }: Props) {
 		const dur = duration("traySlide") / 1000;
 		const safeDPR = devicePixelRatio || 1;
 		const normalizedWidth = WIDTHS[breakpoint] / safeDPR;
-		const target = { width: `${normalizedWidth}px` };
+		const targetWidth = isDesktop ? "100%" : `${normalizedWidth}px`;
+		const target = { width: targetWidth };
 		const anim = animate(el, target, { duration: dur, ease: EASING.standard });
 		anim.finished.then(() => window.dispatchEvent(new Event("resize")));
-	}, [breakpoint, devicePixelRatio]);
+	}, [breakpoint, devicePixelRatio, isDesktop]);
 
 	useEffect(() => {
 		const fonts = [themeTokens.typography.headingFont, themeTokens.typography.bodyFont]
@@ -157,7 +159,6 @@ export function BreakpointFrame({ children, nav }: Props) {
 		}
 	}, [themeTokens.typography.headingFont, themeTokens.typography.bodyFont]);
 
-	const isDesktop = breakpoint === "desktop";
 	const safeDPR = devicePixelRatio || 1;
 	const normalizedWidth = WIDTHS[breakpoint] / safeDPR;
 
