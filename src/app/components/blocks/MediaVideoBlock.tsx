@@ -73,7 +73,7 @@ export function MediaVideoBlock({ block }: { block: Block }) {
             title="Vimeo video"
             allow="autoplay; fullscreen; picture-in-picture"
             allowFullScreen
-            style={{ position: "absolute", top: "50%", left: "50%", width: "177.78vh", minWidth: "100%", minHeight: "100%", height: "56.25vw", transform: "translate(-50%,-50%)", border: 0 }}
+            style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", border: 0 }}
           />
         ) : (
           <p style={{ color: "#9b8e85", fontStyle: "italic", textAlign: "center", padding: "2rem 0" }}>
