@@ -169,9 +169,9 @@ export function BreakpointFrame({ children, nav }: Props) {
 	const scale = WIDTHS[breakpoint] / WIDTHS.desktop;
 	const hCap = breakpoint === "mobile" ? 10 : breakpoint === "tablet" ? 40 : Infinity;
 	const mT = Math.round(rawMT * scale);
-	const mR = Math.min(Math.round(rawMR * scale), hCap);
+	const mR = isDesktop ? 0 : Math.min(Math.round(rawMR * scale), hCap);
 	const mB = Math.round(rawMB * scale);
-	const mL = Math.min(Math.round(rawML * scale), hCap);
+	const mL = isDesktop ? 0 : Math.min(Math.round(rawML * scale), hCap);
 	const hasMargins = mT > 0 || mR > 0 || mB > 0 || mL > 0;
 	const curtainBg = settings.bgColor ?? themeTokens.colors.background;
 	const bgImage = settings.bgImage as string | null;
