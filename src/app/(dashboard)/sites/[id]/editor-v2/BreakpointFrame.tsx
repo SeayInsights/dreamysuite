@@ -181,7 +181,7 @@ export function BreakpointFrame({ children, nav }: Props) {
 
 	return (
 		<div
-			className={`flex h-full w-full justify-center ${isDesktop ? "bg-background p-0" : "bg-muted/40 p-6"}`}
+			className={`flex h-full w-full ${isDesktop ? "bg-background p-0" : "justify-center bg-muted/40 p-6"}`}
 			onClick={handleDeselect}
 		>
 			<div
@@ -189,7 +189,7 @@ export function BreakpointFrame({ children, nav }: Props) {
 				data-breakpoint={breakpoint}
 				className={`relative max-w-full h-full overflow-x-hidden overflow-y-hidden ${isDesktop ? "" : "rounded-lg border border-border shadow-sm"}`}
 				style={{
-					width: `${normalizedWidth}px`,
+					width: isDesktop ? "100%" : `${normalizedWidth}px`,
 					...themeVars(themeTokens.colors, themeTokens.typography),
 					background: pageBgDisabled ? "transparent" : curtainBg,
 				}}
