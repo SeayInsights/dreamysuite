@@ -16,7 +16,10 @@ function extractVimeoId(url: string): string | null {
 export function MediaVideoBlock({ block }: { block: Block }) {
   const cfg = parseCfg(block.config);
   const url = String(cfg.url ?? "");
-  const height = String(cfg.height ?? "100dvh");
+  const configHeight = cfg.height as string | undefined;
+  const useAspectRatio = !configHeight || configHeight === "100dvh";
+  const height = useAspectRatio ? undefined : configHeight;
+  const aspectRatio = useAspectRatio ? "16/9" : undefined;
   const objectFit = String(cfg.imageFit ?? cfg.objectFit ?? "cover") as React.CSSProperties["objectFit"];
   const sectionStyle = blockSectionStyle(cfg);
 
@@ -66,7 +69,7 @@ export function MediaVideoBlock({ block }: { block: Block }) {
       : null;
     return (
       <section className="block block-media-video" data-block-id={block.id} data-block-type={block.type}
-        style={{ position: "relative", width: "100%", height, overflow: "hidden", background: "#000", ...sectionStyle }}>
+        style={{ position: "relative", width: "100%", height, aspectRatio, overflow: "hidden", background: "#000", ...sectionStyle }}>
         {vimeoSrc ? (
           <iframe
             src={vimeoSrc}
@@ -86,7 +89,7 @@ export function MediaVideoBlock({ block }: { block: Block }) {
 
   return (
     <section className="block block-media-video" data-block-id={block.id} data-block-type={block.type}
-      style={{ height, position: "relative", overflow: "hidden", ...sectionStyle }}>
+      style={{ height, aspectRatio, position: "relative", overflow: "hidden", ...sectionStyle }}>
       <video
         src={url}
         autoPlay
