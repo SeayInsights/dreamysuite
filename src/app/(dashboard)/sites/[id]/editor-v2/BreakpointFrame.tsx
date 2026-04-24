@@ -131,10 +131,9 @@ export function BreakpointFrame({ children, nav }: Props) {
 		const el = ref.current;
 		if (!el) return;
 		const dur = duration("traySlide") / 1000;
-		const safeDPR = devicePixelRatio || 1;
+		const safeDPR = isDesktop ? 1 : (devicePixelRatio || 1);
 		const normalizedWidth = WIDTHS[breakpoint] / safeDPR;
-		const targetWidth = isDesktop ? "100%" : `${normalizedWidth}px`;
-		const target = { width: targetWidth };
+		const target = { width: `${normalizedWidth}px` };
 		const anim = animate(el, target, { duration: dur, ease: EASING.standard });
 		anim.finished.then(() => window.dispatchEvent(new Event("resize")));
 	}, [breakpoint, devicePixelRatio, isDesktop]);
@@ -159,7 +158,7 @@ export function BreakpointFrame({ children, nav }: Props) {
 		}
 	}, [themeTokens.typography.headingFont, themeTokens.typography.bodyFont]);
 
-	const safeDPR = devicePixelRatio || 1;
+	const safeDPR = isDesktop ? 1 : (devicePixelRatio || 1);
 	const normalizedWidth = WIDTHS[breakpoint] / safeDPR;
 
 	const rawMT = Number(settings.marginTop ?? 0) || 0;
@@ -170,9 +169,9 @@ export function BreakpointFrame({ children, nav }: Props) {
 	const scale = WIDTHS[breakpoint] / WIDTHS.desktop;
 	const hCap = breakpoint === "mobile" ? 10 : breakpoint === "tablet" ? 40 : Infinity;
 	const mT = Math.round(rawMT * scale);
-	const mR = isDesktop ? 0 : Math.min(Math.round(rawMR * scale), hCap);
+	const mR = Math.min(Math.round(rawMR * scale), hCap);
 	const mB = Math.round(rawMB * scale);
-	const mL = isDesktop ? 0 : Math.min(Math.round(rawML * scale), hCap);
+	const mL = Math.min(Math.round(rawML * scale), hCap);
 	const hasMargins = mT > 0 || mR > 0 || mB > 0 || mL > 0;
 	const curtainBg = settings.bgColor ?? themeTokens.colors.background;
 	const bgImage = settings.bgImage as string | null;
@@ -182,15 +181,25 @@ export function BreakpointFrame({ children, nav }: Props) {
 
 	return (
 		<div
-			className={`flex h-full w-full ${isDesktop ? "bg-background p-0" : "justify-center bg-muted/40 p-6"}`}
+			className="flex h-full w-full justify-center items-center p-0"
+			style={{
+				background: isDesktop
+					? "linear-gradient(135deg, #f8f7f5 0%, #ede9e3 100%)"
+					: "rgb(var(--muted) / 0.4)",
+			}}
 			onClick={handleDeselect}
 		>
 			<div
 				ref={ref}
 				data-breakpoint={breakpoint}
-				className={`relative max-w-full h-full overflow-x-hidden overflow-y-hidden ${isDesktop ? "" : "rounded-lg border border-border shadow-sm"}`}
+				className="relative max-w-full h-full overflow-x-hidden overflow-y-hidden"
 				style={{
-					width: isDesktop ? "100%" : `${normalizedWidth}px`,
+					width: `${normalizedWidth}px`,
+					borderRadius: "8px",
+					border: isDesktop ? "1px solid rgba(0, 0, 0, 0.06)" : "1px solid rgb(var(--border))",
+					boxShadow: isDesktop
+						? "0 4px 24px rgba(0,0,0,0.08), 0 2px 8px rgba(0,0,0,0.04)"
+						: "0 2px 8px rgba(0,0,0,0.04)",
 					...themeVars(themeTokens.colors, themeTokens.typography),
 					background: pageBgDisabled ? "transparent" : curtainBg,
 				}}
