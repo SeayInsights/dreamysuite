@@ -2,10 +2,11 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useEditorStore } from "@/app/stores/editorStore";
-import { parseCfg, resolveBreakpointConfig } from "@/lib/editableField";
+import { parseCfg } from "@/lib/editableField";
 import type { Block } from "@/app/stores/slices/document";
 import { consolidateBlocks } from "@/lib/migrations/blockConsolidation";
 import { trackEditorError } from "@/lib/telemetry/editor";
+import { getEffectiveConfig } from "./lib/cascadeConfig";
 import { SiteRenderer } from "@/app/components/SiteRenderer";
 import { BreakpointFrame } from "./BreakpointFrame";
 import { EditorOverlay } from "./EditorOverlay";
@@ -41,7 +42,7 @@ export function Canvas({ siteId }: Props) {
 		() =>
 			rawBlocks.map((b) => ({
 				...b,
-				config: resolveBreakpointConfig(parseCfg(b.config), breakpoint),
+				config: getEffectiveConfig(b, breakpoint),
 			})),
 		[rawBlocks, breakpoint],
 	);
