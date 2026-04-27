@@ -3,19 +3,97 @@
 import { useState, useEffect } from "react";
 import { DatePicker } from "@/components/ui/DatePicker";
 import { TimePicker } from "@/components/ui/TimePicker";
+import type { Block } from "@/app/stores/editorStore";
+
+// ---------------------------------------------------------------------------
+// Override detection helper
+// ---------------------------------------------------------------------------
+
+function isPropertyOverridden(
+  block: Block | undefined,
+  breakpoint: "desktop" | "tablet" | "mobile" | undefined,
+  propertyName: string | undefined
+): boolean {
+  if (!block || !breakpoint || !propertyName) return false;
+  if (breakpoint === "desktop") return false;
+  return propertyName in (block.overrides?.[breakpoint] || {});
+}
+
+function OverrideIndicator() {
+  return (
+    <span
+      className="ml-1 inline-block h-1.5 w-1.5 rounded-full bg-orange-500"
+      title="Overridden from desktop value"
+    />
+  );
+}
+
+function ResetOverrideButton({
+  block,
+  breakpoint,
+  propertyName,
+  updateBlock,
+}: {
+  block: Block;
+  breakpoint: "tablet" | "mobile";
+  propertyName: string;
+  updateBlock: (id: string, updates: Partial<Block>) => void;
+}) {
+  function handleReset() {
+    // Get current overrides for this breakpoint
+    const currentOverrides = block.overrides?.[breakpoint] || {};
+
+    // Create new overrides object without this property
+    const { [propertyName]: _removed, ...remainingOverrides } = currentOverrides;
+
+    // Update block with new overrides
+    const newOverrides = {
+      ...block.overrides,
+      [breakpoint]: Object.keys(remainingOverrides).length > 0
+        ? remainingOverrides
+        : undefined, // Remove breakpoint key if empty
+    };
+
+    updateBlock(block.id, { overrides: newOverrides });
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={handleReset}
+      className="ml-1 inline-flex h-4 w-4 items-center justify-center rounded hover:bg-accent"
+      title="Reset to cascaded value"
+    >
+      ⟲
+    </button>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Panel Input Components
+// ---------------------------------------------------------------------------
 
 export function PanelTextInput({
   label,
   value,
   onChange,
   placeholder,
+  block,
+  breakpoint,
+  propertyName,
+  updateBlock,
 }: {
   label: string;
   value: string;
   onChange: (v: string) => void;
   placeholder?: string;
+  block?: Block;
+  breakpoint?: "desktop" | "tablet" | "mobile";
+  propertyName?: string;
+  updateBlock?: (id: string, updates: Partial<Block>) => void;
 }) {
   const [draft, setDraft] = useState(value);
+  const isOverridden = isPropertyOverridden(block, breakpoint, propertyName);
 
   useEffect(() => {
     setDraft(value);
@@ -29,6 +107,19 @@ export function PanelTextInput({
     <div className="space-y-1">
       <label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
         {label}
+        {isOverridden && (
+          <>
+            <OverrideIndicator />
+            {block && breakpoint && breakpoint !== "desktop" && propertyName && updateBlock && (
+              <ResetOverrideButton
+                block={block}
+                breakpoint={breakpoint}
+                propertyName={propertyName}
+                updateBlock={updateBlock}
+              />
+            )}
+          </>
+        )}
       </label>
       <input
         type="text"
@@ -51,13 +142,22 @@ export function PanelTextArea({
   value,
   onChange,
   placeholder,
+  block,
+  breakpoint,
+  propertyName,
+  updateBlock,
 }: {
   label: string;
   value: string;
   onChange: (v: string) => void;
   placeholder?: string;
+  block?: Block;
+  breakpoint?: "desktop" | "tablet" | "mobile";
+  propertyName?: string;
+  updateBlock?: (id: string, updates: Partial<Block>) => void;
 }) {
   const [draft, setDraft] = useState(value);
+  const isOverridden = isPropertyOverridden(block, breakpoint, propertyName);
 
   useEffect(() => {
     setDraft(value);
@@ -71,6 +171,19 @@ export function PanelTextArea({
     <div className="space-y-1">
       <label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
         {label}
+        {isOverridden && (
+          <>
+            <OverrideIndicator />
+            {block && breakpoint && breakpoint !== "desktop" && propertyName && updateBlock && (
+              <ResetOverrideButton
+                block={block}
+                breakpoint={breakpoint}
+                propertyName={propertyName}
+                updateBlock={updateBlock}
+              />
+            )}
+          </>
+        )}
       </label>
       <textarea
         value={draft}
@@ -89,15 +202,38 @@ export function PanelDateInput({
   label,
   value,
   onChange,
+  block,
+  breakpoint,
+  propertyName,
+  updateBlock,
 }: {
   label: string;
   value: string;
   onChange: (v: string) => void;
+  block?: Block;
+  breakpoint?: "desktop" | "tablet" | "mobile";
+  propertyName?: string;
+  updateBlock?: (id: string, updates: Partial<Block>) => void;
 }) {
+  const isOverridden = isPropertyOverridden(block, breakpoint, propertyName);
+
   return (
     <div className="space-y-1">
       <label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
         {label}
+        {isOverridden && (
+          <>
+            <OverrideIndicator />
+            {block && breakpoint && breakpoint !== "desktop" && propertyName && updateBlock && (
+              <ResetOverrideButton
+                block={block}
+                breakpoint={breakpoint}
+                propertyName={propertyName}
+                updateBlock={updateBlock}
+              />
+            )}
+          </>
+        )}
       </label>
       <DatePicker
         value={value}
@@ -113,16 +249,39 @@ export function PanelSelectInput({
   value,
   onChange,
   options,
+  block,
+  breakpoint,
+  propertyName,
+  updateBlock,
 }: {
   label: string;
   value: string;
   onChange: (v: string) => void;
   options: { value: string; label: string }[];
+  block?: Block;
+  breakpoint?: "desktop" | "tablet" | "mobile";
+  propertyName?: string;
+  updateBlock?: (id: string, updates: Partial<Block>) => void;
 }) {
+  const isOverridden = isPropertyOverridden(block, breakpoint, propertyName);
+
   return (
     <div className="space-y-1">
       <label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
         {label}
+        {isOverridden && (
+          <>
+            <OverrideIndicator />
+            {block && breakpoint && breakpoint !== "desktop" && propertyName && updateBlock && (
+              <ResetOverrideButton
+                block={block}
+                breakpoint={breakpoint}
+                propertyName={propertyName}
+                updateBlock={updateBlock}
+              />
+            )}
+          </>
+        )}
       </label>
       <select
         value={value}
@@ -141,15 +300,38 @@ export function PanelTimeInput({
   label,
   value,
   onChange,
+  block,
+  breakpoint,
+  propertyName,
+  updateBlock,
 }: {
   label: string;
   value: string;
   onChange: (v: string) => void;
+  block?: Block;
+  breakpoint?: "desktop" | "tablet" | "mobile";
+  propertyName?: string;
+  updateBlock?: (id: string, updates: Partial<Block>) => void;
 }) {
+  const isOverridden = isPropertyOverridden(block, breakpoint, propertyName);
+
   return (
     <div className="space-y-1">
       <label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
         {label}
+        {isOverridden && (
+          <>
+            <OverrideIndicator />
+            {block && breakpoint && breakpoint !== "desktop" && propertyName && updateBlock && (
+              <ResetOverrideButton
+                block={block}
+                breakpoint={breakpoint}
+                propertyName={propertyName}
+                updateBlock={updateBlock}
+              />
+            )}
+          </>
+        )}
       </label>
       <TimePicker
         value={value}

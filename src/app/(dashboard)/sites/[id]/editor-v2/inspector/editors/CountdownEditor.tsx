@@ -3,9 +3,15 @@
 export function CountdownEditor({
   cfg,
   updateConfig,
+  block,
+  breakpoint,
+  updateBlock,
 }: {
   cfg: Record<string, unknown>;
   updateConfig: (patch: Record<string, unknown>) => void;
+  block?: unknown;
+  breakpoint?: unknown;
+  updateBlock?: (id: string, updates: Partial<unknown>) => void;
 }) {
   const showRsvp = cfg.showRsvpButton === true;
 
