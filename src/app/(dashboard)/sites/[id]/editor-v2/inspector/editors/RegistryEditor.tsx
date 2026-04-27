@@ -1,6 +1,7 @@
 "use client";
 
 import { PanelTextInput, PanelTextArea } from "../PanelInputs";
+import type { Block } from "@/app/stores/editorStore";
 
 type DisplayMode = "grid" | "list";
 
@@ -23,11 +24,13 @@ export function RegistryEditor({
   updateConfig,
   block,
   breakpoint,
+  updateBlock,
 }: {
   cfg: Record<string, unknown>;
   updateConfig: (patch: Record<string, unknown>) => void;
-  block?: unknown;
-  breakpoint?: unknown;
+  block?: Block;
+  breakpoint?: "desktop" | "tablet" | "mobile";
+  updateBlock?: (id: string, updates: Partial<Block>) => void;
 }) {
   const reg = normalize(cfg);
 
@@ -38,6 +41,10 @@ export function RegistryEditor({
         value={reg.heading}
         onChange={(v) => updateConfig({ heading: v })}
         placeholder="Registry"
+        block={block}
+        breakpoint={breakpoint}
+        propertyName="heading"
+        updateBlock={updateBlock}
       />
 
       <PanelTextArea
@@ -45,6 +52,10 @@ export function RegistryEditor({
         value={reg.subheading}
         onChange={(v) => updateConfig({ subheading: v })}
         placeholder="Your presence is the greatest gift..."
+        block={block}
+        breakpoint={breakpoint}
+        propertyName="subheading"
+        updateBlock={updateBlock}
       />
 
       <div className="space-y-1">

@@ -20,11 +20,13 @@ export function VideoEditor({
   updateConfig,
   block,
   breakpoint,
+  updateBlock,
 }: {
   cfg: Record<string, unknown>;
   updateConfig: (patch: Record<string, unknown>) => void;
   block?: Block;
   breakpoint?: "desktop" | "tablet" | "mobile";
+  updateBlock?: (id: string, updates: Partial<Block>) => void;
 }) {
   const siteId = useEditorStore((s) => s.siteId);
   const currentUrl = String(cfg.url ?? "");
@@ -129,6 +131,7 @@ export function VideoEditor({
         block={block}
         breakpoint={breakpoint}
         propertyName="height"
+        updateBlock={updateBlock}
       />
       <p className="text-[10px] text-muted-foreground -mt-2">
         CSS value — e.g. 100dvh, 600px, 80vh
@@ -148,6 +151,7 @@ export function VideoEditor({
           block={block}
           breakpoint={breakpoint}
           propertyName="objectFit"
+          updateBlock={updateBlock}
         />
       )}
     </div>

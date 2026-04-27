@@ -32,22 +32,22 @@ export function BlockContentPanel({ block, updateBlock }: Props) {
     case "fun-facts":
     case "travel":
     case "content-card":
-      return <ContentCardEditor cfg={cfg} updateConfig={updateConfig} block={block} breakpoint={breakpoint} />;
+      return <ContentCardEditor cfg={cfg} updateConfig={updateConfig} block={block} breakpoint={breakpoint} updateBlock={updateBlock} />;
     case "schedule":
-      return <ScheduleEditor cfg={cfg} updateConfig={updateConfig} block={block} breakpoint={breakpoint} />;
+      return <ScheduleEditor cfg={cfg} updateConfig={updateConfig} block={block} breakpoint={breakpoint} updateBlock={updateBlock} />;
     case "video":
-      return <VideoEditor cfg={{ ...cfg, _type: "video" }} updateConfig={updateConfig} block={block} breakpoint={breakpoint} />;
+      return <VideoEditor cfg={{ ...cfg, _type: "video" }} updateConfig={updateConfig} block={block} breakpoint={breakpoint} updateBlock={updateBlock} />;
     case "media-video":
-      return <VideoEditor cfg={{ ...cfg, _type: "media-video" }} updateConfig={updateConfig} block={block} breakpoint={breakpoint} />;
+      return <VideoEditor cfg={{ ...cfg, _type: "media-video" }} updateConfig={updateConfig} block={block} breakpoint={breakpoint} updateBlock={updateBlock} />;
     case "gallery":
     case "images":
-      return <GalleryEditor cfg={cfg} updateConfig={updateConfig} block={block} breakpoint={breakpoint} />;
+      return <GalleryEditor cfg={cfg} updateConfig={updateConfig} block={block} breakpoint={breakpoint} updateBlock={updateBlock} />;
     case "countdown":
-      return <CountdownEditor cfg={cfg} updateConfig={updateConfig} block={block} breakpoint={breakpoint} />;
+      return <CountdownEditor cfg={cfg} updateConfig={updateConfig} block={block} breakpoint={breakpoint} updateBlock={updateBlock} />;
     case "venue-map":
-      return <VenueMapEditor cfg={cfg} updateConfig={updateConfig} block={block} breakpoint={breakpoint} />;
+      return <VenueMapEditor cfg={cfg} updateConfig={updateConfig} block={block} breakpoint={breakpoint} updateBlock={updateBlock} />;
     case "registry":
-      return <RegistryEditor cfg={cfg} updateConfig={updateConfig} block={block} breakpoint={breakpoint} />;
+      return <RegistryEditor cfg={cfg} updateConfig={updateConfig} block={block} breakpoint={breakpoint} updateBlock={updateBlock} />;
     default:
       return (
         <p className="p-4 text-xs text-muted-foreground italic">

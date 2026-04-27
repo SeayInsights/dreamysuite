@@ -64,11 +64,13 @@ export function ContentCardEditor({
   updateConfig,
   block,
   breakpoint,
+  updateBlock,
 }: {
   cfg: Record<string, unknown>;
   updateConfig: (patch: Record<string, unknown>) => void;
   block?: unknown;
   breakpoint?: unknown;
+  updateBlock?: (id: string, updates: Partial<unknown>) => void;
 }) {
   const card = normalizeContentCardConfig(cfg);
 

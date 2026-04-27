@@ -1,6 +1,7 @@
 "use client";
 
 import { PanelTextInput } from "../PanelInputs";
+import type { Block } from "@/app/stores/editorStore";
 
 type DisplayMode = "timeline" | "cards";
 
@@ -21,11 +22,13 @@ export function ScheduleEditor({
   updateConfig,
   block,
   breakpoint,
+  updateBlock,
 }: {
   cfg: Record<string, unknown>;
   updateConfig: (patch: Record<string, unknown>) => void;
-  block?: unknown;
-  breakpoint?: unknown;
+  block?: Block;
+  breakpoint?: "desktop" | "tablet" | "mobile";
+  updateBlock?: (id: string, updates: Partial<Block>) => void;
 }) {
   const schedule = normalizeScheduleConfig(cfg);
 
@@ -36,6 +39,10 @@ export function ScheduleEditor({
         value={schedule.heading}
         onChange={(v) => updateConfig({ heading: v })}
         placeholder="The Day"
+        block={block}
+        breakpoint={breakpoint}
+        propertyName="heading"
+        updateBlock={updateBlock}
       />
 
       {/* Display mode toggle */}

@@ -28,6 +28,47 @@ function OverrideIndicator() {
   );
 }
 
+function ResetOverrideButton({
+  block,
+  breakpoint,
+  propertyName,
+  updateBlock,
+}: {
+  block: Block;
+  breakpoint: "tablet" | "mobile";
+  propertyName: string;
+  updateBlock: (id: string, updates: Partial<Block>) => void;
+}) {
+  function handleReset() {
+    // Get current overrides for this breakpoint
+    const currentOverrides = block.overrides?.[breakpoint] || {};
+
+    // Create new overrides object without this property
+    const { [propertyName]: _removed, ...remainingOverrides } = currentOverrides;
+
+    // Update block with new overrides
+    const newOverrides = {
+      ...block.overrides,
+      [breakpoint]: Object.keys(remainingOverrides).length > 0
+        ? remainingOverrides
+        : undefined, // Remove breakpoint key if empty
+    };
+
+    updateBlock(block.id, { overrides: newOverrides });
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={handleReset}
+      className="ml-1 inline-flex h-4 w-4 items-center justify-center rounded hover:bg-accent"
+      title="Reset to cascaded value"
+    >
+      ⟲
+    </button>
+  );
+}
+
 // ---------------------------------------------------------------------------
 // Panel Input Components
 // ---------------------------------------------------------------------------
@@ -40,6 +81,7 @@ export function PanelTextInput({
   block,
   breakpoint,
   propertyName,
+  updateBlock,
 }: {
   label: string;
   value: string;
@@ -48,6 +90,7 @@ export function PanelTextInput({
   block?: Block;
   breakpoint?: "desktop" | "tablet" | "mobile";
   propertyName?: string;
+  updateBlock?: (id: string, updates: Partial<Block>) => void;
 }) {
   const [draft, setDraft] = useState(value);
   const isOverridden = isPropertyOverridden(block, breakpoint, propertyName);
@@ -64,7 +107,19 @@ export function PanelTextInput({
     <div className="space-y-1">
       <label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
         {label}
-        {isOverridden && <OverrideIndicator />}
+        {isOverridden && (
+          <>
+            <OverrideIndicator />
+            {block && breakpoint && breakpoint !== "desktop" && propertyName && updateBlock && (
+              <ResetOverrideButton
+                block={block}
+                breakpoint={breakpoint}
+                propertyName={propertyName}
+                updateBlock={updateBlock}
+              />
+            )}
+          </>
+        )}
       </label>
       <input
         type="text"
@@ -90,6 +145,7 @@ export function PanelTextArea({
   block,
   breakpoint,
   propertyName,
+  updateBlock,
 }: {
   label: string;
   value: string;
@@ -98,6 +154,7 @@ export function PanelTextArea({
   block?: Block;
   breakpoint?: "desktop" | "tablet" | "mobile";
   propertyName?: string;
+  updateBlock?: (id: string, updates: Partial<Block>) => void;
 }) {
   const [draft, setDraft] = useState(value);
   const isOverridden = isPropertyOverridden(block, breakpoint, propertyName);
@@ -114,7 +171,19 @@ export function PanelTextArea({
     <div className="space-y-1">
       <label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
         {label}
-        {isOverridden && <OverrideIndicator />}
+        {isOverridden && (
+          <>
+            <OverrideIndicator />
+            {block && breakpoint && breakpoint !== "desktop" && propertyName && updateBlock && (
+              <ResetOverrideButton
+                block={block}
+                breakpoint={breakpoint}
+                propertyName={propertyName}
+                updateBlock={updateBlock}
+              />
+            )}
+          </>
+        )}
       </label>
       <textarea
         value={draft}
@@ -136,6 +205,7 @@ export function PanelDateInput({
   block,
   breakpoint,
   propertyName,
+  updateBlock,
 }: {
   label: string;
   value: string;
@@ -143,6 +213,7 @@ export function PanelDateInput({
   block?: Block;
   breakpoint?: "desktop" | "tablet" | "mobile";
   propertyName?: string;
+  updateBlock?: (id: string, updates: Partial<Block>) => void;
 }) {
   const isOverridden = isPropertyOverridden(block, breakpoint, propertyName);
 
@@ -150,7 +221,19 @@ export function PanelDateInput({
     <div className="space-y-1">
       <label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
         {label}
-        {isOverridden && <OverrideIndicator />}
+        {isOverridden && (
+          <>
+            <OverrideIndicator />
+            {block && breakpoint && breakpoint !== "desktop" && propertyName && updateBlock && (
+              <ResetOverrideButton
+                block={block}
+                breakpoint={breakpoint}
+                propertyName={propertyName}
+                updateBlock={updateBlock}
+              />
+            )}
+          </>
+        )}
       </label>
       <DatePicker
         value={value}
@@ -169,6 +252,7 @@ export function PanelSelectInput({
   block,
   breakpoint,
   propertyName,
+  updateBlock,
 }: {
   label: string;
   value: string;
@@ -177,6 +261,7 @@ export function PanelSelectInput({
   block?: Block;
   breakpoint?: "desktop" | "tablet" | "mobile";
   propertyName?: string;
+  updateBlock?: (id: string, updates: Partial<Block>) => void;
 }) {
   const isOverridden = isPropertyOverridden(block, breakpoint, propertyName);
 
@@ -184,7 +269,19 @@ export function PanelSelectInput({
     <div className="space-y-1">
       <label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
         {label}
-        {isOverridden && <OverrideIndicator />}
+        {isOverridden && (
+          <>
+            <OverrideIndicator />
+            {block && breakpoint && breakpoint !== "desktop" && propertyName && updateBlock && (
+              <ResetOverrideButton
+                block={block}
+                breakpoint={breakpoint}
+                propertyName={propertyName}
+                updateBlock={updateBlock}
+              />
+            )}
+          </>
+        )}
       </label>
       <select
         value={value}
@@ -206,6 +303,7 @@ export function PanelTimeInput({
   block,
   breakpoint,
   propertyName,
+  updateBlock,
 }: {
   label: string;
   value: string;
@@ -213,6 +311,7 @@ export function PanelTimeInput({
   block?: Block;
   breakpoint?: "desktop" | "tablet" | "mobile";
   propertyName?: string;
+  updateBlock?: (id: string, updates: Partial<Block>) => void;
 }) {
   const isOverridden = isPropertyOverridden(block, breakpoint, propertyName);
 
@@ -220,7 +319,19 @@ export function PanelTimeInput({
     <div className="space-y-1">
       <label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
         {label}
-        {isOverridden && <OverrideIndicator />}
+        {isOverridden && (
+          <>
+            <OverrideIndicator />
+            {block && breakpoint && breakpoint !== "desktop" && propertyName && updateBlock && (
+              <ResetOverrideButton
+                block={block}
+                breakpoint={breakpoint}
+                propertyName={propertyName}
+                updateBlock={updateBlock}
+              />
+            )}
+          </>
+        )}
       </label>
       <TimePicker
         value={value}
