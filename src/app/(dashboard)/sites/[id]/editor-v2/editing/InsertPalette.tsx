@@ -5,6 +5,7 @@ import { animate } from "motion/mini";
 import { useEditorStore } from "@/app/stores/editorStore";
 import { duration, EASING } from "@/lib/motion";
 import { getVisibleBlocks, BLOCK_REGISTRY } from "../blocks/registry";
+import { getCenteredPosition } from "@/lib/blockPositioning";
 
 interface Props {
   insertIndex: number;
@@ -83,15 +84,12 @@ export function InsertPalette({ insertIndex, onClose, anchorRef }: Props) {
     if (!entry) return;
     const id = `block_${crypto.randomUUID().replace(/-/g, "").slice(0, 16)}`;
 
-    // Calculate centered vertical position (viewport center minus nav header)
-    const navHeight = 64; // Approximate nav header height
-    const viewportCenterY = (window.innerHeight / 2) - navHeight;
+    // Single source of truth: get centered position from blockPositioning utility
+    const centeredPosition = getCenteredPosition(window.innerHeight);
     const defaultConfig = {
       ...entry.defaultData,
-      // Only add blockOffsetY if not already in defaultData
-      ...(entry.defaultData.blockOffsetY === undefined ? { blockOffsetY: Math.max(100, viewportCenterY) } : {}),
-      // Ensure new blocks have high z-index to appear in front
-      ...(entry.defaultData.zIndex === undefined ? { zIndex: 10 } : {}),
+      // Only add positioning if not already in defaultData
+      ...(entry.defaultData.blockOffsetY === undefined ? centeredPosition : {}),
     };
 
     insertBlock(
