@@ -109,7 +109,11 @@ export function Canvas({ siteId }: Props) {
 				};
 
 				if (!cancelled) {
-					const parsed = (rawBlocks as Block[]).map((b) => ({ ...b, config: parseCfg(b.config) }));
+					const parsed = (rawBlocks as Block[]).map((b) => ({
+						...b,
+						config: parseCfg(b.config),
+						overrides: typeof b.overrides === "string" ? JSON.parse(b.overrides) : b.overrides,
+					}));
 					const { blocks: consolidated } = consolidateBlocks(parsed);
 					const updateBlock = useEditorStore.getState().updateBlock;
 					setBlocks(consolidated as Block[]);

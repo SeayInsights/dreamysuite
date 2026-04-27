@@ -57,6 +57,7 @@ export async function PUT(
   const parsed = await parseJsonBody<{
     type?: string;
     config?: unknown;
+    overrides?: unknown;
     sortOrder?: number;
     isVisible?: boolean;
   }>(req);
@@ -81,6 +82,10 @@ export async function PUT(
     const configValue = configParse.ok ? configParse.config : configParse.fallback;
     fields.push(`"config" = ?`);
     values.push(JSON.stringify(configValue));
+  }
+  if (body.overrides !== undefined) {
+    fields.push(`"overrides" = ?`);
+    values.push(JSON.stringify(body.overrides));
   }
   if (body.sortOrder !== undefined) {
     fields.push(`"sortOrder" = ?`);
