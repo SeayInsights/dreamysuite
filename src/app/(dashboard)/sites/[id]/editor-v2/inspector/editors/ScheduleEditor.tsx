@@ -1,6 +1,6 @@
 "use client";
 
-import { PanelTextInput } from "../PanelInputs";
+import { FormInput } from "../FormInput";
 import type { Block } from "@/app/stores/editorStore";
 
 type DisplayMode = "timeline" | "cards";
@@ -33,8 +33,10 @@ export function ScheduleEditor({
   const schedule = normalizeScheduleConfig(cfg);
 
   return (
-    <div className="space-y-4 p-4">
-      <PanelTextInput
+    <div className="space-y-6 p-4">
+      <FormInput
+        mode="block"
+        type="text"
         label="Heading"
         value={schedule.heading}
         onChange={(v) => updateConfig({ heading: v })}
@@ -43,22 +45,23 @@ export function ScheduleEditor({
         breakpoint={breakpoint}
         propertyName="heading"
         updateBlock={updateBlock}
+        helpText="Section heading (supports cascading across breakpoints)"
       />
 
       {/* Display mode toggle */}
-      <div className="space-y-1">
-        <label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+      <div className="space-y-2">
+        <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
           Display Mode
         </label>
-        <div className="flex gap-1.5">
+        <div className="flex gap-2">
           {(["timeline", "cards"] as const).map((mode) => (
             <button
               key={mode}
               type="button"
               onClick={() => updateConfig({ displayMode: mode })}
-              className={`flex-1 rounded-md border py-1 text-xs capitalize transition-colors ${
+              className={`flex-1 rounded-lg border py-2 text-sm capitalize transition-colors ${
                 schedule.displayMode === mode
-                  ? "border-primary bg-primary text-primary-foreground"
+                  ? "border-primary bg-primary text-primary-foreground font-medium"
                   : "border-border text-muted-foreground hover:bg-accent/50"
               }`}
             >
@@ -66,10 +69,13 @@ export function ScheduleEditor({
             </button>
           ))}
         </div>
+        <p className="text-xs text-muted-foreground leading-relaxed">
+          Choose how events are displayed: timeline (vertical flow) or cards (grid layout)
+        </p>
       </div>
 
-      <p className="text-[10px] text-muted-foreground italic">
-        Add and edit events directly on the block.
+      <p className="text-xs text-muted-foreground italic leading-relaxed">
+        Add and edit individual events directly on the block in the editor canvas.
       </p>
     </div>
   );

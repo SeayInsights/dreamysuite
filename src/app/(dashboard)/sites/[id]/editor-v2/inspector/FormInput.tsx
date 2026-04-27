@@ -44,11 +44,11 @@ interface BlockModeProps extends BaseFormInputProps {
   mode: "block";
   type: FormInputType;
 
-  // Required for cascading support
-  block: Block;
-  breakpoint: "desktop" | "tablet" | "mobile";
-  propertyName: string;
-  updateBlock: (id: string, updates: Partial<Block>) => void;
+  // Required for cascading support (but may be undefined if editor doesn't receive them)
+  block?: Block;
+  breakpoint?: "desktop" | "tablet" | "mobile";
+  propertyName?: string;
+  updateBlock?: (id: string, updates: Partial<Block>) => void;
 
   // Optional for select
   options?: { value: string; label: string }[];
@@ -149,10 +149,16 @@ export function FormInput(props: FormInputProps) {
     setDraft(value);
   }, [value]);
 
-  // Cascading indicator logic (only for block mode)
-  const showCascadeIndicator = props.mode === "block";
+  // Cascading indicator logic (only for block mode with all required props)
+  const showCascadeIndicator =
+    props.mode === "block" &&
+    props.block !== undefined &&
+    props.breakpoint !== undefined &&
+    props.propertyName !== undefined &&
+    props.updateBlock !== undefined;
+
   const isOverridden = showCascadeIndicator
-    ? isPropertyOverridden(props.block, props.breakpoint, props.propertyName)
+    ? isPropertyOverridden(props.block!, props.breakpoint!, props.propertyName!)
     : false;
   const sourceBreakpoint =
     showCascadeIndicator && props.breakpoint === "mobile"
@@ -173,14 +179,20 @@ export function FormInput(props: FormInputProps) {
       <label className="flex items-center text-xs font-semibold uppercase tracking-wide text-muted-foreground">
         {label}
         {isOverridden && <OverrideIndicator sourceBreakpoint={sourceBreakpoint} />}
-        {isOverridden && showCascadeIndicator && props.breakpoint !== "desktop" && (
-          <ResetButton
-            block={props.block}
-            breakpoint={props.breakpoint}
-            propertyName={props.propertyName}
-            updateBlock={props.updateBlock}
-          />
-        )}
+        {isOverridden &&
+          showCascadeIndicator &&
+          props.breakpoint !== "desktop" &&
+          props.block &&
+          props.breakpoint &&
+          props.propertyName &&
+          props.updateBlock && (
+            <ResetButton
+              block={props.block}
+              breakpoint={props.breakpoint as "tablet" | "mobile"}
+              propertyName={props.propertyName}
+              updateBlock={props.updateBlock}
+            />
+          )}
       </label>
       {maxLength && type === "textarea" && (
         <span
