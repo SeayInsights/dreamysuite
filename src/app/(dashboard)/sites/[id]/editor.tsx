@@ -10,7 +10,7 @@ import { useDebouncedCallback } from "use-debounce";
 import { useEditorStore } from "@/app/stores/editorStore";
 import type { Block as StoreBlock } from "@/app/stores/slices/document";
 import { BLOCK_COMPONENTS } from "@/app/components/blocks";
-import { safeBlockConfig } from "@/lib/schemas/blocks";
+import { safeBlockConfig } from "@/lib/validation";
 import { hexToRgb, rgbToHex } from "@/lib/color";
 import { LANGUAGES, LANG_FLAGS } from "@/lib/languages";
 import "@/styles/site-editor.css";

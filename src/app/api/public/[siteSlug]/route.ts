@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getEnv } from "@/lib/cloudflare";
-import { safeBlockConfig } from "@/lib/schemas/blocks";
+import { safeBlockConfig, safeJsonParse } from "@/lib/validation";
 import { isRateLimited } from "@/lib/rateLimit";
 import { getSiteTypeSettings } from "@/lib/schemas/site-type-settings";
 
@@ -142,8 +142,7 @@ export async function GET(
     .all<ContentRow>();
 
   const content = contentResult.results.map((row: ContentRow) => {
-    let parsed: unknown = {};
-    try { parsed = JSON.parse(row.content); } catch { /* keep empty */ }
+    const parsed = safeJsonParse(row.content, {});
     return { ...row, content: parsed };
   });
 
@@ -152,10 +151,9 @@ export async function GET(
 
   // Build navConfig from flat setting columns + per-page entrance config
   const s = settings as Record<string, unknown> | null;
-  let navItems: Array<{ key: string; entrance?: string }> = [];
-  try {
-    if (s?.navItemsConfig) navItems = JSON.parse(s.navItemsConfig as string);
-  } catch { /* keep empty */ }
+  const navItems: Array<{ key: string; entrance?: string }> = s?.navItemsConfig
+    ? safeJsonParse(s.navItemsConfig as string, [])
+    : [];
 
   const navConfig = {
     background:     (s?.navBg       as string | undefined) ?? "white",

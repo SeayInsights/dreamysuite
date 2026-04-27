@@ -6,7 +6,7 @@ import {
   apiError,
   parseJsonBody,
 } from "@/lib/api/site-auth";
-import { parseBlockConfig } from "@/lib/schemas/blocks";
+import { parseBlockConfig } from "@/lib/validation";
 
 export async function POST(
   req: NextRequest,
