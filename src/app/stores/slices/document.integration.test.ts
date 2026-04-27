@@ -3,9 +3,10 @@ import { create } from "zustand";
 import { createDocumentSlice, type DocumentSlice, type Block } from "./document";
 import { createEditorShellSlice, type EditorShellSlice } from "./editorShell";
 import { createThemeSlice, type ThemeSlice } from "./theme";
+import { createSettingsSlice, type SettingsSlice } from "./settings";
 import { getEffectiveConfig } from "@/app/(dashboard)/sites/[id]/editor-v2/lib/cascadeConfig";
 
-type TestStore = DocumentSlice & EditorShellSlice & ThemeSlice;
+type TestStore = DocumentSlice & EditorShellSlice & ThemeSlice & SettingsSlice;
 
 /**
  * Integration tests demonstrating the full override workflow:
@@ -15,12 +16,13 @@ type TestStore = DocumentSlice & EditorShellSlice & ThemeSlice;
  * 4. getEffectiveConfig returns the right values at each breakpoint
  */
 describe("DocumentSlice - Override Integration", () => {
-	let store: ReturnType<typeof create<TestStore>>;
+	let store: ReturnType<ReturnType<typeof create<TestStore>>>;
 
 	beforeEach(() => {
 		store = create<TestStore>()((...a) => ({
 			...createDocumentSlice(...a),
 			...createEditorShellSlice(...a),
+			...createSettingsSlice(...a),
 			...createThemeSlice(...a),
 		}));
 	});
