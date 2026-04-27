@@ -21,9 +21,13 @@ function normalize(cfg: Record<string, unknown>): RegistryCfg {
 export function RegistryEditor({
   cfg,
   updateConfig,
+  block,
+  breakpoint,
 }: {
   cfg: Record<string, unknown>;
   updateConfig: (patch: Record<string, unknown>) => void;
+  block?: unknown;
+  breakpoint?: unknown;
 }) {
   const reg = normalize(cfg);
 

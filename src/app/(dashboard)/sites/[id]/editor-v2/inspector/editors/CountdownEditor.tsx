@@ -3,9 +3,13 @@
 export function CountdownEditor({
   cfg,
   updateConfig,
+  block,
+  breakpoint,
 }: {
   cfg: Record<string, unknown>;
   updateConfig: (patch: Record<string, unknown>) => void;
+  block?: unknown;
+  breakpoint?: unknown;
 }) {
   const showRsvp = cfg.showRsvpButton === true;
 

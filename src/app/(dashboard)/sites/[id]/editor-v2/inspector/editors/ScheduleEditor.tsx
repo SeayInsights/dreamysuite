@@ -19,9 +19,13 @@ function normalizeScheduleConfig(cfg: Record<string, unknown>): ScheduleConfig {
 export function ScheduleEditor({
   cfg,
   updateConfig,
+  block,
+  breakpoint,
 }: {
   cfg: Record<string, unknown>;
   updateConfig: (patch: Record<string, unknown>) => void;
+  block?: unknown;
+  breakpoint?: unknown;
 }) {
   const schedule = normalizeScheduleConfig(cfg);
 

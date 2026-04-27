@@ -1,7 +1,7 @@
 "use client";
 
 import { parseCfg } from "@/lib/editableField";
-import { type Block } from "@/app/stores/editorStore";
+import { type Block, useEditorStore } from "@/app/stores/editorStore";
 import { ContentCardEditor } from "./editors/ContentCardEditor";
 import { CountdownEditor } from "./editors/CountdownEditor";
 import { ScheduleEditor } from "./editors/ScheduleEditor";
@@ -21,6 +21,7 @@ interface Props {
 
 export function BlockContentPanel({ block, updateBlock }: Props) {
   const cfg = parseCfg(block.config);
+  const breakpoint = useEditorStore((s) => s.breakpoint);
 
   function updateConfig(patch: Record<string, unknown>) {
     updateBlock(block.id, { config: { ...cfg, ...patch } });
@@ -31,22 +32,22 @@ export function BlockContentPanel({ block, updateBlock }: Props) {
     case "fun-facts":
     case "travel":
     case "content-card":
-      return <ContentCardEditor cfg={cfg} updateConfig={updateConfig} />;
+      return <ContentCardEditor cfg={cfg} updateConfig={updateConfig} block={block} breakpoint={breakpoint} />;
     case "schedule":
-      return <ScheduleEditor cfg={cfg} updateConfig={updateConfig} />;
+      return <ScheduleEditor cfg={cfg} updateConfig={updateConfig} block={block} breakpoint={breakpoint} />;
     case "video":
-      return <VideoEditor cfg={{ ...cfg, _type: "video" }} updateConfig={updateConfig} />;
+      return <VideoEditor cfg={{ ...cfg, _type: "video" }} updateConfig={updateConfig} block={block} breakpoint={breakpoint} />;
     case "media-video":
-      return <VideoEditor cfg={{ ...cfg, _type: "media-video" }} updateConfig={updateConfig} />;
+      return <VideoEditor cfg={{ ...cfg, _type: "media-video" }} updateConfig={updateConfig} block={block} breakpoint={breakpoint} />;
     case "gallery":
     case "images":
-      return <GalleryEditor cfg={cfg} updateConfig={updateConfig} />;
+      return <GalleryEditor cfg={cfg} updateConfig={updateConfig} block={block} breakpoint={breakpoint} />;
     case "countdown":
-      return <CountdownEditor cfg={cfg} updateConfig={updateConfig} />;
+      return <CountdownEditor cfg={cfg} updateConfig={updateConfig} block={block} breakpoint={breakpoint} />;
     case "venue-map":
-      return <VenueMapEditor cfg={cfg} updateConfig={updateConfig} />;
+      return <VenueMapEditor cfg={cfg} updateConfig={updateConfig} block={block} breakpoint={breakpoint} />;
     case "registry":
-      return <RegistryEditor cfg={cfg} updateConfig={updateConfig} />;
+      return <RegistryEditor cfg={cfg} updateConfig={updateConfig} block={block} breakpoint={breakpoint} />;
     default:
       return (
         <p className="p-4 text-xs text-muted-foreground italic">

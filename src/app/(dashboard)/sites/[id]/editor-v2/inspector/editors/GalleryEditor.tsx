@@ -20,9 +20,13 @@ interface Photo {
 export function GalleryEditor({
   cfg,
   updateConfig,
+  block,
+  breakpoint,
 }: {
   cfg: Record<string, unknown>;
   updateConfig: (patch: Record<string, unknown>) => void;
+  block?: unknown;
+  breakpoint?: unknown;
 }) {
   const siteId = useEditorStore((s) => s.siteId);
   const [photos, setPhotos] = useState<Photo[]>([]);

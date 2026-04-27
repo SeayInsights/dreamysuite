@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useEditorStore } from "@/app/stores/editorStore";
+import { useEditorStore, type Block } from "@/app/stores/editorStore";
 import { PanelTextInput, PanelSelectInput } from "../PanelInputs";
 
 // ---------------------------------------------------------------------------
@@ -18,9 +18,13 @@ function detectProvider(url: string): string {
 export function VideoEditor({
   cfg,
   updateConfig,
+  block,
+  breakpoint,
 }: {
   cfg: Record<string, unknown>;
   updateConfig: (patch: Record<string, unknown>) => void;
+  block?: Block;
+  breakpoint?: "desktop" | "tablet" | "mobile";
 }) {
   const siteId = useEditorStore((s) => s.siteId);
   const currentUrl = String(cfg.url ?? "");
@@ -122,6 +126,9 @@ export function VideoEditor({
         value={height}
         onChange={(v) => updateConfig({ height: v })}
         placeholder="100dvh"
+        block={block}
+        breakpoint={breakpoint}
+        propertyName="height"
       />
       <p className="text-[10px] text-muted-foreground -mt-2">
         CSS value — e.g. 100dvh, 600px, 80vh
@@ -138,6 +145,9 @@ export function VideoEditor({
             { value: "fill", label: "Fill (stretch)" },
             { value: "none", label: "None (natural size)" },
           ]}
+          block={block}
+          breakpoint={breakpoint}
+          propertyName="objectFit"
         />
       )}
     </div>

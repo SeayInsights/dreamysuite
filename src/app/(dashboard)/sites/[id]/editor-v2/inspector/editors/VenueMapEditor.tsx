@@ -5,9 +5,13 @@ import { PanelTextInput, PanelDateInput } from "../PanelInputs";
 export function VenueMapEditor({
   cfg,
   updateConfig,
+  block,
+  breakpoint,
 }: {
   cfg: Record<string, unknown>;
   updateConfig: (patch: Record<string, unknown>) => void;
+  block?: unknown;
+  breakpoint?: unknown;
 }) {
   const heading = typeof cfg.heading === "string" ? cfg.heading : "";
   const dateStart = typeof cfg.dateStart === "string" ? cfg.dateStart : "";

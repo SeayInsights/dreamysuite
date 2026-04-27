@@ -3,19 +3,54 @@
 import { useState, useEffect } from "react";
 import { DatePicker } from "@/components/ui/DatePicker";
 import { TimePicker } from "@/components/ui/TimePicker";
+import type { Block } from "@/app/stores/editorStore";
+
+// ---------------------------------------------------------------------------
+// Override detection helper
+// ---------------------------------------------------------------------------
+
+function isPropertyOverridden(
+  block: Block | undefined,
+  breakpoint: "desktop" | "tablet" | "mobile" | undefined,
+  propertyName: string | undefined
+): boolean {
+  if (!block || !breakpoint || !propertyName) return false;
+  if (breakpoint === "desktop") return false;
+  return propertyName in (block.overrides?.[breakpoint] || {});
+}
+
+function OverrideIndicator() {
+  return (
+    <span
+      className="ml-1 inline-block h-1.5 w-1.5 rounded-full bg-orange-500"
+      title="Overridden from desktop value"
+    />
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Panel Input Components
+// ---------------------------------------------------------------------------
 
 export function PanelTextInput({
   label,
   value,
   onChange,
   placeholder,
+  block,
+  breakpoint,
+  propertyName,
 }: {
   label: string;
   value: string;
   onChange: (v: string) => void;
   placeholder?: string;
+  block?: Block;
+  breakpoint?: "desktop" | "tablet" | "mobile";
+  propertyName?: string;
 }) {
   const [draft, setDraft] = useState(value);
+  const isOverridden = isPropertyOverridden(block, breakpoint, propertyName);
 
   useEffect(() => {
     setDraft(value);
@@ -29,6 +64,7 @@ export function PanelTextInput({
     <div className="space-y-1">
       <label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
         {label}
+        {isOverridden && <OverrideIndicator />}
       </label>
       <input
         type="text"
@@ -51,13 +87,20 @@ export function PanelTextArea({
   value,
   onChange,
   placeholder,
+  block,
+  breakpoint,
+  propertyName,
 }: {
   label: string;
   value: string;
   onChange: (v: string) => void;
   placeholder?: string;
+  block?: Block;
+  breakpoint?: "desktop" | "tablet" | "mobile";
+  propertyName?: string;
 }) {
   const [draft, setDraft] = useState(value);
+  const isOverridden = isPropertyOverridden(block, breakpoint, propertyName);
 
   useEffect(() => {
     setDraft(value);
@@ -71,6 +114,7 @@ export function PanelTextArea({
     <div className="space-y-1">
       <label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
         {label}
+        {isOverridden && <OverrideIndicator />}
       </label>
       <textarea
         value={draft}
@@ -89,15 +133,24 @@ export function PanelDateInput({
   label,
   value,
   onChange,
+  block,
+  breakpoint,
+  propertyName,
 }: {
   label: string;
   value: string;
   onChange: (v: string) => void;
+  block?: Block;
+  breakpoint?: "desktop" | "tablet" | "mobile";
+  propertyName?: string;
 }) {
+  const isOverridden = isPropertyOverridden(block, breakpoint, propertyName);
+
   return (
     <div className="space-y-1">
       <label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
         {label}
+        {isOverridden && <OverrideIndicator />}
       </label>
       <DatePicker
         value={value}
@@ -113,16 +166,25 @@ export function PanelSelectInput({
   value,
   onChange,
   options,
+  block,
+  breakpoint,
+  propertyName,
 }: {
   label: string;
   value: string;
   onChange: (v: string) => void;
   options: { value: string; label: string }[];
+  block?: Block;
+  breakpoint?: "desktop" | "tablet" | "mobile";
+  propertyName?: string;
 }) {
+  const isOverridden = isPropertyOverridden(block, breakpoint, propertyName);
+
   return (
     <div className="space-y-1">
       <label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
         {label}
+        {isOverridden && <OverrideIndicator />}
       </label>
       <select
         value={value}
@@ -141,15 +203,24 @@ export function PanelTimeInput({
   label,
   value,
   onChange,
+  block,
+  breakpoint,
+  propertyName,
 }: {
   label: string;
   value: string;
   onChange: (v: string) => void;
+  block?: Block;
+  breakpoint?: "desktop" | "tablet" | "mobile";
+  propertyName?: string;
 }) {
+  const isOverridden = isPropertyOverridden(block, breakpoint, propertyName);
+
   return (
     <div className="space-y-1">
       <label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
         {label}
+        {isOverridden && <OverrideIndicator />}
       </label>
       <TimePicker
         value={value}

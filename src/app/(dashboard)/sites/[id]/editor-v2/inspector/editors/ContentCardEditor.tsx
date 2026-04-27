@@ -62,9 +62,13 @@ const CARD_STYLES: Array<{ value: CardStyle; label: string }> = [
 export function ContentCardEditor({
   cfg,
   updateConfig,
+  block,
+  breakpoint,
 }: {
   cfg: Record<string, unknown>;
   updateConfig: (patch: Record<string, unknown>) => void;
+  block?: unknown;
+  breakpoint?: unknown;
 }) {
   const card = normalizeContentCardConfig(cfg);
 
