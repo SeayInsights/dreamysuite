@@ -6,6 +6,10 @@ export interface Block {
 	config: Record<string, unknown>;
 	sortOrder?: number;
 	isVisible?: number;
+	overrides?: {
+		tablet?: Partial<Record<string, unknown>>;
+		mobile?: Partial<Record<string, unknown>>;
+	};
 }
 
 export interface PendingOps {
