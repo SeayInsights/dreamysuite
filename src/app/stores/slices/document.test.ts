@@ -3,17 +3,19 @@ import { create } from "zustand";
 import { createDocumentSlice, type DocumentSlice, type Block } from "./document";
 import { createEditorShellSlice, type EditorShellSlice } from "./editorShell";
 import { createThemeSlice, type ThemeSlice } from "./theme";
+import { createSettingsSlice, type SettingsSlice } from "./settings";
 
-type TestStore = DocumentSlice & EditorShellSlice & ThemeSlice;
+type TestStore = DocumentSlice & EditorShellSlice & ThemeSlice & SettingsSlice;
 
 describe("DocumentSlice - Override Detection", () => {
-	let store: ReturnType<typeof create<TestStore>>;
+	let store: ReturnType<ReturnType<typeof create<TestStore>>>;
 
 	beforeEach(() => {
 		// Create a minimal test store that combines the slices
 		store = create<TestStore>()((...a) => ({
 			...createDocumentSlice(...a),
 			...createEditorShellSlice(...a),
+			...createSettingsSlice(...a),
 			...createThemeSlice(...a),
 		}));
 	});
