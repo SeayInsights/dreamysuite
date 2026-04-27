@@ -82,8 +82,20 @@ export function InsertPalette({ insertIndex, onClose, anchorRef }: Props) {
     const entry = BLOCK_REGISTRY[type];
     if (!entry) return;
     const id = `block_${crypto.randomUUID().replace(/-/g, "").slice(0, 16)}`;
+
+    // Calculate centered vertical position (viewport center minus nav header)
+    const navHeight = 64; // Approximate nav header height
+    const viewportCenterY = (window.innerHeight / 2) - navHeight;
+    const defaultConfig = {
+      ...entry.defaultData,
+      // Only add blockOffsetY if not already in defaultData
+      ...(entry.defaultData.blockOffsetY === undefined ? { blockOffsetY: Math.max(100, viewportCenterY) } : {}),
+      // Ensure new blocks have high z-index to appear in front
+      ...(entry.defaultData.zIndex === undefined ? { zIndex: 10 } : {}),
+    };
+
     insertBlock(
-      { id, type, config: entry.defaultData, sortOrder: insertIndex, isVisible: 1 },
+      { id, type, config: defaultConfig, sortOrder: insertIndex, isVisible: 1 },
       insertIndex,
     );
     // Patch sortOrder on subsequent blocks
