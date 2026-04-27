@@ -1,4 +1,5 @@
 import type { StateCreator } from "zustand";
+import type { EditorShellSlice } from "./editorShell";
 
 export interface Block {
 	id: string;
@@ -39,7 +40,12 @@ const emptyOps = (): PendingOps => ({
 	reordered: false,
 });
 
-export const createDocumentSlice: StateCreator<DocumentSlice> = (set) => ({
+export const createDocumentSlice: StateCreator<
+	DocumentSlice & EditorShellSlice,
+	[],
+	[],
+	DocumentSlice
+> = (set, get) => ({
 	blocks: [],
 	isDirty: false,
 	pendingOps: emptyOps(),
@@ -48,9 +54,42 @@ export const createDocumentSlice: StateCreator<DocumentSlice> = (set) => ({
 		set((state) => {
 			const ops = { ...state.pendingOps, updated: new Set(state.pendingOps.updated) };
 			ops.updated.add(id);
+
+			// Get current breakpoint to determine if we need override routing
+			const breakpoint = get().breakpoint;
+
+			// Transform updates based on breakpoint
+			let transformedUpdates = { ...updates };
+
+			// If editing on tablet or mobile AND config updates exist, route to overrides
+			if (breakpoint !== "desktop" && updates.config) {
+				const currentBlock = state.blocks.find((b) => b.id === id);
+				if (currentBlock) {
+					// Extract config updates
+					const configUpdates = updates.config;
+
+					// Merge with existing overrides for this breakpoint
+					const existingOverrides = currentBlock.overrides?.[breakpoint] || {};
+					const mergedOverrides = { ...existingOverrides, ...configUpdates };
+
+					// Create updated overrides object
+					const newOverrides = {
+						...currentBlock.overrides,
+						[breakpoint]: mergedOverrides,
+					};
+
+					// Replace config update with overrides update
+					transformedUpdates = {
+						...updates,
+						config: currentBlock.config, // Keep base config unchanged
+						overrides: newOverrides,
+					};
+				}
+			}
+
 			return {
 				blocks: state.blocks.map((b) =>
-					b.id === id ? { ...b, ...updates } : b,
+					b.id === id ? { ...b, ...transformedUpdates } : b,
 				),
 				isDirty: true,
 				pendingOps: ops,
