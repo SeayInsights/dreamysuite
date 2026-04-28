@@ -10,6 +10,7 @@ import {
 	type EditorShellSlice,
 	type Breakpoint,
 	type EditorMode,
+	type InspectorTab,
 	type Section,
 } from "./slices/editorShell";
 import {
@@ -34,7 +35,7 @@ import {
 	type ThemeTypography,
 } from "./slices/theme";
 
-export type { Block, Breakpoint, EditorMode, Section, DragState, ThemeTokens, ThemeColors, ThemeTypography };
+export type { Block, Breakpoint, EditorMode, InspectorTab, Section, DragState, ThemeTokens, ThemeColors, ThemeTypography };
 
 export type EditorState = DocumentSlice & EditorShellSlice & TransientSlice & SettingsSlice & TranslationSlice & ThemeSlice;
 

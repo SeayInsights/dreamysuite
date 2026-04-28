@@ -57,8 +57,8 @@ next-env.d.ts
 # Generated types
 cloudflare-env.d.ts
 
-# Claude Code browser sessions
-.claude/web-ctl/
+# Claude Code (all Claude files)
+.claude/
 
 # Legacy build artifacts
 /dist
@@ -76,6 +76,7 @@ cloudflare-env.d.ts
 # Planning & session artifacts
 .planning/
 .sessions/
+.design-audit/
 
 # Migrations (managed in Cloudflare D1 dashboard)
 /migrations

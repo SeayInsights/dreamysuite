@@ -3,6 +3,7 @@ import type { ThemeSlice } from "./theme";
 
 export type Breakpoint = "desktop" | "tablet" | "mobile";
 export type EditorMode = "simple" | "pro";
+export type InspectorTab = "design" | "advanced";
 export type Section =
 	| "pages"
 	| "elements"
@@ -50,6 +51,7 @@ export interface EditorShellSlice {
 	railCollapsed: boolean;
 	openTray: Section | null;
 	inspectorOpen: boolean;
+	inspectorTab: InspectorTab;
 	fullPreview: boolean;
 
 	setBreakpoint: (bp: Breakpoint) => void;
@@ -59,6 +61,7 @@ export interface EditorShellSlice {
 	setOpenTray: (t: Section | null) => void;
 	toggleInspector: () => void;
 	setInspectorOpen: (v: boolean) => void;
+	setInspectorTab: (tab: InspectorTab) => void;
 	toggleFullPreview: () => void;
 
 	/** True when the floating section toolbar should be visible (set on double-click). */
@@ -101,6 +104,7 @@ export const createEditorShellSlice: StateCreator<EditorShellSlice & ThemeSlice,
 	railCollapsed: false,
 	openTray: null,
 	inspectorOpen: false,
+	inspectorTab: "design",
 	fullPreview: false,
 
 	setBreakpoint: (breakpoint) => set({ breakpoint }),
@@ -110,6 +114,7 @@ export const createEditorShellSlice: StateCreator<EditorShellSlice & ThemeSlice,
 	setOpenTray: (openTray) => set({ openTray }),
 	toggleInspector: () => set((s) => ({ inspectorOpen: !s.inspectorOpen })),
 	setInspectorOpen: (inspectorOpen) => set({ inspectorOpen }),
+	setInspectorTab: (inspectorTab) => set({ inspectorTab }),
 	toggleFullPreview: () => set((s) => ({ fullPreview: !s.fullPreview })),
 
 	blockToolbarVisible: false,
