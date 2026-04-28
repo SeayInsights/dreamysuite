@@ -135,6 +135,17 @@ function DomainPanel({ onBack }: { onBack: () => void }) {
 							</p>
 						)}
 					</div>
+
+					<div className="flex flex-col gap-1 border-t border-border pt-3">
+						<label className="text-[11px] font-medium uppercase leading-none tracking-wider text-muted-foreground">
+							Domain & SEO
+						</label>
+						<div className="rounded-md border border-dashed border-border px-3 py-6 text-center">
+							<p className="text-xs text-muted-foreground italic">
+								SEO fields will appear here
+							</p>
+						</div>
+					</div>
 				</div>
 			</div>
 		</div>

@@ -9,6 +9,7 @@ import { DatePicker } from "@/components/ui/DatePicker";
 import { TimePicker } from "@/components/ui/TimePicker";
 import { PlacesAutocomplete, fetchPlaceDetails } from "./PlacesSearch";
 import type { PlaceResult } from "./PlacesSearch";
+import { Accordion } from "@/components/ui/Accordion";
 
 // ---------------------------------------------------------------------------
 // Page Settings Panel — Global site settings (no breakpoint cascading)
@@ -166,10 +167,6 @@ function VenueHotelSection() {
 
   return (
     <div className="space-y-4">
-      <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-        Venue &amp; Hotels
-      </p>
-
       {venueName && (
         <div className="flex items-center justify-between rounded-lg border border-border bg-background/60 px-3 py-2.5">
           <span className="text-sm text-foreground">{venueName}</span>
@@ -306,37 +303,55 @@ export function PageSettingsPanel() {
       </div>
 
       {/* Event Info */}
-      <FormInput
-        mode="page"
-        type="text"
-        label="Event Name"
-        value={settings.eventName ?? ""}
-        onChange={(v) => updateSettings({ eventName: v || null })}
-        placeholder="Our Wedding"
-        helpText="The name of your event (e.g., 'Sarah & John's Wedding')"
-      />
+      <Accordion
+        title={
+          <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            Event Information
+          </span>
+        }
+        defaultOpen={true}
+      >
+        <div className="space-y-4">
+          <FormInput
+            mode="page"
+            type="text"
+            label="Event Name"
+            value={settings.eventName ?? ""}
+            onChange={(v) => updateSettings({ eventName: v || null })}
+            placeholder="Our Wedding"
+            helpText="The name of your event (e.g., 'Sarah & John's Wedding')"
+          />
 
-      <DateTimeInput
-        label="Event Date & Time"
-        value={settings.eventDate}
-        onChange={(v) => updateSettings({ eventDate: v })}
-        helpText="When is your event taking place?"
-      />
+          <DateTimeInput
+            label="Event Date & Time"
+            value={settings.eventDate}
+            onChange={(v) => updateSettings({ eventDate: v })}
+            helpText="When is your event taking place?"
+          />
 
-      <FormInput
-        mode="page"
-        type="text"
-        label="Location"
-        value={settings.eventLocation ?? ""}
-        onChange={(v) => updateSettings({ eventLocation: v || null })}
-        placeholder="Grand Ballroom, New York"
-        helpText="Brief location description (full details in Venue section below)"
-      />
+          <FormInput
+            mode="page"
+            type="text"
+            label="Location"
+            value={settings.eventLocation ?? ""}
+            onChange={(v) => updateSettings({ eventLocation: v || null })}
+            placeholder="Grand Ballroom, New York"
+            helpText="Brief location description (full details in Venue section below)"
+          />
+        </div>
+      </Accordion>
 
       {/* Venue & Hotels */}
-      <div className="border-t border-border pt-6">
+      <Accordion
+        title={
+          <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            Venue & Hotels
+          </span>
+        }
+        defaultOpen={true}
+      >
         <VenueHotelSection />
-      </div>
+      </Accordion>
 
       {/* SEO & Social */}
       <div className="border-t border-border pt-6 space-y-4">
