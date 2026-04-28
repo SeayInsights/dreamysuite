@@ -82,6 +82,9 @@ export * from "./api";
 // Cryptography
 export * from "./crypto";
 
+// Database queries
+export * from "./db";
+
 // Effects system (already has comprehensive index.ts)
 export * from "./effects";
 

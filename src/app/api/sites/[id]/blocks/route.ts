@@ -7,6 +7,7 @@ import {
   parseJsonBody,
 } from "@/lib/api/site-auth";
 import { parseBlockConfig } from "@/lib/validation";
+import { getPageById, getMaxBlockSortOrder, createBlock } from "@/lib/db";
 
 export async function POST(
   req: NextRequest,
@@ -35,17 +36,10 @@ export async function POST(
     return apiError("VALIDATION_ERROR", "sortOrder must be a non-negative integer.", 400);
   }
 
-  const page = await env.DB
-    .prepare("SELECT id FROM page WHERE id = ? AND siteId = ?")
-    .bind(pageId, siteId)
-    .first<{ id: string }>();
-
-  if (!page) {
+  const page = await getPageById(env.DB, pageId);
+  if (!page || page.siteId !== siteId) {
     return apiError("NOT_FOUND", "Page not found in this site", 404);
   }
-
-  const id = clientId || crypto.randomUUID();
-  const now = Date.now();
 
   const configParse = parseBlockConfig(type, config);
   if (!configParse.ok) {
@@ -59,19 +53,18 @@ export async function POST(
 
   let resolvedOrder = sortOrder;
   if (resolvedOrder === undefined) {
-    const maxOrder = await env.DB
-      .prepare("SELECT COALESCE(MAX(sortOrder), -1) as maxOrder FROM block WHERE pageId = ?")
-      .bind(pageId)
-      .first<{ maxOrder: number }>();
-    resolvedOrder = (maxOrder?.maxOrder ?? -1) + 1;
+    const maxOrder = await getMaxBlockSortOrder(env.DB, pageId);
+    resolvedOrder = maxOrder + 1;
   }
 
-  const block = await env.DB
-    .prepare(
-      "INSERT INTO block (id, siteId, pageId, type, config, sortOrder, isVisible, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, 1, ?, ?) RETURNING *"
-    )
-    .bind(id, siteId, pageId, type, configStr, resolvedOrder, now, now)
-    .first();
+  const block = await createBlock(env.DB, {
+    id: clientId,
+    siteId,
+    pageId,
+    type,
+    config: configStr,
+    sortOrder: resolvedOrder,
+  });
 
   return NextResponse.json({ block }, { status: 201 });
 }
