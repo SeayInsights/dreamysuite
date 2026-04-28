@@ -352,48 +352,6 @@ export function PageSettingsPanel() {
       >
         <VenueHotelSection />
       </Accordion>
-
-      {/* SEO & Social */}
-      <div className="border-t border-border pt-6 space-y-4">
-        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-          SEO & Social
-        </p>
-
-        <FormInput
-          mode="page"
-          type="text"
-          label="Page Title"
-          value={settings.seoTitle ?? ""}
-          onChange={(v) => updateSettings({ seoTitle: v || null })}
-          placeholder="Custom page title"
-          maxLength={60}
-          helpText="Appears in browser tabs and search results (60 characters max)"
-        />
-
-        <FormInput
-          mode="page"
-          type="textarea"
-          label="Meta Description"
-          value={settings.seoDescription ?? ""}
-          onChange={(v) => updateSettings({ seoDescription: v || null })}
-          placeholder="A brief description for search engines"
-          maxLength={160}
-          helpText="Brief description for search engines and social shares (160 characters max)"
-        />
-
-        <div className="space-y-2">
-          <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-            Social Image (OG)
-          </label>
-          <SitePhotoPicker
-            value={settings.ogImage ?? null}
-            onChange={(v) => updateSettings({ ogImage: v })}
-          />
-          <p className="text-xs leading-normal text-muted-foreground">
-            Image shown when your site is shared on social media (1200x630px recommended)
-          </p>
-        </div>
-      </div>
     </div>
   );
 }
