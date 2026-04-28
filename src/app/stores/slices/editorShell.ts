@@ -10,11 +10,13 @@ export type Section =
 	| "layers"
 	| "theme"
 	| "navigation"
-	| "media"
+	| "photos"
+	| "videos"
 	| "music"
 	| "language"
 	| "effects"
-	| "settings";
+	| "settings"
+	| "seo";
 
 // ---------------------------------------------------------------------------
 

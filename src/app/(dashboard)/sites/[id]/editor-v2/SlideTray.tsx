@@ -100,7 +100,7 @@ export function SlideTray() {
 			{openTray === "layers" && <LayersTray />}
 			{openTray === "theme" && <ThemeTray />}
 			{openTray === "navigation" && <NavigationTray />}
-			{openTray === "media" && <MediaTray />}
+			{(openTray === "photos" || openTray === "videos") && <MediaTray />}
 			{openTray === "music" && <MusicTray />}
 			{openTray === "effects" && <EffectsTray />}
 			{openTray === "language" && <LanguageTray />}

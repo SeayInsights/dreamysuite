@@ -15,8 +15,8 @@ import { SIDEBAR_SECTIONS, type PanelId } from "./lib/sidebarConfig";
  */
 const PANEL_TO_SECTION: Record<PanelId, Section> = {
 	elements: "elements",
-	photos: "media",
-	videos: "media",
+	photos: "photos",
+	videos: "videos",
 	music: "music",
 	effects: "effects",
 	"page-list": "pages",
