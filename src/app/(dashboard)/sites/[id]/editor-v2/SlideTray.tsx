@@ -9,11 +9,8 @@ import { prefersReducedMotion } from "@/lib/motion";
 const PagesTray = dynamic(() => import("./trays/PagesTray").then((m) => ({ default: m.PagesTray })));
 const ElementsTray = dynamic(() => import("./trays/ElementsTray").then((m) => ({ default: m.ElementsTray })));
 const LayersTray = dynamic(() => import("./trays/LayersTray").then((m) => ({ default: m.LayersTray })));
-const ThemeTray = dynamic(() => import("./trays/ThemeTray").then((m) => ({ default: m.ThemeTray })));
+const DesignThemeTray = dynamic(() => import("./trays/DesignThemeTray").then((m) => ({ default: m.DesignThemeTray })));
 const MediaTray = dynamic(() => import("./trays/MediaTray").then((m) => ({ default: m.MediaTray })));
-const MusicTray = dynamic(() => import("./trays/MusicTray").then((m) => ({ default: m.MusicTray })));
-const NavigationTray = dynamic(() => import("./trays/NavigationTray").then((m) => ({ default: m.NavigationTray })));
-const EffectsTray = dynamic(() => import("./trays/EffectsTray").then((m) => ({ default: m.EffectsTray })));
 const LanguageTray = dynamic(() => import("./trays/LanguageTray").then((m) => ({ default: m.LanguageTray })));
 const SettingsTray = dynamic(() => import("./trays/SettingsTray").then((m) => ({ default: m.SettingsTray })));
 
@@ -98,11 +95,8 @@ export function SlideTray() {
 			{openTray === "pages" && <PagesTray />}
 			{openTray === "elements" && <ElementsTray />}
 			{openTray === "layers" && <LayersTray />}
-			{openTray === "theme" && <ThemeTray />}
-			{openTray === "navigation" && <NavigationTray />}
-			{openTray === "media" && <MediaTray />}
-			{openTray === "music" && <MusicTray />}
-			{openTray === "effects" && <EffectsTray />}
+			{(openTray === "navigation" || openTray === "theme") && <DesignThemeTray />}
+			{(openTray === "photos" || openTray === "videos" || openTray === "music") && <MediaTray />}
 			{openTray === "language" && <LanguageTray />}
 			{openTray === "settings" && <SettingsTray />}
 		</div>

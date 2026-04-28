@@ -1,4 +1,4 @@
-import { LucideIcon, Plus, FileText, Globe, Settings } from "lucide-react";
+import { LucideIcon, Plus, FileText, Layers, Palette, Image, Globe, Settings } from "lucide-react";
 
 /**
  * Panel identifiers for sidebar content areas.
@@ -6,14 +6,15 @@ import { LucideIcon, Plus, FileText, Globe, Settings } from "lucide-react";
  */
 export type PanelId =
   | "elements"      // ElementsTray - text, images, buttons, etc.
-  | "media"         // MediaTray - upload and manage media assets
+  | "photos"        // PhotosTray - upload and manage photos
+  | "videos"        // VideosTray - upload and manage videos
+  | "music"         // MusicTray - background audio
   | "effects"       // EffectsTray - animations and transitions
   | "page-list"     // PageListTray - manage pages
   | "navigation"    // NavigationTray - menu structure
   | "layers"        // LayersTray - element hierarchy
   | "theme"         // ThemeTray - colors, fonts, spacing
   | "language"      // LanguageTray - i18n settings
-  | "music"         // MusicTray - background audio
   | "site-settings"; // SiteSettingsTray - general site config
 
 /**
@@ -29,42 +30,63 @@ export interface SidebarSection {
 }
 
 /**
- * New sidebar structure - 4 top-level sections with nested panels.
+ * New sidebar structure - 7 top-level sections (Wix-style organization).
  *
- * Reduces cognitive load from 10 flat items to 4 logical groups.
- * Total panels remains 10, but organized by workflow:
+ * Reduces cognitive load by promoting frequently-used panels to top level
+ * while grouping related content into tabbed sections:
  *
- * - **Add** (3 panels): Content creation tools
- * - **Pages** (3 panels): Structure and organization
- * - **Site** (3 panels): Global styling and features
- * - **Settings** (1 panel): Configuration
+ * - **Add** (direct): Content creation tools
+ * - **Pages** (direct): Page management
+ * - **Layers** (direct): Element hierarchy (promoted from nested)
+ * - **Design/Theme** (3 tabs): Navigation, theme, effects
+ * - **Media** (3 tabs): Photos, videos, music
+ * - **Languages** (direct): i18n settings
+ * - **Settings** (direct): Site configuration
  *
- * This structure aligns with user mental models:
- * "I want to add something" vs "I want to configure the site"
+ * This structure balances quick access to core tools with logical grouping
+ * of related features, matching user workflows in modern site builders.
  */
 export const SIDEBAR_SECTIONS: SidebarSection[] = [
   {
-    id: 'add',
+    id: 'add-elements',
     label: 'Add',
     icon: Plus,
-    panels: ['elements', 'media', 'effects']
+    panel: 'elements'
   },
   {
     id: 'pages',
     label: 'Pages',
     icon: FileText,
-    panels: ['page-list', 'navigation', 'layers']
+    panel: 'page-list'
   },
   {
-    id: 'site',
-    label: 'Site',
+    id: 'layers',
+    label: 'Layers',
+    icon: Layers,
+    panel: 'layers'
+  },
+  {
+    id: 'design-theme',
+    label: 'Design',
+    icon: Palette,
+    panels: ['navigation', 'theme']
+  },
+  {
+    id: 'media',
+    label: 'Media',
+    icon: Image,
+    panels: ['photos', 'videos', 'music']
+  },
+  {
+    id: 'languages',
+    label: 'Languages',
     icon: Globe,
-    panels: ['theme', 'language', 'music']
+    panel: 'language'
   },
   {
     id: 'settings',
     label: 'Settings',
     icon: Settings,
-    panel: 'site-settings' // Single panel, no nesting
+    panel: 'site-settings'
   }
 ];

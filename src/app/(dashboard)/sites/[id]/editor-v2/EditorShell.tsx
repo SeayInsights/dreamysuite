@@ -3,7 +3,7 @@
 import { type ReactNode, useEffect } from "react";
 
 import { SidebarNav } from "./SidebarNav";
-import { Inspector } from "./Inspector";
+import { InspectorV2 } from "./InspectorV2";
 import { SlideTray } from "./SlideTray";
 import { TopBar } from "./TopBar";
 import { Breadcrumb } from "./Breadcrumb";
@@ -72,7 +72,7 @@ export function EditorShell({ site, user: _user, children }: Props) {
 					<Breadcrumb />
 				</main>
 
-				<Inspector />
+				<InspectorV2 />
 			</div>
 		</div>
 	);

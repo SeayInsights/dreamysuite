@@ -134,6 +134,31 @@ export function ThemeTray() {
 					)}
 				</section>
 
+				<section className="mb-4 border-t border-border pt-4 space-y-3">
+					<div>
+						<label className="block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">
+							Decorations
+						</label>
+						<select className="w-full rounded-md border border-border bg-background px-2.5 py-1.5 text-sm outline-none focus:border-ring">
+							<option value="">None</option>
+							<option value="hearts">Hearts</option>
+							<option value="flowers">Flowers</option>
+							<option value="confetti">Confetti</option>
+						</select>
+					</div>
+
+					<div>
+						<label className="block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">
+							Cursor
+						</label>
+						<select className="w-full rounded-md border border-border bg-background px-2.5 py-1.5 text-sm outline-none focus:border-ring">
+							<option value="default">Default</option>
+							<option value="pointer">Pointer</option>
+							<option value="custom">Custom</option>
+						</select>
+					</div>
+				</section>
+
 				{isPro && (
 					<>
 						<section className="mb-4 border-t border-border pt-4">
