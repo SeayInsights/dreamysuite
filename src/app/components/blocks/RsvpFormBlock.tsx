@@ -1,4 +1,5 @@
 "use client";
+import { useEditorStore } from "@/app/stores/editorStore";
 
 import { blockSectionStyle, parseCfg } from "@/lib/editableField";
 import { TextEffectWrapper } from "@/app/components/TextEffectWrapper";
@@ -9,6 +10,7 @@ interface Block { id: string; type: string; [key: string]: unknown }
 interface CustomQuestion { id: string; label: string }
 
 export function RsvpFormBlock({ block }: { block: Block }) {
+  const breakpoint = useEditorStore((s) => s.breakpoint) as "desktop" | "tablet" | "mobile";
   const cfg = parseCfg(block.config);
   const heading = String(cfg.heading ?? cfg.title ?? "RSVP");
   const subheading = String(cfg.subheading ?? "");
@@ -49,7 +51,7 @@ export function RsvpFormBlock({ block }: { block: Block }) {
 
   return (
     <section className="block block-rsvp" data-block-id={block.id} data-block-type={block.type}
-      style={blockSectionStyle(cfg)}>
+      style={blockSectionStyle(cfg, breakpoint)}>
       <TextEffectWrapper as="h2" className="section-heading">{heading}</TextEffectWrapper>
       <div className="section-rule" aria-hidden="true" />
       {subheading && <p style={{ textAlign: "center", color: "var(--muted)", marginBottom: "1.5rem" }}>{subheading}</p>}

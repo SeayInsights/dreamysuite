@@ -1,4 +1,5 @@
 "use client";
+import { useEditorStore } from "@/app/stores/editorStore";
 
 import { useState, useEffect } from "react";
 import { blockSectionStyle, parseCfg } from "@/lib/editableField";
@@ -25,6 +26,7 @@ interface GuestEntry {
 interface Block { id: string; type: string; [key: string]: unknown }
 
 export function GuestBookBlock({ block }: { block: Block }) {
+  const breakpoint = useEditorStore((s) => s.breakpoint) as "desktop" | "tablet" | "mobile";
   const cfg = parseCfg(block.config);
   const heading = String(cfg.heading ?? "Guest Book");
   const placeholder = String(cfg.placeholder ?? "Leave a message for the happy couple…");
@@ -93,7 +95,7 @@ export function GuestBookBlock({ block }: { block: Block }) {
 
   return (
     <section className="block block-guest-book" data-block-id={block.id} data-block-type={block.type}
-      style={{ padding: "2rem 1rem", maxWidth: "600px", margin: "0 auto", ...blockSectionStyle(cfg) }}>
+      style={{ padding: "2rem 1rem", maxWidth: "600px", margin: "0 auto", ...blockSectionStyle(cfg, breakpoint) }}>
       {heading && <TextEffectWrapper as="h2" style={{ textAlign: "center", marginBottom: "1.5rem" }}>{heading}</TextEffectWrapper>}
 
       <form onSubmit={submit} style={{ display: "flex", flexDirection: "column", gap: "0.6rem", marginBottom: "2rem" }}>

@@ -29,6 +29,7 @@ function useCountdown(target: string | null) {
 }
 
 export function CountdownBlock({ block }: { block: Block }) {
+  const breakpoint = useEditorStore((s) => s.breakpoint) as "desktop" | "tablet" | "mobile";
   const cfg = parseCfg(block.config);
   const label = String(cfg.label ?? "Until we say I do");
   const daysLabel = String(cfg.daysLabel ?? "Days");
@@ -50,7 +51,7 @@ export function CountdownBlock({ block }: { block: Block }) {
   }
 
   return (
-    <section className="block block-countdown" data-block-id={block.id} data-block-type={block.type} style={blockSectionStyle(cfg)}>
+    <section className="block block-countdown" data-block-id={block.id} data-block-type={block.type} style={blockSectionStyle(cfg, breakpoint)}>
       <p className="countdown-label" data-editable-field="label">{label}</p>
       <div className="countdown-units">
         <div className="countdown-unit"><span className="countdown-num">{hasDate ? days : "--"}</span><span className="countdown-unit-label" data-editable-field="daysLabel">{daysLabel}</span></div>

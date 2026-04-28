@@ -1,3 +1,4 @@
+import { useEditorStore } from "@/app/stores/editorStore";
 import React from "react";
 import { blockSectionStyle, parseCfg } from "@/lib/editableField";
 
@@ -14,6 +15,7 @@ function extractVimeoId(url: string): string | null {
 }
 
 export function MediaVideoBlock({ block }: { block: Block }) {
+  const breakpoint = useEditorStore((s) => s.breakpoint) as "desktop" | "tablet" | "mobile";
   const cfg = parseCfg(block.config);
   const url = String(cfg.url ?? "");
   const configHeight = cfg.height as string | undefined;
@@ -21,7 +23,7 @@ export function MediaVideoBlock({ block }: { block: Block }) {
   const height = useAspectRatio ? undefined : configHeight;
   const aspectRatio = useAspectRatio ? "16/9" : undefined;
   const objectFit = String(cfg.imageFit ?? cfg.objectFit ?? "cover") as React.CSSProperties["objectFit"];
-  const sectionStyle = blockSectionStyle(cfg);
+  const sectionStyle = blockSectionStyle(cfg, breakpoint);
 
   const isYoutube = cfg.provider === "youtube" ||
     (cfg.provider !== "direct" && (url.includes("youtube.com") || url.includes("youtu.be")));

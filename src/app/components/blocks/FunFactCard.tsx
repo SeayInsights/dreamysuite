@@ -1,3 +1,4 @@
+import { useEditorStore } from "@/app/stores/editorStore";
 "use client";
 
 interface FunFactItem {
@@ -16,6 +17,7 @@ interface Props {
 }
 
 export function FunFactCard({ item, index, cardStyle, editing, onDelete }: Props) {
+  const breakpoint = useEditorStore((s) => s.breakpoint) as "desktop" | "tablet" | "mobile";
   return (
     <div style={{ ...cardStyle, position: "relative" }} className="group/fact">
       {editing && item.id && onDelete && (

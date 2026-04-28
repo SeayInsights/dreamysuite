@@ -764,6 +764,7 @@ interface PopoverState {
 // ── Main RegistryBlock ───────────────────────────────────────────────────────
 
 export function RegistryBlock({ block }: { block: Block }) {
+  const breakpoint = useEditorStore((s) => s.breakpoint) as "desktop" | "tablet" | "mobile";
   const cfg = parseCfg(block.config);
   const heading = String(cfg.heading ?? "Registry");
   const subheading = String(cfg.subheading ?? "");
@@ -883,7 +884,7 @@ export function RegistryBlock({ block }: { block: Block }) {
       className="block block-registry"
       data-block-id={block.id}
       data-block-type={block.type}
-      style={{ padding: "3rem 1.5rem", ...blockSectionStyle(cfg) }}
+      style={{ padding: "3rem 1.5rem", ...blockSectionStyle(cfg, breakpoint) }}
     >
       <TextEffectWrapper as="h2" className="section-heading" {...editableProps(cfg, "heading")}>
         {heading || <span style={{ opacity: 0.4, fontStyle: "italic" }}>Add heading</span>}
