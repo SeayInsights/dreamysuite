@@ -105,6 +105,18 @@ import { DatabaseError, NotFoundError } from '../errors';
 // =============================================================================
 // TYPE DEFINITIONS
 // =============================================================================
+//
+// These types represent the DATABASE LAYER - they match the database schema exactly.
+//
+// Characteristics:
+// - All fields match SQL schema (required fields, no undefined)
+// - JSON columns stored as strings (config, metadata)
+// - Timestamps as numbers (Unix epoch)
+// - Boolean as 0/1 (SQLite doesn't have native boolean)
+//
+// Note: Store and component layers use different types optimized for their needs.
+// See: .planning/TYPE-ORGANIZATION.md for layered types architecture.
+//
 
 export interface CreateBlockInput {
   id?: string;
@@ -122,16 +134,28 @@ export interface UpdateBlockInput {
   isVisible?: number;
 }
 
+/**
+ * Block (Database Layer)
+ *
+ * Represents a content block as stored in the database.
+ *
+ * Note: This is the DATABASE type. Store and component layers use different Block types:
+ * - Store Block: config is parsed object, has overrides field, optional fields
+ * - Component Block: flexible config (string | object), index signature for extensibility
+ *
+ * Transform DB → Store: JSON.parse(config), make fields optional
+ * Transform Store → DB: JSON.stringify(config), ensure required fields present
+ */
 export interface Block {
   id: string;
   siteId: string;
   pageId: string;
   type: string;
-  config: string;
-  sortOrder: number;
-  isVisible: number;
-  createdAt: number;
-  updatedAt: number;
+  config: string; // JSON string from database
+  sortOrder: number; // Always present (DB has default value)
+  isVisible: number; // SQLite boolean: 0=hidden, 1=visible
+  createdAt: number; // Unix timestamp
+  updatedAt: number; // Unix timestamp
 }
 
 export interface CreatePageInput {
