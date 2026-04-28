@@ -173,7 +173,7 @@ export function DragHandles({ containerRef }: Props) {
 						}}
 					>
 						<div
-							className="rounded-[1px] border border-primary-foreground bg-primary ring-1 ring-primary"
+							className="rounded-[1px] border border-primary-foreground bg-primary ring-1 ring-primary transition-transform duration-150 ease-in-out hover:scale-[1.2] hover:shadow-[0_2px_8px_rgba(0,0,0,0.15)]"
 							style={{
 								width: HANDLE_VISUAL,
 								height: HANDLE_VISUAL,

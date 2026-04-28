@@ -7,6 +7,7 @@ import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useEditorStore, type InspectorTab } from "@/app/stores/editorStore";
 import { duration, EASING } from "@/lib/motion";
+import { PageSettingsPanel } from "./inspector/PageSettingsPanel";
 
 const PANEL_WIDTH = 320;
 const TAB_SWITCH_DEBOUNCE_MS = 500;
@@ -44,6 +45,7 @@ export function InspectorV2() {
 	const inspectorOpen = useEditorStore((s) => s.inspectorOpen);
 	const setInspectorOpen = useEditorStore((s) => s.setInspectorOpen);
 	const settingsLoaded = useEditorStore((s) => s.settingsLoaded);
+	const selectedBlockId = useEditorStore((s) => s.selectedBlockId);
 	const tab = useEditorStore((s) => s.inspectorTab);
 	const setInspectorTab = useEditorStore((s) => s.setInspectorTab);
 
@@ -105,7 +107,7 @@ export function InspectorV2() {
 		>
 			<div className="flex h-10 items-center justify-between border-b border-border px-3">
 				<div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-					Page Settings
+					{selectedBlockId === null ? "Page Settings" : "Element Properties"}
 				</div>
 				<button
 					type="button"
@@ -117,41 +119,50 @@ export function InspectorV2() {
 				</button>
 			</div>
 
-			<div
-				role="tablist"
-				aria-label="Inspector tabs"
-				className="flex items-center gap-0.5 border-b border-border px-2 py-1.5"
-			>
-				{TABS.map((t) => {
-					const active = tab === t.id;
-					return (
-						<button
-							key={t.id}
-							type="button"
-							role="tab"
-							aria-selected={active}
-							onClick={() => setInspectorTab(t.id)}
-							className={cn(
-								"h-7 rounded-sm px-2 text-xs font-medium transition-colors",
-								active
-									? "bg-accent text-accent-foreground"
-									: "text-muted-foreground hover:bg-accent/50",
-							)}
-						>
-							{t.label}
-						</button>
-					);
-				})}
-			</div>
+			{selectedBlockId !== null && (
+				<div
+					role="tablist"
+					aria-label="Inspector tabs"
+					className="flex items-center gap-0.5 border-b border-border px-2 py-1.5"
+				>
+					{TABS.map((t) => {
+						const active = tab === t.id;
+						return (
+							<button
+								key={t.id}
+								type="button"
+								role="tab"
+								aria-selected={active}
+								onClick={() => setInspectorTab(t.id)}
+								className={cn(
+									"h-7 rounded-sm px-2 text-xs font-medium transition-colors",
+									active
+										? "bg-accent text-accent-foreground"
+										: "text-muted-foreground hover:bg-accent/50",
+								)}
+							>
+								{t.label}
+							</button>
+						);
+					})}
+				</div>
+			)}
 
 			<div
 				role="tabpanel"
-				className="h-[calc(100%-5.25rem)] overflow-y-auto"
+				className={cn(
+					"overflow-y-auto",
+					selectedBlockId === null
+						? "h-[calc(100%-2.5rem)]"
+						: "h-[calc(100%-5.25rem)]"
+				)}
 			>
 				{!settingsLoaded ? (
 					<div className="flex items-center justify-center p-8">
 						<div className="h-5 w-5 animate-spin rounded-full border-2 border-muted-foreground border-t-foreground" />
 					</div>
+				) : selectedBlockId === null ? (
+					<PageSettingsPanel />
 				) : tab === "design" ? (
 					<div className="p-4 text-sm text-muted-foreground">
 						Design tab content coming soon

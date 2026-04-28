@@ -186,10 +186,10 @@ function Outline({ rect, label, variant, blockId }: OutlineProps) {
 		<div
 			ref={ref}
 			className={cn(
-				"absolute ring-1",
+				"absolute",
 				variant === "selected"
 					? "ring-2 ring-primary"
-					: "ring-primary/40",
+					: "ring-1 ring-dashed ring-primary opacity-50",
 			)}
 			style={{
 				top: rect.top,
@@ -202,11 +202,12 @@ function Outline({ rect, label, variant, blockId }: OutlineProps) {
 				<div className="absolute -top-5 left-0 flex items-end">
 					<span
 						className={cn(
-							"rounded-t-sm px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wider",
+							"rounded-t-sm px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider",
 							variant === "selected"
 								? "bg-primary text-primary-foreground"
 								: "bg-primary/70 text-primary-foreground",
 						)}
+						style={{ boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)" }}
 					>
 						{label}
 					</span>
