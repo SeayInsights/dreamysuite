@@ -27,6 +27,7 @@ export function BlockEditPanel({ containerRef }: Props) {
   const setEditingPanel = useEditorStore((s) => s.setEditingPanel);
   const blocks = useEditorStore((s) => s.blocks);
   const updateBlock = useEditorStore((s) => s.updateBlock);
+  const inspectorOpen = useEditorStore((s) => s.inspectorOpen);
 
   const panelRef = useRef<HTMLDivElement>(null);
 
@@ -70,22 +71,48 @@ export function BlockEditPanel({ containerRef }: Props) {
     return null;
   }
 
-  // Derive position: place panel to the right side of the canvas container,
-  // aligned near the top of the viewport so it doesn't fall off-screen.
-  // Falls back to a centered position if the container ref isn't available.
+  // Derive position using smart positioning algorithm:
+  // - Avoid viewport edges (top/bottom/left/right)
+  // - Avoid inspector overlap when open (assumes 320px width on right)
+  // - Fallback to centered position if no container ref
   let panelStyle: React.CSSProperties;
   const container = containerRef.current;
   if (container) {
     const box = container.getBoundingClientRect();
-    // Sit inside the canvas frame, 16px from the left edge, 72px from top
-    // (below the toolbar area)
+    const toolbarWidth = 320;
+    const inspectorWidth = 320;
+    const padding = 16;
+    const topbarHeight = 72;
+
+    // Calculate available space
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+    const availableRight = inspectorOpen
+      ? viewportWidth - inspectorWidth
+      : viewportWidth;
+
+    // Try: above canvas, centered
+    let top = Math.max(box.top + topbarHeight, topbarHeight);
+    let left = Math.max(box.left + padding, padding);
+
+    // Clamp left to avoid inspector overlap
+    left = Math.min(left, availableRight - toolbarWidth - padding);
+
+    // Clamp top to avoid bottom overflow
+    const maxTop = viewportHeight - 400; // Reserve 400px minimum height
+    top = Math.min(top, maxTop);
+
+    // Ensure minimum padding from edges
+    left = Math.max(left, padding);
+    top = Math.max(top, topbarHeight);
+
     panelStyle = {
       position: "fixed",
-      top: Math.max(box.top + 72, 72),
-      left: Math.max(box.left + 16, 16),
+      top,
+      left,
       zIndex: 9998,
-      width: 320,
-      maxHeight: `calc(100dvh - ${Math.max(box.top + 72, 72) + 32}px)`,
+      width: toolbarWidth,
+      maxHeight: `calc(100dvh - ${top + 32}px)`,
     };
   } else {
     panelStyle = {
