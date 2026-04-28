@@ -2,7 +2,7 @@
 
 import { type ReactNode, useEffect } from "react";
 
-import { IconRail } from "./IconRail";
+import { SidebarNav } from "./SidebarNav";
 import { Inspector } from "./Inspector";
 import { SlideTray } from "./SlideTray";
 import { TopBar } from "./TopBar";
@@ -62,7 +62,7 @@ export function EditorShell({ site, user: _user, children }: Props) {
 			<TopBar site={site} />
 
 			<div className="relative flex flex-1 overflow-hidden">
-				<IconRail />
+				<SidebarNav />
 				<SlideTray />
 
 				<main className="relative flex-1">
