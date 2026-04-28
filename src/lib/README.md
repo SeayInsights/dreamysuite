@@ -236,16 +236,24 @@ const [r, g, b] = hexToRgb('#FF5733');
 const hex = rgbToHex(255, 87, 51);
 ```
 
-### Block Validation
+### Config Parsing (Two-Tier Pattern)
 
 ```typescript
-import { parseBlockConfig } from '@/lib/validation';
+import { parseCfg, parseBlockConfig } from '@/lib/validation';
 
+// Tier 1: Safe JSON parse (components, rendering)
+const cfg = parseCfg(block.config);  // Returns Record<string, unknown>
+
+// Tier 2: Zod validation (API routes, type safety)
 const result = parseBlockConfig(block.type, rawConfig);
 if (!result.ok) {
   return apiError('VALIDATION_ERROR', result.error, 400);
 }
 ```
+
+**When to use:**
+- `parseCfg` - Component rendering, style calculations (45+ files use this)
+- `parseBlockConfig` - API routes, data persistence, strict validation
 
 ### Tailwind Class Merging
 

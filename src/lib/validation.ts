@@ -9,6 +9,7 @@
  * It consolidates:
  * - Zod schema validation from `/lib/schemas`
  * - Safe JSON parsing utilities
+ * - Config parsing with recovery logic
  * - Domain-specific validation functions
  *
  * ## Why This Pattern?
@@ -41,8 +42,13 @@
  *
  * ### For Components
  * ```typescript
- * import { safeBlockConfig } from '@/lib/validation';
+ * import { safeBlockConfig, parseCfg } from '@/lib/validation';
  *
+ * // Two-tier parsing:
+ * // 1. parseCfg - Safe JSON parse (used in components)
+ * const cfg = parseCfg(block.config);
+ *
+ * // 2. safeBlockConfig - Zod validation (when type safety needed)
  * const config = safeBlockConfig(block);
  * ```
  *
@@ -61,6 +67,11 @@
  * - Replaced critical bare JSON.parse calls
  * - Updated imports to use barrel
  *
+ * ✅ Domain 3 complete (2026-04-27)
+ * - Verified config parsing already centralized (parseCfg)
+ * - Added parseCfg re-export for consistency
+ * - Documented two-tier parsing pattern
+ *
  * Part of: Architecture Refactor - Single Source of Truth Pattern
  * See: `.planning/architecture-refactor-audit.md`
  */
@@ -70,6 +81,9 @@ export { parseBlockConfig, safeBlockConfig } from "./schemas/blocks";
 
 // Re-export submission validation
 export { parseSubmissionData } from "./schemas/submission";
+
+// Re-export config parsing utilities
+export { parseCfg } from "./editableField";
 
 /**
  * Safe JSON parsing with fallback.
