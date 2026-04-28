@@ -1,20 +1,38 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { animate } from "motion/mini";
 import { X } from "lucide-react";
 
 import { cn } from "@/lib/utils";
-import { useEditorStore } from "@/app/stores/editorStore";
+import { useEditorStore, type InspectorTab } from "@/app/stores/editorStore";
 import { duration, EASING } from "@/lib/motion";
 
 const PANEL_WIDTH = 320;
+const TAB_SWITCH_DEBOUNCE_MS = 500;
 
 type TabId = "design" | "advanced";
 const TABS: { id: TabId; label: string }[] = [
 	{ id: "design", label: "Design" },
 	{ id: "advanced", label: "Advanced" },
 ];
+
+/**
+ * Simple debounce utility for tab switching.
+ * Returns a debounced version of the provided function.
+ */
+function debounce<T extends (...args: Parameters<T>) => void>(fn: T, delay: number): (...args: Parameters<T>) => void {
+	let timeoutId: ReturnType<typeof setTimeout> | null = null;
+	return (...args: Parameters<T>) => {
+		if (timeoutId !== null) {
+			clearTimeout(timeoutId);
+		}
+		timeoutId = setTimeout(() => {
+			fn(...args);
+			timeoutId = null;
+		}, delay);
+	};
+}
 
 export function InspectorV2() {
 	const ref = useRef<HTMLDivElement>(null);
@@ -26,7 +44,14 @@ export function InspectorV2() {
 	const inspectorOpen = useEditorStore((s) => s.inspectorOpen);
 	const setInspectorOpen = useEditorStore((s) => s.setInspectorOpen);
 	const settingsLoaded = useEditorStore((s) => s.settingsLoaded);
-	const [tab, setTab] = useState<TabId>("design");
+	const tab = useEditorStore((s) => s.inspectorTab);
+	const setInspectorTab = useEditorStore((s) => s.setInspectorTab);
+
+	// Debounced tab setter to avoid rapid switching (TR-012)
+	const debouncedSetTab = useCallback(
+		debounce((newTab: InspectorTab) => setInspectorTab(newTab), TAB_SWITCH_DEBOUNCE_MS),
+		[setInspectorTab]
+	);
 
 	useEffect(() => {
 		const el = ref.current;
@@ -105,7 +130,7 @@ export function InspectorV2() {
 							type="button"
 							role="tab"
 							aria-selected={active}
-							onClick={() => setTab(t.id)}
+							onClick={() => setInspectorTab(t.id)}
 							className={cn(
 								"h-7 rounded-sm px-2 text-xs font-medium transition-colors",
 								active

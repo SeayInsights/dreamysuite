@@ -126,6 +126,7 @@ export function useDrag(
 	const blocks = useEditorStore((s) => s.blocks);
 	const updateBlock = useEditorStore((s) => s.updateBlock);
 	const setDrag = useEditorStore((s) => s.setDrag);
+	const setInspectorTab = useEditorStore((s) => s.setInspectorTab);
 	const temporalStore = useEditorStore.temporal;
 
 	const sessionRef = useRef<DragSession | null>(null);
@@ -466,6 +467,9 @@ export function useDrag(
 			// pointermove updates are silent; a single entry is committed on pointerup.
 			temporalStore.getState().pause();
 
+			// Auto-switch to advanced tab when dragging starts (TR-012)
+			setInspectorTab("advanced");
+
 			sessionRef.current = {
 				kind: "move",
 				blockId,
@@ -481,7 +485,7 @@ export function useDrag(
 			attachListeners(e);
 		},
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-		[blocks, onPointerMove, onPointerUp, setDrag, temporalStore],
+		[blocks, onPointerMove, onPointerUp, setDrag, setInspectorTab, temporalStore],
 	);
 
 	const startResize = useCallback(
@@ -525,6 +529,9 @@ export function useDrag(
 
 			temporalStore.getState().pause();
 
+			// Auto-switch to advanced tab when resizing starts (TR-012)
+			setInspectorTab("advanced");
+
 			sessionRef.current = {
 				kind: "resize",
 				blockId,
@@ -546,7 +553,7 @@ export function useDrag(
 			attachListeners(e);
 		},
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-		[blocks, containerRef, onPointerMove, onPointerUp, setDrag, temporalStore],
+		[blocks, containerRef, onPointerMove, onPointerUp, setDrag, setInspectorTab, temporalStore],
 	);
 
 	return { isDragging, draggedId, collidingIds, startMove, startResize };
