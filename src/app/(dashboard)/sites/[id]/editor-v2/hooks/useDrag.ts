@@ -267,12 +267,25 @@ export function useDrag(
 					const isTop = ["nw", "n", "ne"].includes(handle);
 
 					if (isTop) {
-						const newTopEdge = Math.min(session.bottomEdgePx - 20, session.topEdgePx + dy);
-						patch.blockOffsetY = Math.round(newTopEdge - session.naturalTopPx);
-						patch.blockHeight = Math.round(session.bottomEdgePx - newTopEdge);
+						// Clamp top edge to maintain minimum height of 20px
+						const desiredTopEdge = session.topEdgePx + dy;
+						const minTopEdge = session.bottomEdgePx - 20;
+						const newTopEdge = Math.min(minTopEdge, desiredTopEdge);
+
+						// Only update offset and height if not clamped
+						if (newTopEdge === desiredTopEdge || Math.abs(newTopEdge - desiredTopEdge) < 1) {
+							patch.blockOffsetY = Math.round(newTopEdge - session.naturalTopPx);
+							patch.blockHeight = Math.round(session.bottomEdgePx - newTopEdge);
+						} else {
+							// Clamped - keep at minimum, don't update outline
+							patch.blockOffsetY = Math.round(minTopEdge - session.naturalTopPx);
+							patch.blockHeight = 20;
+						}
 					} else {
-						const newBottomEdge = session.bottomEdgePx + dy;
-						patch.blockHeight = Math.round(Math.max(20, newBottomEdge - session.topEdgePx));
+						// Bottom resize - clamp to minimum height
+						const desiredBottomEdge = session.bottomEdgePx + dy;
+						const newHeight = Math.max(20, desiredBottomEdge - session.topEdgePx);
+						patch.blockHeight = Math.round(newHeight);
 					}
 				}
 

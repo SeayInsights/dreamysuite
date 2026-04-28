@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getEnv } from "@/lib/cloudflare";
 import { requireSiteOwnership, apiOwnershipError } from "@/lib/api/site-auth";
-import { parseBlockConfig } from "@/lib/schemas/blocks";
+import { parseBlockConfig } from "@/lib/validation";
 import {
   SettingsSchema,
   upsertSiteSettings,

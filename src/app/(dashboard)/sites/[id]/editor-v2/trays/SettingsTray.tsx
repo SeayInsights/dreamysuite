@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 
 import { useEditorStore } from "@/app/stores/editorStore";
+import { useClipboard } from "@/lib/hooks";
 
 type PanelId = "domain" | "collaborators" | "privacy" | "guests";
 
@@ -86,14 +87,8 @@ function PanelHeader({ label, onBack }: { label: string; onBack: () => void }) {
 function DomainPanel({ onBack }: { onBack: () => void }) {
 	const slug = useEditorStore((s) => s.siteSlug);
 	const customDomain = useEditorStore((s) => s.siteCustomDomain);
-	const [copied, setCopied] = useState(false);
 	const subdomain = slug ? `${slug}.dreamysuite.com` : null;
-
-	function copyUrl(url: string) {
-		navigator.clipboard.writeText(`https://${url}`);
-		setCopied(true);
-		setTimeout(() => setCopied(false), 1500);
-	}
+	const { copied, copy } = useClipboard({ resetDelay: 1500 });
 
 	return (
 		<div className="flex h-full flex-col">
@@ -110,7 +105,7 @@ function DomainPanel({ onBack }: { onBack: () => void }) {
 								<span className="flex-1 truncate text-sm">{subdomain}</span>
 								<button
 									type="button"
-									onClick={() => copyUrl(subdomain)}
+									onClick={() => copy(`https://${subdomain}`)}
 									className="shrink-0 rounded p-1 text-muted-foreground hover:bg-accent/50"
 									title="Copy URL"
 								>

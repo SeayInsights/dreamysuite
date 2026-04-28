@@ -7,7 +7,7 @@
 import { NextRequest } from "next/server";
 import { getEnv } from "@/lib/cloudflare";
 import { createAuth, type Env } from "@/app/lib/auth.server";
-import { safeBlockConfig } from "@/lib/schemas/blocks";
+import { safeBlockConfig } from "@/lib/validation";
 import { getEffectById } from "@/lib/effects/registry";
 import {
   hashGuestPassword,

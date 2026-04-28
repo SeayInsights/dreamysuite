@@ -147,12 +147,45 @@ const MIGRATORS: Record<string, (b: RawBlock) => RawBlock> = {
 
 // ── Public API ────────────────────────────────────────────────────────────────
 
+/**
+ * Result of a block consolidation migration
+ */
 export interface MigrationResult {
+  /** Migrated blocks (includes both changed and unchanged) */
   blocks: RawBlock[];
+  /** Count of blocks that were migrated */
   migrated: number;
+  /** Count of blocks that did not need migration */
   unchanged: number;
 }
 
+/**
+ * Consolidate legacy block types to current v2 block types
+ *
+ * Converts:
+ * - video, youtube → media-video (with provider flag)
+ * - images, photo-split → gallery (with layout flag)
+ * - registry-card, hotel-card → info-card (with variant flag)
+ * - rsvp → rsvp-form
+ * - tidbits → fun-facts
+ * - travel-section → travel
+ * - multi-text (mode-specific) → dedicated block types
+ *
+ * @param blocks - Array of blocks to potentially migrate
+ * @returns Migration result with updated blocks and migration stats
+ *
+ * @example
+ * const result = consolidateBlocks([
+ *   { id: "1", type: "video", config: "{}" },
+ *   { id: "2", type: "countdown", config: "{}" }, // No migration needed
+ * ]);
+ * // result.blocks: [
+ * //   { id: "1", type: "media-video", config: '{"provider":"direct"}' },
+ * //   { id: "2", type: "countdown", config: "{}" }
+ * // ]
+ * // result.migrated: 1
+ * // result.unchanged: 1
+ */
 export function consolidateBlocks(blocks: RawBlock[]): MigrationResult {
   let migrated = 0;
   const result = blocks.map((block) => {
@@ -175,6 +208,16 @@ export function consolidateBlocks(blocks: RawBlock[]): MigrationResult {
   return { blocks: result, migrated, unchanged: blocks.length - migrated };
 }
 
+/**
+ * Check if a block needs consolidation migration
+ *
+ * @param block - Block to check
+ * @returns True if block type is legacy and needs migration
+ *
+ * @example
+ * needsMigration({ id: "1", type: "video", config: "{}" }) // true
+ * needsMigration({ id: "2", type: "media-video", config: "{}" }) // false
+ */
 export function needsMigration(block: RawBlock): boolean {
   if (block.type === "multi-text") {
     const cfg = parseConfig(block.config);

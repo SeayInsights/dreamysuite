@@ -1,6 +1,6 @@
 "use client";
 
-import { PanelTextInput, PanelTextArea } from "../PanelInputs";
+import { FormInput } from "../FormInput";
 import type { Block } from "@/app/stores/editorStore";
 
 type DisplayMode = "grid" | "list";
@@ -35,8 +35,10 @@ export function RegistryEditor({
   const reg = normalize(cfg);
 
   return (
-    <div className="space-y-4 p-4">
-      <PanelTextInput
+    <div className="space-y-6 p-4">
+      <FormInput
+        mode="block"
+        type="text"
         label="Heading"
         value={reg.heading}
         onChange={(v) => updateConfig({ heading: v })}
@@ -45,9 +47,12 @@ export function RegistryEditor({
         breakpoint={breakpoint}
         propertyName="heading"
         updateBlock={updateBlock}
+        helpText="Section heading (supports cascading across breakpoints)"
       />
 
-      <PanelTextArea
+      <FormInput
+        mode="block"
+        type="textarea"
         label="Subheading"
         value={reg.subheading}
         onChange={(v) => updateConfig({ subheading: v })}
@@ -56,21 +61,22 @@ export function RegistryEditor({
         breakpoint={breakpoint}
         propertyName="subheading"
         updateBlock={updateBlock}
+        helpText="Optional subheading or message to guests"
       />
 
-      <div className="space-y-1">
-        <label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+      <div className="space-y-2">
+        <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
           Display Mode
         </label>
-        <div className="flex gap-1.5">
+        <div className="flex gap-2">
           {(["grid", "list"] as const).map((mode) => (
             <button
               key={mode}
               type="button"
               onClick={() => updateConfig({ displayMode: mode })}
-              className={`flex-1 rounded-md border py-1 text-xs capitalize transition-colors ${
+              className={`flex-1 rounded-lg border py-2 text-sm capitalize transition-colors ${
                 reg.displayMode === mode
-                  ? "border-primary bg-primary text-primary-foreground"
+                  ? "border-primary bg-primary text-primary-foreground font-medium"
                   : "border-border text-muted-foreground hover:bg-accent/50"
               }`}
             >
@@ -78,10 +84,13 @@ export function RegistryEditor({
             </button>
           ))}
         </div>
+        <p className="text-xs text-muted-foreground leading-relaxed">
+          Choose layout: grid (cards in columns) or list (vertical stack)
+        </p>
       </div>
 
-      <p className="text-[10px] text-muted-foreground italic">
-        Add registries and funds directly on the block.
+      <p className="text-xs text-muted-foreground italic leading-relaxed">
+        Add individual registries and funds directly on the block in the editor canvas.
       </p>
     </div>
   );

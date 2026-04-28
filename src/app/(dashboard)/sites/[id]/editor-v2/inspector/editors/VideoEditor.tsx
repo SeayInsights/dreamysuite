@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useEditorStore, type Block } from "@/app/stores/editorStore";
-import { PanelTextInput, PanelSelectInput } from "../PanelInputs";
+import { FormInput } from "../FormInput";
 
 // ---------------------------------------------------------------------------
 // Video editor
@@ -54,9 +54,9 @@ export function VideoEditor({
   }
 
   return (
-    <div className="space-y-4 p-4">
-      <div className="space-y-1.5">
-        <label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+    <div className="space-y-6 p-4">
+      <div className="space-y-2">
+        <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
           Video
         </label>
 
@@ -123,7 +123,9 @@ export function VideoEditor({
         </div>
       </div>
 
-      <PanelTextInput
+      <FormInput
+        mode="block"
+        type="text"
         label="Height"
         value={height}
         onChange={(v) => updateConfig({ height: v })}
@@ -132,13 +134,13 @@ export function VideoEditor({
         breakpoint={breakpoint}
         propertyName="height"
         updateBlock={updateBlock}
+        helpText="CSS value (e.g., 100dvh, 600px, 80vh). Cascades from desktop → tablet → mobile."
       />
-      <p className="text-[10px] text-muted-foreground -mt-2">
-        CSS value — e.g. 100dvh, 600px, 80vh
-      </p>
 
       {(!provider || provider === "direct") && (
-        <PanelSelectInput
+        <FormInput
+          mode="block"
+          type="select"
           label="Object Fit"
           value={objectFit}
           onChange={(v) => updateConfig({ objectFit: v })}
@@ -152,6 +154,7 @@ export function VideoEditor({
           breakpoint={breakpoint}
           propertyName="objectFit"
           updateBlock={updateBlock}
+          helpText="How the video fits within its container (cascading supported)"
         />
       )}
     </div>
