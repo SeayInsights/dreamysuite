@@ -1,10 +1,11 @@
 "use client";
 
-import { memo, useMemo, useRef, useState, useLayoutEffect } from "react";
+import { memo, useMemo } from "react";
 import { BLOCK_COMPONENTS } from "@/app/components/blocks";
 import { useEditorStore } from "@/app/stores/editorStore";
 import { TRANSLATABLE_FIELDS } from "@/lib/translations";
 import { BlockTransitionWrapper } from "@/app/components/BlockTransitionWrapper";
+import { getBlockStyle, type Breakpoint } from "@/lib/blockPositioning";
 
 export interface SiteBlock {
 	id: string;
@@ -46,18 +47,16 @@ function useTranslatedBlocks(blocks: SiteBlock[]): SiteBlock[] {
 
 const MemoBlock = memo(function MemoBlock({
 	block,
-	anchorTop,
-	isAnchored,
+	breakpoint,
 }: {
 	block: SiteBlock;
-	anchorTop: number | undefined;
-	isAnchored: boolean;
+	breakpoint: Breakpoint;
 }) {
 	const Component = BLOCK_COMPONENTS[block.type];
+	const config = (typeof block.config === "object" && block.config !== null ? block.config : {}) as Record<string, unknown>;
 
-	const wrapperStyle: React.CSSProperties | undefined = isAnchored
-		? { position: "absolute", top: `${anchorTop ?? 0}px`, left: 0, width: "100%" }
-		: undefined;
+	// Single source of truth: all positioning logic in blockPositioning.ts
+	const wrapperStyle = getBlockStyle(config, breakpoint);
 
 	if (!Component) {
 		return (
@@ -86,6 +85,7 @@ const MemoBlock = memo(function MemoBlock({
 export function SiteRenderer({ blocks, ordered = false }: Props) {
 	const sectionSpacing = useEditorStore((s) => s.settings.sectionSpacing);
 	const gap = Number(sectionSpacing ?? 0) || 0;
+	const breakpoint = useEditorStore((s) => s.breakpoint) as Breakpoint;
 
 	const visible = ordered
 		? blocks.filter((b) => b.isVisible !== 0)
@@ -93,67 +93,18 @@ export function SiteRenderer({ blocks, ordered = false }: Props) {
 
 	const translated = useTranslatedBlocks(visible);
 
-	const containerRef = useRef<HTMLDivElement>(null);
-	const translatedRef = useRef(translated);
-	translatedRef.current = translated;
-
-	const [anchors, setAnchors] = useState<Record<string, number> | null>(null);
-	const [totalHeight, setTotalHeight] = useState(0);
-
-	const blockIdKey = translated.map((b) => b.id).join(",");
-	const breakpoint = useEditorStore((s) => s.breakpoint);
-	const isDesktop = breakpoint === "desktop";
-
-	// Reset anchors when block list or breakpoint changes
-	useLayoutEffect(() => {
-		setAnchors(null);
-		setTotalHeight(0);
-	}, [blockIdKey, breakpoint]);
-
-	// Measure block positions from flex layout, then anchor them absolutely
-	// Skip on non-desktop breakpoints — blocks should stack in normal flow
-	useLayoutEffect(() => {
-		if (!isDesktop || anchors !== null) return;
-		const el = containerRef.current;
-		if (!el) return;
-
-		const currentBlocks = translatedRef.current;
-		const measured: Record<string, number> = {};
-		let maxBottom = 0;
-
-		for (const block of currentBlocks) {
-			const wrapper = el.querySelector<HTMLElement>(`[data-block-wrapper="${block.id}"]`);
-			if (wrapper) {
-				measured[block.id] = wrapper.offsetTop;
-				maxBottom = Math.max(maxBottom, wrapper.offsetTop + wrapper.offsetHeight);
-			}
-		}
-
-		if (Object.keys(measured).length > 0) {
-			setAnchors(measured);
-			setTotalHeight(maxBottom);
-		}
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [anchors, isDesktop]);
-
-	const isAnchored = isDesktop && anchors !== null;
+	// Container style: flex stack on mobile/tablet, relative container on desktop
+	const containerStyle: React.CSSProperties = breakpoint === "desktop"
+		? { position: "relative", minHeight: "100vh" }
+		: { display: "flex", flexDirection: "column", gap: gap > 0 ? `${gap}px` : undefined };
 
 	return (
-		<div
-			ref={containerRef}
-			className="site-renderer relative"
-			style={
-				isAnchored
-					? { position: "relative", minHeight: `${totalHeight}px` }
-					: { display: "flex", flexDirection: "column", gap: gap > 0 ? `${gap}px` : undefined }
-			}
-		>
+		<div className="site-renderer relative" style={containerStyle}>
 			{translated.map((block) => (
 				<MemoBlock
 					key={block.id}
 					block={block}
-					anchorTop={anchors?.[block.id]}
-					isAnchored={isAnchored}
+					breakpoint={breakpoint}
 				/>
 			))}
 		</div>

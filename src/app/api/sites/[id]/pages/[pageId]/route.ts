@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getEnv } from "@/lib/cloudflare";
 import { z } from "zod";
 import { requireSiteOwnership, apiOwnershipError, parseJsonBody } from "@/lib/api/site-auth";
+import { getPageById, getBlocksByPageId } from "@/lib/db";
 
 const PageUpdateSchema = z.object({
   label: z.string().max(100).optional(),
@@ -20,21 +21,14 @@ export async function GET(
   const check = await requireSiteOwnership(req, env, siteId);
   if ("error" in check) return apiOwnershipError(check);
 
-  const page = await env.DB
-    .prepare("SELECT * FROM page WHERE id = ? AND siteId = ?")
-    .bind(pageId, siteId)
-    .first();
-
-  if (!page) {
+  const page = await getPageById(env.DB, pageId);
+  if (!page || page.siteId !== siteId) {
     return NextResponse.json({ error: { code: "NOT_FOUND", message: "Page not found" } }, { status: 404 });
   }
 
-  const blocks = await env.DB
-    .prepare("SELECT * FROM block WHERE pageId = ? ORDER BY sortOrder ASC")
-    .bind(pageId)
-    .all();
+  const blocks = await getBlocksByPageId(env.DB, pageId);
 
-  return NextResponse.json({ page, blocks: blocks.results });
+  return NextResponse.json({ page, blocks });
 }
 
 export async function DELETE(
@@ -47,26 +41,20 @@ export async function DELETE(
   const check = await requireSiteOwnership(req, env, siteId);
   if ("error" in check) return apiOwnershipError(check);
 
-  const page = await env.DB
-    .prepare("SELECT * FROM page WHERE id = ? AND siteId = ?")
-    .bind(pageId, siteId)
-    .first();
-
-  if (!page) {
+  const page = await getPageById(env.DB, pageId);
+  if (!page || page.siteId !== siteId) {
     return NextResponse.json({ error: { code: "NOT_FOUND", message: "Page not found" } }, { status: 404 });
   }
 
-  const pageBlocks = await env.DB
-    .prepare("SELECT id FROM block WHERE pageId = ?")
-    .bind(pageId)
-    .all<{ id: string }>();
+  const pageBlocks = await getBlocksByPageId(env.DB, pageId);
 
+  // Use batch to delete page, blocks, and translations atomically
   const stmts = [
     env.DB.prepare("DELETE FROM page WHERE id = ?").bind(pageId),
     env.DB.prepare("DELETE FROM block WHERE pageId = ?").bind(pageId),
   ];
-  for (const b of pageBlocks.results) {
-    stmts.push(env.DB.prepare("DELETE FROM block_translation WHERE blockId = ?").bind(b.id));
+  for (const block of pageBlocks) {
+    stmts.push(env.DB.prepare("DELETE FROM block_translation WHERE blockId = ?").bind(block.id));
   }
   await env.DB.batch(stmts);
 

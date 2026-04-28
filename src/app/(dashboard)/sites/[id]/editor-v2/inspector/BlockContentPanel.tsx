@@ -2,6 +2,7 @@
 
 import { parseCfg } from "@/lib/editableField";
 import { type Block, useEditorStore } from "@/app/stores/editorStore";
+import { getEffectiveConfig } from "../lib/cascadeConfig";
 import { ContentCardEditor } from "./editors/ContentCardEditor";
 import { CountdownEditor } from "./editors/CountdownEditor";
 import { ScheduleEditor } from "./editors/ScheduleEditor";
@@ -20,11 +21,24 @@ interface Props {
 }
 
 export function BlockContentPanel({ block, updateBlock }: Props) {
-  const cfg = parseCfg(block.config);
   const breakpoint = useEditorStore((s) => s.breakpoint);
 
+  // Use getEffectiveConfig to get cascaded config for current breakpoint
+  const cfg = parseCfg(getEffectiveConfig(block, breakpoint));
+
   function updateConfig(patch: Record<string, unknown>) {
-    updateBlock(block.id, { config: { ...cfg, ...patch } });
+    if (breakpoint === "desktop") {
+      // Desktop: update base config
+      updateBlock(block.id, { config: { ...parseCfg(block.config), ...patch } });
+    } else {
+      // Tablet/Mobile: update overrides[breakpoint]
+      const currentOverrides = block.overrides?.[breakpoint] || {};
+      const newOverrides = {
+        ...block.overrides,
+        [breakpoint]: { ...currentOverrides, ...patch },
+      };
+      updateBlock(block.id, { overrides: newOverrides });
+    }
   }
 
   switch (block.type) {

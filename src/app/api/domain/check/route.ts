@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getEnv } from "@/lib/cloudflare";
 import { getSession } from "@/lib/api/get-session";
 import { requireSiteOwnership } from "@/lib/api/site-auth";
+import { parseDomain } from "@/lib/validation";
 
 // Cloudflare at-cost registrar pricing (USD/yr) for common TLDs
 const TLD_PRICES: Record<string, number> = {
@@ -15,17 +16,6 @@ const TLD_PRICES: Record<string, number> = {
   info: 11.06,
   biz: 14.37,
 };
-
-// Basic domain validation
-function parseDomain(input: string): { name: string; tld: string } | null {
-  const clean = input.trim().toLowerCase().replace(/^https?:\/\//, "").replace(/\/.*$/, "");
-  const parts = clean.split(".");
-  if (parts.length < 2) return null;
-  const tld = parts[parts.length - 1];
-  if (!/^[a-z]{2,}$/.test(tld)) return null;
-  if (parts.some((p) => !/^[a-z0-9-]+$/.test(p) || p.startsWith("-") || p.endsWith("-"))) return null;
-  return { name: clean, tld };
-}
 
 export async function GET(req: NextRequest) {
   const env = await getEnv();

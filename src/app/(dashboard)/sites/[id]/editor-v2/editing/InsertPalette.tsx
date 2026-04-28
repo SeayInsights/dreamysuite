@@ -5,6 +5,7 @@ import { animate } from "motion/mini";
 import { useEditorStore } from "@/app/stores/editorStore";
 import { duration, EASING } from "@/lib/motion";
 import { getVisibleBlocks, BLOCK_REGISTRY } from "../blocks/registry";
+import { getCenteredPosition } from "@/lib/blockPositioning";
 
 interface Props {
   insertIndex: number;
@@ -82,8 +83,17 @@ export function InsertPalette({ insertIndex, onClose, anchorRef }: Props) {
     const entry = BLOCK_REGISTRY[type];
     if (!entry) return;
     const id = `block_${crypto.randomUUID().replace(/-/g, "").slice(0, 16)}`;
+
+    // Single source of truth: get centered position from blockPositioning utility
+    const centeredPosition = getCenteredPosition(window.innerHeight);
+    const defaultConfig = {
+      ...entry.defaultData,
+      // Only add positioning if not already in defaultData
+      ...(entry.defaultData.blockOffsetY === undefined ? centeredPosition : {}),
+    };
+
     insertBlock(
-      { id, type, config: entry.defaultData, sortOrder: insertIndex, isVisible: 1 },
+      { id, type, config: defaultConfig, sortOrder: insertIndex, isVisible: 1 },
       insertIndex,
     );
     // Patch sortOrder on subsequent blocks

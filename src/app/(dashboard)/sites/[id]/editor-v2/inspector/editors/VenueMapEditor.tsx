@@ -1,6 +1,6 @@
 "use client";
 
-import { PanelTextInput, PanelDateInput } from "../PanelInputs";
+import { FormInput } from "../FormInput";
 import type { Block } from "@/app/stores/editorStore";
 
 export function VenueMapEditor({
@@ -21,8 +21,10 @@ export function VenueMapEditor({
   const dateEnd = typeof cfg.dateEnd === "string" ? cfg.dateEnd : "";
 
   return (
-    <div className="space-y-4 p-4">
-      <PanelTextInput
+    <div className="space-y-6 p-4">
+      <FormInput
+        mode="block"
+        type="text"
         label="Heading"
         value={heading}
         onChange={(v) => updateConfig({ heading: v })}
@@ -31,10 +33,13 @@ export function VenueMapEditor({
         breakpoint={breakpoint}
         propertyName="heading"
         updateBlock={updateBlock}
+        helpText="Section heading (supports cascading across breakpoints)"
       />
 
-      <div className="grid grid-cols-2 gap-2">
-        <PanelDateInput
+      <div className="grid grid-cols-2 gap-3">
+        <FormInput
+          mode="block"
+          type="date"
           label="Start Date"
           value={dateStart}
           onChange={(v) => updateConfig({ dateStart: v })}
@@ -43,7 +48,9 @@ export function VenueMapEditor({
           propertyName="dateStart"
           updateBlock={updateBlock}
         />
-        <PanelDateInput
+        <FormInput
+          mode="block"
+          type="date"
           label="End Date"
           value={dateEnd}
           onChange={(v) => updateConfig({ dateEnd: v })}
@@ -54,8 +61,8 @@ export function VenueMapEditor({
         />
       </div>
 
-      <p className="text-[10px] text-muted-foreground italic">
-        Venue location and hotels are configured in Page Settings &rarr; Info.
+      <p className="text-xs text-muted-foreground italic leading-relaxed">
+        Venue location and hotels are configured in Page Settings → Info tab.
       </p>
     </div>
   );

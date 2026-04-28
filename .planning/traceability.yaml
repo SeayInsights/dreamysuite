@@ -1,80 +1,108 @@
-project: dreamysuite-multi-type-refactor
-spec: .planning/database-architecture-patterns.md
-plan: .planning/multi-type-refactor-plan.md
-date: 2026-04-22
+# Traceability Registry
+# Auto-generated on 2026-04-27
+# Links requirements → tasks → commits → verification
+
+project: dreamysuite
+feature: free-block-positioning
+date: 2026-04-27
 
 requirements:
   TR-001:
-    description: Create new tables (contact, submission, site_type_config, site_type_settings, template) and add site_type to site
+    description: Single source of truth for block positioning logic
     priority: must
-    tasks: [1, 2]
-    status: implemented
-    commits: [1721c3d, dec9e7e]
+    rationale: User requirement - one place to edit/understand positioning
+    verification: All positioning logic in one module, no scattered transforms
 
   TR-002:
-    description: Drop empty legacy tables (guest, guest_book_entry)
+    description: Apply blockOffsetX/Y as GPU-accelerated CSS transforms
     priority: must
-    tasks: [1]
-    status: implemented
-    commits: [1721c3d]
+    rationale: Existing config fields unused, need GPU performance
+    verification: Blocks with offsets render with transform, not top/left
 
   TR-003:
-    description: Recreate site_setting as slim universal table, migrate 1 row, move wedding fields to site_type_settings JSON
+    description: Cascade support - different positions per breakpoint
     priority: must
-    tasks: [1]
-    status: implemented
-    commits: [1721c3d]
+    rationale: Responsive design needs breakpoint-specific positioning
+    verification: Override blockOffsetY on tablet, verify different position
 
   TR-004:
-    description: RSVP block + public endpoint write to contact + submission instead of guest
+    description: Backward compatibility - blocks without offsets use flex flow
     priority: must
-    tasks: [3, 4]
-    status: implemented
-    commits: [fb1fc83, 6aa4a47]
+    rationale: Can't break existing sites with no positioning data
+    verification: Block with no offsets renders in flex stack, not absolute
 
   TR-005:
-    description: Guest book block + endpoint write to submission instead of guest_book_entry
-    priority: must
-    tasks: [3, 5]
-    status: in_progress
-    commits: [fb1fc83]
+    description: Mobile/tablet stacked layout fallback
+    priority: should
+    rationale: Small screens need vertical stack, not overlapping blocks
+    verification: Switch to tablet, blocks stack vertically regardless of offsets
 
   TR-006:
-    description: Guest admin UI reads from contact table
-    priority: must
-    tasks: [3, 6]
-    status: in_progress
-    commits: [fb1fc83]
-
-  TR-007:
-    description: Settings schema + API reads/writes site_setting + site_type_settings
-    priority: must
-    tasks: [7, 8]
-    status: in_progress
-    commits: [7b1d2ff]
-
-  TR-008:
-    description: Block registry has siteTypes filtering
+    description: New blocks start centered in viewport, not at bottom
     priority: should
-    tasks: [9]
-    status: implemented
-    commits: [b38decc, 533d323]
+    rationale: User expectation - blocks appear where visible, not off-screen
+    verification: Add new block, appears in viewport center with high z-index
 
-  TR-009:
-    description: Create-site flow has site type selector
-    priority: should
-    tasks: [10]
-    status: implemented
-    commits: [c0f3d6c, 533d323]
+tasks:
+  "1":
+    name: Create block positioning utility module
+    implements: [TR-001, TR-002]
+    files: [src/lib/blockPositioning.ts]
+    commits: []
 
-  TR-010:
-    description: Public site renderer uses new tables
-    priority: must
-    tasks: [11]
+  "2":
+    name: Update SiteRenderer to use positioning utility
+    implements: [TR-001, TR-002, TR-004, TR-005]
+    files: [src/app/components/SiteRenderer.tsx]
+    commits: []
+
+  "3":
+    name: Update InsertPalette with centered positioning
+    implements: [TR-006]
+    files: [src/app/(dashboard)/sites/[id]/editor-v2/editing/InsertPalette.tsx]
+    commits: []
+
+  "4":
+    name: Verify cascade integration
+    implements: [TR-003]
+    files: [test/manual]
+    commits: []
+
+  "5":
+    name: Test backward compatibility and mobile fallback
+    implements: [TR-004, TR-005]
+    files: [test/manual]
+    commits: []
+
+commits: []
+
+verification:
+  TR-001:
+    method: Code inspection
+    criteria: grep positioning logic shows one module
     status: pending
 
-  TR-011:
-    description: Analytics endpoint reads from contact/submission
-    priority: must
-    tasks: [6]
+  TR-002:
+    method: Browser DevTools
+    criteria: Inspect block wrapper sees transform not top/left
+    status: pending
+
+  TR-003:
+    method: Manual test
+    criteria: Edit offset on desktop switch to tablet different positions
+    status: pending
+
+  TR-004:
+    method: Manual test
+    criteria: Block with empty config renders in flex flow
+    status: pending
+
+  TR-005:
+    method: Manual test
+    criteria: Switch to mobile blocks stack vertically
+    status: pending
+
+  TR-006:
+    method: Manual test
+    criteria: Insert new block appears at viewport center
     status: pending
