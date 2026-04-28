@@ -119,43 +119,9 @@ export function InspectorV2() {
 				</button>
 			</div>
 
-			{selectedBlockId !== null && (
-				<div
-					role="tablist"
-					aria-label="Inspector tabs"
-					className="flex items-center gap-0.5 border-b border-border px-2 py-1.5"
-				>
-					{TABS.map((t) => {
-						const active = tab === t.id;
-						return (
-							<button
-								key={t.id}
-								type="button"
-								role="tab"
-								aria-selected={active}
-								onClick={() => setInspectorTab(t.id)}
-								className={cn(
-									"h-7 rounded-sm px-2 text-xs font-medium transition-colors",
-									active
-										? "bg-accent text-accent-foreground"
-										: "text-muted-foreground hover:bg-accent/50",
-								)}
-							>
-								{t.label}
-							</button>
-						);
-					})}
-				</div>
-			)}
-
 			<div
 				role="tabpanel"
-				className={cn(
-					"overflow-y-auto",
-					selectedBlockId === null
-						? "h-[calc(100%-2.5rem)]"
-						: "h-[calc(100%-5.25rem)]"
-				)}
+				className="h-[calc(100%-2.5rem)] overflow-y-auto"
 			>
 				{!settingsLoaded ? (
 					<div className="flex items-center justify-center p-8">
@@ -163,13 +129,14 @@ export function InspectorV2() {
 					</div>
 				) : selectedBlockId === null ? (
 					<PageSettingsPanel />
-				) : tab === "design" ? (
-					<div className="p-4 text-sm text-muted-foreground">
-						Design tab content coming soon
-					</div>
 				) : (
-					<div className="p-4 text-sm text-muted-foreground">
-						Advanced tab content coming soon
+					<div className="p-4">
+						<p className="text-sm text-muted-foreground mb-3">
+							Element properties panel coming soon.
+						</p>
+						<div className="text-xs text-muted-foreground/70">
+							Block ID: <code className="font-mono">{selectedBlockId}</code>
+						</div>
 					</div>
 				)}
 			</div>
