@@ -168,11 +168,11 @@ export function stopEvent<T extends Event>(
  * }
  * ```
  */
-export function extractFormData<T extends Record<string, any>>(
+export function extractFormData<T extends Record<string, unknown>>(
 	form: HTMLFormElement
 ): T {
 	const formData = new FormData(form);
-	const data: any = {};
+	const data: Record<string, unknown> = {};
 
 	for (const [key, value] of formData.entries()) {
 		// Handle multiple values for same key (e.g., checkboxes)
@@ -201,12 +201,12 @@ export function extractFormData<T extends Record<string, any>>(
  * });
  * ```
  */
-export function extractFormDataWith<T extends Record<string, any>>(
+export function extractFormDataWith<T extends Record<string, unknown>>(
 	form: HTMLFormElement,
-	transformers: Partial<Record<keyof T, (value: FormDataEntryValue) => any>>
+	transformers: Partial<Record<keyof T, (value: FormDataEntryValue) => unknown>>
 ): T {
 	const formData = new FormData(form);
-	const data: any = {};
+	const data: Record<string, unknown> = {};
 
 	for (const [key, value] of formData.entries()) {
 		const transformer = transformers[key as keyof T];

@@ -98,7 +98,7 @@ import { useState, useCallback, useRef, useEffect } from "react";
 
 export type FormStatus = "idle" | "submitting" | "success" | "error";
 
-export interface FormSubmitOptions<TData = any, TResponse = any> {
+export interface FormSubmitOptions<TData = unknown, TResponse = unknown> {
 	/**
 	 * API endpoint URL
 	 */
@@ -193,7 +193,7 @@ function extractErrorMessage(error: unknown): string {
 
 	// Handle API error response format: { error: string | { message: string } }
 	if (error && typeof error === "object") {
-		const err = error as any;
+		const err = error as Record<string, unknown>;
 		if (err.error) {
 			if (typeof err.error === "string") return err.error;
 			if (err.error.message) return err.error.message;
@@ -207,7 +207,7 @@ function extractErrorMessage(error: unknown): string {
 /**
  * Form submission hook with status management and error handling
  */
-export function useFormSubmit<TData = any, TResponse = any>(
+export function useFormSubmit<TData = unknown, TResponse = unknown>(
 	options: FormSubmitOptions<TData, TResponse>
 ): FormSubmitResult {
 	const {
@@ -261,12 +261,12 @@ export function useFormSubmit<TData = any, TResponse = any>(
 
 			try {
 				// Transform form data if handler provided
-				let body: any;
+				let body: string;
 				if (onSubmit) {
 					body = JSON.stringify(onSubmit(formData, form));
 				} else {
 					// Default: convert FormData to JSON object
-					const data: any = {};
+					const data: Record<string, unknown> = {};
 					for (const [key, value] of formData.entries()) {
 						data[key] = value;
 					}
