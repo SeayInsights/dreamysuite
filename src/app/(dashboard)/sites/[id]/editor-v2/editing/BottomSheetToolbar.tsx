@@ -6,6 +6,7 @@ import { animate } from "motion/mini";
 import { ImageIcon, Crop, Wand2, Sparkles, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { duration, EASING } from "@/lib/motion";
+import { TRANSITIONS } from "@/lib/transitions";
 import { type FormatCommand } from "./FloatingFormatToolbar";
 
 // ---------------------------------------------------------------------------
@@ -326,7 +327,7 @@ export function BottomSheetToolbar({
       )}
       style={entered ? {
         transform: `translateY(${translateY}px)`,
-        transition: isAnimating ? "transform 0.22s ease-out" : "none",
+        transition: isAnimating ? TRANSITIONS.bottomSheet : "none",
       } : undefined}
       // Prevent any interaction here from stealing focus (desktop mouse events)
       onMouseDown={(e) => e.preventDefault()}
