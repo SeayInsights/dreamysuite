@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
 import { blockSectionStyle, parseCfg } from "@/lib/editableField";
 import { TextEffectWrapper } from "@/app/components/TextEffectWrapper";
+import { useFormSubmit } from "@/lib/hooks";
 
 interface Block { id: string; type: string; [key: string]: unknown }
 
@@ -16,44 +16,36 @@ export function RsvpFormBlock({ block }: { block: Block }) {
   const siteSlug = String(cfg.siteSlug ?? "");
   const customQuestions: CustomQuestion[] = Array.isArray(cfg.customQuestions) ? (cfg.customQuestions as CustomQuestion[]) : [];
 
-  const [status, setStatus] = useState<"idle" | "submitting" | "success" | "error">("idle");
-  const [errorMsg, setErrorMsg] = useState("");
+  // Form submission with useFormSubmit hook
+  const endpoint = siteSlug ? `/api/public/${siteSlug}/rsvp` : `/api/sites/${siteId}/rsvp`;
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    if (!siteSlug && !siteId) { setErrorMsg("RSVP unavailable — site not configured."); setStatus("error"); return; }
-    setStatus("submitting");
-    setErrorMsg("");
-    const form = e.target as HTMLFormElement;
-    const data = new FormData(form);
-    const customResponses: Record<string, string> = {};
-    for (const q of customQuestions) {
-      customResponses[q.id] = String(data.get(`custom_${q.id}`) ?? "");
-    }
-    const endpoint = siteSlug ? `/api/public/${siteSlug}/rsvp` : `/api/sites/${siteId}/rsvp`;
-    try {
-      const res = await fetch(endpoint, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          firstName: data.get("firstName"),
-          lastName: data.get("lastName"),
-          email: data.get("email"),
-          attending: data.get("attending"),
-          notes: data.get("notes"),
-          ...(customQuestions.length > 0 ? { customResponses } : {}),
-        }),
-      });
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({}));
-        throw new Error((body as { error?: { message?: string } }).error?.message ?? "Submission failed");
+  const { status, error, submit } = useFormSubmit({
+    endpoint,
+    method: "POST",
+    onSubmit: (formData) => {
+      // Validate site configuration
+      if (!siteSlug && !siteId) {
+        throw new Error("RSVP unavailable — site not configured.");
       }
-      setStatus("success");
-    } catch (err) {
-      setErrorMsg(err instanceof Error ? err.message : "Something went wrong.");
-      setStatus("error");
-    }
-  }
+
+      // Extract custom question responses
+      const customResponses: Record<string, string> = {};
+      for (const q of customQuestions) {
+        customResponses[q.id] = String(formData.get(`custom_${q.id}`) ?? "");
+      }
+
+      // Return data to submit
+      return {
+        firstName: formData.get("firstName"),
+        lastName: formData.get("lastName"),
+        email: formData.get("email"),
+        attending: formData.get("attending"),
+        notes: formData.get("notes"),
+        ...(customQuestions.length > 0 ? { customResponses } : {}),
+      };
+    },
+    resetForm: true, // Reset form after successful submission
+  });
 
   return (
     <section className="block block-rsvp" data-block-id={block.id} data-block-type={block.type}
@@ -67,7 +59,7 @@ export function RsvpFormBlock({ block }: { block: Block }) {
           Thank you! Your RSVP has been received.
         </div>
       ) : (
-        <form className="rsvp-form" onSubmit={handleSubmit} aria-label="RSVP form">
+        <form className="rsvp-form" onSubmit={submit} aria-label="RSVP form">
           <div className="form-group">
             <label className="form-label">First Name</label>
             <input className="form-input" name="firstName" type="text" placeholder="First name" autoComplete="given-name" required />
@@ -103,8 +95,8 @@ export function RsvpFormBlock({ block }: { block: Block }) {
               <input className="form-input" name={`custom_${q.id}`} type="text" placeholder="Optional" />
             </div>
           ))}
-          {status === "error" && (
-            <p role="alert" style={{ color: "#ef4444", fontSize: "0.85rem", margin: 0 }}>{errorMsg}</p>
+          {status === "error" && error && (
+            <p role="alert" style={{ color: "#ef4444", fontSize: "0.85rem", margin: 0 }}>{error}</p>
           )}
           <button className="rsvp-submit" type="submit" disabled={status === "submitting"}
             style={{ background: "var(--accent, #B8921A)", opacity: status === "submitting" ? 0.7 : 1 }}>

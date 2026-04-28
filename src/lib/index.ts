@@ -54,6 +54,23 @@ export {
   createErrorResponse,
 } from "./errors";
 
+// ── Event Handlers ────────────────────────────────────────────────────────────
+
+export {
+  preventDefault,
+  stopPropagation,
+  stopEvent,
+  extractFormData,
+  extractFormDataWith,
+  onKey,
+  onKeyPrevent,
+  combineHandlers,
+} from "./handlers";
+
+// ── Custom Hooks ──────────────────────────────────────────────────────────────
+
+export * from "./hooks";
+
 // ── Block & Layout ────────────────────────────────────────────────────────────
 
 export {

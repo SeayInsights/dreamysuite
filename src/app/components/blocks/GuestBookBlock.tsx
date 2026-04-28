@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { blockSectionStyle, parseCfg } from "@/lib/editableField";
 import { TextEffectWrapper } from "@/app/components/TextEffectWrapper";
+import { useFormSubmit } from "@/lib/hooks";
 
 // Escape HTML to prevent XSS attacks from user-submitted content
 function escapeHtml(unsafe: string): string {
@@ -33,8 +34,6 @@ export function GuestBookBlock({ block }: { block: Block }) {
   const [entries, setEntries] = useState<GuestEntry[]>([]);
   const [name, setName] = useState("");
   const [message, setMessage] = useState("");
-  const [status, setStatus] = useState<"idle" | "submitting" | "success" | "error">("idle");
-  const [errorMsg, setErrorMsg] = useState("");
 
   // Load existing entries on mount
   useEffect(() => {
@@ -51,48 +50,41 @@ export function GuestBookBlock({ block }: { block: Block }) {
       });
   }, [siteId, siteSlug]);
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    if (!name.trim() || !message.trim()) return;
-    if (!siteSlug && !siteId) {
-      setErrorMsg("Guest book unavailable — site not configured.");
-      setStatus("error");
-      return;
-    }
+  // Form submission with useFormSubmit hook
+  const endpoint = siteSlug ? `/api/public/${siteSlug}/guestbook` : `/api/sites/${siteId}/guestbook`;
 
-    setStatus("submitting");
-    setErrorMsg("");
-
-    const endpoint = siteSlug ? `/api/public/${siteSlug}/guestbook` : `/api/sites/${siteId}/guestbook`;
-    try {
-      const res = await fetch(endpoint, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: name.trim(), message: message.trim() }),
-      });
-
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({}));
-        throw new Error((body as { error?: { message?: string } | string }).error
-          ? typeof (body as { error: { message?: string } | string }).error === "string"
-            ? (body as { error: string }).error
-            : ((body as { error: { message?: string } }).error.message ?? "Submission failed")
-          : "Submission failed");
+  const { status, error, submit } = useFormSubmit<
+    { name: string; message: string },
+    { entry?: GuestEntry }
+  >({
+    endpoint,
+    method: "POST",
+    onSubmit: () => {
+      // Validate fields
+      if (!name.trim() || !message.trim()) {
+        throw new Error("Please fill in all fields");
+      }
+      if (!siteSlug && !siteId) {
+        throw new Error("Guest book unavailable — site not configured.");
       }
 
-      const data = await res.json() as { entry?: GuestEntry };
+      // Return data to submit
+      return {
+        name: name.trim(),
+        message: message.trim(),
+      };
+    },
+    onSuccess: (data) => {
+      // Add new entry to top of list
       if (data.entry) {
         setEntries((prev) => [data.entry!, ...prev]);
       }
+      // Clear form
       setName("");
       setMessage("");
-      setStatus("success");
-      setTimeout(() => setStatus("idle"), 3000);
-    } catch (err) {
-      setErrorMsg(err instanceof Error ? err.message : "Something went wrong.");
-      setStatus("error");
-    }
-  }
+    },
+    resetDelay: 3000, // Auto-reset success message after 3s
+  });
 
   const inputStyle: React.CSSProperties = {
     width: "100%", padding: "0.5rem 0.75rem", border: "1px solid #e0dbd4",
@@ -104,7 +96,7 @@ export function GuestBookBlock({ block }: { block: Block }) {
       style={{ padding: "2rem 1rem", maxWidth: "600px", margin: "0 auto", ...blockSectionStyle(cfg) }}>
       {heading && <TextEffectWrapper as="h2" style={{ textAlign: "center", marginBottom: "1.5rem" }}>{heading}</TextEffectWrapper>}
 
-      <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "0.6rem", marginBottom: "2rem" }}>
+      <form onSubmit={submit} style={{ display: "flex", flexDirection: "column", gap: "0.6rem", marginBottom: "2rem" }}>
         <input style={inputStyle} placeholder="Your name" value={name}
           onChange={(e) => setName(e.target.value)} required disabled={status === "submitting"} />
         <textarea style={{ ...inputStyle, minHeight: "80px", resize: "vertical" }}
@@ -126,9 +118,9 @@ export function GuestBookBlock({ block }: { block: Block }) {
         </div>
       )}
 
-      {status === "error" && errorMsg && (
+      {status === "error" && error && (
         <div role="alert" aria-live="polite" style={{ textAlign: "center", color: "#ef4444", padding: "0.5rem", marginBottom: "1rem", fontSize: "0.875rem" }}>
-          {errorMsg}
+          {error}
         </div>
       )}
 
