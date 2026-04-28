@@ -5,8 +5,9 @@ import { useEditorStore } from "@/app/stores/editorStore";
 import { parseCfg } from "@/lib/editableField";
 import type { Block } from "@/app/stores/slices/document";
 import { consolidateBlocks } from "@/lib/migrations/blockConsolidation";
-import { trackEditorError } from "@/lib/telemetry/editor";
-import { getEffectiveConfig } from "./lib/cascadeConfig";
+import { migrateOutOfBoundsElements } from "@/lib/migrations/migrateOutOfBoundsElements";
+import { trackEditorError, trackBoundsMigration } from "@/lib/telemetry/editor";
+import { getEffectiveConfig, getEffectiveOrder } from "./lib/cascadeConfig";
 import { SiteRenderer } from "@/app/components/SiteRenderer";
 import { BreakpointFrame } from "./BreakpointFrame";
 import { EditorOverlay } from "./EditorOverlay";
@@ -38,14 +39,26 @@ export function Canvas({ siteId }: Props) {
 	const loadTranslations = useEditorStore((s) => s.loadTranslations);
 	const settingsLoaded = useEditorStore((s) => s.settingsLoaded);
 
-	const blocks = useMemo(
-		() =>
-			rawBlocks.map((b) => ({
-				...b,
-				config: getEffectiveConfig(b, breakpoint),
-			})),
-		[rawBlocks, breakpoint],
-	);
+	const blocks = useMemo(() => {
+		// Apply effective config to each block
+		const withEffectiveConfig = rawBlocks.map((b) => ({
+			...b,
+			config: getEffectiveConfig(b, breakpoint),
+		}));
+
+		// Sort blocks by effective order for the current breakpoint
+		return [...withEffectiveConfig].sort((a, b) => {
+			const indexA = rawBlocks.indexOf(
+				rawBlocks.find((rb) => rb.id === a.id)!,
+			);
+			const indexB = rawBlocks.indexOf(
+				rawBlocks.find((rb) => rb.id === b.id)!,
+			);
+			const orderA = getEffectiveOrder(a, breakpoint, indexA);
+			const orderB = getEffectiveOrder(b, breakpoint, indexB);
+			return orderA - orderB;
+		});
+	}, [rawBlocks, breakpoint]);
 
 	useEffect(() => {
 		let cancelled = false;
@@ -115,14 +128,36 @@ export function Canvas({ siteId }: Props) {
 						overrides: typeof b.overrides === "string" ? JSON.parse(b.overrides) : b.overrides,
 					}));
 					const { blocks: consolidated } = consolidateBlocks(parsed);
+
+					// Run bounds migration to fix out-of-bounds elements
+					const { blocks: migrated, fixed, unchanged } = migrateOutOfBoundsElements(consolidated as Block[]);
+					if (fixed > 0) {
+						trackBoundsMigration(siteId, fixed, unchanged);
+					}
+
 					const updateBlock = useEditorStore.getState().updateBlock;
-					setBlocks(consolidated as Block[]);
+					setBlocks(migrated as Block[]);
+
 					// Mark type-changed blocks dirty so the new type persists to DB.
 					for (let i = 0; i < parsed.length; i++) {
 						if (parsed[i].type !== (consolidated[i] as Block).type) {
 							updateBlock((consolidated[i] as Block).id, {
 								type: (consolidated[i] as Block).type,
 								config: parseCfg((consolidated[i] as Block).config),
+							});
+						}
+					}
+
+					// Mark bounds-fixed blocks dirty so the new position persists to DB.
+					for (let i = 0; i < consolidated.length; i++) {
+						const before = consolidated[i] as Block;
+						const after = migrated[i] as Block;
+						if (before.config.top !== after.config.top ||
+						    before.config.left !== after.config.left ||
+						    before.config.width !== after.config.width ||
+						    before.config.height !== after.config.height) {
+							updateBlock(after.id, {
+								config: after.config,
 							});
 						}
 					}
