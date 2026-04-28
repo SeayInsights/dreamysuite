@@ -5,11 +5,10 @@ import { cn } from "@/lib/utils";
 import { NavigationTray } from "./NavigationTray";
 import { ThemeTray } from "./ThemeTray";
 
-type TabId = "navigation" | "theme" | "effects";
+type TabId = "navigation" | "theme";
 const TABS: { id: TabId; label: string }[] = [
 	{ id: "navigation", label: "Navigation" },
 	{ id: "theme", label: "Theme" },
-	{ id: "effects", label: "Effects" },
 ];
 
 export function DesignThemeTray() {
@@ -51,15 +50,7 @@ export function DesignThemeTray() {
 			</div>
 
 			<div role="tabpanel" className="h-[calc(100%-5.25rem)] overflow-hidden">
-				{activeTab === "navigation" ? (
-					<NavigationTray />
-				) : activeTab === "theme" ? (
-					<ThemeTray />
-				) : (
-					<div className="flex h-full items-center justify-center p-4 text-sm text-muted-foreground">
-						Effects coming soon
-					</div>
-				)}
+				{activeTab === "navigation" ? <NavigationTray /> : <ThemeTray />}
 			</div>
 		</div>
 	);

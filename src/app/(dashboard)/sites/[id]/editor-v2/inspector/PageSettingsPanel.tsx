@@ -309,7 +309,7 @@ export function PageSettingsPanel() {
             Event Information
           </span>
         }
-        defaultOpen={true}
+        defaultOpen={false}
       >
         <div className="space-y-4">
           <FormInput
@@ -348,7 +348,7 @@ export function PageSettingsPanel() {
             Venue & Hotels
           </span>
         }
-        defaultOpen={true}
+        defaultOpen={false}
       >
         <VenueHotelSection />
       </Accordion>

@@ -69,7 +69,7 @@ export const SIDEBAR_SECTIONS: SidebarSection[] = [
     id: 'design-theme',
     label: 'Design',
     icon: Palette,
-    panels: ['navigation', 'theme', 'effects']
+    panels: ['navigation', 'theme']
   },
   {
     id: 'media',

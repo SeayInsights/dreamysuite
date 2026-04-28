@@ -95,7 +95,7 @@ export function SlideTray() {
 			{openTray === "pages" && <PagesTray />}
 			{openTray === "elements" && <ElementsTray />}
 			{openTray === "layers" && <LayersTray />}
-			{(openTray === "navigation" || openTray === "theme" || openTray === "effects") && <DesignThemeTray />}
+			{(openTray === "navigation" || openTray === "theme") && <DesignThemeTray />}
 			{(openTray === "photos" || openTray === "videos" || openTray === "music") && <MediaTray />}
 			{openTray === "language" && <LanguageTray />}
 			{openTray === "settings" && <SettingsTray />}
