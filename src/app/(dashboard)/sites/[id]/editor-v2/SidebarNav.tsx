@@ -204,7 +204,7 @@ export function SidebarNav() {
 								data-tray-trigger
 								onClick={() => setOpenTray(active ? null : sectionId)}
 								className={cn(
-									"flex h-9 items-center gap-3 rounded-md px-2 text-sm transition-colors",
+									"flex h-9 w-9 items-center justify-center rounded-md text-sm transition-colors",
 									"text-muted-foreground hover:bg-accent hover:text-accent-foreground",
 									active && "bg-accent text-accent-foreground",
 								)}
@@ -213,7 +213,6 @@ export function SidebarNav() {
 								title={section.label}
 							>
 								<section.icon className="size-5 shrink-0" />
-								<span className="whitespace-nowrap font-medium">{section.label}</span>
 							</button>
 						);
 					}
@@ -225,7 +224,7 @@ export function SidebarNav() {
 								type="button"
 								onClick={() => setExpandedSection(isExpanded ? null : section.id)}
 								className={cn(
-									"flex h-9 items-center gap-2 rounded-md px-2 text-sm transition-colors",
+									"flex h-9 w-9 items-center justify-center rounded-md text-sm transition-colors",
 									"text-muted-foreground hover:bg-accent/50",
 									isExpanded && "bg-accent/30",
 								)}
@@ -234,13 +233,6 @@ export function SidebarNav() {
 								title={section.label}
 							>
 								<section.icon className="size-5 shrink-0" />
-								<span className="flex-1 whitespace-nowrap font-medium text-left">{section.label}</span>
-								<ChevronRight
-									className={cn(
-										"size-4 shrink-0 transition-transform",
-										isExpanded && "rotate-90"
-									)}
-								/>
 							</button>
 
 							{/* TabSwitcher for multi-panel sections */}
