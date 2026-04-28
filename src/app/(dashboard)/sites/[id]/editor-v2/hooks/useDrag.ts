@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import { useEditorStore } from "@/app/stores/editorStore";
 import { parseCfg } from "@/lib/editableField";
+import { getCanvasBounds, constrainToBounds, type Bounds, type Rect } from "../lib/boundsCalculator";
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 
@@ -48,6 +49,8 @@ const COLUMNS = 12;
 const COL_PCT = 100 / COLUMNS; // 8.3333…%
 const SNAP_THRESHOLD_PX = 8;
 const GRID_SIZE_PX = 8; // Snap grid for move operations
+const AUTO_SCROLL_EDGE_DISTANCE_PX = 50; // Distance from viewport edge to trigger auto-scroll
+const AUTO_SCROLL_SPEED_PX = 5; // Scroll speed per frame
 
 function snapWidth(rawPct: number, containerWidth: number): number {
 	const rawPx = (rawPct / 100) * containerWidth;
@@ -88,6 +91,31 @@ function detectCollisions(
 		}
 	}
 	return collisions;
+}
+
+/**
+ * Handle auto-scroll when pointer is near viewport edges during drag.
+ * Implements FR-002 (auto-scroll near edges).
+ */
+function handleAutoScroll(clientY: number, container: HTMLElement): void {
+	const viewportHeight = window.innerHeight;
+	const distanceFromTop = clientY;
+	const distanceFromBottom = viewportHeight - clientY;
+
+	let scrollDelta = 0;
+
+	if (distanceFromTop < AUTO_SCROLL_EDGE_DISTANCE_PX) {
+		// Near top edge - scroll up
+		scrollDelta = -AUTO_SCROLL_SPEED_PX;
+	} else if (distanceFromBottom < AUTO_SCROLL_EDGE_DISTANCE_PX) {
+		// Near bottom edge - scroll down
+		scrollDelta = AUTO_SCROLL_SPEED_PX;
+	}
+
+	if (scrollDelta !== 0) {
+		// Scroll the window (canvas is in viewport)
+		window.scrollBy({ top: scrollDelta, behavior: "auto" });
+	}
 }
 
 // ─── Hook ──────────────────────────────────────────────────────────────────
@@ -196,26 +224,71 @@ export function useDrag(
 			const dy = e.clientY - session.startY;
 
 			if (session.kind === "move") {
+				const container = containerRef.current;
+				if (!container) return;
+
 				const block = blocks.find((b) => b.id === session.blockId);
 				if (!block) return;
+
 				const config = parseCfg(block.config);
-				const rawX = (session.startOffsetX ?? 0) + dx;
-				const rawY = (session.startOffsetY ?? 0) + dy;
-				const newConfig = {
-					...config,
-					blockOffsetX: snapToGrid(rawX, GRID_SIZE_PX, SNAP_THRESHOLD_PX),
-					blockOffsetY: snapToGrid(rawY, GRID_SIZE_PX, SNAP_THRESHOLD_PX),
+				const el = container.querySelector<HTMLElement>(`[data-block-id="${session.blockId}"]`);
+				if (!el) return;
+
+				// Auto-scroll near viewport edges (FR-002)
+				handleAutoScroll(e.clientY, container);
+
+				// Calculate raw offset from drag delta
+				const rawOffsetX = (session.startOffsetX ?? 0) + dx;
+				const rawOffsetY = (session.startOffsetY ?? 0) + dy;
+
+				// Get element dimensions and position for bounds checking
+				const elRect = el.getBoundingClientRect();
+				const containerRect = container.getBoundingClientRect();
+
+				// Get element's current position relative to container (including current offset)
+				const currentLeft = elRect.left - containerRect.left;
+				const currentTop = elRect.top - containerRect.top;
+
+				// Calculate natural position (where element is positioned in the flow without offset)
+				const naturalLeft = currentLeft - (session.startOffsetX ?? 0);
+				const naturalTop = currentTop - (session.startOffsetY ?? 0);
+
+				// Calculate desired position with new offset applied
+				const desiredLeft = naturalLeft + rawOffsetX;
+				const desiredTop = naturalTop + rawOffsetY;
+
+				// Create element rect for bounds checking
+				const elementRect: Rect = {
+					top: desiredTop,
+					left: desiredLeft,
+					width: elRect.width,
+					height: elRect.height,
 				};
 
-				const container = containerRef.current;
+				// Get canvas bounds and constrain position (TR-001, TR-004)
+				const bounds = getCanvasBounds(container);
+				const constrained = constrainToBounds(elementRect, bounds);
+
+				// Calculate constrained offset (difference from natural position)
+				const constrainedOffsetX = constrained.left - naturalLeft;
+				const constrainedOffsetY = constrained.top - naturalTop;
+
+				// Apply grid snapping to constrained position
+				const newConfig = {
+					...config,
+					blockOffsetX: snapToGrid(constrainedOffsetX, GRID_SIZE_PX, SNAP_THRESHOLD_PX),
+					blockOffsetY: snapToGrid(constrainedOffsetY, GRID_SIZE_PX, SNAP_THRESHOLD_PX),
+				};
+
+				// Detect collisions with constrained bounds
 				let collisions: string[] | undefined;
-				if (container) {
-					const el = container.querySelector<HTMLElement>(`[data-block-id="${session.blockId}"]`);
-					if (el) {
-						const bounds = el.getBoundingClientRect();
-						collisions = detectCollisions(session.blockId, bounds, blocks, container);
-					}
-				}
+				const newBounds = new DOMRect(
+					containerRect.left + constrained.left,
+					containerRect.top + constrained.top,
+					constrained.width,
+					constrained.height,
+				);
+				collisions = detectCollisions(session.blockId, newBounds, blocks, container);
 
 				// Store pending update instead of applying immediately
 				pendingUpdateRef.current = { config: newConfig, collisions };
@@ -235,6 +308,9 @@ export function useDrag(
 				const affectsHeight = ["nw", "n", "ne", "se", "s", "sw"].includes(handle);
 				const isWest = ["nw", "sw", "w"].includes(handle);
 
+				// Get canvas bounds for resize constraints (TR-001, TR-004)
+				const bounds = getCanvasBounds(container);
+
 				if (DEBUG_DRAG) {
 					console.log(`[useDrag] move handle=${handle} dx=${dx} dy=${dy} affectsWidth=${affectsWidth} affectsHeight=${affectsHeight} isWest=${isWest}`);
 				}
@@ -247,7 +323,10 @@ export function useDrag(
 					}
 
 					if (isWest) {
-						const newLeftEdge = Math.max(0, Math.min(session.rightEdgePct - COL_PCT, session.leftEdgePct + deltaPct));
+						// West resize - moving left edge
+						const rawLeftEdge = session.leftEdgePct + deltaPct;
+						// Constrain to canvas bounds (TR-001)
+						const newLeftEdge = Math.max(0, Math.min(session.rightEdgePct - COL_PCT, rawLeftEdge));
 						patch.blockMarginLeft = newLeftEdge;
 						patch.blockWidth = session.rightEdgePct - newLeftEdge;
 						patch.blockOffsetX = 0;
@@ -255,10 +334,15 @@ export function useDrag(
 							console.log(`[useDrag]   west: newLeftEdge=${newLeftEdge.toFixed(2)} → marginLeft=${patch.blockMarginLeft} width=${patch.blockWidth}`);
 						}
 					} else {
-						const newRightEdge = session.rightEdgePct + deltaPct;
-						patch.blockWidth = Math.max(COL_PCT, Math.min(100 - session.leftEdgePct, newRightEdge - session.leftEdgePct));
+						// East resize - moving right edge
+						const rawRightEdge = session.rightEdgePct + deltaPct;
+						// Constrain right edge to 100% max (canvas right boundary)
+						const maxRightEdge = 100;
+						const constrainedRightEdge = Math.min(maxRightEdge, rawRightEdge);
+						const newWidth = Math.max(COL_PCT, constrainedRightEdge - session.leftEdgePct);
+						patch.blockWidth = newWidth;
 						if (DEBUG_DRAG) {
-							console.log(`[useDrag]   east: newRightEdge=${newRightEdge.toFixed(2)} → width=${patch.blockWidth} (min=${COL_PCT.toFixed(2)} max=${(100 - session.leftEdgePct).toFixed(2)})`);
+							console.log(`[useDrag]   east: rawRightEdge=${rawRightEdge.toFixed(2)} constrainedRightEdge=${constrainedRightEdge.toFixed(2)} → width=${patch.blockWidth} (min=${COL_PCT.toFixed(2)})`);
 						}
 					}
 				}
@@ -267,25 +351,29 @@ export function useDrag(
 					const isTop = ["nw", "n", "ne"].includes(handle);
 
 					if (isTop) {
-						// Clamp top edge to maintain minimum height of 20px
+						// Top resize - moving top edge
 						const desiredTopEdge = session.topEdgePx + dy;
-						const minTopEdge = session.bottomEdgePx - 20;
-						const newTopEdge = Math.min(minTopEdge, desiredTopEdge);
+						// Constrain to canvas top boundary and minimum height (TR-001, TR-004)
+						const minTopEdge = Math.max(bounds.minY, session.bottomEdgePx - 20);
+						const newTopEdge = Math.max(minTopEdge, Math.min(session.bottomEdgePx - 20, desiredTopEdge));
 
-						// Only update offset and height if not clamped
-						if (newTopEdge === desiredTopEdge || Math.abs(newTopEdge - desiredTopEdge) < 1) {
-							patch.blockOffsetY = Math.round(newTopEdge - session.naturalTopPx);
-							patch.blockHeight = Math.round(session.bottomEdgePx - newTopEdge);
-						} else {
-							// Clamped - keep at minimum, don't update outline
-							patch.blockOffsetY = Math.round(minTopEdge - session.naturalTopPx);
-							patch.blockHeight = 20;
+						patch.blockOffsetY = Math.round(newTopEdge - session.naturalTopPx);
+						patch.blockHeight = Math.round(session.bottomEdgePx - newTopEdge);
+
+						if (DEBUG_DRAG) {
+							console.log(`[useDrag]   top: desiredTopEdge=${desiredTopEdge} newTopEdge=${newTopEdge} minTopEdge=${minTopEdge}`);
 						}
 					} else {
-						// Bottom resize - clamp to minimum height
+						// Bottom resize - moving bottom edge
 						const desiredBottomEdge = session.bottomEdgePx + dy;
-						const newHeight = Math.max(20, desiredBottomEdge - session.topEdgePx);
+						// Constrain to canvas bottom boundary and minimum height (TR-001)
+						const maxBottomEdge = Math.min(bounds.maxY, desiredBottomEdge);
+						const newHeight = Math.max(20, maxBottomEdge - session.topEdgePx);
 						patch.blockHeight = Math.round(newHeight);
+
+						if (DEBUG_DRAG) {
+							console.log(`[useDrag]   bottom: desiredBottomEdge=${desiredBottomEdge} maxBottomEdge=${maxBottomEdge} newHeight=${newHeight}`);
+						}
 					}
 				}
 
