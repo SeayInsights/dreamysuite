@@ -177,11 +177,13 @@ export function extractFormData<T extends Record<string, unknown>>(
 	for (const [key, value] of formData.entries()) {
 		// Handle multiple values for same key (e.g., checkboxes)
 		if (key in data) {
+			const existing = data[key];
 			// Convert to array if not already
-			if (!Array.isArray(data[key])) {
-				data[key] = [data[key]];
+			if (!Array.isArray(existing)) {
+				data[key] = [existing, value];
+			} else {
+				existing.push(value);
 			}
-			data[key].push(value);
 		} else {
 			data[key] = value;
 		}

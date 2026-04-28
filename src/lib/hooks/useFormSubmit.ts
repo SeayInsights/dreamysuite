@@ -196,9 +196,12 @@ function extractErrorMessage(error: unknown): string {
 		const err = error as Record<string, unknown>;
 		if (err.error) {
 			if (typeof err.error === "string") return err.error;
-			if (err.error.message) return err.error.message;
+			if (typeof err.error === "object" && err.error !== null) {
+				const errorObj = err.error as Record<string, unknown>;
+				if (typeof errorObj.message === "string") return errorObj.message;
+			}
 		}
-		if (err.message) return err.message;
+		if (typeof err.message === "string") return err.message;
 	}
 
 	return "Something went wrong. Please try again.";
