@@ -581,6 +581,121 @@ if (!response.ok) {
 
 ---
 
+## Data Transformation Patterns in Stores
+
+Store actions often transform data before updating state. These patterns are correct and should stay in stores.
+
+### Pattern: Update by ID
+
+**Immutable update of a single item:**
+```typescript
+updateBlock: (id, updates) =>
+  set((state) => ({
+    blocks: state.blocks.map((b) =>
+      b.id === id ? { ...b, ...updates } : b
+    ),
+  }))
+```
+
+**Why this pattern?**
+- Immutable: Creates new array/objects, doesn't mutate
+- Efficient: Only updates the matching item
+- Type-safe: TypeScript validates updates
+- Standard React pattern
+
+### Pattern: Remove by ID
+
+**Filter out a specific item:**
+```typescript
+removeBlock: (id) =>
+  set((state) => ({
+    blocks: state.blocks.filter((b) => b.id !== id),
+  }))
+```
+
+### Pattern: Insert at Index
+
+**Add item at specific position:**
+```typescript
+insertBlock: (block, atIndex) =>
+  set((state) => {
+    const blocks = [...state.blocks];
+    blocks.splice(atIndex, 0, block);
+    return { blocks };
+  })
+```
+
+### Pattern: Reorder Items
+
+**Move item from one index to another:**
+```typescript
+reorderBlocks: (fromIndex, toIndex) =>
+  set((state) => {
+    const blocks = [...state.blocks];
+    const [moved] = blocks.splice(fromIndex, 1);
+    blocks.splice(toIndex, 0, moved);
+    return { blocks };
+  })
+```
+
+### Pattern: Filter + Sort
+
+**Chain transformations:**
+```typescript
+const visible = blocks.filter((b) => b.isVisible !== 0);
+const sorted = visible.sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
+```
+
+**Why inline?**
+- Context-specific (depends on current view state)
+- Simple and readable
+- Standard JavaScript array methods
+- No need for abstraction
+
+### Pattern: Transform with Side Effects
+
+**Update with additional operations:**
+```typescript
+updateBlock: (id, updates) =>
+  set((state) => {
+    // Track pending operations
+    const ops = { ...state.pendingOps, updated: new Set(state.pendingOps.updated) };
+    ops.updated.add(id);
+    
+    // Apply transform
+    const blocks = state.blocks.map((b) =>
+      b.id === id ? { ...b, ...updates } : b
+    );
+    
+    return { blocks, isDirty: true, pendingOps: ops };
+  })
+```
+
+### When NOT to Abstract Transformations
+
+**Keep inline when:**
+- One-liner predicates: `filter((b) => b.isVisible !== 0)`
+- Standard patterns: `map((b, i) => ...)`
+- Context-specific logic: Depends on component/store state
+- Already readable: Adding abstraction adds indirection
+
+**Example of over-abstraction (don't do this):**
+```typescript
+// ❌ Bad: Over-engineered
+const filterVisible = (items) => items.filter((item) => item.isVisible !== 0);
+const visible = filterVisible(blocks);
+
+// ✅ Good: Simple and direct
+const visible = blocks.filter((b) => b.isVisible !== 0);
+```
+
+**When to abstract:**
+- Complex multi-step transformations (use `/lib/migrations`)
+- Reused across 3+ files (consider utility function)
+- Business logic worth documenting (create named function)
+
+---
+
 ## Resources
 
 - **Zustand Docs:** https://docs.pmnd.rs/zustand/getting-started/introduction
