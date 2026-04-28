@@ -2,7 +2,8 @@ type EditorEventName =
   | "editor.mount"
   | "editor.select"
   | "editor.save"
-  | "editor.error";
+  | "editor.error"
+  | "editor.migration.bounds_fix";
 
 interface EditorEvent {
   name: EditorEventName;
@@ -82,6 +83,14 @@ export function trackEditorError(
   source: "boundary" | "canvas" | "save",
 ) {
   track("editor.error", siteId, { error, source });
+}
+
+export function trackBoundsMigration(
+  siteId: string,
+  fixed: number,
+  unchanged: number,
+) {
+  track("editor.migration.bounds_fix", siteId, { fixed, unchanged });
 }
 
 export function flushEditorTelemetry() {
