@@ -100,6 +100,8 @@
  * @module db/queries
  */
 
+import { DatabaseError, NotFoundError } from '../errors';
+
 // =============================================================================
 // TYPE DEFINITIONS
 // =============================================================================
@@ -357,7 +359,12 @@ export async function createBlock(
     .first<Block>();
 
   if (!block) {
-    throw new Error("Failed to create block");
+    throw new DatabaseError("Failed to create block", {
+      operation: 'INSERT',
+      table: 'block',
+      siteId: data.siteId,
+      pageId: data.pageId,
+    });
   }
 
   return block;
@@ -415,7 +422,7 @@ export async function updateBlock(
     .first<Block>();
 
   if (!block) {
-    throw new Error("Block not found");
+    throw new NotFoundError("Block not found", { blockId: id });
   }
 
   return block;
@@ -494,7 +501,11 @@ export async function createPage(
     .first<Page>();
 
   if (!page) {
-    throw new Error("Failed to create page");
+    throw new DatabaseError("Failed to create page", {
+      operation: 'INSERT',
+      table: 'page',
+      siteId: data.siteId,
+    });
   }
 
   return page;
@@ -545,7 +556,7 @@ export async function updatePage(
     .first<Page>();
 
   if (!page) {
-    throw new Error("Page not found");
+    throw new NotFoundError("Page not found", { pageId: id });
   }
 
   return page;
@@ -641,7 +652,11 @@ export async function createSite(
     .first<Site>();
 
   if (!site) {
-    throw new Error("Failed to create site");
+    throw new DatabaseError("Failed to create site", {
+      operation: 'INSERT',
+      table: 'site',
+      userId: data.userId,
+    });
   }
 
   return site;
@@ -688,7 +703,7 @@ export async function updateSite(
     .first<Site>();
 
   if (!site) {
-    throw new Error("Site not found");
+    throw new NotFoundError("Site not found", { siteId: id });
   }
 
   return site;
@@ -772,7 +787,11 @@ export async function createContact(
     .first<ContactRow>();
 
   if (!contact) {
-    throw new Error("Failed to create contact");
+    throw new DatabaseError("Failed to create contact", {
+      operation: 'INSERT',
+      table: 'contact',
+      site_id: data.site_id,
+    });
   }
 
   return contact;
@@ -840,7 +859,7 @@ export async function updateContact(
     .first<ContactRow>();
 
   if (!contact) {
-    throw new Error("Contact not found");
+    throw new NotFoundError("Contact not found", { contactId: id });
   }
 
   return contact;
@@ -932,7 +951,11 @@ export async function createMediaItem(
     .first<MediaItem>();
 
   if (!media) {
-    throw new Error("Failed to create media item");
+    throw new DatabaseError("Failed to create media item", {
+      operation: 'INSERT',
+      table: 'media_item',
+      siteId: data.siteId,
+    });
   }
 
   return media;
@@ -977,7 +1000,7 @@ export async function updateMediaItem(
     .first<MediaItem>();
 
   if (!media) {
-    throw new Error("Media item not found");
+    throw new NotFoundError("Media item not found", { mediaId: id });
   }
 
   return media;

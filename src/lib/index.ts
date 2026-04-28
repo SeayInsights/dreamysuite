@@ -34,6 +34,26 @@ export {
   safeJsonParse,
 } from "./validation";
 
+// ── Error Handling ────────────────────────────────────────────────────────────
+
+export {
+  AppError,
+  ValidationError,
+  DatabaseError,
+  NetworkError,
+  NotFoundError,
+  UnauthorizedError,
+  ForbiddenError,
+  RateLimitError,
+  getErrorMessage,
+  getErrorCode,
+  getErrorContext,
+  isErrorType,
+  formatUserError,
+  getErrorStatus,
+  createErrorResponse,
+} from "./errors";
+
 // ── Block & Layout ────────────────────────────────────────────────────────────
 
 export {
