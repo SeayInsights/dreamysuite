@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Upload, Trash2, Film, Plus, X } from "lucide-react";
+import { Upload, Trash2, Film, Plus, X, Music } from "lucide-react";
 
 import { useEditorStore } from "@/app/stores/editorStore";
 
@@ -15,7 +15,7 @@ interface Photo {
 }
 
 export function MediaTray() {
-	const [tab, setTab] = useState<"photos" | "videos">("photos");
+	const [tab, setTab] = useState<"photos" | "videos" | "music">("photos");
 
 	return (
 		<div className="flex h-full flex-col">
@@ -44,9 +44,21 @@ export function MediaTray() {
 				>
 					Videos
 				</button>
+				<button
+					type="button"
+					onClick={() => setTab("music")}
+					className={
+						"rounded-md px-2.5 py-1 text-xs font-medium transition-colors " +
+						(tab === "music"
+							? "bg-accent text-accent-foreground"
+							: "text-muted-foreground hover:text-foreground")
+					}
+				>
+					Music
+				</button>
 			</div>
 
-			{tab === "photos" ? <PhotosPanel /> : <VideosPanel />}
+			{tab === "photos" ? <PhotosPanel /> : tab === "videos" ? <VideosPanel /> : <MusicPanel />}
 		</div>
 	);
 }
@@ -289,4 +301,51 @@ function extractVideoLabel(url: string): string {
 	} catch {
 		return "Video";
 	}
+}
+
+// ── Music Panel ──────────────────────────────────────────────────────────
+
+function MusicPanel() {
+	const musicUrl = useEditorStore((s) => s.settings.musicUrl);
+	const updateSettings = useEditorStore((s) => s.updateSettings);
+	const [urlDraft, setUrlDraft] = useState(musicUrl ?? "");
+
+	function commitUrl() {
+		const trimmed = urlDraft.trim();
+		updateSettings({ musicUrl: trimmed || null });
+	}
+
+	return (
+		<div className="flex flex-1 flex-col overflow-hidden px-3 pt-2">
+			<div className="flex flex-col gap-3">
+				<div className="flex flex-col gap-1.5">
+					<label className="text-xs font-medium">Background Music URL</label>
+					<p className="text-[11px] text-muted-foreground">
+						Paste a direct MP3/audio URL
+					</p>
+					<input
+						type="url"
+						value={urlDraft}
+						onChange={(e) => setUrlDraft(e.target.value)}
+						onBlur={commitUrl}
+						onKeyDown={(e) => {
+							if (e.key === "Enter") {
+								commitUrl();
+								e.currentTarget.blur();
+							}
+						}}
+						placeholder="https://example.com/song.mp3"
+						className="rounded-md border border-border bg-background px-2.5 py-1.5 text-sm outline-none focus:border-ring"
+					/>
+				</div>
+
+				{musicUrl && (
+					<div className="flex items-center gap-2 rounded-md border border-border bg-muted/30 px-3 py-2">
+						<Music className="size-4 text-muted-foreground" />
+						<p className="flex-1 truncate text-xs">Music loaded</p>
+					</div>
+				)}
+			</div>
+		</div>
+	);
 }

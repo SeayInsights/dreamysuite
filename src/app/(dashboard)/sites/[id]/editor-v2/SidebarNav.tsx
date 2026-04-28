@@ -162,7 +162,6 @@ export function SidebarNav() {
 	const railCollapsed = useEditorStore((s) => s.railCollapsed);
 	const openTray = useEditorStore((s) => s.openTray);
 	const setOpenTray = useEditorStore((s) => s.setOpenTray);
-	const [expandedSection, setExpandedSection] = useState<string | null>(null);
 
 	useEffect(() => {
 		const el = ref.current;
@@ -191,9 +190,7 @@ export function SidebarNav() {
 		>
 			<nav className="flex flex-col gap-1 p-1.5">
 				{SIDEBAR_SECTIONS.map((section) => {
-					const isExpanded = expandedSection === section.id;
-
-					// Single-panel sections (like Settings) open directly
+					// Single-panel sections open directly
 					if (section.panel) {
 						const sectionId = PANEL_TO_SECTION[section.panel];
 						const active = openTray === sectionId;
@@ -217,36 +214,33 @@ export function SidebarNav() {
 						);
 					}
 
-					// Multi-panel sections show expandable section header
-					return (
-						<div key={section.id} className="flex flex-col gap-0.5">
-							<button
-								type="button"
-								onClick={() => setExpandedSection(isExpanded ? null : section.id)}
-								className={cn(
-									"flex h-9 w-9 items-center justify-center rounded-md text-sm transition-colors",
-									"text-muted-foreground hover:bg-accent/50",
-									isExpanded && "bg-accent/30",
-								)}
-								aria-label={`${section.label} section`}
-								aria-expanded={isExpanded}
-								title={section.label}
-							>
-								<section.icon className="size-5 shrink-0" />
-							</button>
+					// Multi-panel sections open tray with first panel
+					const firstPanel = section.panels?.[0];
+					if (!firstPanel) return null;
 
-							{/* TabSwitcher for multi-panel sections */}
-							{isExpanded && section.panels && (
-								<TabSwitcher
-									panels={section.panels}
-									activePanel={openTray}
-									onSelect={(panelId) => {
-										const sectionId = PANEL_TO_SECTION[panelId];
-										setOpenTray(openTray === sectionId ? null : sectionId);
-									}}
-								/>
+					const sectionId = PANEL_TO_SECTION[firstPanel];
+					// Check if ANY of this section's panels are active
+					const active = section.panels?.some(
+						panelId => PANEL_TO_SECTION[panelId] === openTray
+					);
+
+					return (
+						<button
+							key={section.id}
+							type="button"
+							data-tray-trigger
+							onClick={() => setOpenTray(active ? null : sectionId)}
+							className={cn(
+								"flex h-9 w-9 items-center justify-center rounded-md text-sm transition-colors",
+								"text-muted-foreground hover:bg-accent hover:text-accent-foreground",
+								active && "bg-accent text-accent-foreground",
 							)}
-						</div>
+							aria-label={section.label}
+							aria-pressed={active}
+							title={section.label}
+						>
+							<section.icon className="size-5 shrink-0" />
+						</button>
 					);
 				})}
 			</nav>

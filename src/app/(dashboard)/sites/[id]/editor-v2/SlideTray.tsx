@@ -11,7 +11,6 @@ const ElementsTray = dynamic(() => import("./trays/ElementsTray").then((m) => ({
 const LayersTray = dynamic(() => import("./trays/LayersTray").then((m) => ({ default: m.LayersTray })));
 const DesignThemeTray = dynamic(() => import("./trays/DesignThemeTray").then((m) => ({ default: m.DesignThemeTray })));
 const MediaTray = dynamic(() => import("./trays/MediaTray").then((m) => ({ default: m.MediaTray })));
-const MusicTray = dynamic(() => import("./trays/MusicTray").then((m) => ({ default: m.MusicTray })));
 const LanguageTray = dynamic(() => import("./trays/LanguageTray").then((m) => ({ default: m.LanguageTray })));
 const SettingsTray = dynamic(() => import("./trays/SettingsTray").then((m) => ({ default: m.SettingsTray })));
 
@@ -97,8 +96,7 @@ export function SlideTray() {
 			{openTray === "elements" && <ElementsTray />}
 			{openTray === "layers" && <LayersTray />}
 			{(openTray === "navigation" || openTray === "theme" || openTray === "effects") && <DesignThemeTray />}
-			{(openTray === "photos" || openTray === "videos") && <MediaTray />}
-			{openTray === "music" && <MusicTray />}
+			{(openTray === "photos" || openTray === "videos" || openTray === "music") && <MediaTray />}
 			{openTray === "language" && <LanguageTray />}
 			{openTray === "settings" && <SettingsTray />}
 		</div>
