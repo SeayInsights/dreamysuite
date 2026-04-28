@@ -281,14 +281,13 @@ export function useDrag(
 				};
 
 				// Detect collisions with constrained bounds
-				let collisions: string[] | undefined;
 				const newBounds = new DOMRect(
 					containerRect.left + constrained.left,
 					containerRect.top + constrained.top,
 					constrained.width,
 					constrained.height,
 				);
-				collisions = detectCollisions(session.blockId, newBounds, blocks, container);
+				const collisions = detectCollisions(session.blockId, newBounds, blocks, container);
 
 				// Store pending update instead of applying immediately
 				pendingUpdateRef.current = { config: newConfig, collisions };
