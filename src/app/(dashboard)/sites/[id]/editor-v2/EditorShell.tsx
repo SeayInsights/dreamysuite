@@ -61,11 +61,11 @@ export function EditorShell({ site, user: _user, children }: Props) {
 		<div className="fixed inset-0 flex flex-col bg-background text-foreground antialiased">
 			<TopBar site={site} />
 
-			<div className="relative flex flex-1 overflow-hidden">
+			<div className="relative flex flex-row flex-1 overflow-hidden">
 				<SidebarNav />
 				<SlideTray />
 
-				<main className="relative flex-1">
+				<main className="relative flex-1 min-w-0">
 					<EditorErrorBoundary siteId={site.id}>
 						{children ?? <Canvas siteId={site.id} />}
 					</EditorErrorBoundary>
