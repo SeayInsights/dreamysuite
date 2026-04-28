@@ -120,7 +120,10 @@ export function parseCfg(raw: unknown): Record<string, unknown> {
  * from the SectionToolbar controls. Merges cleanly with existing inline styles
  * by spreading last so individual longhand properties override any shorthand.
  */
-export function blockSectionStyle(cfg: Record<string, unknown>): CSSProperties {
+export function blockSectionStyle(
+  cfg: Record<string, unknown>,
+  breakpoint: "desktop" | "tablet" | "mobile" = "desktop"
+): CSSProperties {
   const style: CSSProperties = {};
 
   if (typeof cfg.backgroundColor === "string" && cfg.backgroundColor) {
@@ -130,12 +133,14 @@ export function blockSectionStyle(cfg: Record<string, unknown>): CSSProperties {
     if (bg?.type === "color" && bg?.value) style.background = bg.value;
   }
 
-  if (typeof cfg.blockWidth === "number" && cfg.blockWidth > 0 && cfg.blockWidth < 100) {
-    style.width = `${cfg.blockWidth}%`;
-    const ml = typeof cfg.blockMarginLeft === "number" ? cfg.blockMarginLeft : 0;
-    style.marginLeft = ml > 0 ? `${ml}%` : "0";
-    style.marginRight = "0";
-  }
+  // POSITIONING: Desktop only (tablet/mobile use CSS flex stacking)
+  if (breakpoint === "desktop") {
+    if (typeof cfg.blockWidth === "number" && cfg.blockWidth > 0 && cfg.blockWidth < 100) {
+      style.width = `${cfg.blockWidth}%`;
+      const ml = typeof cfg.blockMarginLeft === "number" ? cfg.blockMarginLeft : 0;
+      style.marginLeft = ml > 0 ? `${ml}%` : "0";
+      style.marginRight = "0";
+    }
 
   const hasOffsetX = typeof cfg.blockOffsetX === "number" && cfg.blockOffsetX !== 0;
   const hasOffsetY = typeof cfg.blockOffsetY === "number" && cfg.blockOffsetY !== 0;
@@ -159,15 +164,17 @@ export function blockSectionStyle(cfg: Record<string, unknown>): CSSProperties {
     style.zIndex = cfg.blockZIndex;
   }
 
-  if (typeof cfg.blockHeight === "number" && cfg.blockHeight > 0) {
-    style.height = `${cfg.blockHeight}px`;
-    style.paddingTop = "0";
-    style.paddingBottom = "0";
-    style.display = "flex";
-    style.flexDirection = "column";
-    style.alignItems = "stretch";
-  }
+    if (typeof cfg.blockHeight === "number" && cfg.blockHeight > 0) {
+      style.height = `${cfg.blockHeight}px`;
+      style.paddingTop = "0";
+      style.paddingBottom = "0";
+      style.display = "flex";
+      style.flexDirection = "column";
+      style.alignItems = "stretch";
+    }
+  } // END breakpoint === "desktop"
 
+  // Padding: allowed on all breakpoints
   const pad = cfg.padding;
   if (pad && typeof pad === "object" && !Array.isArray(pad)) {
     const p = pad as Record<string, unknown>;
