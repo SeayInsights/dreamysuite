@@ -15,14 +15,15 @@ import { SIDEBAR_SECTIONS, type PanelId } from "./lib/sidebarConfig";
  */
 const PANEL_TO_SECTION: Record<PanelId, Section> = {
 	elements: "elements",
-	media: "media",
+	photos: "media",
+	videos: "media",
+	music: "music",
 	effects: "effects",
 	"page-list": "pages",
 	navigation: "navigation",
 	layers: "layers",
 	theme: "theme",
 	language: "language",
-	music: "music",
 	"site-settings": "settings",
 };
 
@@ -32,14 +33,15 @@ const PANEL_TO_SECTION: Record<PanelId, Section> = {
 function formatPanelLabel(panelId: PanelId): string {
 	const labels: Record<PanelId, string> = {
 		elements: "Elements",
-		media: "Media",
+		photos: "Photos",
+		videos: "Videos",
+		music: "Music",
 		effects: "Effects",
 		"page-list": "Pages",
 		navigation: "Nav",
 		layers: "Layers",
 		theme: "Theme",
 		language: "Language",
-		music: "Music",
 		"site-settings": "Settings",
 	};
 	return labels[panelId];
