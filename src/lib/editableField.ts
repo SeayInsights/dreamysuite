@@ -145,12 +145,16 @@ export function blockSectionStyle(
   // POSITIONING: Scale transforms proportionally to viewport width
   const scale = BREAKPOINT_WIDTHS[breakpoint] / BREAKPOINT_WIDTHS.desktop;
 
-  if (typeof cfg.blockWidth === "number" && cfg.blockWidth > 0 && cfg.blockWidth < 100) {
+  // On desktop, blockWidth/blockMarginLeft are owned by the wrapper div (getBlockStyle).
+  // On tablet/mobile the wrapper is in flow, so apply here instead.
+  if (breakpoint !== "desktop") {
+    if (typeof cfg.blockWidth === "number" && cfg.blockWidth > 0 && cfg.blockWidth < 100) {
       style.width = `${cfg.blockWidth}%`;
       const ml = typeof cfg.blockMarginLeft === "number" ? cfg.blockMarginLeft : 0;
       style.marginLeft = ml > 0 ? `${ml}%` : "0";
       style.marginRight = "0";
     }
+  }
 
   const hasOffsetX = typeof cfg.blockOffsetX === "number" && cfg.blockOffsetX !== 0;
   const hasOffsetY = typeof cfg.blockOffsetY === "number" && cfg.blockOffsetY !== 0;
