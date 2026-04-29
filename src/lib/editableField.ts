@@ -157,7 +157,9 @@ export function blockSectionStyle(
   const hasRotation = typeof cfg.blockRotation === "number" && cfg.blockRotation !== 0;
 
   const transforms: string[] = [];
-  if (hasOffsetX || hasOffsetY) {
+  // On desktop the wrapper div (getBlockStyle) owns all translate positioning.
+  // blockSectionStyle only adds translate on tablet/mobile where the wrapper is in flow.
+  if (breakpoint !== "desktop" && (hasOffsetX || hasOffsetY)) {
     const ox = hasOffsetX ? (cfg.blockOffsetX as number) : 0;
     const oy = hasOffsetY ? (cfg.blockOffsetY as number) : 0;
     const scaledY = oy * scale;

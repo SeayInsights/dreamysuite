@@ -470,13 +470,34 @@ export function useDrag(
 			// Auto-switch to advanced tab when dragging starts (TR-012)
 			setInspectorTab("advanced");
 
+			let startOffsetX = typeof config.blockOffsetX === "number" ? config.blockOffsetX : 0;
+			let startOffsetY = typeof config.blockOffsetY === "number" ? config.blockOffsetY : 0;
+
+			// If the block has no stored position, seed from its current DOM position.
+			// Without this, a block that just became absolute would snap to top:0 on the
+			// first drag move instead of staying where it visually was.
+			if (startOffsetX === 0 && startOffsetY === 0) {
+				const container = containerRef.current;
+				const blockEl = container?.querySelector<HTMLElement>(`[data-block-id="${blockId}"]`);
+				if (blockEl && container) {
+					const blockRect = blockEl.getBoundingClientRect();
+					const containerRect = container.getBoundingClientRect();
+					const measuredX = Math.round(blockRect.left - containerRect.left);
+					const measuredY = Math.round(blockRect.top - containerRect.top + container.scrollTop);
+					if (measuredX !== 0 || measuredY !== 0) {
+						startOffsetX = measuredX;
+						startOffsetY = measuredY;
+					}
+				}
+			}
+
 			sessionRef.current = {
 				kind: "move",
 				blockId,
 				startX: e.clientX,
 				startY: e.clientY,
-				startOffsetX: typeof config.blockOffsetX === "number" ? config.blockOffsetX : 0,
-				startOffsetY: typeof config.blockOffsetY === "number" ? config.blockOffsetY : 0,
+				startOffsetX,
+				startOffsetY,
 			};
 
 			setDrag({ kind: "block", id: blockId });

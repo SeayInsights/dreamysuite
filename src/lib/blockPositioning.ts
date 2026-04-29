@@ -47,19 +47,16 @@ export function getBlockStyle(
   const offsetX = typeof config.blockOffsetX === "number" ? config.blockOffsetX : 0;
   const offsetY = typeof config.blockOffsetY === "number" ? config.blockOffsetY : 0;
 
-  // No offsets: render in flex flow (backward compatibility)
-  if (offsetX === 0 && offsetY === 0) {
-    return undefined;
-  }
-
-  // Free positioning: GPU-accelerated transform
+  // Always absolute on desktop so blocks are independent layers.
+  // Zero-offset blocks sit at top:0 with no transform; non-zero get GPU transform.
   return {
     position: "absolute",
     top: 0,
     left: 0,
     width: "100%",
-    transform: `translate(${offsetX}px, ${offsetY}px)`,
-    willChange: "transform",
+    ...(offsetX !== 0 || offsetY !== 0
+      ? { transform: `translate(${offsetX}px, ${offsetY}px)`, willChange: "transform" as const }
+      : {}),
   };
 }
 
