@@ -60,6 +60,11 @@ export function InspectorV2() {
 		[blocks, selectedBlockId]
 	);
 
+	// Reset to Design tab whenever the selected block changes
+	useEffect(() => {
+		setInspectorTab("design");
+	}, [selectedBlockId]); // eslint-disable-line react-hooks/exhaustive-deps
+
 	// Debounced tab setter to avoid rapid switching (TR-012)
 	const debouncedSetTab = useCallback(
 		debounce((newTab: InspectorTab) => setInspectorTab(newTab), TAB_SWITCH_DEBOUNCE_MS),
