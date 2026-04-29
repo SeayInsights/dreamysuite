@@ -2,7 +2,7 @@
 
 import { cn } from "@/lib/utils";
 import { AnimationPresetPicker } from "../../inspector/AnimationPresetPicker";
-import { getPreset } from "@/app/animations/registry";
+import { runPreviewAnimation } from "@/app/animations/preview";
 import "@/app/animations/presets/index";
 
 // ---------------------------------------------------------------------------
@@ -65,63 +65,7 @@ export function AnimationPopoverContent({ blockId, anim, isPro, onUpdate }: Anim
   function updateWithPreview(patch: Partial<AnimationConfig>) {
     onUpdate(patch);
     const presetId = patch.presetId ?? anim.presetId;
-    if (!presetId) return;
-
-    const el = document.querySelector<HTMLElement>(`[data-block-id="${blockId}"]`);
-    if (!el || !el.parentElement) return;
-
-    const clone = el.cloneNode(true) as HTMLElement;
-    clone.removeAttribute("data-block-id");
-    clone.style.pointerEvents = "none";
-    // Insert clone in-flow at the block's exact position so animations
-    // play at the correct coordinates (CSS transforms don't affect layout flow).
-    el.parentElement.insertBefore(clone, el);
-    el.style.visibility = "hidden";
-
-    const restore = () => {
-      el.style.visibility = "";
-      // Kill any GSAP tweens on the clone before removing it to avoid orphaned
-      // ScrollTrigger spacers or other DOM side-effects from scroll-based presets.
-      import("gsap").then(({ gsap }) => {
-        gsap.killTweensOf(clone);
-        import("gsap/ScrollTrigger").then(({ ScrollTrigger }) => {
-          ScrollTrigger.getAll()
-            .filter((t) => t.trigger === clone)
-            .forEach((t) => t.kill());
-        }).catch(() => {});
-        clone.remove();
-      }).catch(() => {
-        clone.remove();
-      });
-    };
-
-    // Fallback: restore visibility even if the animation loader hangs or throws.
-    const fallback = setTimeout(restore, 2000);
-
-    const loader = getPreset(presetId);
-    if (!loader) {
-      clearTimeout(fallback);
-      restore();
-      return;
-    }
-
-    loader()
-      .then((fn) => {
-        try {
-          fn(clone);
-        } catch {
-          // Animation threw synchronously — restore immediately
-          clearTimeout(fallback);
-          restore();
-          return;
-        }
-        clearTimeout(fallback);
-        setTimeout(restore, 1500);
-      })
-      .catch(() => {
-        clearTimeout(fallback);
-        restore();
-      });
+    if (presetId) runPreviewAnimation(blockId, presetId);
   }
 
   return (

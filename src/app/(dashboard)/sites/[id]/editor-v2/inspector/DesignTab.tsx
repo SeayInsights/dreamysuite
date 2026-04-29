@@ -6,6 +6,8 @@ import { CollapsibleSection } from "./CollapsibleSection";
 import { getInspectorConfig } from "@/lib/inspectorRegistry";
 import { parseCfg } from "@/lib/editableField";
 import { AnimationPresetPicker } from "./AnimationPresetPicker";
+import { runPreviewAnimation } from "@/app/animations/preview";
+import "@/app/animations/presets/index";
 import type { Block } from "@/app/stores/editorStore";
 
 interface AnimationConfig {
@@ -252,11 +254,12 @@ export function DesignTab({ block, breakpoint: _breakpoint, updateBlock }: Desig
               <p className="mb-1.5 text-[10px] text-muted-foreground">Entrance</p>
               <AnimationPresetPicker
                 value={currentAnim.presetId}
-                onChange={(id) =>
+                onChange={(id) => {
                   updateBlock(block.id, {
                     config: { ...parsed, animation: { ...currentAnim, presetId: id } },
-                  })
-                }
+                  });
+                  if (id) runPreviewAnimation(block.id, id);
+                }}
               />
             </div>
             <div className="flex items-center gap-2">
