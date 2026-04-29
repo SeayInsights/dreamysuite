@@ -95,6 +95,8 @@ export function BreakpointFrame({ children, nav }: Props) {
 
 	const [frameReady, setFrameReady] = useState(false);
 	const [devicePixelRatio, setDevicePixelRatio] = useState(1);
+	const [navHeight, setNavHeight] = useState(0);
+	const navRef = useRef<HTMLDivElement>(null);
 	const isDesktop = breakpoint === "desktop";
 
 	useEffect(() => {
@@ -122,6 +124,16 @@ export function BreakpointFrame({ children, nav }: Props) {
 		const ro = new ResizeObserver(([entry]) => {
 			const { width, height } = entry.contentRect;
 			if (width > 0 && height > 0) setFrameReady(true);
+		});
+		ro.observe(el);
+		return () => ro.disconnect();
+	}, []);
+
+	useEffect(() => {
+		const el = navRef.current;
+		if (!el) return;
+		const ro = new ResizeObserver(([entry]) => {
+			setNavHeight(entry.contentRect.height);
 		});
 		ro.observe(el);
 		return () => ro.disconnect();
@@ -231,7 +243,7 @@ export function BreakpointFrame({ children, nav }: Props) {
 					/>
 				)}
 				<div className="editor-canvas-scroll relative h-full overflow-x-hidden overflow-y-auto" style={{ zIndex: 10 }}>
-					<div style={{ padding: `${mT}px ${mR}px ${mB}px ${mL}px` }}>
+					<div style={{ padding: `${isDesktop ? mT : mT + navHeight}px ${mR}px ${mB}px ${mL}px` }}>
 						{children}
 					</div>
 				</div>
@@ -254,7 +266,7 @@ export function BreakpointFrame({ children, nav }: Props) {
 					</>
 				)}
 				{nav && (
-					<div className="absolute left-0 right-0 top-0" style={{ zIndex: 30 }}>
+					<div ref={navRef} className="absolute left-0 right-0 top-0" style={{ zIndex: 30 }}>
 						{nav}
 					</div>
 				)}

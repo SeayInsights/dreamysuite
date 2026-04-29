@@ -74,7 +74,13 @@ const MemoBlock = memo(function MemoBlock({
 	}
 
 	return (
-		<div data-block-wrapper={block.id} style={wrapperStyle}>
+		<div
+			data-block-wrapper={block.id}
+			data-block-id={block.id}
+			data-block-type={block.type}
+			data-block-label={block.type}
+			style={wrapperStyle}
+		>
 			<BlockTransitionWrapper>
 				<Component block={block} />
 			</BlockTransitionWrapper>

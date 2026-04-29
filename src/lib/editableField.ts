@@ -160,10 +160,7 @@ export function blockSectionStyle(
   if (hasOffsetX || hasOffsetY) {
     const ox = hasOffsetX ? (cfg.blockOffsetX as number) : 0;
     const oy = hasOffsetY ? (cfg.blockOffsetY as number) : 0;
-    // Scale positions proportionally (desktop 100%, tablet 60%, mobile 30.5%)
-    // Add nav height offset on non-desktop to prevent blocks hiding under fixed nav
-    const NAV_HEIGHT = 64;
-    const scaledY = oy * scale + (breakpoint !== "desktop" ? NAV_HEIGHT * (1 - scale) : 0);
+    const scaledY = oy * scale;
     transforms.push(`translate(${ox * scale}px, ${scaledY}px)`);
   }
   if (hasRotation) {
