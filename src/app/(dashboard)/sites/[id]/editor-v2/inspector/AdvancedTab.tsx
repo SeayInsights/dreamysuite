@@ -236,6 +236,66 @@ export function AdvancedTab({ block, breakpoint, updateBlock }: AdvancedTabProps
         </div>
       </CollapsibleSection>
 
+      {breakpoint !== "desktop" && (
+        <CollapsibleSection title="Order">
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <label className="w-14 shrink-0 text-[10px] uppercase text-muted-foreground">Position</label>
+              <input
+                type="number"
+                min={0}
+                step={1}
+                placeholder="default"
+                value={
+                  typeof (block.overrides?.[breakpoint] as Record<string, unknown> | undefined)?.sortOrder === "number"
+                    ? String((block.overrides![breakpoint] as Record<string, unknown>).sortOrder)
+                    : ""
+                }
+                onChange={(e) => {
+                  const raw = e.target.value;
+                  const bp = breakpoint as "tablet" | "mobile";
+                  if (raw === "") {
+                    const existing = block.overrides?.[bp] ?? {};
+                    const { sortOrder: _r, ...rest } = existing as Record<string, unknown>;
+                    updateBlock(block.id, {
+                      overrides: {
+                        ...block.overrides,
+                        [bp]: Object.keys(rest).length > 0 ? rest : undefined,
+                      },
+                    });
+                  } else {
+                    const n = parseInt(raw, 10);
+                    if (!isNaN(n)) {
+                      updateBlock(block.id, {
+                        overrides: {
+                          ...block.overrides,
+                          [bp]: { ...(block.overrides?.[bp] ?? {}), sortOrder: n },
+                        },
+                      });
+                    }
+                  }
+                }}
+                onKeyDown={(e) => e.stopPropagation()}
+                className="h-7 w-20 rounded border border-input bg-background px-2 text-xs tabular-nums focus:outline-none focus:ring-1 focus:ring-ring"
+              />
+              {typeof (block.overrides?.[breakpoint as "tablet" | "mobile"] as Record<string, unknown> | undefined)?.sortOrder === "number" && (
+                <button
+                  type="button"
+                  title="Reset to default order"
+                  onClick={() => resetOverride(block, breakpoint, "sortOrder", updateBlock)}
+                  className="flex h-5 w-5 shrink-0 items-center justify-center rounded text-[11px] text-orange-500 hover:bg-orange-50"
+                >
+                  ↺
+                </button>
+              )}
+            </div>
+            {typeof (block.overrides?.[breakpoint as "tablet" | "mobile"] as Record<string, unknown> | undefined)?.sortOrder === "number" && (
+              <p className="text-[10px] text-orange-500">Custom order on {breakpoint}</p>
+            )}
+          </div>
+        </CollapsibleSection>
+      )}
+
       {cfg.showTiming && (
         <CollapsibleSection title="Timing">
           <div className="space-y-3">
