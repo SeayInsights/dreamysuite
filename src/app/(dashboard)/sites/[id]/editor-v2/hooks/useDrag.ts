@@ -128,6 +128,7 @@ export function useDrag(
 	const setDrag = useEditorStore((s) => s.setDrag);
 	const setInspectorTab = useEditorStore((s) => s.setInspectorTab);
 	const temporalStore = useEditorStore.temporal;
+	const pendingTabSwitchRef = useRef(false);
 
 	const sessionRef = useRef<DragSession | null>(null);
 	const cleanupRef = useRef<(() => void) | null>(null);
@@ -202,6 +203,7 @@ export function useDrag(
 			temporalStore.getState().resume();
 		}
 
+		pendingTabSwitchRef.current = false;
 		setDrag({ kind: null, id: null });
 		sessionRef.current = null;
 		setIsDragging(false);
@@ -223,6 +225,11 @@ export function useDrag(
 
 			const dx = e.clientX - session.startX;
 			const dy = e.clientY - session.startY;
+
+			if (pendingTabSwitchRef.current && (Math.abs(dx) > 4 || Math.abs(dy) > 4)) {
+				setInspectorTab("advanced");
+				pendingTabSwitchRef.current = false;
+			}
 
 			if (session.kind === "move") {
 				const container = containerRef.current;
@@ -398,7 +405,7 @@ export function useDrag(
 			}
 		},
 
-		[applyUpdate, blocks, containerRef],
+		[applyUpdate, blocks, containerRef, setInspectorTab],
 	);
 
 	const onPointerUp = useCallback(() => {
@@ -467,8 +474,8 @@ export function useDrag(
 			// pointermove updates are silent; a single entry is committed on pointerup.
 			temporalStore.getState().pause();
 
-			// Auto-switch to advanced tab when dragging starts (TR-012)
-			setInspectorTab("advanced");
+			// Defer tab switch until actual movement occurs — prevents clicks from switching tab.
+			pendingTabSwitchRef.current = true;
 
 			let startOffsetX = typeof config.blockOffsetX === "number" ? config.blockOffsetX : 0;
 			let startOffsetY = typeof config.blockOffsetY === "number" ? config.blockOffsetY : 0;

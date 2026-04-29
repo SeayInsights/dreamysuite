@@ -148,7 +148,8 @@ interface AdvancedTabProps {
 
 export function AdvancedTab({ block, breakpoint, updateBlock }: AdvancedTabProps) {
   const cfg = getInspectorConfig(block.type);
-  const currentAnim = { ...DEFAULT_ANIM, ...(parseCfg(block.config).animation as Partial<AnimationConfig> | undefined) };
+  const parsed = parseCfg(block.config);
+  const currentAnim = { ...DEFAULT_ANIM, ...(parsed.animation as Partial<AnimationConfig> | undefined) };
 
   return (
     <div>
@@ -172,14 +173,14 @@ export function AdvancedTab({ block, breakpoint, updateBlock }: AdvancedTabProps
             label="X"
             value={getEffectiveValue(block, breakpoint, "blockOffsetX")}
             overridden={isOverridden(block, breakpoint, "blockOffsetX")}
-            onChange={(v) => updateBlock(block.id, { config: { blockOffsetX: v } })}
+            onChange={(v) => updateBlock(block.id, { config: { ...parsed, blockOffsetX: v } })}
             onReset={() => resetOverride(block, breakpoint, "blockOffsetX", updateBlock)}
           />
           <NumericInput
             label="Y"
             value={getEffectiveValue(block, breakpoint, "blockOffsetY")}
             overridden={isOverridden(block, breakpoint, "blockOffsetY")}
-            onChange={(v) => updateBlock(block.id, { config: { blockOffsetY: v } })}
+            onChange={(v) => updateBlock(block.id, { config: { ...parsed, blockOffsetY: v } })}
             onReset={() => resetOverride(block, breakpoint, "blockOffsetY", updateBlock)}
           />
         </div>
@@ -192,7 +193,7 @@ export function AdvancedTab({ block, breakpoint, updateBlock }: AdvancedTabProps
             unit="%"
             value={getEffectiveValue(block, breakpoint, "blockWidth")}
             overridden={isOverridden(block, breakpoint, "blockWidth")}
-            onChange={(v) => updateBlock(block.id, { config: { blockWidth: v } })}
+            onChange={(v) => updateBlock(block.id, { config: { ...parsed, blockWidth: v } })}
             onReset={() => resetOverride(block, breakpoint, "blockWidth", updateBlock)}
           />
           <NumericInput
@@ -200,7 +201,7 @@ export function AdvancedTab({ block, breakpoint, updateBlock }: AdvancedTabProps
             unit="px"
             value={getEffectiveValue(block, breakpoint, "blockHeight")}
             overridden={isOverridden(block, breakpoint, "blockHeight")}
-            onChange={(v) => updateBlock(block.id, { config: { blockHeight: v } })}
+            onChange={(v) => updateBlock(block.id, { config: { ...parsed, blockHeight: v } })}
             onReset={() => resetOverride(block, breakpoint, "blockHeight", updateBlock)}
           />
           <NumericInput
@@ -208,7 +209,7 @@ export function AdvancedTab({ block, breakpoint, updateBlock }: AdvancedTabProps
             unit="%"
             value={getEffectiveValue(block, breakpoint, "blockMarginLeft")}
             overridden={isOverridden(block, breakpoint, "blockMarginLeft")}
-            onChange={(v) => updateBlock(block.id, { config: { blockMarginLeft: v } })}
+            onChange={(v) => updateBlock(block.id, { config: { ...parsed, blockMarginLeft: v } })}
             onReset={() => resetOverride(block, breakpoint, "blockMarginLeft", updateBlock)}
           />
         </div>
@@ -221,7 +222,7 @@ export function AdvancedTab({ block, breakpoint, updateBlock }: AdvancedTabProps
             unit=""
             value={getEffectiveValue(block, breakpoint, "blockZIndex")}
             overridden={isOverridden(block, breakpoint, "blockZIndex")}
-            onChange={(v) => updateBlock(block.id, { config: { blockZIndex: v } })}
+            onChange={(v) => updateBlock(block.id, { config: { ...parsed, blockZIndex: v } })}
             onReset={() => resetOverride(block, breakpoint, "blockZIndex", updateBlock)}
           />
           <NumericInput
@@ -229,7 +230,7 @@ export function AdvancedTab({ block, breakpoint, updateBlock }: AdvancedTabProps
             unit="°"
             value={getEffectiveValue(block, breakpoint, "blockRotation")}
             overridden={isOverridden(block, breakpoint, "blockRotation")}
-            onChange={(v) => updateBlock(block.id, { config: { blockRotation: v } })}
+            onChange={(v) => updateBlock(block.id, { config: { ...parsed, blockRotation: v } })}
             onReset={() => resetOverride(block, breakpoint, "blockRotation", updateBlock)}
           />
         </div>
@@ -248,7 +249,7 @@ export function AdvancedTab({ block, breakpoint, updateBlock }: AdvancedTabProps
                 value={Math.round(currentAnim.duration * 1000)}
                 onChange={(e) =>
                   updateBlock(block.id, {
-                    config: { animation: { ...currentAnim, duration: Math.max(0.05, Number(e.target.value) / 1000) } },
+                    config: { ...parsed, animation: { ...currentAnim, duration: Math.max(0.05, Number(e.target.value) / 1000) } },
                   })
                 }
                 onKeyDown={(e) => e.stopPropagation()}
@@ -266,7 +267,7 @@ export function AdvancedTab({ block, breakpoint, updateBlock }: AdvancedTabProps
                 value={Math.round(currentAnim.delay * 1000)}
                 onChange={(e) =>
                   updateBlock(block.id, {
-                    config: { animation: { ...currentAnim, delay: Math.max(0, Number(e.target.value) / 1000) } },
+                    config: { ...parsed, animation: { ...currentAnim, delay: Math.max(0, Number(e.target.value) / 1000) } },
                   })
                 }
                 onKeyDown={(e) => e.stopPropagation()}
@@ -283,7 +284,7 @@ export function AdvancedTab({ block, breakpoint, updateBlock }: AdvancedTabProps
                     type="button"
                     onClick={() =>
                       updateBlock(block.id, {
-                        config: { animation: { ...currentAnim, trigger: opt.id } },
+                        config: { ...parsed, animation: { ...currentAnim, trigger: opt.id } },
                       })
                     }
                     className={cn(

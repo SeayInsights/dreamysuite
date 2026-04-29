@@ -120,7 +120,7 @@ export function DesignTab({ block, breakpoint: _breakpoint, updateBlock }: Desig
               type="color"
               value={bgColor || "#ffffff"}
               onChange={(e) =>
-                updateBlock(block.id, { config: { backgroundColor: e.target.value } })
+                updateBlock(block.id, { config: { ...parsed, backgroundColor: e.target.value } })
               }
               onKeyDown={(e) => e.stopPropagation()}
               className="h-7 w-7 cursor-pointer rounded border border-input p-0.5"
@@ -131,7 +131,7 @@ export function DesignTab({ block, breakpoint: _breakpoint, updateBlock }: Desig
               placeholder="None"
               onChange={(e) => {
                 const v = e.target.value.trim();
-                updateBlock(block.id, { config: { backgroundColor: v || undefined } });
+                updateBlock(block.id, { config: { ...parsed, backgroundColor: v || undefined } });
               }}
               onKeyDown={(e) => e.stopPropagation()}
               className="h-7 flex-1 rounded border border-input bg-background px-2 text-xs focus:outline-none focus:ring-1 focus:ring-ring"
@@ -150,13 +150,11 @@ export function DesignTab({ block, breakpoint: _breakpoint, updateBlock }: Desig
                 onChange={(v) => {
                   if (linked) {
                     updateBlock(block.id, {
-                      config: {
-                        padding: { top: v, right: v, bottom: v, left: v },
-                      },
+                      config: { ...parsed, padding: { top: v, right: v, bottom: v, left: v } },
                     });
                   } else {
                     updateBlock(block.id, {
-                      config: { padding: { ...padding, top: v as number } },
+                      config: { ...parsed, padding: { ...padding, top: v as number } },
                     });
                   }
                 }}
@@ -167,13 +165,11 @@ export function DesignTab({ block, breakpoint: _breakpoint, updateBlock }: Desig
                 onChange={(v) => {
                   if (linked) {
                     updateBlock(block.id, {
-                      config: {
-                        padding: { top: v, right: v, bottom: v, left: v },
-                      },
+                      config: { ...parsed, padding: { top: v, right: v, bottom: v, left: v } },
                     });
                   } else {
                     updateBlock(block.id, {
-                      config: { padding: { ...padding, right: v as number } },
+                      config: { ...parsed, padding: { ...padding, right: v as number } },
                     });
                   }
                 }}
@@ -184,13 +180,11 @@ export function DesignTab({ block, breakpoint: _breakpoint, updateBlock }: Desig
                 onChange={(v) => {
                   if (linked) {
                     updateBlock(block.id, {
-                      config: {
-                        padding: { top: v, right: v, bottom: v, left: v },
-                      },
+                      config: { ...parsed, padding: { top: v, right: v, bottom: v, left: v } },
                     });
                   } else {
                     updateBlock(block.id, {
-                      config: { padding: { ...padding, bottom: v as number } },
+                      config: { ...parsed, padding: { ...padding, bottom: v as number } },
                     });
                   }
                 }}
@@ -201,13 +195,11 @@ export function DesignTab({ block, breakpoint: _breakpoint, updateBlock }: Desig
                 onChange={(v) => {
                   if (linked) {
                     updateBlock(block.id, {
-                      config: {
-                        padding: { top: v, right: v, bottom: v, left: v },
-                      },
+                      config: { ...parsed, padding: { top: v, right: v, bottom: v, left: v } },
                     });
                   } else {
                     updateBlock(block.id, {
-                      config: { padding: { ...padding, left: v as number } },
+                      config: { ...parsed, padding: { ...padding, left: v as number } },
                     });
                   }
                 }}
@@ -262,7 +254,7 @@ export function DesignTab({ block, breakpoint: _breakpoint, updateBlock }: Desig
                 value={currentAnim.presetId}
                 onChange={(id) =>
                   updateBlock(block.id, {
-                    config: { animation: { ...currentAnim, presetId: id } },
+                    config: { ...parsed, animation: { ...currentAnim, presetId: id } },
                   })
                 }
               />
@@ -273,7 +265,7 @@ export function DesignTab({ block, breakpoint: _breakpoint, updateBlock }: Desig
                 value={currentAnim.easing}
                 onChange={(e) =>
                   updateBlock(block.id, {
-                    config: { animation: { ...currentAnim, easing: e.target.value } },
+                    config: { ...parsed, animation: { ...currentAnim, easing: e.target.value } },
                   })
                 }
                 onKeyDown={(e) => e.stopPropagation()}
