@@ -71,6 +71,9 @@ export {
 
 export * from "./hooks";
 
+// ── Inspector Registry ────────────────────────────────────────────────────────
+export { BLOCK_INSPECTOR_CONFIG, DEFAULT_INSPECTOR_CONFIG, getInspectorConfig, type BlockInspectorConfig } from "./inspectorRegistry";
+
 // ── Block & Layout ────────────────────────────────────────────────────────────
 
 export {
