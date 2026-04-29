@@ -113,6 +113,12 @@ export function DesignTab({ block, breakpoint: _breakpoint, updateBlock }: Desig
     ...(parsed.animation as Partial<AnimationConfig> | undefined),
   };
 
+  // Determine if the block's rendered element contains visible text so we can
+  // hide text-only animation presets (split-text, letter-cascade) when irrelevant.
+  const hasText = typeof document !== "undefined"
+    ? (document.querySelector<HTMLElement>(`[data-block-id="${block.id}"]`)?.textContent ?? "").trim().length > 0
+    : true;
+
   return (
     <div className="space-y-0">
       {cfg.showBackground && (
@@ -254,6 +260,7 @@ export function DesignTab({ block, breakpoint: _breakpoint, updateBlock }: Desig
               <p className="mb-1.5 text-[10px] text-muted-foreground">Entrance</p>
               <AnimationPresetPicker
                 value={currentAnim.presetId}
+                hasText={hasText}
                 onChange={(id) => {
                   updateBlock(block.id, {
                     config: { ...parsed, animation: { ...currentAnim, presetId: id } },
