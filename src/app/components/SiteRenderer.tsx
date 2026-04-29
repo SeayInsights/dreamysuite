@@ -113,6 +113,11 @@ export function SiteRenderer({ blocks, ordered = false }: Props) {
 	const containerStyle: React.CSSProperties = {
 		position: "relative",
 		minHeight: Math.max(maxExtent + 200, window.innerHeight || 800),
+		...(breakpoint !== "desktop" && gap > 0 ? {
+			display: "flex",
+			flexDirection: "column",
+			gap: `${gap}px`,
+		} : {}),
 	};
 
 	return (

@@ -2815,6 +2815,7 @@ function buildIntroHtml(
 
 // Allowlist prevents arbitrary path injection into import() URLs
 const VALID_PRESET_IDS = new Set([
+  "fade-in", "spring-in",
   "fade-slide-up", "split-text", "mask-wipe", "parallax-monogram",
   "ken-burns", "scroll-pinned-story", "sticky-date", "blur-in",
   "envelope-unfold", "letter-cascade",

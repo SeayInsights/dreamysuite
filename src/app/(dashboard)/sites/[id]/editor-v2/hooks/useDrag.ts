@@ -41,7 +41,7 @@ interface DragSession {
 }
 
 // ─── Debug flag — flip to true to trace east-resize in console ────────────
-const DEBUG_DRAG = true;
+const DEBUG_DRAG = false;
 
 // ─── Snap helpers ─────────────────────────────────────────────────────────
 
