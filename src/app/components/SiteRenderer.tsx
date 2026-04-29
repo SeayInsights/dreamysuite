@@ -94,10 +94,19 @@ export function SiteRenderer({ blocks, ordered = false }: Props) {
 	const translated = useTranslatedBlocks(visible);
 
 	// Container style: always relative to allow layering on all breakpoints
-	// Blocks scale their positions proportionally to viewport width
+	// Calculate height to contain all absolutely-positioned blocks
+	const maxExtent = translated.reduce((max, block) => {
+		const cfg = block.config as Record<string, unknown>;
+		const offsetY = (typeof cfg.blockOffsetY === "number" ? cfg.blockOffsetY : 0);
+		const height = (typeof cfg.blockHeight === "number" ? cfg.blockHeight : 400);
+		const scale = breakpoint === "desktop" ? 1 :
+		             breakpoint === "tablet" ? 768 / 1280 : 390 / 1280;
+		return Math.max(max, (offsetY + height) * scale);
+	}, 0);
+
 	const containerStyle: React.CSSProperties = {
 		position: "relative",
-		minHeight: "100vh",
+		minHeight: Math.max(maxExtent + 200, window.innerHeight || 800),
 	};
 
 	return (
