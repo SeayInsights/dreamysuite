@@ -1,4 +1,13 @@
 /**
+ * Breakpoint widths for proportional position scaling
+ */
+const BREAKPOINT_WIDTHS = {
+	desktop: 1280,
+	tablet: 768,
+	mobile: 390,
+};
+
+/**
  * Editable-field convention shared between block components and the V2
  * TextEditor. Each cfg text field can carry companion style keys that persist
  * formatting at the whole-field level (selection-level formatting is not
@@ -133,9 +142,10 @@ export function blockSectionStyle(
     if (bg?.type === "color" && bg?.value) style.background = bg.value;
   }
 
-  // POSITIONING: Desktop only (tablet/mobile use CSS flex stacking)
-  if (breakpoint === "desktop") {
-    if (typeof cfg.blockWidth === "number" && cfg.blockWidth > 0 && cfg.blockWidth < 100) {
+  // POSITIONING: Scale transforms proportionally to viewport width
+  const scale = BREAKPOINT_WIDTHS[breakpoint] / BREAKPOINT_WIDTHS.desktop;
+
+  if (typeof cfg.blockWidth === "number" && cfg.blockWidth > 0 && cfg.blockWidth < 100) {
       style.width = `${cfg.blockWidth}%`;
       const ml = typeof cfg.blockMarginLeft === "number" ? cfg.blockMarginLeft : 0;
       style.marginLeft = ml > 0 ? `${ml}%` : "0";
@@ -150,7 +160,8 @@ export function blockSectionStyle(
   if (hasOffsetX || hasOffsetY) {
     const ox = hasOffsetX ? (cfg.blockOffsetX as number) : 0;
     const oy = hasOffsetY ? (cfg.blockOffsetY as number) : 0;
-    transforms.push(`translate(${ox}px, ${oy}px)`);
+    // Scale positions proportionally (desktop 100%, tablet 60%, mobile 30.5%)
+    transforms.push(`translate(${ox * scale}px, ${oy * scale}px)`);
   }
   if (hasRotation) {
     transforms.push(`rotate(${cfg.blockRotation}deg)`);
@@ -172,7 +183,6 @@ export function blockSectionStyle(
       style.flexDirection = "column";
       style.alignItems = "stretch";
     }
-  } // END breakpoint === "desktop"
 
   // Padding: allowed on all breakpoints
   const pad = cfg.padding;

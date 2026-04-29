@@ -93,10 +93,12 @@ export function SiteRenderer({ blocks, ordered = false }: Props) {
 
 	const translated = useTranslatedBlocks(visible);
 
-	// Container style: flex stack on mobile/tablet, relative container on desktop
-	const containerStyle: React.CSSProperties = breakpoint === "desktop"
-		? { position: "relative", minHeight: "100vh" }
-		: { display: "flex", flexDirection: "column", gap: gap > 0 ? `${gap}px` : undefined };
+	// Container style: always relative to allow layering on all breakpoints
+	// Blocks scale their positions proportionally to viewport width
+	const containerStyle: React.CSSProperties = {
+		position: "relative",
+		minHeight: "100vh",
+	};
 
 	return (
 		<div className="site-renderer relative" style={containerStyle}>
