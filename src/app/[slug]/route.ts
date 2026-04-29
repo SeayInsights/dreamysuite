@@ -2987,8 +2987,14 @@ function buildHtml(
       const blocksHtml = page.blocks
         .map((block) => {
           const html = renderBlock(block, settings, pageContent, siteSlug, blockTransMap, renderLang, mainLang);
-          const animPreset = (block.config as Record<string, unknown>).animation;
-          if (typeof animPreset !== "string" || !animPreset) return html;
+          const animRaw = (block.config as Record<string, unknown>).animation;
+          const animPreset =
+            typeof animRaw === "object" && animRaw !== null
+              ? (animRaw as { presetId?: string }).presetId ?? ""
+              : typeof animRaw === "string"
+              ? animRaw
+              : "";
+          if (!animPreset) return html;
           return html.replace(/(<section\b[^>]*)(>)/, `$1 data-animation="${escHtml(animPreset)}"$2`);
         })
         .join("\n");

@@ -11,17 +11,15 @@ import { duration, EASING } from "@/lib/motion";
 import { ContentTab } from "./inspector/ContentTab";
 import { LayoutTab } from "./inspector/LayoutTab";
 import { StyleTab } from "./inspector/StyleTab";
-import { MotionTab } from "./inspector/MotionTab";
 import { AssistantTab } from "./inspector/AssistantTab";
 
 const PANEL_WIDTH = 320;
 
-type TabId = "info" | "layout" | "style" | "motion" | "assistant";
+type TabId = "info" | "layout" | "style" | "assistant";
 const TABS: { id: TabId; label: string }[] = [
 	{ id: "info", label: "Info" },
 	{ id: "layout", label: "Layout" },
 	{ id: "style", label: "Style" },
-	{ id: "motion", label: "Motion" },
 	{ id: "assistant", label: "AI" },
 ];
 
@@ -156,8 +154,6 @@ export function Inspector() {
 					<LayoutTab />
 				) : tab === "style" ? (
 					<StyleTab />
-				) : tab === "motion" ? (
-					<MotionTab />
 				) : (
 					<AssistantTab />
 				)}
