@@ -59,7 +59,7 @@ export function CustomCssPanel({ blockId }: { blockId: string }) {
 
 	useEffect(() => {
 		if (raw) apply(raw);
-	}, [blockId]);
+	}, [blockId, raw, apply]);
 
 	return (
 		<div className="space-y-2 border-t border-border pt-4">

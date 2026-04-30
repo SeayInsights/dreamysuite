@@ -192,7 +192,7 @@ export function CropHandles({ blockId, rect, containerRef }: Props) {
 
       return { onPointerDown };
     },
-    [blockId, updateBlock],
+    [blockId, updateBlock, rect.width, rect.height],
   );
 
   const cd = currentDelta.current;

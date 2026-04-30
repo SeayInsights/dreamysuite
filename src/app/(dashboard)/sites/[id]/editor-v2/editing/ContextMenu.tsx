@@ -250,7 +250,7 @@ export function ContextMenu({ children }: { children: ReactNode }): React.JSX.El
 
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [blocks, selectedBlockId, setBlocks, selectBlock]);
+  }, [blocks, selectedBlockId, setBlocks, selectBlock, removeBlock]);
 
   // -------------------------------------------------------------------------
   // Render
