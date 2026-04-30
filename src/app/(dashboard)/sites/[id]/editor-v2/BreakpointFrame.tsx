@@ -183,6 +183,26 @@ export function BreakpointFrame({ children, nav }: Props) {
     };
   }, [iframeDoc]);
 
+  useEffect(() => {
+    if (!iframeDoc) return;
+    function forwardMouse(e: MouseEvent) {
+      window.dispatchEvent(
+        new MouseEvent(e.type, {
+          clientX: e.clientX,
+          clientY: e.clientY,
+          button: e.button,
+          bubbles: true,
+        }),
+      );
+    }
+    const events = ["mousemove", "mousedown", "mouseup"] as const;
+    for (const evt of events) iframeDoc.addEventListener(evt, forwardMouse);
+    return () => {
+      for (const evt of events)
+        iframeDoc.removeEventListener(evt, forwardMouse);
+    };
+  }, [iframeDoc]);
+
   const [frameReady, setFrameReady] = useState(false);
   const [devicePixelRatio, setDevicePixelRatio] = useState(1);
   const [navHeight, setNavHeight] = useState(0);
