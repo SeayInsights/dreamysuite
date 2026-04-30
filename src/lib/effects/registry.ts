@@ -468,6 +468,16 @@ export const EFFECT_REGISTRY: EffectEntry[] = [
     intensity: "medium",
     description: "Text weight responds to cursor proximity",
   },
+  {
+    id: "variable-proximity",
+    name: "VariableProximity",
+    source: "reactbits",
+    category: "text",
+    mood: ["modern", "playful"],
+    eventTypes: ["celebration", "engagement"],
+    intensity: "subtle",
+    description: "Variable font axes shift based on cursor distance",
+  },
   // ═══════════════════════════════════════════
   // CURSOR EFFECTS (3 — from Animations)
   // ═══════════════════════════════════════════
