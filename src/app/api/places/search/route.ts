@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { getEnv } from "@/lib/cloudflare";
 import { isRateLimited } from "@/lib/rateLimit";
+import { safeJsonParse } from "@/lib/validation";
 
 export async function GET(req: NextRequest) {
   const env = await getEnv();
@@ -27,8 +28,7 @@ export async function GET(req: NextRequest) {
       return Response.json({ error: "Upstream Places API error" }, { status: 502 });
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const raw: any = JSON.parse(rawText);
+    const raw = safeJsonParse<{ results?: Array<{ name?: string; formatted_address?: string; place_id?: string; geometry?: { location?: { lat: number; lng: number } } }> }>(rawText, { results: [] });
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const results = (raw.results ?? []).slice(0, 5).map((r: any) => ({
       place_id: r.place_id,
