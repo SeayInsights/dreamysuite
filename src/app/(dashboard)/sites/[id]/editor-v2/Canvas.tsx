@@ -16,7 +16,6 @@ import { NavPreview } from "./NavPreview";
 import { TextEditor } from "./editing/TextEditor";
 import { ImageEditor } from "./editing/ImageEditor";
 import { VideoInlineEditor } from "./editing/VideoInlineEditor";
-import { SectionToolbar } from "./editing/SectionToolbar";
 import { BlockEditPanel } from "./editing/BlockEditPanel";
 import { DragHandles } from "./editing/DragHandles";
 import { ContextMenu } from "./editing/ContextMenu";
@@ -202,8 +201,7 @@ export function Canvas({ siteId }: Props) {
 					<EditorOverlay containerRef={containerRef}>
 						<SiteRenderer blocks={blocks} ordered />
 						<GridOverlay />
-						{/* Editing overlays inside containerRef so absolute coords are correct */}
-						<SectionToolbar containerRef={containerRef} />
+						{/* SectionToolbar removed (E019) — controls moved to inspector Design/Advanced tabs */}
 					</EditorOverlay>
 				</BreakpointFrame>
 

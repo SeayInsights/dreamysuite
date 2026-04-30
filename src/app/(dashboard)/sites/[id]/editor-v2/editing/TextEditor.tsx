@@ -10,7 +10,8 @@ import {
 import { createPortal } from "react-dom";
 
 import { useEditorStore } from "@/app/stores/editorStore";
-import { FloatingFormatToolbar, type FormatCommand } from "./FloatingFormatToolbar";
+// FloatingFormatToolbar suppressed (E021) — import kept for type reference only
+import { type FormatCommand } from "./FloatingFormatToolbar";
 import { useFloatingToolbar } from "../hooks/useFloatingToolbar";
 
 // ---------------------------------------------------------------------------
@@ -525,20 +526,8 @@ export function TextEditor({
   // Render toolbar portal only
   // -------------------------------------------------------------------------
 
+  // FloatingFormatToolbar suppressed (E021) — text formatting now in inspector Content tab.
+  // Inline editing (contentEditable, keyboard shortcuts, blur-commit) remains fully active.
   if (!editState) return <></>;
-
-  return (
-    <>
-      {toolbar.visible &&
-        typeof document !== "undefined" &&
-        createPortal(
-          <FloatingFormatToolbar
-            x={toolbar.position.left}
-            y={toolbar.position.top}
-            onFormat={handleFormat}
-          />,
-          document.body,
-        )}
-    </>
-  );
+  return <></>;
 }
