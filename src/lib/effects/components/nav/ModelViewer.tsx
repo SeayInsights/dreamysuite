@@ -129,7 +129,7 @@ const ModelInner = ({
       }, 16);
       return () => clearInterval(id);
     } else onLoaded?.();
-  }, [content]);
+  }, [content, autoFrame, camera, fadeIn, initPitch, initYaw, onLoaded, pivot]);
 
   useEffect(() => {
     if (!enableManualRotation || isTouch) return;

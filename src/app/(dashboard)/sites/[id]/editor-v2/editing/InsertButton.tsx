@@ -58,9 +58,9 @@ export function InsertButton({ containerRef }: Props) {
     });
 
     return slots;
-  }, [containerRef, blocks]);
+  }, [containerRef]);
 
-  function onMouseMove(e: MouseEvent) {
+  const onMouseMove = useCallback((e: MouseEvent) => {
     if (paletteOpen) return;
     const container = containerRef.current;
     if (!container) return;
@@ -78,12 +78,12 @@ export function InsertButton({ containerRef }: Props) {
         hideTimerRef.current = setTimeout(() => { setSlot(null); hideTimerRef.current = null; }, 200);
       }
     }
-  }
+  }, [paletteOpen, containerRef, computeSlots]);
 
-  function onMouseLeave() {
+  const onMouseLeave = useCallback(() => {
     if (paletteOpen) return;
     hideTimerRef.current = setTimeout(() => { setSlot(null); hideTimerRef.current = null; }, 300);
-  }
+  }, [paletteOpen]);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -94,7 +94,7 @@ export function InsertButton({ containerRef }: Props) {
       container.removeEventListener("mousemove", onMouseMove);
       container.removeEventListener("mouseleave", onMouseLeave);
     };
-  }, [containerRef, paletteOpen, computeSlots]);
+  }, [containerRef, onMouseMove, onMouseLeave]);
 
   useEffect(() => () => {
     if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
