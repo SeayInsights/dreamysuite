@@ -75,7 +75,7 @@ export function EditorOverlay({ children, containerRef }: Props) {
 				if (currentIdx === -1) {
 					select(stackIds[0]);
 				} else if (stackIds.length === 1) {
-					clear();
+					return;
 				} else {
 					// Multiple overlapping blocks — cycle front-to-back on each click.
 					select(stackIds[(currentIdx + 1) % stackIds.length]);
@@ -123,6 +123,9 @@ export function EditorOverlay({ children, containerRef }: Props) {
 
 				const draggableAncestor = (e.target as HTMLElement).closest<HTMLElement>("[draggable='true']");
 				if (draggableAncestor && blockEl.contains(draggableAncestor)) return;
+
+				const target = e.target as HTMLElement;
+				if (target.isContentEditable || target.closest("[contenteditable='true']")) return;
 
 				const currentId = state.selectedBlockId;
 
