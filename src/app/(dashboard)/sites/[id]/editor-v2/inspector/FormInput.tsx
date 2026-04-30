@@ -102,7 +102,7 @@ function ResetButton({
 }) {
   function handleReset() {
     const currentOverrides = block.overrides?.[breakpoint] || {};
-    const { [propertyName]: _removed, ...remainingOverrides } = currentOverrides;
+    const { [propertyName]: _, ...remainingOverrides } = currentOverrides;
 
     const newOverrides = {
       ...block.overrides,

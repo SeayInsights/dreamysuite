@@ -10,7 +10,6 @@ import {
 import { createPortal } from "react-dom";
 
 import { useEditorStore } from "@/app/stores/editorStore";
-import { parseCfg } from "@/lib/editableField";
 import { FloatingFormatToolbar, type FormatCommand } from "./FloatingFormatToolbar";
 import { useFloatingToolbar } from "../hooks/useFloatingToolbar";
 

@@ -96,7 +96,7 @@ function NumericInput({
   );
 }
 
-export function DesignTab({ block, breakpoint: _breakpoint, updateBlock }: DesignTabProps) {
+export function DesignTab({ block, breakpoint: _, updateBlock }: DesignTabProps) {
   const cfg = getInspectorConfig(block.type);
   const parsed = parseCfg(block.config);
 

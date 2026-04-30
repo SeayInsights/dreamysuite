@@ -14,7 +14,6 @@ const MediaTray = dynamic(() => import("./trays/MediaTray").then((m) => ({ defau
 const LanguageTray = dynamic(() => import("./trays/LanguageTray").then((m) => ({ default: m.LanguageTray })));
 const SettingsTray = dynamic(() => import("./trays/SettingsTray").then((m) => ({ default: m.SettingsTray })));
 
-const TRAY_WIDTH = 288;
 const ANIM_MS = 200;
 
 export function SlideTray() {

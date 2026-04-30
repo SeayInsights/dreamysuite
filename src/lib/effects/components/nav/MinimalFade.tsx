@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { motion } from "motion/react";
 import type { NavStyleProps } from "../../types";
 
@@ -8,7 +9,6 @@ export default function MinimalFade({
   logo,
   logoAlt,
   accent,
-  bg,
   textColor,
   brandColor,
   headingFont,
@@ -38,10 +38,12 @@ export default function MinimalFade({
           flexShrink: 0,
         }}
       >
-        <img
+        <Image
           src={logo}
           alt={logoAlt}
-          style={{ width: compact ? 20 : 28, height: compact ? 20 : 28, borderRadius: "50%" }}
+          width={compact ? 20 : 28}
+          height={compact ? 20 : 28}
+          style={{ borderRadius: "50%" }}
         />
         {!compact && (
           <span

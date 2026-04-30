@@ -42,7 +42,7 @@ interface Props {
 	children?: ReactNode;
 }
 
-export function EditorShell({ site, user: _user, children }: Props) {
+export function EditorShell({ site, children }: Props) {
 	useShortcuts();
 	useSettingsSync(site.id);
 	useBlockSync(site.id);

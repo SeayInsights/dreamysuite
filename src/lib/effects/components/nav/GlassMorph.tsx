@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import type { NavStyleProps } from "../../types";
 
 const shimmerKeyframes = `
@@ -15,7 +16,6 @@ export default function GlassMorph({
   logo,
   logoAlt,
   accent,
-  bg,
   textColor,
   brandColor,
   headingFont,
@@ -73,10 +73,12 @@ export default function GlassMorph({
                 flexShrink: 0,
               }}
             >
-              <img
+              <Image
                 src={logo}
                 alt={logoAlt}
-                style={{ width: compact ? 20 : 26, height: compact ? 20 : 26, borderRadius: "50%" }}
+                width={compact ? 20 : 26}
+                height={compact ? 20 : 26}
+                style={{ borderRadius: "50%" }}
               />
               {!compact && (
                 <span
