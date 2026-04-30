@@ -16,7 +16,7 @@ export type Breakpoint = "desktop" | "tablet" | "mobile";
 export interface BlockPositionStyle {
   position: "absolute";
   top: number;
-  left: number;
+  left: number | string;
   width: string;
   transform: string;
   willChange: "transform";
@@ -43,23 +43,28 @@ export function getBlockStyle(
     return undefined;
   }
 
-  // Extract offsets from config
   const offsetX = typeof config.blockOffsetX === "number" ? config.blockOffsetX : 0;
   const offsetY = typeof config.blockOffsetY === "number" ? config.blockOffsetY : 0;
 
-  // No offsets: render in flex flow (backward compatibility)
-  if (offsetX === 0 && offsetY === 0) {
-    return undefined;
-  }
+  // blockWidth and blockMarginLeft live on the wrapper so the DOM rect matches the
+  // visual element — selection boxes and resize math both read from this wrapper.
+  const blockWidth =
+    typeof config.blockWidth === "number" && config.blockWidth > 0 && config.blockWidth < 100
+      ? config.blockWidth
+      : 100;
+  const marginLeft =
+    typeof config.blockMarginLeft === "number" && config.blockMarginLeft > 0
+      ? config.blockMarginLeft
+      : 0;
 
-  // Free positioning: GPU-accelerated transform
   return {
     position: "absolute",
     top: 0,
-    left: 0,
-    width: "100%",
-    transform: `translate(${offsetX}px, ${offsetY}px)`,
-    willChange: "transform",
+    left: marginLeft > 0 ? `${marginLeft}%` : 0,
+    width: `${blockWidth}%`,
+    ...(offsetX !== 0 || offsetY !== 0
+      ? { transform: `translate(${offsetX}px, ${offsetY}px)`, willChange: "transform" as const }
+      : {}),
   };
 }
 

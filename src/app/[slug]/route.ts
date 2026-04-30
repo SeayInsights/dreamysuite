@@ -2815,6 +2815,7 @@ function buildIntroHtml(
 
 // Allowlist prevents arbitrary path injection into import() URLs
 const VALID_PRESET_IDS = new Set([
+  "fade-in", "spring-in",
   "fade-slide-up", "split-text", "mask-wipe", "parallax-monogram",
   "ken-burns", "scroll-pinned-story", "sticky-date", "blur-in",
   "envelope-unfold", "letter-cascade",
@@ -2831,19 +2832,52 @@ function buildBlockAnimationScript(usedPresets: Set<string>): string {
   // GSAP CDN is already loaded synchronously in <head>, so `gsap` global is
   // available before this deferred module executes.
   return `<script type="module">
+if (window.matchMedia('(prefers-reduced-motion:reduce)').matches) return;
 const ids = ${idsJson};
 const mods = await Promise.all(ids.map(id => import('/animations/presets/' + id + '.js')));
 const fns = Object.fromEntries(ids.map((id, i) => [id, mods[i].default]));
 const els = document.querySelectorAll('[data-animation]');
 if (!els.length) return;
+function getOpts(el) {
+  return {
+    duration: parseFloat(el.dataset.animationDuration || '') || undefined,
+    delay: parseFloat(el.dataset.animationDelay || '') || undefined,
+    easing: el.dataset.animationEasing || undefined,
+  };
+}
 const io = new IntersectionObserver((entries) => {
   for (const e of entries) {
     if (!e.isIntersecting) continue;
-    const fn = fns[e.target.getAttribute('data-animation')];
-    if (fn) { fn(e.target); io.unobserve(e.target); }
+    const trigger = e.target.dataset.animationTrigger || 'on-view';
+    if (trigger !== 'on-view') { io.unobserve(e.target); continue; }
+    const fn = fns[e.target.dataset.animation];
+    if (fn) { fn(e.target, getOpts(e.target)); io.unobserve(e.target); }
   }
 }, { threshold: 0.15, rootMargin: '0px 0px -40px 0px' });
-for (const el of els) io.observe(el);
+const hoverEls = [...els].filter(el => el.dataset.animationTrigger === 'on-hover');
+for (const el of hoverEls) {
+  const fn = fns[el.dataset.animation];
+  if (fn) el.addEventListener('mouseenter', () => fn(el, getOpts(el)), { once: true });
+}
+const scrubEls = [...els].filter(el => el.dataset.animationTrigger === 'on-scroll-scrub');
+if (scrubEls.length && typeof gsap !== 'undefined' && typeof ScrollTrigger !== 'undefined') {
+  gsap.registerPlugin(ScrollTrigger);
+  for (const el of scrubEls) {
+    const fn = fns[el.dataset.animation];
+    if (!fn) continue;
+    ScrollTrigger.create({
+      trigger: el,
+      start: 'top 80%',
+      end: 'bottom 20%',
+      scrub: true,
+      onEnter: () => fn(el, { ...getOpts(el), scrub: true }),
+    });
+  }
+}
+for (const el of els) {
+  const trigger = el.dataset.animationTrigger || 'on-view';
+  if (trigger === 'on-view') io.observe(el);
+}
 </script>`;
 }
 
@@ -2877,11 +2911,29 @@ function buildHtml(
 
   const usedBlockPresets = new Set(
     allBlocks
-      .map((b) => (b.config as Record<string, unknown>).animation)
-      .filter((a): a is string => typeof a === "string" && a.length > 0)
+      .flatMap((b) => {
+        const a = (b.config as Record<string, unknown>).animation;
+        const id =
+          typeof a === "object" && a !== null
+            ? ((a as { presetId?: string }).presetId ?? "")
+            : typeof a === "string"
+            ? a
+            : "";
+        return id ? [id] : [];
+      })
   );
-  const blockPresetNeedsScrollTrigger = ["parallax-monogram", "scroll-pinned-story", "sticky-date"]
-    .some((id) => usedBlockPresets.has(id));
+  const blockPresetNeedsScrollTrigger =
+    ["parallax-monogram", "scroll-pinned-story", "sticky-date"].some((id) =>
+      usedBlockPresets.has(id)
+    ) ||
+    allBlocks.some((b) => {
+      const a = (b.config as Record<string, unknown>).animation;
+      return (
+        typeof a === "object" &&
+        a !== null &&
+        (a as { trigger?: string }).trigger === "on-scroll-scrub"
+      );
+    });
   const blockAnimScript = buildBlockAnimationScript(usedBlockPresets);
 
   // Build nav bar (only if there are multiple pages, all visible)
@@ -2987,9 +3039,31 @@ function buildHtml(
       const blocksHtml = page.blocks
         .map((block) => {
           const html = renderBlock(block, settings, pageContent, siteSlug, blockTransMap, renderLang, mainLang);
-          const animPreset = (block.config as Record<string, unknown>).animation;
-          if (typeof animPreset !== "string" || !animPreset) return html;
-          return html.replace(/(<section\b[^>]*)(>)/, `$1 data-animation="${escHtml(animPreset)}"$2`);
+          const animRaw = (block.config as Record<string, unknown>).animation;
+          type AnimConfig = { presetId?: string; duration?: number; delay?: number; easing?: string; trigger?: string };
+          let animPreset = "";
+          let animDuration: number | undefined;
+          let animDelay: number | undefined;
+          let animEasing: string | undefined;
+          let animTrigger: string | undefined;
+          if (typeof animRaw === "object" && animRaw !== null) {
+            const cfg = animRaw as AnimConfig;
+            animPreset = cfg.presetId ?? "";
+            animDuration = cfg.duration;
+            animDelay = cfg.delay;
+            animEasing = cfg.easing;
+            animTrigger = cfg.trigger;
+          } else if (typeof animRaw === "string") {
+            animPreset = animRaw;
+          }
+          if (!animPreset) return html;
+          // Build data attribute string — only emit non-default values to keep HTML lean
+          let dataAttrs = ` data-animation="${escHtml(animPreset)}"`;
+          if (animDuration !== undefined && animDuration !== 0.6) dataAttrs += ` data-animation-duration="${animDuration}"`;
+          if (animDelay !== undefined && animDelay !== 0) dataAttrs += ` data-animation-delay="${animDelay}"`;
+          if (animEasing !== undefined && animEasing !== "power2.out") dataAttrs += ` data-animation-easing="${escHtml(animEasing)}"`;
+          if (animTrigger !== undefined && animTrigger !== "on-view") dataAttrs += ` data-animation-trigger="${escHtml(animTrigger)}"`;
+          return html.replace(/(<section\b[^>]*)(>)/, `$1${dataAttrs}$2`);
         })
         .join("\n");
       return `<div class="${sectionClass}" id="page-${escHtml(page.id)}">${blocksHtml}</div>`;

@@ -1,4 +1,13 @@
 /**
+ * Breakpoint widths for proportional position scaling
+ */
+const BREAKPOINT_WIDTHS = {
+	desktop: 1280,
+	tablet: 768,
+	mobile: 390,
+};
+
+/**
  * Editable-field convention shared between block components and the V2
  * TextEditor. Each cfg text field can carry companion style keys that persist
  * formatting at the whole-field level (selection-level formatting is not
@@ -120,7 +129,10 @@ export function parseCfg(raw: unknown): Record<string, unknown> {
  * from the SectionToolbar controls. Merges cleanly with existing inline styles
  * by spreading last so individual longhand properties override any shorthand.
  */
-export function blockSectionStyle(cfg: Record<string, unknown>): CSSProperties {
+export function blockSectionStyle(
+  cfg: Record<string, unknown>,
+  breakpoint: "desktop" | "tablet" | "mobile" = "desktop"
+): CSSProperties {
   const style: CSSProperties = {};
 
   if (typeof cfg.backgroundColor === "string" && cfg.backgroundColor) {
@@ -130,11 +142,18 @@ export function blockSectionStyle(cfg: Record<string, unknown>): CSSProperties {
     if (bg?.type === "color" && bg?.value) style.background = bg.value;
   }
 
-  if (typeof cfg.blockWidth === "number" && cfg.blockWidth > 0 && cfg.blockWidth < 100) {
-    style.width = `${cfg.blockWidth}%`;
-    const ml = typeof cfg.blockMarginLeft === "number" ? cfg.blockMarginLeft : 0;
-    style.marginLeft = ml > 0 ? `${ml}%` : "0";
-    style.marginRight = "0";
+  // POSITIONING: Scale transforms proportionally to viewport width
+  const scale = BREAKPOINT_WIDTHS[breakpoint] / BREAKPOINT_WIDTHS.desktop;
+
+  // On desktop, blockWidth/blockMarginLeft are owned by the wrapper div (getBlockStyle).
+  // On tablet/mobile the wrapper is in flow, so apply here instead.
+  if (breakpoint !== "desktop") {
+    if (typeof cfg.blockWidth === "number" && cfg.blockWidth > 0 && cfg.blockWidth < 100) {
+      style.width = `${cfg.blockWidth}%`;
+      const ml = typeof cfg.blockMarginLeft === "number" ? cfg.blockMarginLeft : 0;
+      style.marginLeft = ml > 0 ? `${ml}%` : "0";
+      style.marginRight = "0";
+    }
   }
 
   const hasOffsetX = typeof cfg.blockOffsetX === "number" && cfg.blockOffsetX !== 0;
@@ -142,10 +161,13 @@ export function blockSectionStyle(cfg: Record<string, unknown>): CSSProperties {
   const hasRotation = typeof cfg.blockRotation === "number" && cfg.blockRotation !== 0;
 
   const transforms: string[] = [];
-  if (hasOffsetX || hasOffsetY) {
+  // On desktop the wrapper div (getBlockStyle) owns all translate positioning.
+  // blockSectionStyle only adds translate on tablet/mobile where the wrapper is in flow.
+  if (breakpoint !== "desktop" && (hasOffsetX || hasOffsetY)) {
     const ox = hasOffsetX ? (cfg.blockOffsetX as number) : 0;
     const oy = hasOffsetY ? (cfg.blockOffsetY as number) : 0;
-    transforms.push(`translate(${ox}px, ${oy}px)`);
+    const scaledY = oy * scale;
+    transforms.push(`translate(${ox * scale}px, ${scaledY}px)`);
   }
   if (hasRotation) {
     transforms.push(`rotate(${cfg.blockRotation}deg)`);
@@ -159,15 +181,16 @@ export function blockSectionStyle(cfg: Record<string, unknown>): CSSProperties {
     style.zIndex = cfg.blockZIndex;
   }
 
-  if (typeof cfg.blockHeight === "number" && cfg.blockHeight > 0) {
-    style.height = `${cfg.blockHeight}px`;
-    style.paddingTop = "0";
-    style.paddingBottom = "0";
-    style.display = "flex";
-    style.flexDirection = "column";
-    style.alignItems = "stretch";
-  }
+    if (typeof cfg.blockHeight === "number" && cfg.blockHeight > 0) {
+      style.height = `${cfg.blockHeight}px`;
+      style.paddingTop = "0";
+      style.paddingBottom = "0";
+      style.display = "flex";
+      style.flexDirection = "column";
+      style.alignItems = "stretch";
+    }
 
+  // Padding: allowed on all breakpoints
   const pad = cfg.padding;
   if (pad && typeof pad === "object" && !Array.isArray(pad)) {
     const p = pad as Record<string, unknown>;

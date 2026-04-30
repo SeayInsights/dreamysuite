@@ -1,9 +1,11 @@
+import { useEditorStore } from "@/app/stores/editorStore";
 import { blockSectionStyle, parseCfg, cropClipPath } from "@/lib/editableField";
 import { TextEffectWrapper } from "@/app/components/TextEffectWrapper";
 
 interface Block { id: string; type: string; [key: string]: unknown }
 
 export function PhotoSplitBlock({ block }: { block: Block }) {
+  const breakpoint = useEditorStore((s) => s.breakpoint) as "desktop" | "tablet" | "mobile";
   const cfg = parseCfg(block.config);
   const imageUrl = cfg.imageUrl as string | undefined;
   const heading = String(cfg.heading ?? "");
@@ -14,7 +16,7 @@ export function PhotoSplitBlock({ block }: { block: Block }) {
   const imageFit = (typeof cfg.imageFit === "string" ? cfg.imageFit : "cover") as React.CSSProperties["objectFit"];
 
   return (
-    <section className="block block-photo-split" data-block-id={block.id} data-block-type={block.type} style={blockSectionStyle(cfg)}>
+    <section className="block block-photo-split" data-block-id={block.id} data-block-type={block.type} style={blockSectionStyle(cfg, breakpoint)}>
       <div style={{
         display: "flex",
         flexDirection: layout === "right" ? "row-reverse" : "row",

@@ -1,9 +1,11 @@
+import { useEditorStore } from "@/app/stores/editorStore";
 import { blockSectionStyle, editableProps, parseCfg } from "@/lib/editableField";
 import { TextEffectWrapper } from "@/app/components/TextEffectWrapper";
 
 interface Block { id: string; type: string; [key: string]: unknown }
 
 export function MultiTextBlock({ block }: { block: Block }) {
+  const breakpoint = useEditorStore((s) => s.breakpoint) as "desktop" | "tablet" | "mobile";
   const cfg = parseCfg(block.config);
   const mode = String(cfg.mode ?? "text");
   const heading = String(cfg.heading ?? "");
@@ -15,7 +17,7 @@ export function MultiTextBlock({ block }: { block: Block }) {
   };
 
   return (
-    <section className="block block-text" data-block-id={block.id} data-block-type={block.type} style={blockSectionStyle(cfg)}>
+    <section className="block block-text" data-block-id={block.id} data-block-type={block.type} style={blockSectionStyle(cfg, breakpoint)}>
       <TextEffectWrapper
         as="h2"
         className="section-heading"

@@ -1,16 +1,18 @@
+import { useEditorStore } from "@/app/stores/editorStore";
 import { blockSectionStyle, editableProps, parseCfg } from "@/lib/editableField";
 import { TextEffectWrapper } from "@/app/components/TextEffectWrapper";
 
 interface Block { id: string; type: string; [key: string]: unknown }
 
 export function HomeHeroBlock({ block }: { block: Block }) {
+  const breakpoint = useEditorStore((s) => s.breakpoint) as "desktop" | "tablet" | "mobile";
   const cfg = parseCfg(block.config);
   const title = String(cfg.coupleNames ?? "Our Special Day");
   const date = String(cfg.dateText ?? "");
   const location = String(cfg.locationText ?? "");
 
   return (
-    <section className="block block-home-hero" data-block-id={block.id} data-block-type={block.type} style={blockSectionStyle(cfg)}>
+    <section className="block block-home-hero" data-block-id={block.id} data-block-type={block.type} style={blockSectionStyle(cfg, breakpoint)}>
       <div className="hero-inner">
         <p className="hero-eyebrow">We&apos;re getting married</p>
         <TextEffectWrapper as="h1" className="hero-title" {...editableProps(cfg, "coupleNames")}>{title}</TextEffectWrapper>

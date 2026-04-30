@@ -1,9 +1,11 @@
+import { useEditorStore } from "@/app/stores/editorStore";
 import { blockSectionStyle, parseCfg, cropClipPath } from "@/lib/editableField";
 import { TextEffectWrapper } from "@/app/components/TextEffectWrapper";
 
 interface Block { id: string; type: string; [key: string]: unknown }
 
 export function GalleryBlock({ block }: { block: Block }) {
+  const breakpoint = useEditorStore((s) => s.breakpoint) as "desktop" | "tablet" | "mobile";
   const cfg = parseCfg(block.config);
   const layout = String(cfg.layout ?? "grid");
   const clipPath = cropClipPath(cfg);
@@ -17,7 +19,7 @@ export function GalleryBlock({ block }: { block: Block }) {
     const imageLayout = String(cfg.imageLayout ?? "left");
 
     return (
-      <section className="block block-gallery" data-block-id={block.id} data-block-type={block.type} style={blockSectionStyle(cfg)}>
+      <section className="block block-gallery" data-block-id={block.id} data-block-type={block.type} style={blockSectionStyle(cfg, breakpoint)}>
         <div style={{
           display: "flex",
           flexDirection: imageLayout === "right" ? "row-reverse" : "row",
@@ -51,7 +53,7 @@ export function GalleryBlock({ block }: { block: Block }) {
   const images = imageSlot ? [imageSlot] : urls;
 
   return (
-    <section className="block block-gallery" data-block-id={block.id} data-block-type={block.type} style={blockSectionStyle(cfg)}>
+    <section className="block block-gallery" data-block-id={block.id} data-block-type={block.type} style={blockSectionStyle(cfg, breakpoint)}>
       {images.length > 0 ? (
         <div style={{ display: "grid", gap: "0.5rem", gridTemplateColumns: images.length > 1 ? "1fr 1fr" : "1fr", ...(sized ? { minHeight: 0, height: "100%", width: "100%", gridAutoRows: "1fr" } : {}) }}>
           {images.map((url, i) => (

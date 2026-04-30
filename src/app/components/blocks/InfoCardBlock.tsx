@@ -1,3 +1,4 @@
+import { useEditorStore } from "@/app/stores/editorStore";
 import { blockSectionStyle, parseCfg } from "@/lib/editableField";
 import { TextEffectWrapper } from "@/app/components/TextEffectWrapper";
 import { CardEffectWrapper } from "@/app/components/CardEffectWrapper";
@@ -5,6 +6,7 @@ import { CardEffectWrapper } from "@/app/components/CardEffectWrapper";
 interface Block { id: string; type: string; [key: string]: unknown }
 
 export function InfoCardBlock({ block }: { block: Block }) {
+  const breakpoint = useEditorStore((s) => s.breakpoint) as "desktop" | "tablet" | "mobile";
   const cfg = parseCfg(block.config);
   const variant = String(cfg.variant ?? "registry");
   const name = String(cfg.name ?? cfg.title ?? (variant === "hotel" ? "Hotel" : "Registry"));
@@ -16,7 +18,7 @@ export function InfoCardBlock({ block }: { block: Block }) {
   const linkLabel = variant === "hotel" ? "Book Now" : "View Registry";
 
   return (
-    <section className="block block-info-card" data-block-id={block.id} data-block-type={block.type} style={blockSectionStyle(cfg)}>
+    <section className="block block-info-card" data-block-id={block.id} data-block-type={block.type} style={blockSectionStyle(cfg, breakpoint)}>
       <TextEffectWrapper as="h2" className="section-heading">{headingLabel}</TextEffectWrapper>
       <div className="section-rule" aria-hidden="true" />
       <CardEffectWrapper>

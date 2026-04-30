@@ -1,3 +1,4 @@
+import { useEditorStore } from "@/app/stores/editorStore";
 import { blockSectionStyle, parseCfg } from "@/lib/editableField";
 import { TextEffectWrapper } from "@/app/components/TextEffectWrapper";
 
@@ -17,6 +18,7 @@ const DEFAULT_EVENTS: TimelineEvent[] = [
 ];
 
 export function StoryTimelineBlock({ block }: { block: Block }) {
+  const breakpoint = useEditorStore((s) => s.breakpoint) as "desktop" | "tablet" | "mobile";
   const cfg = parseCfg(block.config);
   const heading = String(cfg.heading ?? "Our Story");
   const events: TimelineEvent[] = Array.isArray(cfg.events) && cfg.events.length > 0
@@ -25,7 +27,7 @@ export function StoryTimelineBlock({ block }: { block: Block }) {
 
   return (
     <section className="block block-story-timeline" data-block-id={block.id} data-block-type={block.type}
-      style={{ padding: "2rem 1rem", ...blockSectionStyle(cfg) }}>
+      style={{ padding: "2rem 1rem", ...blockSectionStyle(cfg, breakpoint) }}>
       {heading && <TextEffectWrapper as="h2" style={{ textAlign: "center", marginBottom: "2rem" }}>{heading}</TextEffectWrapper>}
       <div style={{ position: "relative", maxWidth: "600px", margin: "0 auto" }}>
         {/* Vertical line */}

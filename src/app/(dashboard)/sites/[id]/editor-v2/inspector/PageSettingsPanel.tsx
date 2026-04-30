@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Globe } from "lucide-react";
 import { useEditorStore } from "@/app/stores/editorStore";
 import { SitePhotoPicker } from "../SitePhotoPicker";
@@ -108,6 +108,90 @@ function DateTimeInput({
       {helpText && (
         <p className="text-xs leading-normal text-muted-foreground">{helpText}</p>
       )}
+    </div>
+  );
+}
+
+// ── Layout Section ────────────────────────────────────────────────────────
+
+function SpacingInput({
+  label,
+  value,
+  onChange,
+  placeholder = "0",
+}: {
+  label: string;
+  value: string | null;
+  onChange: (v: string | null) => void;
+  placeholder?: string;
+}) {
+  const [draft, setDraft] = useState(value ?? "");
+
+  useEffect(() => {
+    setDraft(value ?? "");
+  }, [value]);
+
+  function commit() {
+    const trimmed = draft.trim();
+    onChange(trimmed === "" ? null : trimmed);
+  }
+
+  return (
+    <div className="flex items-center gap-2">
+      <label className="w-12 shrink-0 text-[10px] uppercase text-muted-foreground">{label}</label>
+      <input
+        type="text"
+        inputMode="numeric"
+        value={draft}
+        placeholder={placeholder}
+        onChange={(e) => {
+          setDraft(e.target.value);
+          const trimmed = e.target.value.trim();
+          onChange(trimmed === "" ? null : trimmed);
+        }}
+        onBlur={commit}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") commit();
+          e.stopPropagation();
+        }}
+        className="h-7 w-full rounded border border-input bg-background px-2 text-xs tabular-nums focus:outline-none focus:ring-1 focus:ring-ring"
+      />
+      <span className="shrink-0 text-[10px] text-muted-foreground">px</span>
+    </div>
+  );
+}
+
+function LayoutSection() {
+  const settings = useEditorStore((s) => s.settings);
+  const updateSettings = useEditorStore((s) => s.updateSettings);
+
+  return (
+    <div className="space-y-5">
+      <div className="space-y-2">
+        <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+          Page Margins
+        </p>
+        <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+          <SpacingInput label="Top" value={settings.marginTop} onChange={(v) => updateSettings({ marginTop: v })} />
+          <SpacingInput label="Right" value={settings.marginRight} onChange={(v) => updateSettings({ marginRight: v })} />
+          <SpacingInput label="Bottom" value={settings.marginBottom} onChange={(v) => updateSettings({ marginBottom: v })} />
+          <SpacingInput label="Left" value={settings.marginLeft} onChange={(v) => updateSettings({ marginLeft: v })} />
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+            Section Gap
+          </p>
+          <span className="text-[10px] italic text-muted-foreground">tablet &amp; mobile only</span>
+        </div>
+        <SpacingInput
+          label="Gap"
+          value={settings.sectionSpacing}
+          onChange={(v) => updateSettings({ sectionSpacing: v })}
+        />
+      </div>
     </div>
   );
 }
@@ -339,6 +423,18 @@ export function PageSettingsPanel() {
             helpText="Brief location description (full details in Venue section below)"
           />
         </div>
+      </Accordion>
+
+      {/* Layout */}
+      <Accordion
+        title={
+          <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            Layout
+          </span>
+        }
+        defaultOpen={false}
+      >
+        <LayoutSection />
       </Accordion>
 
       {/* Venue & Hotels */}

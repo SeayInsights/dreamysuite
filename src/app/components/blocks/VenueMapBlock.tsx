@@ -182,6 +182,7 @@ function HotelCard({
 }
 
 export function VenueMapBlock({ block }: { block: Block }) {
+  const breakpoint = useEditorStore((s) => s.breakpoint) as "desktop" | "tablet" | "mobile";
   const cfg = parseCfg(block.config);
   const settings = useEditorStore((s) => s.settings);
   const updateSettings = useEditorStore((s) => s.updateSettings);
@@ -221,7 +222,7 @@ export function VenueMapBlock({ block }: { block: Block }) {
       className="block block-venue-map"
       data-block-id={block.id}
       data-block-type={block.type}
-      style={blockSectionStyle(cfg)}
+      style={blockSectionStyle(cfg, breakpoint)}
     >
       <TextEffectWrapper as="h2" className="section-heading" style={{ textAlign: "center" }}>
         {heading}

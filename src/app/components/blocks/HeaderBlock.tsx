@@ -1,10 +1,12 @@
 import { blockSectionStyle, editableProps, parseCfg, styleFromField } from "@/lib/editableField";
 import { TextEffectWrapper } from "@/app/components/TextEffectWrapper";
+import { useEditorStore } from "@/app/stores/editorStore";
 
 interface Block { id: string; type: string; [key: string]: unknown }
 
 export function HeaderBlock({ block }: { block: Block }) {
   const cfg = parseCfg(block.config);
+  const breakpoint = useEditorStore((s) => s.breakpoint) as "desktop" | "tablet" | "mobile";
   const text = String(cfg.title ?? cfg.heading ?? cfg.text ?? "Section");
 
   // Legacy per-field style keys (titleSize, titleAlign, etc.) map onto the
@@ -21,7 +23,7 @@ export function HeaderBlock({ block }: { block: Block }) {
   const fieldStyle = { ...legacyStyle, ...styleFromField(cfg, "title") };
 
   return (
-    <section className="block block-header" data-block-id={block.id} data-block-type={block.type} style={blockSectionStyle(cfg)}>
+    <section className="block block-header" data-block-id={block.id} data-block-type={block.type} style={blockSectionStyle(cfg, breakpoint)}>
       <TextEffectWrapper
         as="h2"
         className="section-heading"

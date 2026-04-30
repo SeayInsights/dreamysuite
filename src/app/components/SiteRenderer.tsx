@@ -74,7 +74,13 @@ const MemoBlock = memo(function MemoBlock({
 	}
 
 	return (
-		<div data-block-wrapper={block.id} style={wrapperStyle}>
+		<div
+			data-block-wrapper={block.id}
+			data-block-id={block.id}
+			data-block-type={block.type}
+			data-block-label={block.type}
+			style={wrapperStyle}
+		>
 			<BlockTransitionWrapper>
 				<Component block={block} />
 			</BlockTransitionWrapper>
@@ -93,10 +99,26 @@ export function SiteRenderer({ blocks, ordered = false }: Props) {
 
 	const translated = useTranslatedBlocks(visible);
 
-	// Container style: flex stack on mobile/tablet, relative container on desktop
-	const containerStyle: React.CSSProperties = breakpoint === "desktop"
-		? { position: "relative", minHeight: "100vh" }
-		: { display: "flex", flexDirection: "column", gap: gap > 0 ? `${gap}px` : undefined };
+	// Container style: always relative to allow layering on all breakpoints
+	// Calculate height to contain all absolutely-positioned blocks
+	const maxExtent = translated.reduce((max, block) => {
+		const cfg = block.config as Record<string, unknown>;
+		const offsetY = (typeof cfg.blockOffsetY === "number" ? cfg.blockOffsetY : 0);
+		const height = (typeof cfg.blockHeight === "number" ? cfg.blockHeight : 400);
+		const scale = breakpoint === "desktop" ? 1 :
+		             breakpoint === "tablet" ? 768 / 1280 : 390 / 1280;
+		return Math.max(max, (offsetY + height) * scale);
+	}, 0);
+
+	const containerStyle: React.CSSProperties = {
+		position: "relative",
+		minHeight: Math.max(maxExtent + 200, window.innerHeight || 800),
+		...(breakpoint !== "desktop" && gap > 0 ? {
+			display: "flex",
+			flexDirection: "column",
+			gap: `${gap}px`,
+		} : {}),
+	};
 
 	return (
 		<div className="site-renderer relative" style={containerStyle}>

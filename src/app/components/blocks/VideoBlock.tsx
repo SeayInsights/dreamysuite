@@ -1,9 +1,11 @@
+import { useEditorStore } from "@/app/stores/editorStore";
 import React from "react";
 import { blockSectionStyle, parseCfg } from "@/lib/editableField";
 
 interface Block { id: string; type: string; [key: string]: unknown }
 
 export function VideoBlock({ block }: { block: Block }) {
+  const breakpoint = useEditorStore((s) => s.breakpoint) as "desktop" | "tablet" | "mobile";
   const cfg = parseCfg(block.config);
   const url = String(cfg.url ?? "");
   const configHeight = cfg.height as string | undefined;
@@ -19,7 +21,7 @@ export function VideoBlock({ block }: { block: Block }) {
         className="block block-video"
         data-block-id={block.id}
         data-block-type={block.type}
-        style={{ position: "relative", width: "100%", height, aspectRatio, overflow: "hidden", background: "#000", ...blockSectionStyle(cfg) }}
+        style={{ position: "relative", width: "100%", height, aspectRatio, overflow: "hidden", background: "#000", ...blockSectionStyle(cfg, breakpoint) }}
       >
         <iframe
           src={`https://player.vimeo.com/video/${vimeoId}?autoplay=1&muted=1&loop=1&background=1`}
@@ -37,7 +39,7 @@ export function VideoBlock({ block }: { block: Block }) {
       className="block block-video"
       data-block-id={block.id}
       data-block-type={block.type}
-      style={{ height, aspectRatio, position: "relative", overflow: "hidden", ...blockSectionStyle(cfg) }}
+      style={{ height, aspectRatio, position: "relative", overflow: "hidden", ...blockSectionStyle(cfg, breakpoint) }}
     >
       {url ? (
         <video

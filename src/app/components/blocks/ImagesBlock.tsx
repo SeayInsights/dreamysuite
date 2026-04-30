@@ -1,8 +1,10 @@
+import { useEditorStore } from "@/app/stores/editorStore";
 import { blockSectionStyle, parseCfg } from "@/lib/editableField";
 
 interface Block { id: string; type: string; [key: string]: unknown }
 
 export function ImagesBlock({ block }: { block: Block }) {
+  const breakpoint = useEditorStore((s) => s.breakpoint) as "desktop" | "tablet" | "mobile";
   const cfg = parseCfg(block.config);
   const urls = Array.isArray(cfg.urls) ? (cfg.urls as string[]) : [];
   const imageSlot = cfg.imageSlot as string | undefined;
@@ -10,7 +12,7 @@ export function ImagesBlock({ block }: { block: Block }) {
   const imageFit = (typeof cfg.imageFit === "string" ? cfg.imageFit : "cover") as React.CSSProperties["objectFit"];
 
   return (
-    <section className="block block-images" data-block-id={block.id} data-block-type={block.type} style={blockSectionStyle(cfg)}>
+    <section className="block block-images" data-block-id={block.id} data-block-type={block.type} style={blockSectionStyle(cfg, breakpoint)}>
       {urls.length > 0 || imageSlot ? (
         <div style={{ display: "grid", gap: "0.5rem", gridTemplateColumns: urls.length > 1 ? "1fr 1fr" : "1fr", ...(sized ? { minHeight: 0, height: "100%", width: "100%", gridAutoRows: "1fr" } : {}) }}>
           {(imageSlot ? [imageSlot] : urls).map((url, i) => (

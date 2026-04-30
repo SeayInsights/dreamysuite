@@ -2,7 +2,7 @@
 
 import { cn } from "@/lib/utils";
 import { AnimationPresetPicker } from "../../inspector/AnimationPresetPicker";
-import { getPreset } from "@/app/animations/registry";
+import { runPreviewAnimation } from "@/app/animations/preview";
 import "@/app/animations/presets/index";
 
 // ---------------------------------------------------------------------------
@@ -61,29 +61,14 @@ const TRIGGER_OPTIONS: { id: AnimationConfig["trigger"]; label: string }[] = [
 export function AnimationPopoverContent({ blockId, anim, isPro, onUpdate }: AnimationPopoverProps) {
   const easingOptions = isPro ? EASING_OPTIONS_PRO : EASING_OPTIONS_SIMPLE;
   const hasPreset = !!anim.presetId;
+  const hasText = typeof document !== "undefined"
+    ? (document.querySelector<HTMLElement>(`[data-block-id="${blockId}"]`)?.textContent ?? "").trim().length > 0
+    : true;
 
   function updateWithPreview(patch: Partial<AnimationConfig>) {
     onUpdate(patch);
     const presetId = patch.presetId ?? anim.presetId;
-    if (presetId) {
-      const el = document.querySelector<HTMLElement>(`[data-block-id="${blockId}"]`);
-      if (el && el.parentElement) {
-        const clone = el.cloneNode(true) as HTMLElement;
-        clone.removeAttribute("data-block-id");
-        clone.style.pointerEvents = "none";
-        // Insert clone in-flow at the block's exact position so animations
-        // play at the correct coordinates (CSS transforms don't affect layout flow).
-        el.parentElement.insertBefore(clone, el);
-        el.style.visibility = "hidden";
-        getPreset(presetId)?.().then((fn) => {
-          fn(clone);
-          setTimeout(() => {
-            el.style.visibility = "";
-            clone.remove();
-          }, 1500);
-        });
-      }
-    }
+    if (presetId) runPreviewAnimation(blockId, presetId);
   }
 
   return (
@@ -95,6 +80,7 @@ export function AnimationPopoverContent({ blockId, anim, isPro, onUpdate }: Anim
         </p>
         <AnimationPresetPicker
           value={anim.presetId}
+          hasText={hasText}
           onChange={(id) => {
             if (id) updateWithPreview({ presetId: id });
             else onUpdate({ presetId: null });

@@ -5,7 +5,7 @@ import { useEditorStore } from "@/app/stores/editorStore";
 import type { PendingOps, Block } from "@/app/stores/slices/document";
 
 const DEBOUNCE_MS = 1_500;
-const DEBUG_SYNC = true;
+const DEBUG_SYNC = false;
 
 /**
  * Returns true if all operations succeeded, false if any failed.

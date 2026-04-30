@@ -6,6 +6,7 @@ interface Preset {
   id: string;
   label: string;
   icon: React.ReactNode;
+  textOnly?: boolean;
 }
 
 const PRESETS: Preset[] = [
@@ -69,6 +70,7 @@ const PRESETS: Preset[] = [
   {
     id: "split-text",
     label: "Split Text",
+    textOnly: true,
     icon: (
       <svg viewBox="0 0 32 32" fill="none" className="size-6">
         <rect x="4" y="11" width="10" height="4" rx="1" fill="currentColor" />
@@ -81,6 +83,7 @@ const PRESETS: Preset[] = [
   {
     id: "letter-cascade",
     label: "Letter Cascade",
+    textOnly: true,
     icon: (
       <svg viewBox="0 0 32 32" fill="none" className="size-6">
         <rect x="4" y="8" width="5" height="16" rx="1" fill="currentColor" />
@@ -154,12 +157,14 @@ const PRESETS: Preset[] = [
 interface Props {
   value: string | null;
   onChange: (id: string | null) => void;
+  hasText?: boolean;
 }
 
-export function AnimationPresetPicker({ value, onChange }: Props) {
+export function AnimationPresetPicker({ value, onChange, hasText = true }: Props) {
+  const visiblePresets = hasText ? PRESETS : PRESETS.filter((p) => !p.textOnly);
   return (
     <div className="grid grid-cols-2 gap-2">
-      {PRESETS.map((preset) => {
+      {visiblePresets.map((preset) => {
         const active = value === preset.id;
         return (
           <button

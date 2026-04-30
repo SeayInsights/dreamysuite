@@ -56,7 +56,7 @@ export function EditorOverlay({ children, containerRef }: Props) {
 	return (
 		<div
 			ref={containerRef}
-			className="editor-canvas-scroll relative min-h-full w-full overflow-hidden pb-8"
+			className="editor-canvas-scroll relative min-h-full w-full overflow-y-auto pb-8"
 			style={{ contain: "layout" }}
 			// ── Single-click: selection cycling ──────────────────────────────
 			onClick={(e) => {

@@ -1,13 +1,16 @@
 "use client";
 
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import { animate } from "motion/mini";
 import { X } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { useEditorStore, type InspectorTab } from "@/app/stores/editorStore";
+import type { Block, Breakpoint } from "@/app/stores/editorStore";
 import { duration, EASING } from "@/lib/motion";
 import { PageSettingsPanel } from "./inspector/PageSettingsPanel";
+import { DesignTab } from "./inspector/DesignTab";
+import { AdvancedTab } from "./inspector/AdvancedTab";
 
 const PANEL_WIDTH = 320;
 const TAB_SWITCH_DEBOUNCE_MS = 500;
@@ -48,6 +51,19 @@ export function InspectorV2() {
 	const selectedBlockId = useEditorStore((s) => s.selectedBlockId);
 	const tab = useEditorStore((s) => s.inspectorTab);
 	const setInspectorTab = useEditorStore((s) => s.setInspectorTab);
+	const blocks = useEditorStore((s) => s.blocks);
+	const updateBlock = useEditorStore((s) => s.updateBlock);
+	const breakpoint = useEditorStore((s) => s.breakpoint);
+
+	const selectedBlock = useMemo(
+		() => selectedBlockId ? blocks.find((b) => b.id === selectedBlockId) ?? null : null,
+		[blocks, selectedBlockId]
+	);
+
+	// Reset to Design tab whenever the selected block changes
+	useEffect(() => {
+		setInspectorTab("design");
+	}, [selectedBlockId]); // eslint-disable-line react-hooks/exhaustive-deps
 
 	// Debounced tab setter to avoid rapid switching (TR-012)
 	const debouncedSetTab = useCallback(
@@ -119,43 +135,9 @@ export function InspectorV2() {
 				</button>
 			</div>
 
-			{selectedBlockId !== null && (
-				<div
-					role="tablist"
-					aria-label="Inspector tabs"
-					className="flex items-center gap-0.5 border-b border-border px-2 py-1.5"
-				>
-					{TABS.map((t) => {
-						const active = tab === t.id;
-						return (
-							<button
-								key={t.id}
-								type="button"
-								role="tab"
-								aria-selected={active}
-								onClick={() => setInspectorTab(t.id)}
-								className={cn(
-									"h-7 rounded-sm px-2 text-xs font-medium transition-colors",
-									active
-										? "bg-accent text-accent-foreground"
-										: "text-muted-foreground hover:bg-accent/50",
-								)}
-							>
-								{t.label}
-							</button>
-						);
-					})}
-				</div>
-			)}
-
 			<div
 				role="tabpanel"
-				className={cn(
-					"overflow-y-auto",
-					selectedBlockId === null
-						? "h-[calc(100%-2.5rem)]"
-						: "h-[calc(100%-5.25rem)]"
-				)}
+				className="h-[calc(100%-2.5rem)]"
 			>
 				{!settingsLoaded ? (
 					<div className="flex items-center justify-center p-8">
@@ -163,14 +145,33 @@ export function InspectorV2() {
 					</div>
 				) : selectedBlockId === null ? (
 					<PageSettingsPanel />
-				) : tab === "design" ? (
-					<div className="p-4 text-sm text-muted-foreground">
-						Design tab content coming soon
-					</div>
 				) : (
-					<div className="p-4 text-sm text-muted-foreground">
-						Advanced tab content coming soon
-					</div>
+					<>
+						<div className="flex border-b border-border">
+							{TABS.map((t) => (
+								<button
+									key={t.id}
+									type="button"
+									onClick={() => setInspectorTab(t.id as InspectorTab)}
+									className={cn(
+										"flex-1 py-2 text-xs font-medium transition-colors",
+										tab === t.id
+											? "border-b-2 border-foreground text-foreground"
+											: "text-muted-foreground hover:text-foreground"
+									)}
+								>
+									{t.label}
+								</button>
+							))}
+						</div>
+						<div className="overflow-y-auto h-[calc(100%-4.5rem)]">
+							{tab === "design" && selectedBlock ? (
+								<DesignTab block={selectedBlock} breakpoint={breakpoint} updateBlock={updateBlock} />
+							) : tab === "advanced" && selectedBlock ? (
+								<AdvancedTab block={selectedBlock} breakpoint={breakpoint} updateBlock={updateBlock} />
+							) : null}
+						</div>
+					</>
 				)}
 			</div>
 		</aside>
