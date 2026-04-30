@@ -130,6 +130,7 @@ export interface CreateBlockInput {
 export interface UpdateBlockInput {
   type?: string;
   config?: string;
+  overrides?: string | null;
   sortOrder?: number;
   isVisible?: number;
 }
@@ -152,6 +153,7 @@ export interface Block {
   pageId: string;
   type: string;
   config: string; // JSON string from database
+  overrides: string | null; // JSON string: { tablet?, mobile? } per-breakpoint config
   sortOrder: number; // Always present (DB has default value)
   isVisible: number; // SQLite boolean: 0=hidden, 1=visible
   createdAt: number; // Unix timestamp
@@ -423,6 +425,10 @@ export async function updateBlock(
   if (data.config !== undefined) {
     updates.push("config = ?");
     bindings.push(data.config);
+  }
+  if (data.overrides !== undefined) {
+    updates.push("overrides = ?");
+    bindings.push(data.overrides);
   }
   if (data.sortOrder !== undefined) {
     updates.push("sortOrder = ?");

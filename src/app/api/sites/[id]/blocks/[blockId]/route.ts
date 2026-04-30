@@ -58,7 +58,7 @@ export async function PUT(
   if ("error" in parsed) return parsed.error;
   const body = parsed.body;
 
-  const updateData: { type?: string; config?: string; sortOrder?: number; isVisible?: number } = {};
+  const updateData: { type?: string; config?: string; overrides?: string | null; sortOrder?: number; isVisible?: number } = {};
 
   if (body.type !== undefined && body.type !== block.type) {
     updateData.type = body.type;
@@ -75,10 +75,8 @@ export async function PUT(
     updateData.config = JSON.stringify(configValue);
   }
 
-  // Note: overrides field not currently in updateBlock function - handle separately if needed
   if (body.overrides !== undefined) {
-    // TODO: Add overrides support to updateBlock function
-    console.warn('[blocks:PUT] overrides field not yet supported in query layer');
+    updateData.overrides = body.overrides === null ? null : JSON.stringify(body.overrides);
   }
 
   if (body.sortOrder !== undefined) {
@@ -89,7 +87,7 @@ export async function PUT(
     updateData.isVisible = body.isVisible ? 1 : 0;
   }
 
-  if (Object.keys(updateData).length === 0 && body.overrides === undefined) {
+  if (Object.keys(updateData).length === 0) {
     return apiError("BAD_REQUEST", "No fields to update", 400);
   }
 
