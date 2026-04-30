@@ -5,9 +5,9 @@ import { Globe, Check, X, Plus, RefreshCw } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 import { useEditorStore } from "@/app/stores/editorStore";
-import { TRANSLATABLE_FIELDS } from "@/lib/translations";
+import { TRANSLATABLE_FIELDS } from "@/lib/i18n/translations";
 import { parseCfg } from "@/lib/editableField";
-import { LANGUAGES } from "@/lib/languages";
+import { LANGUAGES } from "@/lib/i18n/languages";
 
 const MAX_LANGUAGES = 5;
 

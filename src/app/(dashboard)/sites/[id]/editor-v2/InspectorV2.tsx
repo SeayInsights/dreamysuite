@@ -6,7 +6,7 @@ import { X } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { useEditorStore, type InspectorTab } from "@/app/stores/editorStore";
-import { duration, EASING } from "@/lib/motion";
+import { duration, EASING } from "@/lib/animation/motion";
 import { PageSettingsPanel } from "./inspector/PageSettingsPanel";
 import { DesignTab } from "./inspector/DesignTab";
 import { AdvancedTab } from "./inspector/AdvancedTab";

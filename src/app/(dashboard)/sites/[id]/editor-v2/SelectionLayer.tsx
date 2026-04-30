@@ -3,7 +3,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
 import { cn } from "@/lib/utils";
-import { prefersReducedMotion, MOTION } from "@/lib/motion";
+import { prefersReducedMotion, MOTION } from "@/lib/animation/motion";
 import { parseCfg } from "@/lib/editableField";
 import { useSelection } from "./hooks/useSelection";
 import { useEditorStore } from "@/app/stores/editorStore";

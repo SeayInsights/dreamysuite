@@ -5,8 +5,8 @@ import { createPortal } from "react-dom";
 import { animate } from "motion/mini";
 import { ImageIcon, Crop, Wand2, Sparkles, X } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { duration, EASING } from "@/lib/motion";
-import { TRANSITIONS } from "@/lib/transitions";
+import { duration, EASING } from "@/lib/animation/motion";
+import { TRANSITIONS } from "@/lib/animation/transitions";
 import { type FormatCommand } from "./FloatingFormatToolbar";
 
 // ---------------------------------------------------------------------------

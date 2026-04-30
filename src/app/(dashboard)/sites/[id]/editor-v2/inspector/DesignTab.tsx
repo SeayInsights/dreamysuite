@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { CollapsibleSection } from "./CollapsibleSection";
-import { getInspectorConfig } from "@/lib/inspectorRegistry";
+import { getInspectorConfig } from "@/lib/editor/inspectorRegistry";
 import { parseCfg } from "@/lib/editableField";
 import { AnimationPresetPicker } from "./AnimationPresetPicker";
 import { BlockContentPanel } from "./BlockContentPanel";

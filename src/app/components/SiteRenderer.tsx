@@ -3,9 +3,9 @@
 import { memo, useMemo } from "react";
 import { BLOCK_COMPONENTS } from "@/app/components/blocks";
 import { useEditorStore } from "@/app/stores/editorStore";
-import { TRANSLATABLE_FIELDS } from "@/lib/translations";
+import { TRANSLATABLE_FIELDS } from "@/lib/i18n/translations";
 import { BlockTransitionWrapper } from "@/app/components/BlockTransitionWrapper";
-import { getBlockStyle, type Breakpoint } from "@/lib/blockPositioning";
+import { getBlockStyle, type Breakpoint } from "@/lib/editor/blockPositioning";
 
 export interface SiteBlock {
 	id: string;

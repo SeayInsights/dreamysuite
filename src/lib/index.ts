@@ -53,7 +53,7 @@ export {
 export * from "./hooks";
 
 // ── Inspector Registry ────────────────────────────────────────────────────────
-export { BLOCK_INSPECTOR_CONFIG, DEFAULT_INSPECTOR_CONFIG, getInspectorConfig, getAnimationPresetFilter, type BlockInspectorConfig } from "./inspectorRegistry";
+export { BLOCK_INSPECTOR_CONFIG, DEFAULT_INSPECTOR_CONFIG, getInspectorConfig, getAnimationPresetFilter, type BlockInspectorConfig } from "./editor/inspectorRegistry";
 
 // ── Block & Layout ────────────────────────────────────────────────────────────
 
@@ -61,7 +61,7 @@ export {
   getBlockStyle,
   getCenteredPosition,
   hasPositioning,
-} from "./blockPositioning";
+} from "./editor/blockPositioning";
 
 export {
   editableProps,
@@ -80,13 +80,13 @@ export {
 
 // ── Motion & Animation ────────────────────────────────────────────────────────
 
-export { duration, prefersReducedMotion, type MotionDuration, EASING } from "./motion";
-export { TRANSITIONS, transition, type TransitionKey } from "./transitions";
+export { duration, prefersReducedMotion, type MotionDuration, EASING } from "./animation/motion";
+export { TRANSITIONS, transition, type TransitionKey } from "./animation/transitions";
 
 // ── Internationalization ──────────────────────────────────────────────────────
 
-export { LANGUAGES, LANG_FLAGS, LANG_NATIVE } from "./languages";
-export { TRANSLATABLE_FIELDS } from "./translations";
+export { LANGUAGES, LANG_FLAGS, LANG_NATIVE } from "./i18n/languages";
+export { TRANSLATABLE_FIELDS } from "./i18n/translations";
 
 // ── Environment & Config ──────────────────────────────────────────────────────
 

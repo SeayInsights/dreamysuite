@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } fro
 import { animate } from "motion/mini";
 
 import { useEditorStore, type Breakpoint } from "@/app/stores/editorStore";
-import { duration, EASING } from "@/lib/motion";
+import { duration, EASING } from "@/lib/animation/motion";
 import type { ThemeColors, ThemeTypography } from "@/app/stores/slices/theme";
 import { getEffectComponent } from "@/lib/effects/loader";
 import { useEffectsEnabled } from "@/lib/effects/performance";

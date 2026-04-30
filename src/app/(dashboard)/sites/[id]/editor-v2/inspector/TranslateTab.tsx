@@ -3,9 +3,9 @@
 import { useState, useCallback, useRef } from "react";
 import { Languages, RefreshCw, Check, AlertTriangle } from "lucide-react";
 import { useEditorStore } from "@/app/stores/editorStore";
-import { TRANSLATABLE_FIELDS } from "@/lib/translations";
+import { TRANSLATABLE_FIELDS } from "@/lib/i18n/translations";
 import { parseCfg } from "@/lib/editableField";
-import { LANG_NATIVE } from "@/lib/languages";
+import { LANG_NATIVE } from "@/lib/i18n/languages";
 
 function parseSiteLanguages(raw: string | null): string[] {
 	if (!raw) return [];

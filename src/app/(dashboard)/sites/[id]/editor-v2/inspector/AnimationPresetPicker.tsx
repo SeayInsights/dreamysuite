@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { getAnimationPresetFilter } from "@/lib/inspectorRegistry";
+import { getAnimationPresetFilter } from "@/lib/editor/inspectorRegistry";
 
 interface Preset {
   id: string;

@@ -5,7 +5,7 @@ import { animate } from "motion/mini";
 
 import { cn } from "@/lib/utils";
 import { useEditorStore, type Section } from "@/app/stores/editorStore";
-import { duration, EASING } from "@/lib/motion";
+import { duration, EASING } from "@/lib/animation/motion";
 import { SIDEBAR_SECTIONS, type PanelId } from "./lib/sidebarConfig";
 
 /**

@@ -3,9 +3,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { animate } from "motion/mini";
 import { useEditorStore } from "@/app/stores/editorStore";
-import { duration, EASING } from "@/lib/motion";
+import { duration, EASING } from "@/lib/animation/motion";
 import { getVisibleBlocks, BLOCK_REGISTRY } from "../blocks/registry";
-import { getCenteredPosition } from "@/lib/blockPositioning";
+import { getCenteredPosition } from "@/lib/editor/blockPositioning";
 
 interface Props {
   insertIndex: number;
