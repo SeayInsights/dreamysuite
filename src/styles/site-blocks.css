@@ -4,19 +4,20 @@
    Import this in any context that renders SiteRenderer / block components.
    ═══════════════════════════════════════════════════════ */
 
-/* Block CSS variables — bridge from --theme-* (set by BreakpointFrame) to short names.
-   Scoped to [data-breakpoint] so both .site-renderer AND the nav overlay inherit them. */
+/* Block CSS variables — defaults for site rendering.
+   Scoped to [data-breakpoint] so both .site-renderer AND the nav overlay inherit them.
+   In the editor, themeVars() inline styles override these defaults. */
 [data-breakpoint] {
-  --site-accent: var(--theme-accent, #b8921a);
-  --site-muted: var(--theme-secondary, #78716c);
+  --site-accent: #b8921a;
+  --site-muted: #78716c;
   --site-border: #e7e5e4;
   --site-radius: 12px;
-  --heading-font: var(--theme-heading-font, Georgia, serif);
-  --body-font: var(--theme-body-font, Inter, system-ui, sans-serif);
-  --bg: var(--theme-background, #ffffff);
-  --text: var(--theme-text, #292524);
+  --heading-font: Georgia, serif;
+  --body-font: Inter, system-ui, sans-serif;
+  --bg: #ffffff;
+  --text: #292524;
   --max-width: 820px;
-  --heading-color: var(--theme-primary, var(--text));
+  --heading-color: var(--text);
   --body-color: var(--site-muted);
   --site-text: var(--text);
   --nav-bg: rgba(255, 255, 255, 0.96);

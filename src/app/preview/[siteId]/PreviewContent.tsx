@@ -138,14 +138,13 @@ export function PreviewContent({
   }, [mode, scale, blocks]);
 
   const themeVars = {
-    "--theme-primary": theme.colors.primary,
-    "--theme-secondary": theme.colors.secondary,
-    "--theme-accent": theme.colors.accent,
-    "--theme-background": theme.colors.background,
-    "--theme-text": theme.colors.text,
-    "--theme-heading-font": theme.typography.headingFont,
-    "--theme-body-font": theme.typography.bodyFont,
-    "--theme-scale": String(theme.typography.scale),
+    "--heading-color": theme.colors.primary,
+    "--site-muted": theme.colors.secondary,
+    "--site-accent": theme.colors.accent,
+    "--bg": theme.colors.background,
+    "--text": theme.colors.text,
+    "--heading-font": theme.typography.headingFont,
+    "--body-font": theme.typography.bodyFont,
   } as CSSProperties;
 
   const gap = Number(settings.sectionSpacing ?? 0) || 0;

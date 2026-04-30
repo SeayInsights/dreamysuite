@@ -44,14 +44,13 @@ function themeVars(
   typography: ThemeTypography,
 ): React.CSSProperties {
   return {
-    "--theme-primary": colors.primary,
-    "--theme-secondary": colors.secondary,
-    "--theme-accent": colors.accent,
-    "--theme-background": colors.background,
-    "--theme-text": colors.text,
-    "--theme-heading-font": typography.headingFont,
-    "--theme-body-font": typography.bodyFont,
-    "--theme-scale": String(typography.scale),
+    "--heading-color": colors.primary,
+    "--site-muted": colors.secondary,
+    "--site-accent": colors.accent,
+    "--bg": colors.background,
+    "--text": colors.text,
+    "--heading-font": typography.headingFont,
+    "--body-font": typography.bodyFont,
   } as React.CSSProperties;
 }
 
