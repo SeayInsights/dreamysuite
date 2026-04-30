@@ -18,6 +18,7 @@ import type { ThemeColors, ThemeTypography } from "@/app/stores/slices/theme";
 import { getEffectComponent } from "@/lib/effects/loader";
 import { useEffectsEnabled } from "@/lib/effects/performance";
 import { IframeCanvas } from "./IframeCanvas";
+import { SelectionLayer } from "./SelectionLayer";
 
 const WIDTHS: Record<Breakpoint, number> = {
   desktop: 1280,
@@ -58,6 +59,7 @@ function siteThemeVars(
 
 export function BreakpointFrame({ children, nav }: Props) {
   const ref = useRef<HTMLDivElement>(null);
+  const [iframeDoc, setIframeDoc] = useState<Document | null>(null);
   const breakpoint = useEditorStore((s) => s.breakpoint);
   const themeTokens = useEditorStore((s) => s.themeTokens);
   const settings = useEditorStore(
@@ -298,6 +300,7 @@ export function BreakpointFrame({ children, nav }: Props) {
           )}
           background={pageBgDisabled ? "transparent" : curtainBg}
           googleFontsHref={googleFontsHref}
+          onDocumentReady={setIframeDoc}
         >
           {BgEffect && frameReady && (
             <div
@@ -403,6 +406,7 @@ export function BreakpointFrame({ children, nav }: Props) {
             </div>
           )}
         </IframeCanvas>
+        <SelectionLayer contentDocument={iframeDoc} />
       </div>
     </div>
   );

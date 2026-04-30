@@ -15,24 +15,14 @@ interface Rect {
   height: number;
 }
 
-/**
- * Overlay drawn on top of the canvas that renders hover and selection
- * outlines. It sits pointer-events:none so the canvas still receives raw
- * clicks; the canvas mount (Task 13) will call `useSelection().select()` /
- * `.hover()` based on its own hit-testing.
- *
- * This component queries the DOM for `[data-block-id]` nodes inside the
- * provided frame ref and mirrors their bounds relative to the frame.
- */
 interface Props {
-  frameRef: React.RefObject<HTMLElement | null>;
+  contentDocument: Document | null;
 }
 
-function findRect(frame: HTMLElement | null, id: string | null): Rect | null {
-  if (!frame || !id) return null;
-  const node = frame.querySelector<HTMLElement>(`[data-block-id="${id}"]`);
+function findRect(doc: Document | null, id: string | null): Rect | null {
+  if (!doc || !id) return null;
+  const node = doc.querySelector<HTMLElement>(`[data-block-id="${id}"]`);
   if (!node) return null;
-  const frameBox = frame.getBoundingClientRect();
 
   const block = useEditorStore.getState().blocks.find((b) => b.id === id);
   const cfg = parseCfg(block?.config);
@@ -56,33 +46,30 @@ function findRect(frame: HTMLElement | null, id: string | null): Rect | null {
     const cropR = isLegacy ? r : r * contentBox.width;
     const cropB = isLegacy ? b : b * contentBox.height;
     return {
-      top: contentBox.top - frameBox.top + frame.scrollTop + cropT,
-      left: contentBox.left - frameBox.left + frame.scrollLeft + cropL,
+      top: contentBox.top + cropT,
+      left: contentBox.left + cropL,
       width: contentBox.width - cropL - cropR,
       height: contentBox.height - cropT - cropB,
     };
   }
 
   const box = node.getBoundingClientRect();
-  return {
-    top: box.top - frameBox.top + frame.scrollTop,
-    left: box.left - frameBox.left + frame.scrollLeft,
-    width: box.width,
-    height: box.height,
-  };
+  return { top: box.top, left: box.left, width: box.width, height: box.height };
 }
 
-function labelFor(frame: HTMLElement | null, id: string | null): string | null {
-  if (!frame || !id) return null;
-  const node = frame.querySelector<HTMLElement>(`[data-block-id="${id}"]`);
+function labelFor(doc: Document | null, id: string | null): string | null {
+  if (!doc || !id) return null;
+  const node = doc.querySelector<HTMLElement>(`[data-block-id="${id}"]`);
   return node?.dataset.blockLabel ?? node?.dataset.blockType ?? "Block";
 }
 
-export function SelectionLayer({ frameRef }: Props) {
+export function SelectionLayer({ contentDocument }: Props) {
   const { selectedBlockId, hoveredBlockId } = useSelection();
   const collidingIds = useEditorStore((s) => s.collidingIds);
   const breakpoint = useEditorStore((s) => s.breakpoint);
   const isCropping = useEditorStore((s) => s.isCropping);
+  const accentColor =
+    useEditorStore((s) => s.themeTokens.colors.accent) || "#B8921A";
   const [selectedRect, setSelectedRect] = useState<Rect | null>(null);
   const [hoverRect, setHoverRect] = useState<Rect | null>(null);
   const [selectedLabel, setSelectedLabel] = useState<string | null>(null);
@@ -94,15 +81,14 @@ export function SelectionLayer({ frameRef }: Props) {
 
   useEffect(() => {
     function measure() {
-      const frame = frameRef.current;
-      setSelectedRect(findRect(frame, selectedBlockId));
-      setHoverRect(findRect(frame, hoveredBlockId));
-      setSelectedLabel(labelFor(frame, selectedBlockId));
-      setHoverLabel(labelFor(frame, hoveredBlockId));
+      setSelectedRect(findRect(contentDocument, selectedBlockId));
+      setHoverRect(findRect(contentDocument, hoveredBlockId));
+      setSelectedLabel(labelFor(contentDocument, selectedBlockId));
+      setHoverLabel(labelFor(contentDocument, hoveredBlockId));
 
       const rects = new Map<string, Rect>();
       for (const id of collidingIds) {
-        const r = findRect(frame, id);
+        const r = findRect(contentDocument, id);
         if (r) rects.set(id, r);
       }
       setCollisionRects(rects);
@@ -112,14 +98,24 @@ export function SelectionLayer({ frameRef }: Props) {
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
       rafRef.current = requestAnimationFrame(measure);
     };
+
     window.addEventListener("resize", onResize);
-    window.addEventListener("scroll", onResize, true);
+
+    const scrollEl = contentDocument?.querySelector(".editor-canvas-scroll");
+    scrollEl?.addEventListener("scroll", onResize);
+
     return () => {
       window.removeEventListener("resize", onResize);
-      window.removeEventListener("scroll", onResize, true);
+      scrollEl?.removeEventListener("scroll", onResize);
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
     };
-  }, [frameRef, selectedBlockId, hoveredBlockId, collidingIds, breakpoint]);
+  }, [
+    contentDocument,
+    selectedBlockId,
+    hoveredBlockId,
+    collidingIds,
+    breakpoint,
+  ]);
 
   const hoverVisible =
     hoverRect && hoveredBlockId && hoveredBlockId !== selectedBlockId;
@@ -135,6 +131,7 @@ export function SelectionLayer({ frameRef }: Props) {
           rect={hoverRect}
           label={hoverLabel}
           variant="hover"
+          accentColor={accentColor}
         />
       )}
       {selectedRect && !isCropping && (
@@ -143,6 +140,7 @@ export function SelectionLayer({ frameRef }: Props) {
           rect={selectedRect}
           label={selectedLabel}
           variant="selected"
+          accentColor={accentColor}
         />
       )}
       {Array.from(collisionRects.entries()).map(([id, rect]) => (
@@ -165,9 +163,10 @@ interface OutlineProps {
   rect: Rect;
   label: string | null;
   variant: "hover" | "selected";
+  accentColor: string;
 }
 
-function Outline({ rect, label, variant }: OutlineProps) {
+function Outline({ rect, label, variant, accentColor }: OutlineProps) {
   const ref = useRef<HTMLDivElement>(null);
 
   useLayoutEffect(() => {
@@ -175,8 +174,6 @@ function Outline({ rect, label, variant }: OutlineProps) {
     if (!el) return;
     el.style.opacity = "0";
     const dur = prefersReducedMotion() ? 0 : MOTION.selectionFade;
-    // setTimeout(0) guarantees the browser paints the opacity:0 frame before
-    // the transition starts — a single rAF fires in the same batch and skips it.
     const timer = setTimeout(() => {
       if (!ref.current) return;
       ref.current.style.transition = `opacity ${dur}ms ease`;
@@ -184,8 +181,6 @@ function Outline({ rect, label, variant }: OutlineProps) {
     }, 0);
     return () => clearTimeout(timer);
   }, []);
-
-  const accentColor = "var(--site-accent, #B8921A)";
 
   return (
     <div
