@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getEnv } from "@/lib/cloudflare";
 import { z } from "zod";
 import { requireSiteOwnership, apiOwnershipError, parseJsonBody } from "@/lib/api/site-auth";
-import { safeJsonParse } from "@/lib/validation";
+import { type ContactRow, contactToGuest } from "@/lib/api/guests";
 
 const GuestSchema = z.object({
   firstName: z.string().min(1).max(100),
@@ -22,54 +22,6 @@ const GuestSchema = z.object({
   thankYouSent: z.number().int().min(0).max(1).optional(),
   customResponses: z.string().nullable().optional(),
 });
-
-// Helper to transform contact row to legacy guest format
-interface ContactRow {
-  id: string;
-  site_id: string;
-  name: string;
-  email: string | null;
-  phone: string | null;
-  contact_type: string;
-  tags: string | null;
-  status: string;
-  metadata: string | Record<string, unknown>;
-  created_at: string;
-  updated_at: string;
-}
-
-function contactToGuest(contact: ContactRow) {
-  const metadata: Record<string, unknown> = typeof contact.metadata === 'string'
-    ? safeJsonParse(contact.metadata, {})
-    : (contact.metadata as Record<string, unknown> || {});
-  const [firstName, ...lastNameParts] = (contact.name || '').split(' ');
-
-  return {
-    id: contact.id,
-    siteId: contact.site_id,
-    firstName: firstName || '',
-    lastName: lastNameParts.join(' ') || null,
-    email: contact.email || null,
-    phone: contact.phone || null,
-    rsvpStatus: metadata.rsvpStatus || 'pending',
-    party: metadata.party ?? null,
-    notes: metadata.notes || null,
-    address: metadata.address || null,
-    invitedBy: metadata.invitedBy || null,
-    category: metadata.category || null,
-    invited: metadata.invited ?? 0,
-    ceremonyOrReception: metadata.ceremonyOrReception || 'both',
-    invitationType: metadata.invitationType || 'digital',
-    tableNumber: metadata.tableNumber || null,
-    giftDescription: metadata.giftDescription || null,
-    thankYouSent: metadata.thankYouSent ?? 0,
-    customResponses: metadata.customResponses || null,
-    sortOrder: metadata.sortOrder ?? 0,
-    rsvpSubmittedAt: metadata.rsvpSubmittedAt || null,
-    createdAt: contact.created_at,
-    updatedAt: contact.updated_at,
-  };
-}
 
 export async function GET(
   req: NextRequest,
