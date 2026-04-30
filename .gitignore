@@ -84,12 +84,14 @@ cloudflare-env.d.ts
 .audit/
 
 # Migrations (managed in Cloudflare D1 dashboard)
-/migrations
+/migrations/*
+!/migrations/0043_audit_log.sql
 
 # Dev scripts & seed data (except build-public-effects which CI needs)
-/scripts
+/scripts/*
 !/scripts/build-public-effects.mjs
 !/scripts/rehash-passwords.mjs
+!/scripts/sbom.mjs
 
 # E2E tests (not needed for launch)
 /e2e
