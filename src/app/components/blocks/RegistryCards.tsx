@@ -125,6 +125,7 @@ export function StoreCard({
 
       <div style={{ width: 56, height: 56, display: "flex", alignItems: "center", justifyContent: "center" }}>
         {logoSrc && !logoFailed ? (
+          // eslint-disable-next-line @next/next/no-img-element -- src is a data: URI (inline SVG); next/image does not support data: URIs
           <img
             src={logoSrc}
             alt={storeName}

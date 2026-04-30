@@ -301,7 +301,7 @@ export default function PixelSnow({
       rendererRef.current = null;
       materialRef.current = null;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [handleResize]);
 
   useEffect(() => {

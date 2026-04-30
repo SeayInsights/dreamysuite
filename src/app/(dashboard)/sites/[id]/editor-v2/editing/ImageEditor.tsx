@@ -25,16 +25,10 @@ import {
   type RefObject,
 } from "react";
 import { useEditorStore } from "@/app/stores/editorStore";
-import { parseCfg } from "@/lib/editableField";
-import { CropHandles } from "./CropHandles";
-import { FloatingToolbar } from "./ImageEditorToolbar";
-import { InlinePhotoPanel } from "./InlinePhotoPanel";
 
 // Constants
 
 const IMAGE_BEARING_TYPES = new Set(["images", "photo-split", "home-hero", "gallery"]);
-const TOOLBAR_HEIGHT = 40;
-const TOOLBAR_FLIP_THRESHOLD = TOOLBAR_HEIGHT + 8;
 
 // Types
 
@@ -72,10 +66,9 @@ interface Props {
 
 export function ImageEditor({ containerRef }: Props) {
   const blocks = useEditorStore((s) => s.blocks);
-  const updateBlock = useEditorStore((s) => s.updateBlock);
 
   const [active, setActive] = useState<ActiveImage | null>(null);
-  const [activeBlockType, setActiveBlockType] = useState<string>("");
+  const [_activeBlockType, setActiveBlockType] = useState<string>("");
   const [cropMode, setCropModeLocal] = useState(false);
   const setIsCropping = useEditorStore((s) => s.setIsCropping);
   const setCropMode = useCallback((v: boolean | ((prev: boolean) => boolean)) => {
@@ -182,38 +175,12 @@ export function ImageEditor({ containerRef }: Props) {
     return () => document.removeEventListener("mousedown", handler, true);
   }, [active, photoPanel, dismiss, containerRef]);
 
-  const activeBlock = active ? blocks.find((b) => b.id === active.blockId) : null;
-  const activeCfg = parseCfg(activeBlock?.config);
-  const currentFit = typeof activeCfg.imageFit === "string" ? activeCfg.imageFit : "cover";
-
-  const handleFitChange = useCallback((fit: string) => {
-    if (!active) return;
-    const block = useEditorStore.getState().blocks.find((b) => b.id === active.blockId);
-    const cfg = parseCfg(block?.config);
-    updateBlock(active.blockId, { config: { ...cfg, imageFit: fit } });
-  }, [active, updateBlock]);
-
   const blockExists = active !== null && blocks.some((b) => b.id === active.blockId);
 
   if (!blockExists && active) {
     Promise.resolve().then(dismiss);
     return null;
   }
-
-  const panelStyle: React.CSSProperties | null = active
-    ? (() => {
-        const spaceAbove = active.imageRect.top;
-        const showBelow = spaceAbove < TOOLBAR_FLIP_THRESHOLD;
-        const toolbarBottom = showBelow
-          ? active.imageRect.top + active.imageRect.height + 8 + TOOLBAR_HEIGHT + 4
-          : active.imageRect.top - TOOLBAR_HEIGHT - 8 + TOOLBAR_HEIGHT + 4;
-        return {
-          top: toolbarBottom,
-          left: active.imageRect.left + active.imageRect.width / 2,
-          transform: "translateX(-50%)",
-        };
-      })()
-    : null;
 
   // Floating toolbar suppressed - image controls live in inspector Design > Content
   return null;

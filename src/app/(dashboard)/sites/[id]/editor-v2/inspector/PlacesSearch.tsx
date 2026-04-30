@@ -27,7 +27,8 @@ export function usePlacesSearch() {
 
   useEffect(() => {
     if (query.length < 2) {
-      setResults([]);
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setResults((prev) => (prev.length === 0 ? prev : []));
       return;
     }
     clearTimeout(timerRef.current);

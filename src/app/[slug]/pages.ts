@@ -28,14 +28,6 @@ export function buildIntroHtml(
       </div>`
     : "";
 
-  function extractInitials(t: string): string {
-    const parts = t.split(/\s*[&+]\s*|\s+and\s+/i).map((s) => s.trim()).filter(Boolean);
-    if (parts.length >= 2) return parts.map((p) => p.charAt(0).toUpperCase()).join(" · ");
-    if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
-    return "&#10086;";
-  }
-  const sealText = sealInitials ? escHtml(sealInitials) : extractInitials(title);
-
   if (animation === "envelope") {
     const envStyle = envelopeColor ? ` style="--env-color:${escHtml(envelopeColor)}"` : "";
     const cardBg = cardImage ? `url('${escHtml(cardImage)}')` : "";

@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { useEditorStore } from "@/app/stores/editorStore";
 import { blockSectionStyle, parseCfg } from "@/lib/editableField";
 import { TextEffectWrapper } from "@/app/components/TextEffectWrapper";
@@ -24,11 +25,15 @@ export function InfoCardBlock({ block }: { block: Block }) {
       <CardEffectWrapper>
         <div className="info-card" style={{ textAlign: "center" }}>
           {imageUrl && (
-            <img
-              src={imageUrl}
-              alt={name}
-              style={{ maxWidth: variant === "hotel" ? "200px" : "120px", borderRadius: "8px", marginBottom: "0.75rem" }}
-            />
+            <div style={{ position: "relative", width: variant === "hotel" ? "200px" : "120px", height: variant === "hotel" ? "120px" : "80px", margin: "0 auto 0.75rem" }}>
+              <Image
+                src={imageUrl}
+                alt={name}
+                fill
+                sizes={variant === "hotel" ? "200px" : "120px"}
+                style={{ borderRadius: "8px", objectFit: "contain" }}
+              />
+            </div>
           )}
           <p className="card-title">{name}</p>
           {address && <p className="card-note">{address}</p>}

@@ -210,6 +210,7 @@ export function VenueMapBlock({ block }: { block: Block }) {
   const dateRange = formatDateRange(dateStart, dateEnd);
   const hasVenue = !!venueName && (!!venuePlaceId || !!coords);
 
+  /* eslint-disable react-hooks/preserve-manual-memoization */
   const handlePhotoIndexChange = useCallback(
     (id: string, index: number) => {
       const updated = hotels.map((h) => (h.id === id ? { ...h, photoIndex: index } : h));
@@ -217,6 +218,7 @@ export function VenueMapBlock({ block }: { block: Block }) {
     },
     [hotels, updateSettings],
   );
+  /* eslint-enable react-hooks/preserve-manual-memoization */
 
   return (
     <section

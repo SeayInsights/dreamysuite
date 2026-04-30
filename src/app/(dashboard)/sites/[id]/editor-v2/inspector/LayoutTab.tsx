@@ -21,7 +21,9 @@ function SettingsInput({
   const [draft, setDraft] = useState(value ?? "");
 
   useEffect(() => {
-    setDraft(value ?? "");
+    const next = value ?? "";
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setDraft((prev) => (prev !== next ? next : prev));
   }, [value]);
 
   function commit() {
@@ -87,7 +89,7 @@ export function LayoutTab() {
     // Clone overrides and remove sortOrder for the current breakpoint
     const newOverrides = { ...selectedBlock.overrides };
     if (newOverrides[breakpoint]) {
-      const { sortOrder: _, ...rest } = newOverrides[breakpoint] as Record<string, unknown>;
+      const { sortOrder: _omit, ...rest } = newOverrides[breakpoint] as Record<string, unknown>;
 
       // If no other overrides remain for this breakpoint, remove the breakpoint key entirely
       if (Object.keys(rest).length === 0) {

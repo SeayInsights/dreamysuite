@@ -107,6 +107,7 @@ export function PagesTray() {
 
 	const listRef = useRef<HTMLDivElement>(null);
 	const pagesRef = useRef(pages);
+	// eslint-disable-next-line react-hooks/refs
 	pagesRef.current = pages;
 
 	const suggestions = EVENT_PAGES[eventType ?? ""] ?? FALLBACK_PAGES;

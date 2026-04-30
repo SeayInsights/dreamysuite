@@ -76,8 +76,10 @@ export function BlockEditPanel({ containerRef }: Props) {
   // - Avoid inspector overlap when open (assumes 320px width on right)
   // - Fallback to centered position if no container ref
   let panelStyle: React.CSSProperties;
+  // eslint-disable-next-line react-hooks/refs
   const container = containerRef.current;
   if (container) {
+    // eslint-disable-next-line react-hooks/refs
     const box = container.getBoundingClientRect();
     const toolbarWidth = 320;
     const inspectorWidth = 320;

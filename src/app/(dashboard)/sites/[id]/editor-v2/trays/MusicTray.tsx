@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Music, Play, RotateCcw, ExternalLink } from "lucide-react";
+import { Music, RotateCcw } from "lucide-react";
 
 import { useEditorStore } from "@/app/stores/editorStore";
 

@@ -34,6 +34,7 @@ export default function RootLayout({
 				<link rel="icon" href="/favicon.svg" type="image/svg+xml"></link>
 				<link rel="preconnect" href="https://fonts.googleapis.com" />
 				<link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+				{/* eslint-disable-next-line @next/next/no-page-custom-font -- wedding theme fonts are selected dynamically at runtime; cannot be statically declared with next/font */}
 				<link
 					href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Dancing+Script:wght@400;700&family=Great+Vibes&family=Inter:wght@400;500;600&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Lora:ital,wght@0,400;0,600;1,400&family=Montserrat:wght@400;500;600&family=Nunito:wght@400;500;600&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Raleway:wght@400;500;600&display=swap"
 					rel="stylesheet"

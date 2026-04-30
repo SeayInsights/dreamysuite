@@ -86,7 +86,7 @@ function detectCollisions(
  * Handle auto-scroll when pointer is near viewport edges during drag.
  * Implements FR-002 (auto-scroll near edges).
  */
-function handleAutoScroll(clientY: number, container: HTMLElement): void {
+function handleAutoScroll(clientY: number, _container: HTMLElement): void {
 	const viewportHeight = window.innerHeight;
 	const distanceFromTop = clientY;
 	const distanceFromBottom = viewportHeight - clientY;

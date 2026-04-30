@@ -10,6 +10,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { motion } from "motion/react";
+import Image from "next/image";
 import { ImagePlus } from "lucide-react";
 import { useEditorStore } from "@/app/stores/editorStore";
 import { parseCfg } from "@/lib/editableField";
@@ -134,7 +135,7 @@ export function InlinePhotoPanel({
                   }
                   title={photo.filename}
                 >
-                  <img src={url} alt={photo.filename} className="size-full object-cover" />
+                  <Image src={url} alt={photo.filename} fill className="object-cover" sizes="80px" />
                   {isSelected && isGalleryGrid && (
                     <div className="absolute inset-0 flex items-center justify-center bg-primary/20">
                       <span className="flex size-4 items-center justify-center rounded-full bg-primary text-[9px] font-bold text-primary-foreground">

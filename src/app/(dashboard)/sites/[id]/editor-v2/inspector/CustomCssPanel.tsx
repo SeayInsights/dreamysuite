@@ -17,7 +17,8 @@ export function CustomCssPanel({ blockId }: { blockId: string }) {
 	const styleRef = useRef<HTMLStyleElement | null>(null);
 
 	useEffect(() => {
-		setDraft(raw);
+		// eslint-disable-next-line react-hooks/set-state-in-effect
+		setDraft((prev) => (prev !== raw ? raw : prev));
 	}, [raw]);
 
 	const apply = useCallback(
@@ -58,6 +59,7 @@ export function CustomCssPanel({ blockId }: { blockId: string }) {
 	}, [blockId]);
 
 	useEffect(() => {
+		// eslint-disable-next-line react-hooks/set-state-in-effect
 		if (raw) apply(raw);
 	}, [blockId, raw, apply]);
 

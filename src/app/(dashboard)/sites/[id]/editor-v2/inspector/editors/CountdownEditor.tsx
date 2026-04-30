@@ -3,9 +3,9 @@
 export function CountdownEditor({
   cfg,
   updateConfig,
-  block,
-  breakpoint,
-  updateBlock,
+  block: _block,
+  breakpoint: _breakpoint,
+  updateBlock: _updateBlock,
 }: {
   cfg: Record<string, unknown>;
   updateConfig: (patch: Record<string, unknown>) => void;

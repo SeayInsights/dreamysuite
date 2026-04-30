@@ -655,7 +655,7 @@ const Ballpit = ({ className = '', followCursor = true, ...props }) => {
     return () => {
       instanceRef.current?.dispose();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, []);
 
   return <canvas className={className} ref={canvasRef} style={{ width: '100%', height: '100%' }} />;

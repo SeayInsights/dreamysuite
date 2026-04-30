@@ -6,12 +6,6 @@
  * bundle time; restart the dev server after changing .env.local.
  */
 
-function boolEnv(raw: string | undefined): boolean {
-	if (!raw) return false;
-	const v = raw.toLowerCase();
-	return v === "1" || v === "true" || v === "yes" || v === "on";
-}
-
 export const flags = {} as const;
 
 export type FeatureFlags = typeof flags;

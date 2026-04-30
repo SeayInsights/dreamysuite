@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { useEditorStore } from "@/app/stores/editorStore";
 import { blockSectionStyle, parseCfg } from "@/lib/editableField";
 
@@ -16,7 +17,9 @@ export function ImagesBlock({ block }: { block: Block }) {
       {urls.length > 0 || imageSlot ? (
         <div style={{ display: "grid", gap: "0.5rem", gridTemplateColumns: urls.length > 1 ? "1fr 1fr" : "1fr", ...(sized ? { minHeight: 0, height: "100%", width: "100%", gridAutoRows: "1fr" } : {}) }}>
           {(imageSlot ? [imageSlot] : urls).map((url, i) => (
-            <img key={i} src={url} alt={String(cfg.imageAlt || cfg.heading || "Wedding photo")} style={{ width: "100%", height: "100%", borderRadius: "8px", objectFit: imageFit, objectPosition: "center", display: "block" }} />
+            <div key={i} style={{ position: "relative", width: "100%", paddingBottom: sized ? undefined : "75%", height: sized ? "100%" : undefined }}>
+              <Image src={url} alt={String(cfg.imageAlt || cfg.heading || "Wedding photo")} fill sizes="(max-width: 768px) 100vw, 50vw" style={{ borderRadius: "8px", objectFit: imageFit, objectPosition: "center" }} />
+            </div>
           ))}
         </div>
       ) : (

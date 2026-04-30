@@ -47,7 +47,9 @@ function NumericInput({
   const [draft, setDraft] = useState(value !== undefined ? String(value) : "");
 
   useEffect(() => {
-    setDraft(value !== undefined ? String(value) : "");
+    const next = value !== undefined ? String(value) : "";
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setDraft((prev) => (prev !== next ? next : prev));
   }, [value]);
 
   function commit() {
@@ -132,7 +134,7 @@ function resetOverride(
 ) {
   if (breakpoint === "desktop") return;
   const existing = block.overrides?.[breakpoint] ?? {};
-  const { [field]: _, ...rest } = existing;
+  const { [field]: _omit, ...rest } = existing;
   const newOverrides = {
     ...block.overrides,
     [breakpoint]: Object.keys(rest).length > 0 ? rest : undefined,
@@ -256,7 +258,7 @@ export function AdvancedTab({ block, breakpoint, updateBlock }: AdvancedTabProps
                   const bp = breakpoint as "tablet" | "mobile";
                   if (raw === "") {
                     const existing = block.overrides?.[bp] ?? {};
-                    const { sortOrder: _, ...rest } = existing as Record<string, unknown>;
+                    const { sortOrder: _omit, ...rest } = existing as Record<string, unknown>;
                     updateBlock(block.id, {
                       overrides: {
                         ...block.overrides,

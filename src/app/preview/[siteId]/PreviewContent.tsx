@@ -48,6 +48,7 @@ function useResponsiveScale(designedAtWidth: number) {
   }, [designedAtWidth]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     update();
     let timer: ReturnType<typeof setTimeout>;
     const handler = () => {

@@ -1061,7 +1061,7 @@ function SplashCursor({
       const loseExt = gl && gl.getExtension('WEBGL_lose_context');
       if (loseExt) loseExt.loseContext();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, []);
 
   return (

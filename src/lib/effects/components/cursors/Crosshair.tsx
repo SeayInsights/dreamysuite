@@ -33,7 +33,7 @@ const Crosshair = ({ color = 'white', containerRef = null }) => {
       if (cancelled) return;
 
       const handleMouseMove = ev => {
-        // eslint-disable-next-line react-hooks/exhaustive-deps
+         
         mouse = getMousePos(ev, containerRef?.current);
 
         if (containerRef?.current) {

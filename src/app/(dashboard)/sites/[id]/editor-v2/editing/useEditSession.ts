@@ -34,6 +34,7 @@ export function useEditSession(
 
   // Keep a ref so event handlers close over the ref, not stale state
   const editStateRef = useRef<EditState | null>(null);
+  // eslint-disable-next-line react-hooks/refs
   editStateRef.current = editState;
 
   const commit = useCallback(

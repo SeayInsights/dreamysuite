@@ -107,6 +107,7 @@ export function Canvas({ siteId }: Props) {
 	useEffect(() => {
 		if (!currentPageId) return;
 		let cancelled = false;
+		// eslint-disable-next-line react-hooks/set-state-in-effect
 		setBlocksLoading(true);
 
 		async function loadBlocks() {

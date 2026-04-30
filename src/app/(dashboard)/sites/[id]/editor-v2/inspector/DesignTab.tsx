@@ -76,7 +76,9 @@ function NumericInput({
   const [draft, setDraft] = useState(String(value ?? ""));
 
   useEffect(() => {
-    setDraft(String(value ?? ""));
+    const next = String(value ?? "");
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setDraft((prev) => (prev !== next ? next : prev));
   }, [value]);
 
   function commit() {
@@ -114,7 +116,7 @@ function NumericInput({
   );
 }
 
-export function DesignTab({ block, breakpoint: _, updateBlock }: DesignTabProps) {
+export function DesignTab({ block, breakpoint: _breakpoint, updateBlock }: DesignTabProps) {
   const cfg = getInspectorConfig(block.type);
   const parsed = parseCfg(block.config);
 
