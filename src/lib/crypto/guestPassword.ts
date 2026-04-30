@@ -66,6 +66,5 @@ export async function verifyGuestPassword(
       .join("");
     return `$sha256$${hex}` === stored;
   }
-  // TODO: remove after running migrations/rehash-passwords script
-  return submitted === stored; // plaintext migration shim
+  return false;
 }
