@@ -203,8 +203,6 @@ export function FunFactPicker({ open, onSelect, onCustom, onClose, anchorRect, d
 
   if (!open) return null;
 
-  console.log("[FunFactPicker] displayMode prop:", displayMode);
-
   const pos = computePosition(anchorRect);
 
   const isFaq = displayMode === "faq";
