@@ -1,5 +1,4 @@
 "use client";
-import { useEditorStore } from "@/app/stores/editorStore";
 
 import { useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
@@ -181,7 +180,6 @@ function computePosition(anchorRect: DOMRect | null | undefined) {
 }
 
 export function FunFactPicker({ open, onSelect, onCustom, onClose, anchorRect, displayMode }: Props) {
-  const breakpoint = useEditorStore((s) => s.breakpoint) as "desktop" | "tablet" | "mobile";
   const panelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {

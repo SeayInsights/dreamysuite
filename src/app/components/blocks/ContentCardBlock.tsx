@@ -359,11 +359,8 @@ export function ContentCardBlock({ block }: { block: Block }) {
 
   const fullPreview = useEditorStore((s) => s.fullPreview);
   const updateBlock = useEditorStore((s) => s.updateBlock);
-  const selectedBlockId = useEditorStore((s) => s.selectedBlockId);
 
   const editing = !fullPreview;
-  const isSelected = selectedBlockId === block.id;
-  void isSelected;
 
   const [pickerOpen, setPickerOpen] = useState(false);
   const [pickerAnchor, setPickerAnchor] = useState<DOMRect | null>(null);
