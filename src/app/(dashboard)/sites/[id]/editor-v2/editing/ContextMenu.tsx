@@ -7,6 +7,7 @@ import React, {
   useState,
   type ReactNode,
 } from "react";
+import { useShallow } from "zustand/react/shallow";
 import { cn } from "@/lib/utils";
 import { useEditorStore } from "@/app/stores/editorStore";
 import type { Block } from "@/app/stores/editorStore";
@@ -41,13 +42,15 @@ function duplicateBlock(blocks: Block[], targetId: string): Block[] {
   const original = blocks[idx];
   const sortOrder =
     typeof original.sortOrder === "number" ? original.sortOrder : idx;
-  const copy: Block = { ...original, id: generateId(), sortOrder: sortOrder + 0.5 };
+  const copy: Block = {
+    ...original,
+    id: generateId(),
+    sortOrder: sortOrder + 0.5,
+  };
   const next = [...blocks];
   next.splice(idx + 1, 0, copy);
   return next;
 }
-
-
 
 // ---------------------------------------------------------------------------
 // Menu item sub-component
@@ -60,7 +63,12 @@ interface MenuItemProps {
   onClick: () => void;
 }
 
-function MenuItem({ label, shortcut, variant = "default", onClick }: MenuItemProps) {
+function MenuItem({
+  label,
+  shortcut,
+  variant = "default",
+  onClick,
+}: MenuItemProps) {
   return (
     <button
       type="button"
@@ -98,7 +106,12 @@ interface FloatingMenuProps {
   children: ReactNode;
 }
 
-function FloatingMenu({ open, position, onClose, children }: FloatingMenuProps) {
+function FloatingMenu({
+  open,
+  position,
+  onClose,
+  children,
+}: FloatingMenuProps) {
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -148,8 +161,12 @@ function FloatingMenu({ open, position, onClose, children }: FloatingMenuProps) 
 // Main ContextMenu component
 // ---------------------------------------------------------------------------
 
-export function ContextMenu({ children }: { children: ReactNode }): React.JSX.Element {
-  const blocks = useEditorStore((s) => s.blocks);
+export function ContextMenu({
+  children,
+}: {
+  children: ReactNode;
+}): React.JSX.Element {
+  const blocks = useEditorStore(useShallow((s) => s.blocks));
   const selectedBlockId = useEditorStore((s) => s.selectedBlockId);
   const setBlocks = useEditorStore((s) => s.setBlocks);
   const removeBlock = useEditorStore((s) => s.removeBlock);
@@ -257,10 +274,7 @@ export function ContextMenu({ children }: { children: ReactNode }): React.JSX.El
   // -------------------------------------------------------------------------
 
   return (
-    <div
-      className="flex h-full flex-col"
-      onContextMenu={handleContextMenu}
-    >
+    <div className="flex h-full flex-col" onContextMenu={handleContextMenu}>
       {children}
 
       <FloatingMenu open={menuOpen} position={menuPos} onClose={closeMenu}>
