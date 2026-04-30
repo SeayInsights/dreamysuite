@@ -51,7 +51,7 @@ export function VideoBlock({ block }: { block: Block }) {
           style={{ width: "100%", height: "100%", objectFit }}
         />
       ) : (
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", color: "#9b8e85" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", color: "var(--muted)" }}>
           No video selected
         </div>
       )}

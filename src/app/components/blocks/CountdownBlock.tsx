@@ -71,7 +71,7 @@ export function CountdownBlock({ block }: { block: Block }) {
         </div>
       )}
       {!hasDate && editing && (
-        <p style={{ fontSize: "0.75rem", color: "var(--muted, #9a8c7c)", marginTop: "0.75rem", textAlign: "center", fontStyle: "italic" }}>
+        <p style={{ fontSize: "0.75rem", color: "var(--muted)", marginTop: "0.75rem", textAlign: "center", fontStyle: "italic" }}>
           Set your event date in Page Settings &rarr; Info to start the countdown
         </p>
       )}
