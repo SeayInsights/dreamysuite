@@ -25,12 +25,6 @@ export function ThemeTray() {
 
 	return (
 		<div className="flex h-full flex-col">
-			<div className="flex items-center justify-between border-b border-border px-4 py-3">
-				<h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-					Theme
-				</h2>
-			</div>
-
 			<div className="flex-1 overflow-y-auto p-3">
 				<section className="mb-4">
 					<p className="mb-2 px-1 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
@@ -136,7 +130,7 @@ export function ThemeTray() {
 
 				<section className="mb-4 border-t border-border pt-4 space-y-3">
 					<div>
-						<label className="block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">
+						<label className="block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">
 							Decorations
 						</label>
 						<select className="w-full rounded-md border border-border bg-background px-2.5 py-1.5 text-sm outline-none focus:border-ring">
@@ -148,7 +142,7 @@ export function ThemeTray() {
 					</div>
 
 					<div>
-						<label className="block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">
+						<label className="block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">
 							Cursor
 						</label>
 						<select className="w-full rounded-md border border-border bg-background px-2.5 py-1.5 text-sm outline-none focus:border-ring">
