@@ -397,7 +397,7 @@ export function ImageEditor({ containerRef }: Props) {
     };
     window.addEventListener("keydown", handler, true);
     return () => window.removeEventListener("keydown", handler, true);
-  }, [active, cropMode, photoPanel, dismiss]);
+  }, [active, cropMode, photoPanel, dismiss, setCropMode]);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -427,7 +427,7 @@ export function ImageEditor({ containerRef }: Props) {
 
     container.addEventListener("dblclick", handler);
     return () => container.removeEventListener("dblclick", handler);
-  }, [containerRef]);
+  }, [containerRef, setCropMode]);
 
   useEffect(() => {
     if (!active) return;

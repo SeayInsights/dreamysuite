@@ -244,17 +244,17 @@ export function SectionToolbar({
   // Holds a pending enter when a block-switch exit is in flight
   const pendingShowRef = useRef<{ pos: Position; blockId: string } | null>(null);
 
-  function setToolbarPhase(p: ToolbarPhase) {
+  const setToolbarPhase = useCallback((p: ToolbarPhase) => {
     phaseRef.current = p;
     setToolbarPhaseState(p);
-  }
+  }, []);
 
-  function showBlock(pos: Position, blockId: string) {
+  const showBlock = useCallback((pos: Position, blockId: string) => {
     renderBlockIdRef.current = blockId;
     setRenderPos(pos);
     setRenderBlockId(blockId);
     setToolbarPhase("shown");
-  }
+  }, [setToolbarPhase]);
 
   // Measure and position the toolbar relative to the selected block
   const measurePosition = useCallback(() => {
@@ -392,7 +392,7 @@ export function SectionToolbar({
         setRenderBlockId(null);
       }, ANIM_MS);
     }
-  }, [selectedBlockId, blockToolbarVisible, position]);
+  }, [selectedBlockId, blockToolbarVisible, position, setToolbarPhase, showBlock]);
 
   // Cleanup timers on unmount.
   useEffect(() => () => {

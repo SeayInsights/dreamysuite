@@ -203,7 +203,7 @@ export function useDrag(
 			cleanupRef.current();
 			cleanupRef.current = null;
 		}
-	}, [applyUpdate, setDrag, temporalStore, updateBlock]);
+	}, [applyUpdate, setCollidingIds, setDrag, temporalStore, updateBlock]);
 
 	// ── Pointer move ───────────────────────────────────────────────────────
 
