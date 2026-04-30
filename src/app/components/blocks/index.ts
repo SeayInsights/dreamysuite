@@ -1,23 +1,27 @@
-import { HomeHeroBlock } from './HomeHeroBlock'
-import { HeaderBlock } from './HeaderBlock'
-import { MultiTextBlock } from './MultiTextBlock'
-import { CountdownBlock } from './CountdownBlock'
-import { ImagesBlock } from './ImagesBlock'
-import { YoutubeBlock } from './YoutubeBlock'
-import { SpacerBlock } from './SpacerBlock'
-import { VenueMapBlock } from './VenueMapBlock'
-// Consolidated (Task 18)
-import { MediaVideoBlock } from './MediaVideoBlock'
-import { GalleryBlock } from './GalleryBlock'
-import { InfoCardBlock } from './InfoCardBlock'
-// New (Task 19)
-import { RsvpFormBlock } from './RsvpFormBlock'
-import { StoryTimelineBlock } from './StoryTimelineBlock'
-import { GuestBookBlock } from './GuestBookBlock'
-// New (Task 3)
-import { ScheduleBlock } from './ScheduleBlock'
-import { ContentCardBlock } from './ContentCardBlock'
-import { RegistryBlock } from './RegistryBlock'
+// Layout blocks
+import { HomeHeroBlock } from './layout/HomeHeroBlock'
+import { HeaderBlock } from './layout/HeaderBlock'
+import { SpacerBlock } from './layout/SpacerBlock'
+
+// Content blocks
+import { MultiTextBlock } from './content/MultiTextBlock'
+import { InfoCardBlock } from './content/InfoCardBlock'
+import { ContentCardBlock } from './content/ContentCardBlock'
+
+// Interactive blocks
+import { CountdownBlock } from './interactive/CountdownBlock'
+import { RsvpFormBlock } from './interactive/RsvpFormBlock'
+import { GuestBookBlock } from './interactive/GuestBookBlock'
+import { ScheduleBlock } from './interactive/ScheduleBlock'
+import { RegistryBlock } from './interactive/RegistryBlock'
+
+// Media blocks
+import { ImagesBlock } from './media/ImagesBlock'
+import { YoutubeBlock } from './media/YoutubeBlock'
+import { VenueMapBlock } from './media/VenueMapBlock'
+import { MediaVideoBlock } from './media/MediaVideoBlock'
+import { GalleryBlock } from './media/GalleryBlock'
+import { StoryTimelineBlock } from './media/StoryTimelineBlock'
 
 interface Block {
   id: string
@@ -59,21 +63,25 @@ export const BLOCK_COMPONENTS: Record<string, React.ComponentType<{ block: Block
 }
 
 export {
+  // Layout
   HomeHeroBlock,
   HeaderBlock,
+  SpacerBlock,
+  // Content
   MultiTextBlock,
+  InfoCardBlock,
+  ContentCardBlock,
+  // Interactive
   CountdownBlock,
+  RsvpFormBlock,
+  GuestBookBlock,
+  ScheduleBlock,
+  RegistryBlock,
+  // Media
   ImagesBlock,
   YoutubeBlock,
-  SpacerBlock,
   VenueMapBlock,
   MediaVideoBlock,
   GalleryBlock,
-  InfoCardBlock,
-  RsvpFormBlock,
   StoryTimelineBlock,
-  GuestBookBlock,
-  ScheduleBlock,
-  ContentCardBlock,
-  RegistryBlock,
 }

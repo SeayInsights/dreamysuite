@@ -89,7 +89,22 @@ const results = { success: [], skipped: [], failed: [] };
 for (const category of CATEGORIES) {
   const catDir = join(COMPONENTS_DIR, category);
   if (!existsSync(catDir)) continue;
-  const files = readdirSync(catDir).filter((f) => f.endsWith(".tsx"));
+
+  // Scan both root and subdirectories (e.g., backgrounds/webgl, backgrounds/canvas)
+  const scanDir = (dir) => {
+    const entries = readdirSync(dir, { withFileTypes: true });
+    let files = [];
+    for (const entry of entries) {
+      if (entry.isDirectory()) {
+        files = files.concat(scanDir(join(dir, entry.name)));
+      } else if (entry.name.endsWith(".tsx")) {
+        files.push(join(dir, entry.name));
+      }
+    }
+    return files;
+  };
+
+  const files = scanDir(catDir);
 
   for (const file of files) {
     const name = basename(file, ".tsx");
@@ -103,7 +118,7 @@ for (const category of CATEGORIES) {
 
     try {
       await build({
-        entryPoints: [join(catDir, file)],
+        entryPoints: [file],
         bundle: true,
         format: "esm",
         outfile: join(OUT_DIR, `${id}.js`),
