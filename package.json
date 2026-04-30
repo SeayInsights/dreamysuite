@@ -21,7 +21,8 @@
     "test:e2e:ui": "npx playwright test --ui",
     "test:e2e:report": "npx playwright show-report",
     "audit": "npm audit --audit-level=high",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "prepare": "husky"
   },
   "dependencies": {
     "@opennextjs/cloudflare": "^1.19.1",
@@ -66,10 +67,19 @@
     "esbuild": "^0.28.0",
     "eslint": "^9",
     "eslint-config-next": "^16.2.4",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.4.0",
     "prettier": "^3.8.3",
     "tailwindcss": "^4",
     "typescript": "^5.7.4",
     "vitest": "^4.1.4",
     "wrangler": "^4.83.0"
+  },
+  "lint-staged": {
+    "*.{ts,tsx}": [
+      "eslint --fix --no-warn-ignored",
+      "prettier --write"
+    ],
+    "*.{css,json,md}": "prettier --write"
   }
 }
