@@ -349,8 +349,9 @@ export function useDrag(
 					if (isTop) {
 						// Top resize - moving top edge
 						const desiredTopEdge = session.topEdgePx + dy;
-						// Constrain to canvas top boundary and minimum height (TR-001, TR-004)
-						const minTopEdge = Math.max(bounds.minY, session.bottomEdgePx - 20);
+						// Constrain: top edge can't go above canvas top (bounds.minY),
+						// and can't go below bottomEdge - minHeight (20px).
+						const minTopEdge = bounds.minY;
 						const newTopEdge = Math.max(minTopEdge, Math.min(session.bottomEdgePx - 20, desiredTopEdge));
 
 						patch.blockOffsetY = Math.round(newTopEdge - session.naturalTopPx);
