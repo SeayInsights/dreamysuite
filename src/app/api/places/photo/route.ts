@@ -1,6 +1,14 @@
 import { NextRequest } from "next/server";
+import { getEnv } from "@/lib/cloudflare";
+import { isRateLimited } from "@/lib/rateLimit";
 
 export async function GET(req: NextRequest) {
+  const env = await getEnv();
+  const ip = req.headers.get("cf-connecting-ip") ?? "unknown";
+  if (await isRateLimited(env.KV, `places-photo:${ip}`, 30, 60)) {
+    return new Response("Too many requests", { status: 429 });
+  }
+
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY;
   if (!apiKey) {
     return new Response("API key not configured", { status: 500 });

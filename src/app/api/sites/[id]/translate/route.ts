@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getEnv } from "@/lib/cloudflare";
 import { requireSiteOwnership, apiOwnershipError } from "@/lib/api/site-auth";
+import { isRateLimited } from "@/lib/rateLimit";
 
 const MAX_CHUNK = 400;
 
@@ -77,6 +78,10 @@ export async function POST(
 
   const check = await requireSiteOwnership(req, env, siteId);
   if ("error" in check) return apiOwnershipError(check);
+
+  if (await isRateLimited(env.KV, `translate:${siteId}`, 10, 60)) {
+    return NextResponse.json({ error: "Too many translate requests — try again in a minute" }, { status: 429 });
+  }
 
   let body: { fromLang: string; toLang: string; content: Record<string, Record<string, string>> };
   try {
