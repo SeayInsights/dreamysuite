@@ -89,7 +89,7 @@ export async function POST(
         `${firstNameClean} ${lastNameClean}`,
         emailClean,
         JSON.stringify({
-          rsvpStatus: status === "yes" ? "attending" : status === "no" ? "not-attending" : "pending",
+          rsvpStatus: status,
           customResponses: customResponses ?? {},
           notes: notesClean
         }),
@@ -111,7 +111,7 @@ export async function POST(
         emailClean,
         'guest',
         JSON.stringify({
-          rsvpStatus: status === "yes" ? "attending" : status === "no" ? "not-attending" : "pending",
+          rsvpStatus: status,
           customResponses: customResponses ?? {},
           notes: notesClean
         }),
