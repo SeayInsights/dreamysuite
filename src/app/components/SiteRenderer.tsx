@@ -93,12 +93,22 @@ export function SiteRenderer({ blocks, ordered = false }: Props) {
 	const gap = Number(sectionSpacing ?? 0) || 0;
 	const breakpoint = useEditorStore((s) => s.breakpoint) as Breakpoint;
 
-	const visible = ordered
-		// Editor mode: store array order is authoritative — resortByOffsetY in useDrag
-		// keeps it sorted by Y on every drag-end, so tablet/mobile flow order stays
-		// in sync with desktop visual order automatically.
-		? blocks.filter((b) => b.isVisible !== 0)
-		: blocks.filter((b) => b.isVisible !== 0).sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
+	const visible = useMemo(() => {
+		const filtered = blocks.filter((b) => b.isVisible !== 0);
+		if (!ordered) {
+			return filtered.sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
+		}
+		if (breakpoint !== "desktop") {
+			return [...filtered].sort((a, b) => {
+				const cfgA = (typeof a.config === "object" && a.config !== null ? a.config : {}) as Record<string, unknown>;
+				const cfgB = (typeof b.config === "object" && b.config !== null ? b.config : {}) as Record<string, unknown>;
+				const yA = typeof cfgA.blockOffsetY === "number" ? cfgA.blockOffsetY : 0;
+				const yB = typeof cfgB.blockOffsetY === "number" ? cfgB.blockOffsetY : 0;
+				return yA - yB;
+			});
+		}
+		return filtered;
+	}, [blocks, ordered, breakpoint]);
 
 	const translated = useTranslatedBlocks(visible);
 
