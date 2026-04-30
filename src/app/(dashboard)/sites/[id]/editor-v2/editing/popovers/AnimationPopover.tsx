@@ -27,6 +27,7 @@ export const DEFAULT_ANIM: AnimationConfig = {
 
 export interface AnimationPopoverProps {
   blockId: string;
+  blockType?: string;
   anim: AnimationConfig;
   isPro: boolean;
   onUpdate: (patch: Partial<AnimationConfig>) => void;
@@ -58,12 +59,9 @@ const TRIGGER_OPTIONS: { id: AnimationConfig["trigger"]; label: string }[] = [
 // Component
 // ---------------------------------------------------------------------------
 
-export function AnimationPopoverContent({ blockId, anim, isPro, onUpdate }: AnimationPopoverProps) {
+export function AnimationPopoverContent({ blockId, blockType, anim, isPro, onUpdate }: AnimationPopoverProps) {
   const easingOptions = isPro ? EASING_OPTIONS_PRO : EASING_OPTIONS_SIMPLE;
   const hasPreset = !!anim.presetId;
-  const hasText = typeof document !== "undefined"
-    ? (document.querySelector<HTMLElement>(`[data-block-id="${blockId}"]`)?.textContent ?? "").trim().length > 0
-    : true;
 
   function updateWithPreview(patch: Partial<AnimationConfig>) {
     onUpdate(patch);
@@ -80,7 +78,7 @@ export function AnimationPopoverContent({ blockId, anim, isPro, onUpdate }: Anim
         </p>
         <AnimationPresetPicker
           value={anim.presetId}
-          hasText={hasText}
+          blockType={blockType}
           onChange={(id) => {
             if (id) updateWithPreview({ presetId: id });
             else onUpdate({ presetId: null });

@@ -1,12 +1,14 @@
 "use client";
 
 import { cn } from "@/lib/utils";
+import { getAnimationPresetFilter } from "@/lib/inspectorRegistry";
 
 interface Preset {
   id: string;
   label: string;
   icon: React.ReactNode;
   textOnly?: boolean;
+  imageOnly?: boolean;
 }
 
 const PRESETS: Preset[] = [
@@ -96,6 +98,7 @@ const PRESETS: Preset[] = [
   {
     id: "ken-burns",
     label: "Ken Burns",
+    imageOnly: true,
     icon: (
       <svg viewBox="0 0 32 32" fill="none" className="size-6">
         <rect x="4" y="6" width="24" height="20" rx="2" fill="currentColor" opacity="0.15" />
@@ -157,11 +160,14 @@ const PRESETS: Preset[] = [
 interface Props {
   value: string | null;
   onChange: (id: string | null) => void;
-  hasText?: boolean;
+  blockType?: string;
 }
 
-export function AnimationPresetPicker({ value, onChange, hasText = true }: Props) {
-  const visiblePresets = hasText ? PRESETS : PRESETS.filter((p) => !p.textOnly);
+export function AnimationPresetPicker({ value, onChange, blockType }: Props) {
+  const { allowText, allowImage } = getAnimationPresetFilter(blockType ?? "");
+  const visiblePresets = PRESETS.filter(
+    (p) => (!p.textOnly || allowText) && (!p.imageOnly || allowImage),
+  );
   return (
     <div className="grid grid-cols-2 gap-2">
       {visiblePresets.map((preset) => {

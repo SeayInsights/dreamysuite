@@ -59,3 +59,35 @@ export const DEFAULT_INSPECTOR_CONFIG: BlockInspectorConfig = {
 export function getInspectorConfig(blockType: string): BlockInspectorConfig {
   return BLOCK_INSPECTOR_CONFIG[blockType] ?? DEFAULT_INSPECTOR_CONFIG;
 }
+
+// ---------------------------------------------------------------------------
+// Animation caps — which preset categories each block type may use
+// ---------------------------------------------------------------------------
+
+interface AnimationFlags {
+  /** Allow text-splitting presets (split-text, letter-cascade) */
+  allowText: boolean;
+  /** Allow image-targeting presets (ken-burns) */
+  allowImage: boolean;
+}
+
+// Blocks not listed default to { allowText: false, allowImage: false } —
+// only universal presets (opacity/translate/scale/clip) are shown.
+const ANIMATION_BLOCK_FLAGS: Record<string, AnimationFlags> = {
+  "header":          { allowText: true,  allowImage: false },
+  "multi-text":      { allowText: true,  allowImage: false },
+  "info-card":       { allowText: true,  allowImage: false },
+  "content-card":    { allowText: true,  allowImage: false },
+  "guest-book":      { allowText: true,  allowImage: false },
+  "faq":             { allowText: true,  allowImage: false },
+  "fun-facts":       { allowText: true,  allowImage: false },
+  "story-timeline":  { allowText: true,  allowImage: false },
+  "home-hero":       { allowText: false, allowImage: true  },
+  "images":          { allowText: false, allowImage: true  },
+  "gallery":         { allowText: false, allowImage: true  },
+  "photo-split":     { allowText: true,  allowImage: true  },
+};
+
+export function getAnimationPresetFilter(blockType: string): AnimationFlags {
+  return ANIMATION_BLOCK_FLAGS[blockType] ?? { allowText: false, allowImage: false };
+}
