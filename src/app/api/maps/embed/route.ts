@@ -10,6 +10,9 @@ export async function GET(req: NextRequest) {
   if (!placeId) {
     return new Response("Missing placeId", { status: 400 });
   }
+  if (!/^[a-zA-Z0-9_-]+$/.test(placeId)) {
+    return new Response("Invalid placeId format", { status: 400 });
+  }
 
   const embedUrl = `https://www.google.com/maps/embed/v1/place?key=${apiKey}&q=place_id:${encodeURIComponent(placeId)}`;
   return Response.redirect(embedUrl, 302);

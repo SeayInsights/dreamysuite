@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getEnv } from "@/lib/cloudflare";
 import { getSession } from "@/lib/api/get-session";
-
-const DOMAIN_RE = /^[a-z0-9-]+(\.[a-z0-9-]+)*\.[a-z]{2,}$/;
+import { parseDomain } from "@/lib/validation";
 
 async function verifySiteOwnership(
   db: D1Database,
@@ -108,7 +107,7 @@ export async function POST(req: NextRequest) {
 
   const normalizedDomain = domain.trim().toLowerCase();
 
-  if (!DOMAIN_RE.test(normalizedDomain)) {
+  if (!parseDomain(normalizedDomain)) {
     return NextResponse.json(
       { error: { code: "BAD_REQUEST", message: "Invalid domain format" } },
       { status: 400 }
