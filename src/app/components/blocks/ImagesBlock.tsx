@@ -16,7 +16,7 @@ export function ImagesBlock({ block }: { block: Block }) {
       {urls.length > 0 || imageSlot ? (
         <div style={{ display: "grid", gap: "0.5rem", gridTemplateColumns: urls.length > 1 ? "1fr 1fr" : "1fr", ...(sized ? { minHeight: 0, height: "100%", width: "100%", gridAutoRows: "1fr" } : {}) }}>
           {(imageSlot ? [imageSlot] : urls).map((url, i) => (
-            <img key={i} src={url} alt="" style={{ width: "100%", height: "100%", borderRadius: "8px", objectFit: imageFit, objectPosition: "center", display: "block" }} />
+            <img key={i} src={url} alt={String(cfg.imageAlt || cfg.heading || "Wedding photo")} style={{ width: "100%", height: "100%", borderRadius: "8px", objectFit: imageFit, objectPosition: "center", display: "block" }} />
           ))}
         </div>
       ) : (

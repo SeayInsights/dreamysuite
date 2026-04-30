@@ -64,7 +64,8 @@ export function CountdownBlock({ block }: { block: Block }) {
           <button
             type="button"
             onClick={scrollToRsvp}
-            className="rounded-md bg-primary px-6 py-2.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+            className="rsvp-submit"
+            style={{ background: "var(--accent, #B8921A)" }}
           >
             RSVP
           </button>

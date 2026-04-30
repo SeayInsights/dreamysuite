@@ -98,10 +98,12 @@ export function GuestBookBlock({ block }: { block: Block }) {
       style={{ padding: "2rem 1rem", maxWidth: "600px", margin: "0 auto", ...blockSectionStyle(cfg, breakpoint) }}>
       {heading && <TextEffectWrapper as="h2" style={{ textAlign: "center", marginBottom: "1.5rem" }}>{heading}</TextEffectWrapper>}
 
-      <form onSubmit={submit} style={{ display: "flex", flexDirection: "column", gap: "0.6rem", marginBottom: "2rem" }}>
-        <input style={inputStyle} placeholder="Your name" value={name}
+      <form onSubmit={submit} aria-label="Guest book" style={{ display: "flex", flexDirection: "column", gap: "0.6rem", marginBottom: "2rem" }}>
+        <label htmlFor={`gb-name-${block.id}`} style={{ fontSize: "0.75rem", fontWeight: 600, color: "var(--muted)" }}>Name</label>
+        <input id={`gb-name-${block.id}`} style={inputStyle} placeholder="Your name" value={name}
           onChange={(e) => setName(e.target.value)} required disabled={status === "submitting"} />
-        <textarea style={{ ...inputStyle, minHeight: "80px", resize: "vertical" }}
+        <label htmlFor={`gb-msg-${block.id}`} style={{ fontSize: "0.75rem", fontWeight: 600, color: "var(--muted)" }}>Message</label>
+        <textarea id={`gb-msg-${block.id}`} style={{ ...inputStyle, minHeight: "80px", resize: "vertical" }}
           placeholder={placeholder} value={message}
           onChange={(e) => setMessage(e.target.value)} required disabled={status === "submitting"} />
         <button type="submit" style={{

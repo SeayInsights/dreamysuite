@@ -96,6 +96,7 @@ function EmbeddedMap({ placeId }: { placeId: string }) {
   return (
     <iframe
       src={`/api/maps/embed?placeId=${encodeURIComponent(placeId)}`}
+      title="Venue map"
       width="100%"
       height="100%"
       style={{ border: 0, minHeight: 300, borderRadius: "12px" }}
