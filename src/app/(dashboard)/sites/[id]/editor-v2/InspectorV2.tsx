@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { animate } from "motion/mini";
 import { X } from "lucide-react";
 
@@ -13,30 +13,11 @@ import { DesignTab } from "./inspector/DesignTab";
 import { AdvancedTab } from "./inspector/AdvancedTab";
 
 const PANEL_WIDTH = 320;
-const TAB_SWITCH_DEBOUNCE_MS = 500;
-
 type TabId = "design" | "advanced";
 const TABS: { id: TabId; label: string }[] = [
 	{ id: "design", label: "Design" },
 	{ id: "advanced", label: "Advanced" },
 ];
-
-/**
- * Simple debounce utility for tab switching.
- * Returns a debounced version of the provided function.
- */
-function debounce<T extends (...args: Parameters<T>) => void>(fn: T, delay: number): (...args: Parameters<T>) => void {
-	let timeoutId: ReturnType<typeof setTimeout> | null = null;
-	return (...args: Parameters<T>) => {
-		if (timeoutId !== null) {
-			clearTimeout(timeoutId);
-		}
-		timeoutId = setTimeout(() => {
-			fn(...args);
-			timeoutId = null;
-		}, delay);
-	};
-}
 
 export function InspectorV2() {
 	const ref = useRef<HTMLDivElement>(null);
@@ -64,12 +45,6 @@ export function InspectorV2() {
 	useEffect(() => {
 		setInspectorTab("design");
 	}, [selectedBlockId]); // eslint-disable-line react-hooks/exhaustive-deps
-
-	// Debounced tab setter to avoid rapid switching (TR-012)
-	const debouncedSetTab = useCallback(
-		debounce((newTab: InspectorTab) => setInspectorTab(newTab), TAB_SWITCH_DEBOUNCE_MS),
-		[setInspectorTab]
-	);
 
 	useEffect(() => {
 		const el = ref.current;

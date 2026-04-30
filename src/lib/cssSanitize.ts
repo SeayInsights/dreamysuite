@@ -6,7 +6,7 @@
 
 const BLOCKED_AT_RULES_SRC = /@import\b|@charset\b|@namespace\b/gi.source;
 const BLOCKED_FUNCTIONS_SRC =
-	/expression\s*\(|javascript\s*:|(?:^|[;\s])-moz-binding\s*:/gi.source;
+	/expression\s*\(|javascript\s*:|(?:^|[;\s])-moz-binding\s*:|(?:^|[;\s])behavior\s*:/gi.source;
 const BLOCKED_URL_SRC =
 	/url\s*\(\s*(?:['"]?\s*(?:https?:|\/\/|data:(?!image\/)))/gi.source;
 

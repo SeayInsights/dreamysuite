@@ -601,8 +601,6 @@ export function ScheduleBlock({ block }: { block: Block }) {
   const updateBlock = useEditorStore((s) => s.updateBlock);
   const editing = !fullPreview;
 
-  console.log("[ScheduleBlock] events data:", events.map((e) => ({ id: e.id, name: e.name, description: e.description })));
-
   const [popover, setPopover] = useState<PopoverState | null>(null);
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [dropIndex, setDropIndex] = useState<number | null>(null);
