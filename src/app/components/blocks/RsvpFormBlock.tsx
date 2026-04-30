@@ -57,7 +57,7 @@ export function RsvpFormBlock({ block }: { block: Block }) {
       {subheading && <p style={{ textAlign: "center", color: "var(--muted)", marginBottom: "1.5rem" }}>{subheading}</p>}
 
       {status === "success" ? (
-        <div role="alert" aria-live="polite" style={{ textAlign: "center", color: "#22c55e", padding: "0.875rem 1rem", fontSize: "0.9375rem" }}>
+        <div role="alert" aria-live="polite" style={{ textAlign: "center", color: "var(--success-color, #22c55e)", padding: "0.875rem 1rem", fontSize: "0.9375rem" }}>
           Thank you! Your RSVP has been received.
         </div>
       ) : (
@@ -72,7 +72,7 @@ export function RsvpFormBlock({ block }: { block: Block }) {
           </div>
           <div className="form-group">
             <label className="form-label">
-              Email <span style={{ fontSize: "0.8em", color: "#9b8e85", fontWeight: 400 }}>(optional — for confirmation)</span>
+              Email <span style={{ fontSize: "0.8em", color: "var(--muted)", fontWeight: 400 }}>(optional — for confirmation)</span>
             </label>
             <input className="form-input" name="email" type="email" placeholder="your@email.com" autoComplete="email" />
           </div>
@@ -98,7 +98,7 @@ export function RsvpFormBlock({ block }: { block: Block }) {
             </div>
           ))}
           {status === "error" && error && (
-            <p role="alert" style={{ color: "#ef4444", fontSize: "0.85rem", margin: 0 }}>{error}</p>
+            <p role="alert" style={{ color: "var(--error-color, #ef4444)", fontSize: "0.85rem", margin: 0 }}>{error}</p>
           )}
           <button className="rsvp-submit" type="submit" disabled={status === "submitting"}
             style={{ background: "var(--accent, #B8921A)", opacity: status === "submitting" ? 0.7 : 1 }}>

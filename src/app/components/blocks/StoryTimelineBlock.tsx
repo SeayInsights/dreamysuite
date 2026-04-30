@@ -66,7 +66,7 @@ export function StoryTimelineBlock({ block }: { block: Block }) {
                 marginRight: isLeft ? undefined : 0,
               }}>
                 {event.imageUrl && (
-                  <img src={event.imageUrl} alt=""
+                  <img src={event.imageUrl} alt={event.title || "Timeline photo"}
                     style={{ width: "100%", borderRadius: "4px", marginBottom: "0.5rem", objectFit: "cover", maxHeight: "120px" }} />
                 )}
                 {event.date && (

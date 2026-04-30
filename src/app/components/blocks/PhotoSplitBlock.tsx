@@ -28,7 +28,7 @@ export function PhotoSplitBlock({ block }: { block: Block }) {
           {imageUrl ? (
             <img
               src={imageUrl}
-              alt=""
+              alt={String(cfg.imageAlt || cfg.heading || "Wedding photo")}
               style={{ width: "100%", height: "100%", borderRadius: "8px", objectFit: imageFit, objectPosition: "center", display: "block", ...(clipPath ? { clipPath } : {}) }}
             />
           ) : (

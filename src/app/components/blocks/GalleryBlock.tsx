@@ -29,7 +29,7 @@ export function GalleryBlock({ block }: { block: Block }) {
         }}>
           <div style={{ flex: 1, ...(sized ? { minHeight: 0, overflow: "hidden", height: "100%", position: "relative" as const } : {}) }}>
             {imageUrl ? (
-              <img src={imageUrl} alt="" style={{ width: "100%", height: "100%", borderRadius: "8px", objectFit: imageFit, objectPosition: "center", display: "block", ...(clipPath ? { clipPath } : {}) }} />
+              <img src={imageUrl} alt={String(cfg.imageAlt || cfg.heading || "Wedding photo")} style={{ width: "100%", height: "100%", borderRadius: "8px", objectFit: imageFit, objectPosition: "center", display: "block", ...(clipPath ? { clipPath } : {}) }} />
             ) : (
               <div style={{ background: "var(--bg)", borderRadius: "8px", height: "200px", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--muted)" }}>
                 Photo
@@ -57,7 +57,7 @@ export function GalleryBlock({ block }: { block: Block }) {
       {images.length > 0 ? (
         <div style={{ display: "grid", gap: "0.5rem", gridTemplateColumns: images.length > 1 ? "1fr 1fr" : "1fr", ...(sized ? { minHeight: 0, height: "100%", width: "100%", gridAutoRows: "1fr" } : {}) }}>
           {images.map((url, i) => (
-            <img key={i} src={url} alt="" style={{ width: "100%", height: "100%", borderRadius: "8px", objectFit: imageFit, objectPosition: "center", display: "block", ...(clipPath ? { clipPath } : {}) }} />
+            <img key={i} src={url} alt={String(cfg.imageAlt || cfg.heading || "Wedding photo")} style={{ width: "100%", height: "100%", borderRadius: "8px", objectFit: imageFit, objectPosition: "center", display: "block", ...(clipPath ? { clipPath } : {}) }} />
           ))}
         </div>
       ) : (
