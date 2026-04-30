@@ -129,11 +129,11 @@ export function ThemeTray() {
 				</section>
 
 				<section className="mb-4 border-t border-border pt-4 space-y-3">
-					<div>
-						<label className="block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">
+					<div className="flex flex-col gap-1">
+						<label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
 							Decorations
 						</label>
-						<select className="w-full rounded-md border border-border bg-background px-2.5 py-1.5 text-sm outline-none focus:border-ring">
+						<select className="w-full rounded-md border border-border bg-background px-2.5 py-1.5 text-xs outline-none focus:border-ring">
 							<option value="">None</option>
 							<option value="hearts">Hearts</option>
 							<option value="flowers">Flowers</option>
@@ -141,11 +141,11 @@ export function ThemeTray() {
 						</select>
 					</div>
 
-					<div>
-						<label className="block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">
+					<div className="flex flex-col gap-1">
+						<label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
 							Cursor
 						</label>
-						<select className="w-full rounded-md border border-border bg-background px-2.5 py-1.5 text-sm outline-none focus:border-ring">
+						<select className="w-full rounded-md border border-border bg-background px-2.5 py-1.5 text-xs outline-none focus:border-ring">
 							<option value="default">Default</option>
 							<option value="pointer">Pointer</option>
 							<option value="custom">Custom</option>
