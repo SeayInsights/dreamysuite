@@ -9,6 +9,7 @@ import { AnimationPresetPicker } from "./AnimationPresetPicker";
 import { BlockContentPanel } from "./BlockContentPanel";
 import { runPreviewAnimation } from "@/app/animations/preview";
 import "@/app/animations/presets/index";
+import { useEditorStore } from "@/app/stores/editorStore";
 import type { Block } from "@/app/stores/editorStore";
 
 interface AnimationConfig {
@@ -37,6 +38,22 @@ const EASING_OPTIONS = [
   "bounce.out",
   "sine.out",
   "linear",
+];
+
+const FONT_FAMILIES = [
+  { label: "System Sans",        value: "ui-sans-serif, system-ui, sans-serif" },
+  { label: "System Serif",       value: "ui-serif, Georgia, serif" },
+  { label: "Monospace",          value: "ui-monospace, 'Courier New', monospace" },
+  { label: "Inter",              value: "'Inter', sans-serif" },
+  { label: "Playfair",           value: "'Playfair Display', Georgia, serif" },
+  { label: "Cormorant",          value: "'Cormorant Garamond', Georgia, serif" },
+  { label: "Lora",               value: "'Lora', Georgia, serif" },
+  { label: "Montserrat",         value: "'Montserrat', sans-serif" },
+  { label: "Raleway",            value: "'Raleway', sans-serif" },
+  { label: "Nunito",             value: "'Nunito', sans-serif" },
+  { label: "Great Vibes",        value: "'Great Vibes', cursive" },
+  { label: "Dancing Script",     value: "'Dancing Script', cursive" },
+  { label: "Libre Baskerville",  value: "'Libre Baskerville', serif" },
 ];
 
 interface DesignTabProps {
@@ -101,6 +118,9 @@ export function DesignTab({ block, breakpoint: _, updateBlock }: DesignTabProps)
   const cfg = getInspectorConfig(block.type);
   const parsed = parseCfg(block.config);
 
+  const isTextEditing = useEditorStore((s) => s.isTextEditing);
+  const selectedField = useEditorStore((s) => s.selectedField);
+
   const [linked, setLinked] = useState(false);
 
   const bgColor = parsed.backgroundColor as string | undefined;
@@ -118,6 +138,134 @@ export function DesignTab({ block, breakpoint: _, updateBlock }: DesignTabProps)
     <div className="space-y-0">
       <CollapsibleSection title="Content" defaultOpen>
         <BlockContentPanel block={block} updateBlock={updateBlock} />
+        {isTextEditing && selectedField && (
+          <div className="mt-3 space-y-2 border-t border-input pt-3">
+            <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">
+              Text Formatting — {selectedField}
+            </p>
+            {/* Font family */}
+            <div className="flex flex-col gap-0.5">
+              <span className="text-[10px] text-muted-foreground">Font</span>
+              <select
+                value={(parsed[selectedField + "FontFamily"] as string | undefined) ?? ""}
+                onChange={(e) =>
+                  updateBlock(block.id, {
+                    config: { ...parsed, [selectedField + "FontFamily"]: e.target.value },
+                  })
+                }
+                onKeyDown={(e) => e.stopPropagation()}
+                className="h-7 w-full rounded border border-input bg-background px-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-ring"
+              >
+                <option value="">Default</option>
+                {FONT_FAMILIES.map((f) => (
+                  <option key={f.value} value={f.value}>
+                    {f.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            {/* Font size */}
+            <div className="flex flex-col gap-0.5">
+              <span className="text-[10px] text-muted-foreground">Size</span>
+              <div className="flex items-center gap-0.5">
+                <input
+                  type="text"
+                  value={(parsed[selectedField + "Size"] as string | undefined) ?? ""}
+                  placeholder="e.g. 16px"
+                  onChange={(e) =>
+                    updateBlock(block.id, {
+                      config: { ...parsed, [selectedField + "Size"]: e.target.value },
+                    })
+                  }
+                  onKeyDown={(e) => e.stopPropagation()}
+                  className="h-7 w-full rounded border border-input bg-background px-2 text-xs focus:outline-none focus:ring-1 focus:ring-ring"
+                />
+              </div>
+            </div>
+            {/* B / I / U toggles */}
+            <div className="flex flex-col gap-0.5">
+              <span className="text-[10px] text-muted-foreground">Style</span>
+              <div className="flex gap-1">
+                {(["Bold", "Italic", "Underline"] as const).map((style) => (
+                  <button
+                    key={style}
+                    type="button"
+                    onClick={() =>
+                      updateBlock(block.id, {
+                        config: {
+                          ...parsed,
+                          [selectedField + style]: !parsed[selectedField + style],
+                        },
+                      })
+                    }
+                    className={cn(
+                      "h-7 w-8 rounded border text-xs font-medium transition-colors",
+                      parsed[selectedField + style]
+                        ? "border-foreground bg-foreground text-background"
+                        : "border-input bg-background text-muted-foreground hover:border-foreground"
+                    )}
+                  >
+                    {style[0]}
+                  </button>
+                ))}
+              </div>
+            </div>
+            {/* Color */}
+            <div className="flex flex-col gap-0.5">
+              <span className="text-[10px] text-muted-foreground">Color</span>
+              <div className="flex items-center gap-2">
+                <input
+                  type="color"
+                  value={(parsed[selectedField + "Color"] as string | undefined) || "#000000"}
+                  onChange={(e) =>
+                    updateBlock(block.id, {
+                      config: { ...parsed, [selectedField + "Color"]: e.target.value },
+                    })
+                  }
+                  onKeyDown={(e) => e.stopPropagation()}
+                  className="h-7 w-7 cursor-pointer rounded border border-input p-0.5"
+                />
+                <input
+                  type="text"
+                  value={(parsed[selectedField + "Color"] as string | undefined) ?? ""}
+                  placeholder="#000000"
+                  onChange={(e) =>
+                    updateBlock(block.id, {
+                      config: { ...parsed, [selectedField + "Color"]: e.target.value },
+                    })
+                  }
+                  onKeyDown={(e) => e.stopPropagation()}
+                  className="h-7 flex-1 rounded border border-input bg-background px-2 text-xs focus:outline-none focus:ring-1 focus:ring-ring"
+                />
+              </div>
+            </div>
+            {/* Alignment */}
+            <div className="flex flex-col gap-0.5">
+              <span className="text-[10px] text-muted-foreground">Align</span>
+              <div className="flex gap-1">
+                {(["left", "center", "right"] as const).map((align) => (
+                  <button
+                    key={align}
+                    type="button"
+                    onClick={() =>
+                      updateBlock(block.id, {
+                        config: { ...parsed, [selectedField + "Align"]: align },
+                      })
+                    }
+                    className={cn(
+                      "h-7 flex-1 rounded border text-xs capitalize transition-colors",
+                      parsed[selectedField + "Align"] === align
+                        ? "border-foreground bg-foreground text-background"
+                        : "border-input bg-background text-muted-foreground hover:border-foreground"
+                    )}
+                  >
+                    {align[0].toUpperCase() + align.slice(1)}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
       </CollapsibleSection>
       {cfg.showBackground && (
         <CollapsibleSection title="Background" defaultOpen={false}>
