@@ -32,14 +32,14 @@ export function PhotoSplitBlock({ block }: { block: Block }) {
               style={{ width: "100%", height: "100%", borderRadius: "8px", objectFit: imageFit, objectPosition: "center", display: "block", ...(clipPath ? { clipPath } : {}) }}
             />
           ) : (
-            <div style={{ background: "#f5f0eb", borderRadius: "8px", height: "200px", display: "flex", alignItems: "center", justifyContent: "center", color: "#9b8e85" }}>
+            <div style={{ background: "var(--bg)", borderRadius: "8px", height: "200px", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--muted)" }}>
               Photo
             </div>
           )}
         </div>
         <div style={{ flex: 1 }}>
           {heading && <TextEffectWrapper as="h3">{heading}</TextEffectWrapper>}
-          {body ? <p>{body}</p> : <p style={{ color: "#9b8e85", fontStyle: "italic" }}>Content will appear here.</p>}
+          {body ? <p>{body}</p> : <p style={{ color: "var(--muted)", fontStyle: "italic" }}>Content will appear here.</p>}
         </div>
       </div>
     </section>

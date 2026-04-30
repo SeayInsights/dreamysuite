@@ -33,7 +33,7 @@ export function StoryTimelineBlock({ block }: { block: Block }) {
         {/* Vertical line */}
         <div style={{
           position: "absolute", left: "50%", top: 0, bottom: 0,
-          width: "2px", background: "#e0dbd4", transform: "translateX(-50%)",
+          width: "2px", background: "var(--border)", transform: "translateX(-50%)",
         }} aria-hidden />
 
         {events.map((event, i) => {
@@ -58,8 +58,8 @@ export function StoryTimelineBlock({ block }: { block: Block }) {
               {/* Card */}
               <div style={{
                 width: "44%",
-                background: "#fff",
-                border: "1px solid #e0dbd4",
+                background: "var(--bg)",
+                border: "1px solid var(--border)",
                 borderRadius: "8px",
                 padding: "0.875rem 1rem",
                 marginLeft: isLeft ? 0 : undefined,
@@ -75,7 +75,7 @@ export function StoryTimelineBlock({ block }: { block: Block }) {
                   </p>
                 )}
                 {event.title && <h4 style={{ margin: "0 0 0.25rem", fontSize: "0.95rem" }}>{event.title}</h4>}
-                {event.description && <p style={{ margin: 0, fontSize: "0.85rem", color: "#6b6560" }}>{event.description}</p>}
+                {event.description && <p style={{ margin: 0, fontSize: "0.85rem", color: "var(--muted)" }}>{event.description}</p>}
               </div>
             </div>
           );
