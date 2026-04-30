@@ -96,6 +96,18 @@ Real bugs and regressions. Read before debugging or building. Update when a new 
 **Rule:** Don't add `closest("[data-something]")` exemptions to blur handlers. New panels get focus-safe behavior automatically via `restoreFocus()`.
 **Status:** Fixed (PR #209).
 
+### Iframe isolation — use el.ownerDocument, not document
+**What happened:** Phase 2 moved site content into an iframe via React portal. All `document.*` and `window.*` calls in editing hooks (useEditEventHandlers, useDblClickActivation, useDrag) referenced the parent document, not the iframe where contenteditable and blocks live.
+**Fix:** PRs #215-#218 — replaced `document.activeElement` with `el.ownerDocument.activeElement`, `document.execCommand` with `el.ownerDocument.execCommand`, `window.getSelection()` with `el.ownerDocument.defaultView?.getSelection()`, etc. Drag listeners added to both iframe and parent windows. Keyboard and mouse events forwarded from iframe to parent.
+**Rule:** When writing code that touches DOM inside the canvas: always use `el.ownerDocument` (not `document`) and `el.ownerDocument.defaultView` (not `window`). The canvas content lives in an iframe; the editor chrome lives in the parent.
+**Status:** Fixed (PRs #215-#218).
+
+### Effects components use parent window for mouse events
+**What happened:** Effect components (cursor, background, decoration) call `window.addEventListener("mousemove")`. Since effects render inside the iframe but `window` resolves to the parent, mouse events from the iframe don't reach them.
+**Fix:** PR #218 — BreakpointFrame forwards mousemove/mousedown/mouseup from iframe document to parent window.
+**Rule:** Effects can listen on `window` as long as mouse event forwarding is active. If adding new event types (scroll, touch), add forwarding in BreakpointFrame's iframe event bridge. Effects that inject `<style>` into `document.head` will affect the parent, not the iframe — use inline styles or pass through React props instead.
+**Status:** Mitigated (PR #218). Style injection into document.head remains a known limitation.
+
 ---
 
 ## Update log
@@ -109,3 +121,4 @@ Real bugs and regressions. Read before debugging or building. Update when a new 
 | 2026-04-30 | CSS variable namespace collision (site-blocks.css vs shadcn/ui) | Bug triage (PR #207) |
 | 2026-04-30 | Focus exemption fragility (closest() pattern) | Bug triage (PR #207) |
 | 2026-04-30 | Updated: CSS namespace collision → fixed (PR #208), focus exemption → fixed (PR #209) | Editor isolation Phase 1 |
+| 2026-04-30 | Iframe isolation: ownerDocument rule, effects mouse forwarding | Editor isolation Phase 2 (PRs #214-#218) |

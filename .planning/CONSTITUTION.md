@@ -41,6 +41,10 @@ Next.js 16 / Cloudflare Workers (opennextjs) / D1 (SQLite) / better-auth / R2 / 
 | Site CSS variables | `src/styles/site-blocks.css` → `[data-breakpoint]` defaults | ✅ Active |
 | Theme variable chain | `BreakpointFrame.tsx` → `siteThemeVars()` → inline styles | ✅ Active |
 | Focus management | `hooks/useLastFocus.ts` + `InspectorV2.onMouseDown` | ✅ Active |
+| Iframe canvas | `IframeCanvas.tsx` — portal, stylesheet clone, theme sync | ✅ Active |
+| Cross-iframe events | `BreakpointFrame.tsx` — keyboard/mouse forwarding to parent | ✅ Active |
+| Selection overlay | `SelectionLayer.tsx` — parent-frame overlay reading iframe rects | ✅ Active |
+| Cross-iframe hit-testing | `EditorOverlay.tsx` — native listeners, `ownerDocument.elementsFromPoint` | ✅ Active |
 | Editor store | `src/app/(dashboard)/stores/editorStore.ts` | Partial — Zustand, blocks only |
 | Public render pipeline | `src/app/[slug]/route.ts` → `components/blocks/*` | Active |
 | Auth | `src/lib/` auth helpers + better-auth | Active |
@@ -64,7 +68,10 @@ Workers runtime doesn't support Next.js Server Actions. All mutations go through
 Never squash or edit existing migrations — production D1 state would desync. Add new migrations only (next sequential number).
 
 ### 5. Editor preview ≠ public render
-Editor uses iframe + delta postMessage. Public `[slug]` uses SSR → client render. They are different code paths. Changes to block rendering must be tested in both.
+Editor uses iframe isolation (React portal into `<iframe srcDoc>`). Public `[slug]` uses SSR → client render. They are different code paths. Changes to block rendering must be tested in both.
+
+### 7. Iframe isolation — DOM API rule
+Site content renders inside an iframe via `IframeCanvas` (React portal). Editor chrome (inspector, toolbar, drag handles) renders in the parent document. When writing code that manipulates canvas DOM: use `el.ownerDocument` not `document`, `el.ownerDocument.defaultView` not `window`. Keyboard and mouse events are forwarded from iframe to parent in BreakpointFrame.
 
 ### 6. All new state goes through editorStore — never new useState in editor.tsx
 Every new piece of editor state must go through `editorStore.ts` (Zustand). Adding useState to the monolith makes it worse.
@@ -107,3 +114,5 @@ Every new piece of editor state must go through `editorStore.ts` (Zustand). Addi
 8. `var(--accent)`, `var(--muted)`, `var(--border)`, `var(--radius)` in block/site code → use `--site-*` prefix. Bare names are shadcn-only.
 9. `closest("[data-something]")` exemptions in blur handlers → use `useLastFocus` hook + `restoreFocus()` pattern
 10. `--theme-*` intermediary CSS variables → output final names directly from `siteThemeVars()`
+11. `document.execCommand()` or `window.getSelection()` in editing code → use `el.ownerDocument.execCommand()` and `el.ownerDocument.defaultView?.getSelection()` (canvas is in an iframe)
+12. `window.addEventListener` for pointer events in drag code without also listening on iframe window → use `el.ownerDocument.defaultView` for the target element's window
