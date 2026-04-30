@@ -483,7 +483,6 @@ export function ImageEditor({ containerRef }: Props) {
     updateBlock(active.blockId, { config: { ...cfg, imageFit: fit } });
   }, [active, updateBlock]);
 
-  const containerHeight = containerRef.current?.clientHeight ?? 0;
   const blockExists = active !== null && blocks.some((b) => b.id === active.blockId);
 
   if (!blockExists && active) {
@@ -541,7 +540,7 @@ export function ImageEditor({ containerRef }: Props) {
       </div>
 
       {active && cropMode && (
-        <CropHandles blockId={active.blockId} rect={active.imageRect} containerRef={containerRef} />
+        <CropHandles blockId={active.blockId} rect={active.imageRect} />
       )}
     </div>
   );

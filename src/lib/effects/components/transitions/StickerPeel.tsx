@@ -170,6 +170,7 @@ const _inject_StickerPeel_Styles = () => {
 };
 if (typeof document !== 'undefined') _inject_StickerPeel_Styles();
 import { useRef, useEffect, useMemo } from 'react';
+import Image from 'next/image';
 
 const StickerPeel = ({
   imageSrc,
@@ -422,11 +423,13 @@ const StickerPeel = ({
       <div className="sticker-container" ref={containerRef}>
         <div className="sticker-main">
           <div className="sticker-lighting">
-            <img
+            <Image
               src={imageSrc}
               alt=""
+              width={width}
+              height={width}
               className="sticker-image"
-              draggable="false"
+              draggable={false}
               onContextMenu={e => e.preventDefault()}
             />
           </div>
@@ -434,11 +437,13 @@ const StickerPeel = ({
 
         <div className="flap">
           <div className="flap-lighting">
-            <img
+            <Image
               src={imageSrc}
               alt=""
+              width={width}
+              height={width}
               className="flap-image"
-              draggable="false"
+              draggable={false}
               onContextMenu={e => e.preventDefault()}
             />
           </div>

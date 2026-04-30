@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import Image from "next/image";
 import { ImagePlus, X } from "lucide-react";
 import { useEditorStore } from "@/app/stores/editorStore";
 
@@ -49,11 +50,12 @@ export function SitePhotoPicker({ value, onChange, label }: Props) {
 			)}
 
 			{value && (
-				<div className="relative overflow-hidden rounded border border-border">
-					<img
+				<div className="relative h-20 overflow-hidden rounded border border-border">
+					<Image
 						src={value}
 						alt="Selected"
-						className="h-20 w-full object-cover"
+						fill
+						className="object-cover"
 						onError={(e) => {
 							(e.target as HTMLImageElement).style.display = "none";
 						}}
@@ -95,10 +97,11 @@ export function SitePhotoPicker({ value, onChange, label }: Props) {
 										: "ring-transparent hover:ring-primary/40")
 								}
 							>
-								<img
+								<Image
 									src={url}
 									alt={photo.filename}
-									className="size-full object-cover"
+									fill
+									className="object-cover"
 								/>
 							</button>
 						);

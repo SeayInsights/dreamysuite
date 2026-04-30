@@ -4,6 +4,7 @@
 "use client";
 
 import { Suspense, useRef, useLayoutEffect, useEffect, useMemo } from 'react';
+import Image from 'next/image';
 import { Canvas, useFrame, useLoader, useThree, invalidate } from '@react-three/fiber';
 import { OrbitControls, useGLTF, useFBX, useProgress, Html, Environment, ContactShadows } from '@react-three/drei';
 import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader';
@@ -25,7 +26,7 @@ const Loader = ({ placeholderSrc }) => {
   return (
     <Html center>
       {placeholderSrc ? (
-        <img src={placeholderSrc} width={128} height={128} style={{ filter: 'blur(8px)', borderRadius: 8 }} />
+        <Image src={placeholderSrc} alt="" width={128} height={128} style={{ filter: 'blur(8px)', borderRadius: 8 }} />
       ) : (
         `${Math.round(progress)} %`
       )}

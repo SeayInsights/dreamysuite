@@ -3,7 +3,6 @@
 import { useState, useRef, useEffect, useMemo } from "react";
 import { ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useEditorStore } from "@/app/stores/editorStore";
 import { getEffectsByCategory, getEffectById } from "@/lib/effects/registry";
 import type { EffectCategory, EffectEntry } from "@/lib/effects/types";
 

@@ -440,7 +440,6 @@ export function SectionToolbar({
       : {}),
   };
 
-  const currentZIndex = typeof config.blockZIndex === "number" ? config.blockZIndex : 0;
   const currentRotation = typeof config.blockRotation === "number" ? config.blockRotation : 0;
 
   const blockType = block?.type ?? "";

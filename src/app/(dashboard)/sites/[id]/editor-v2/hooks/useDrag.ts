@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import { useEditorStore } from "@/app/stores/editorStore";
 import { parseCfg } from "@/lib/editableField";
-import { getCanvasBounds, constrainToBounds, type Bounds, type Rect } from "../lib/boundsCalculator";
+import { getCanvasBounds, constrainToBounds, type Rect } from "../lib/boundsCalculator";
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 
@@ -52,17 +52,6 @@ const GRID_SIZE_PX = 8; // Snap grid for move operations
 const AUTO_SCROLL_EDGE_DISTANCE_PX = 50; // Distance from viewport edge to trigger auto-scroll
 const AUTO_SCROLL_SPEED_PX = 5; // Scroll speed per frame
 
-function snapWidth(rawPct: number, containerWidth: number): number {
-	const rawPx = (rawPct / 100) * containerWidth;
-	const nearestCol = Math.round(rawPct / COL_PCT);
-	const clampedCol = Math.max(1, Math.min(COLUMNS, nearestCol));
-	const snappedPx = (clampedCol * COL_PCT * containerWidth) / 100;
-	if (Math.abs(rawPx - snappedPx) <= SNAP_THRESHOLD_PX) {
-		return clampedCol * COL_PCT;
-	}
-	const clampedRaw = Math.max(COL_PCT, Math.min(100, rawPct));
-	return clampedRaw;
-}
 
 function snapToGrid(value: number, gridSize: number, threshold: number): number {
 	const nearest = Math.round(value / gridSize) * gridSize;

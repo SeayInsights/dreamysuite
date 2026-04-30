@@ -15,7 +15,7 @@
  * edge: { top, left, right, bottom } — e.g. top: 0.1 = crop 10% from top.
  */
 
-import { useRef, useCallback, type RefObject } from "react";
+import { useRef, useCallback } from "react";
 import { useEditorStore } from "@/app/stores/editorStore";
 import { parseCfg } from "@/lib/editableField";
 
@@ -104,10 +104,9 @@ const HANDLES: HandleDef[] = [
 interface Props {
   blockId: string;
   rect: DOMRect;
-  containerRef: RefObject<HTMLElement | null>;
 }
 
-export function CropHandles({ blockId, rect, containerRef }: Props) {
+export function CropHandles({ blockId, rect }: Props) {
   const updateBlock = useEditorStore((s) => s.updateBlock);
   const blocks = useEditorStore((s) => s.blocks);
 

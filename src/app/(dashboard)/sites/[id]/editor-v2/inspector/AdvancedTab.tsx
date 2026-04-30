@@ -132,7 +132,7 @@ function resetOverride(
 ) {
   if (breakpoint === "desktop") return;
   const existing = block.overrides?.[breakpoint] ?? {};
-  const { [field]: _removed, ...rest } = existing;
+  const { [field]: _, ...rest } = existing;
   const newOverrides = {
     ...block.overrides,
     [breakpoint]: Object.keys(rest).length > 0 ? rest : undefined,
@@ -256,7 +256,7 @@ export function AdvancedTab({ block, breakpoint, updateBlock }: AdvancedTabProps
                   const bp = breakpoint as "tablet" | "mobile";
                   if (raw === "") {
                     const existing = block.overrides?.[bp] ?? {};
-                    const { sortOrder: _r, ...rest } = existing as Record<string, unknown>;
+                    const { sortOrder: _, ...rest } = existing as Record<string, unknown>;
                     updateBlock(block.id, {
                       overrides: {
                         ...block.overrides,
