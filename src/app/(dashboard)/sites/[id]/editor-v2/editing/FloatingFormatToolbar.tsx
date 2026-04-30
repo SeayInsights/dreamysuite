@@ -4,7 +4,7 @@ import { useRef, useEffect, useState, type JSX } from "react";
 import { createPortal } from "react-dom";
 import { animate } from "motion/mini";
 import { cn } from "@/lib/utils";
-import { duration, EASING } from "@/lib/motion";
+import { duration, EASING } from "@/lib/animation/motion";
 import { useEditorStore } from "@/app/stores/editorStore";
 import { getEffectsByCategory, getEffectById } from "@/lib/effects/registry";
 

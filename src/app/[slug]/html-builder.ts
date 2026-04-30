@@ -4,7 +4,7 @@ import { buildStyles } from "./styles";
 import { renderBlock } from "./renderers";
 import { buildCountdownScript, buildMessageListenerScript, buildBlockAnimationScript, buildResponsiveScript, VALID_PRESET_IDS } from "./scripts";
 import { buildIntroHtml } from "./pages";
-import { LANG_NATIVE } from "@/lib/languages";
+import { LANG_NATIVE } from "@/lib/i18n/languages";
 import { detectDesignedAtWidth } from "@/lib/responsiveScale";
 
 // Allowlist prevents arbitrary path injection into import() URLs

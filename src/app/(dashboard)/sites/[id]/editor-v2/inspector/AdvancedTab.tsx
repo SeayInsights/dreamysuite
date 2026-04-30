@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { CollapsibleSection } from "./CollapsibleSection";
 import { parseCfg } from "@/lib/editableField";
-import { getInspectorConfig } from "@/lib/inspectorRegistry";
+import { getInspectorConfig } from "@/lib/editor/inspectorRegistry";
 import type { Block } from "@/app/stores/editorStore";
 
 interface AnimationConfig {

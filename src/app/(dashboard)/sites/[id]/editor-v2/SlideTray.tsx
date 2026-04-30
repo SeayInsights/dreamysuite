@@ -4,7 +4,7 @@ import { useEffect, useRef } from "react";
 import dynamic from "next/dynamic";
 
 import { useEditorStore } from "@/app/stores/editorStore";
-import { prefersReducedMotion } from "@/lib/motion";
+import { prefersReducedMotion } from "@/lib/animation/motion";
 
 const PagesTray = dynamic(() => import("./trays/PagesTray").then((m) => ({ default: m.PagesTray })));
 const ElementsTray = dynamic(() => import("./trays/ElementsTray").then((m) => ({ default: m.ElementsTray })));
