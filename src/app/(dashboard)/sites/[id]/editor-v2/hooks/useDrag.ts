@@ -105,24 +105,22 @@ function detectCollisions(
  * Handle auto-scroll when pointer is near viewport edges during drag.
  * Implements FR-002 (auto-scroll near edges).
  */
-function handleAutoScroll(clientY: number, _container: HTMLElement): void {
-  const viewportHeight = window.innerHeight;
-  const distanceFromTop = clientY;
-  const distanceFromBottom = viewportHeight - clientY;
+function handleAutoScroll(clientY: number, container: HTMLElement): void {
+  const scrollEl = container.closest(".editor-canvas-scroll") ?? container;
+  const rect = scrollEl.getBoundingClientRect();
+  const distanceFromTop = clientY - rect.top;
+  const distanceFromBottom = rect.bottom - clientY;
 
   let scrollDelta = 0;
 
   if (distanceFromTop < AUTO_SCROLL_EDGE_DISTANCE_PX) {
-    // Near top edge - scroll up
     scrollDelta = -AUTO_SCROLL_SPEED_PX;
   } else if (distanceFromBottom < AUTO_SCROLL_EDGE_DISTANCE_PX) {
-    // Near bottom edge - scroll down
     scrollDelta = AUTO_SCROLL_SPEED_PX;
   }
 
   if (scrollDelta !== 0) {
-    // Scroll the window (canvas is in viewport)
-    window.scrollBy({ top: scrollDelta, behavior: "auto" });
+    scrollEl.scrollBy({ top: scrollDelta, behavior: "auto" });
   }
 }
 
@@ -541,30 +539,57 @@ export function useDrag(containerRef: React.RefObject<HTMLElement | null>): {
     const target = e.currentTarget as HTMLElement;
     target.setPointerCapture(e.pointerId);
 
+    const ownerDoc = target.ownerDocument;
+    const ownerWin = ownerDoc.defaultView ?? window;
+    const isCrossFrame = ownerWin !== window;
+
     const preventSelect = (ev: Event) => ev.preventDefault();
-    document.addEventListener("selectstart", preventSelect);
-    document.body.style.userSelect = "none";
+    ownerDoc.addEventListener("selectstart", preventSelect);
+    ownerDoc.body.style.userSelect = "none";
+    if (isCrossFrame) {
+      document.addEventListener("selectstart", preventSelect);
+      document.body.style.userSelect = "none";
+    }
 
     const move = (ev: PointerEvent) => onPointerMove(ev);
     const up = () => {
       onPointerUp();
-      document.removeEventListener("selectstart", preventSelect);
-      document.body.style.userSelect = "";
-      window.removeEventListener("pointermove", move);
-      window.removeEventListener("pointerup", up);
-      window.removeEventListener("pointercancel", up);
+      ownerDoc.removeEventListener("selectstart", preventSelect);
+      ownerDoc.body.style.userSelect = "";
+      ownerWin.removeEventListener("pointermove", move);
+      ownerWin.removeEventListener("pointerup", up);
+      ownerWin.removeEventListener("pointercancel", up);
+      if (isCrossFrame) {
+        document.removeEventListener("selectstart", preventSelect);
+        document.body.style.userSelect = "";
+        window.removeEventListener("pointermove", move);
+        window.removeEventListener("pointerup", up);
+        window.removeEventListener("pointercancel", up);
+      }
     };
 
-    window.addEventListener("pointermove", move);
-    window.addEventListener("pointerup", up);
-    window.addEventListener("pointercancel", up);
+    ownerWin.addEventListener("pointermove", move);
+    ownerWin.addEventListener("pointerup", up);
+    ownerWin.addEventListener("pointercancel", up);
+    if (isCrossFrame) {
+      window.addEventListener("pointermove", move);
+      window.addEventListener("pointerup", up);
+      window.addEventListener("pointercancel", up);
+    }
 
     cleanupRef.current = () => {
-      document.removeEventListener("selectstart", preventSelect);
-      document.body.style.userSelect = "";
-      window.removeEventListener("pointermove", move);
-      window.removeEventListener("pointerup", up);
-      window.removeEventListener("pointercancel", up);
+      ownerDoc.removeEventListener("selectstart", preventSelect);
+      ownerDoc.body.style.userSelect = "";
+      ownerWin.removeEventListener("pointermove", move);
+      ownerWin.removeEventListener("pointerup", up);
+      ownerWin.removeEventListener("pointercancel", up);
+      if (isCrossFrame) {
+        document.removeEventListener("selectstart", preventSelect);
+        document.body.style.userSelect = "";
+        window.removeEventListener("pointermove", move);
+        window.removeEventListener("pointerup", up);
+        window.removeEventListener("pointercancel", up);
+      }
     };
   }
 
