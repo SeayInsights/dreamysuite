@@ -11,7 +11,7 @@
     "build:effects": "node scripts/build-public-effects.mjs",
     "build": "node scripts/build-public-effects.mjs && next build --webpack",
     "start": "next start",
-    "lint": "eslint src --ext .ts,.tsx",
+    "lint": "eslint src",
     "test": "vitest run",
     "deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
     "upload": "opennextjs-cloudflare build && opennextjs-cloudflare upload",
@@ -57,7 +57,6 @@
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20260416.2",
-    "@eslint/eslintrc": "^3",
     "@playwright/test": "^1.59.1",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20.19.39",
