@@ -1,0 +1,90 @@
+/* ═══════════════════════════════════════════════════════════════════
+   DreamySuite — Dashboard Shell, Layout & Buttons
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ── Dashboard shell ─────────────────────────────────────────────── */
+
+.ds-shell {
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+  background: var(--ds-bg);
+}
+
+.ds-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
+}
+
+/* ── Sites index page ────────────────────────────────────────────── */
+
+.sites-page {
+  padding: 2rem 2.5rem;
+  max-width: 1040px;
+  animation: ds-fade-up var(--ds-dur-slow) var(--ds-ease-out) both;
+}
+
+.sites-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 2rem;
+  gap: 1rem;
+}
+
+.sites-heading {
+  font-family: var(--ds-font-display);
+  font-size: 1.625rem;
+  font-weight: 500;
+  color: var(--ds-text);
+  letter-spacing: -0.02em;
+  margin: 0 0 0.25rem;
+  line-height: 1.15;
+}
+
+.sites-subheading {
+  font-size: 0.84rem;
+  color: var(--ds-muted);
+  margin: 0;
+}
+
+/* ── Buttons ─────────────────────────────────────────────────────── */
+
+.ds-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.575rem 1.125rem;
+  background: var(--ds-btn);
+  color: var(--ds-btn-text);
+  border-radius: 10px;
+  font-family: var(--ds-font-ui);
+  font-size: 0.84rem;
+  font-weight: 500;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background var(--ds-dur-fast) var(--ds-ease),
+              transform var(--ds-dur-fast) var(--ds-ease),
+              box-shadow var(--ds-dur-fast) var(--ds-ease);
+}
+
+.ds-btn-primary:hover {
+  background: var(--ds-btn-hover);
+  box-shadow: 0 4px 16px rgba(28, 23, 16, 0.2);
+  transform: translateY(-1px);
+}
+
+.ds-btn-primary:active {
+  transform: translateY(0) scale(0.98);
+  box-shadow: none;
+}
+
+.ds-btn-primary:focus-visible {
+  outline: none;
+  box-shadow: var(--ds-focus);
+}

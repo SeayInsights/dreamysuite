@@ -1,0 +1,93 @@
+/* ═══════════════════════════════════════════════════════════════════
+   DreamySuite — Dashboard Tokens & Base
+   Cinematic · Effortless · Expressive
+   Warm cream surfaces · Gold accents · Editorial typography
+   ═══════════════════════════════════════════════════════════════════ */
+
+@import url('https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400;0,6..96,500;0,6..96,600;1,6..96,400;1,6..96,500&family=Figtree:wght@300;400;500;600;700&display=swap');
+
+/* ── Design tokens ──────────────────────────────────────────────── */
+
+:root {
+  /* Brand — warm amber gold */
+  --ds-accent:         #B8921A;
+  --ds-accent-hover:   #9A780E;
+  --ds-accent-light:   #FDF6E0;
+  --ds-accent-ring:    rgba(184, 146, 26, 0.18);
+
+  /* Surfaces */
+  --ds-bg:             #FDFBF7;
+  --ds-bg-subtle:      #F7F2EA;
+  --ds-bg-card:        #FFFFFF;
+
+  /* Text */
+  --ds-text:           #1A1714;
+  --ds-muted:          #8B7F76;
+  --ds-light:          #B5A89E;
+
+  /* Borders */
+  --ds-border:         #E5DDD3;
+  --ds-border-light:   #EDE8DF;
+
+  /* Buttons */
+  --ds-btn:            #1C1710;
+  --ds-btn-hover:      #2C241A;
+  --ds-btn-text:       #FDFBF7;
+
+  /* Focus */
+  --ds-focus:          0 0 0 3px var(--ds-accent-ring);
+
+  /* Typography */
+  --ds-font-display:   'Bodoni Moda', Georgia, serif;
+  --ds-font-ui:        'Figtree', system-ui, -apple-system, sans-serif;
+
+  /* Motion */
+  --ds-ease:           cubic-bezier(0.32, 0.72, 0, 1);
+  --ds-ease-out:       cubic-bezier(0.16, 1, 0.3, 1);
+  --ds-dur-fast:       150ms;
+  --ds-dur:            250ms;
+  --ds-dur-slow:       400ms;
+}
+
+/* ── Base ────────────────────────────────────────────────────────── */
+
+body {
+  font-family: var(--ds-font-ui);
+  background: var(--ds-bg);
+  color: var(--ds-text);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ── Reduced motion ──────────────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ── Animations ──────────────────────────────────────────────────── */
+
+@keyframes ds-fade-up {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.ds-animate {
+  animation: ds-fade-up var(--ds-dur-slow) var(--ds-ease-out) both;
+}
+
+/* Staggered children */
+.ds-stagger > *:nth-child(1)  { animation: ds-fade-up var(--ds-dur-slow) var(--ds-ease-out)  40ms both; }
+.ds-stagger > *:nth-child(2)  { animation: ds-fade-up var(--ds-dur-slow) var(--ds-ease-out)  80ms both; }
+.ds-stagger > *:nth-child(3)  { animation: ds-fade-up var(--ds-dur-slow) var(--ds-ease-out) 120ms both; }
+.ds-stagger > *:nth-child(4)  { animation: ds-fade-up var(--ds-dur-slow) var(--ds-ease-out) 160ms both; }
+.ds-stagger > *:nth-child(5)  { animation: ds-fade-up var(--ds-dur-slow) var(--ds-ease-out) 200ms both; }
+.ds-stagger > *:nth-child(6)  { animation: ds-fade-up var(--ds-dur-slow) var(--ds-ease-out) 240ms both; }
+.ds-stagger > *:nth-child(7)  { animation: ds-fade-up var(--ds-dur-slow) var(--ds-ease-out) 280ms both; }
+.ds-stagger > *:nth-child(8)  { animation: ds-fade-up var(--ds-dur-slow) var(--ds-ease-out) 320ms both; }
+.ds-stagger > *:nth-child(9)  { animation: ds-fade-up var(--ds-dur-slow) var(--ds-ease-out) 360ms both; }
+.ds-stagger > *:nth-child(10) { animation: ds-fade-up var(--ds-dur-slow) var(--ds-ease-out) 400ms both; }
