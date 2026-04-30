@@ -14,6 +14,7 @@ import { useEffect } from "react";
 
 import { useEditorStore } from "@/app/stores/editorStore";
 import { useFloatingToolbar } from "../hooks/useFloatingToolbar";
+import { setLastFocusedElement } from "../hooks/useLastFocus";
 import { type EditState, parseCfgFromBlock } from "./textEditorTypes";
 
 export function useDblClickActivation({
@@ -88,9 +89,10 @@ export function useDblClickActivation({
 
         requestAnimationFrame(() => {
           itemEl.focus();
-          const sel = window.getSelection();
+          setLastFocusedElement(itemEl);
+          const sel = itemEl.ownerDocument.defaultView?.getSelection();
           if (sel && sel.rangeCount === 0) {
-            const range = document.createRange();
+            const range = itemEl.ownerDocument.createRange();
             range.selectNodeContents(itemEl);
             range.collapse(false);
             sel.removeAllRanges();
@@ -167,9 +169,10 @@ export function useDblClickActivation({
 
       requestAnimationFrame(() => {
         fieldEl.focus();
-        const sel = window.getSelection();
+        setLastFocusedElement(fieldEl);
+        const sel = fieldEl.ownerDocument.defaultView?.getSelection();
         if (sel && sel.rangeCount === 0) {
-          const range = document.createRange();
+          const range = fieldEl.ownerDocument.createRange();
           range.selectNodeContents(fieldEl);
           range.collapse(false);
           sel.removeAllRanges();

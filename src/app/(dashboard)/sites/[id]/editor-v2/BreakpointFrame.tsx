@@ -159,6 +159,30 @@ export function BreakpointFrame({ children, nav }: Props) {
     ],
   );
 
+  useEffect(() => {
+    if (!iframeDoc) return;
+    function forward(e: KeyboardEvent) {
+      if ((e.target as HTMLElement)?.isContentEditable) return;
+      window.dispatchEvent(
+        new KeyboardEvent(e.type, {
+          key: e.key,
+          code: e.code,
+          ctrlKey: e.ctrlKey,
+          shiftKey: e.shiftKey,
+          altKey: e.altKey,
+          metaKey: e.metaKey,
+          bubbles: true,
+        }),
+      );
+    }
+    iframeDoc.addEventListener("keydown", forward);
+    iframeDoc.addEventListener("keyup", forward);
+    return () => {
+      iframeDoc.removeEventListener("keydown", forward);
+      iframeDoc.removeEventListener("keyup", forward);
+    };
+  }, [iframeDoc]);
+
   const [frameReady, setFrameReady] = useState(false);
   const [devicePixelRatio, setDevicePixelRatio] = useState(1);
   const [navHeight, setNavHeight] = useState(0);
