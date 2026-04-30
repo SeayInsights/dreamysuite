@@ -8,7 +8,7 @@ interface Block { id: string; type: string; [key: string]: unknown }
 export function InfoCardBlock({ block }: { block: Block }) {
   const breakpoint = useEditorStore((s) => s.breakpoint) as "desktop" | "tablet" | "mobile";
   const cfg = parseCfg(block.config);
-  const variant = String(cfg.variant ?? "registry");
+  const variant = String(cfg.variant ?? (block.type === "hotel-card" ? "hotel" : "registry"));
   const name = String(cfg.name ?? cfg.title ?? (variant === "hotel" ? "Hotel" : "Registry"));
   const address = String(cfg.address ?? "");
   const url = String(cfg.url ?? "");

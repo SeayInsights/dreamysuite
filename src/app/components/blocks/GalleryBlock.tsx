@@ -12,11 +12,11 @@ export function GalleryBlock({ block }: { block: Block }) {
   const sized = typeof cfg.blockHeight === "number" && cfg.blockHeight > 0;
   const imageFit = (typeof cfg.imageFit === "string" ? cfg.imageFit : "cover") as React.CSSProperties["objectFit"];
 
-  if (layout === "split") {
+  if (layout === "split" || layout === "left" || layout === "right") {
     const imageUrl = cfg.imageUrl as string | undefined;
     const heading = String(cfg.heading ?? "");
-    const body = String(cfg.body ?? "");
-    const imageLayout = String(cfg.imageLayout ?? "left");
+    const body = String(cfg.body ?? cfg.text ?? "");
+    const imageLayout = layout === "left" || layout === "right" ? layout : String(cfg.imageLayout ?? "left");
 
     return (
       <section className="block block-gallery" data-block-id={block.id} data-block-type={block.type} style={blockSectionStyle(cfg, breakpoint)}>

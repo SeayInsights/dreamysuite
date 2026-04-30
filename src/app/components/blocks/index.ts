@@ -1,15 +1,11 @@
 import { HomeHeroBlock } from './HomeHeroBlock'
 import { HeaderBlock } from './HeaderBlock'
 import { MultiTextBlock } from './MultiTextBlock'
-import { VideoBlock } from './VideoBlock'
 import { CountdownBlock } from './CountdownBlock'
 import { ImagesBlock } from './ImagesBlock'
 import { YoutubeBlock } from './YoutubeBlock'
 import { SpacerBlock } from './SpacerBlock'
-import { RegistryCardBlock } from './RegistryCardBlock'
-import { HotelCardBlock } from './HotelCardBlock'
 import { VenueMapBlock } from './VenueMapBlock'
-import { PhotoSplitBlock } from './PhotoSplitBlock'
 // Consolidated (Task 18)
 import { MediaVideoBlock } from './MediaVideoBlock'
 import { GalleryBlock } from './GalleryBlock'
@@ -35,15 +31,15 @@ export const BLOCK_COMPONENTS: Record<string, React.ComponentType<{ block: Block
   'couple':        HomeHeroBlock,
   'header':        HeaderBlock,
   'multi-text':    MultiTextBlock,
-  'video':         VideoBlock,
+  'video':         MediaVideoBlock,
   'countdown':     CountdownBlock,
   'images':        ImagesBlock,
   'youtube':       YoutubeBlock,
   'spacer':        SpacerBlock,
-  'registry-card': RegistryCardBlock,
-  'hotel-card':    HotelCardBlock,
+  'registry-card': InfoCardBlock,
+  'hotel-card':    InfoCardBlock,
   'venue-map':     VenueMapBlock,
-  'photo-split':   PhotoSplitBlock,
+  'photo-split':   GalleryBlock,
   'rsvp':          RsvpFormBlock,
   // Consolidated
   'media-video':   MediaVideoBlock,
@@ -66,15 +62,11 @@ export {
   HomeHeroBlock,
   HeaderBlock,
   MultiTextBlock,
-  VideoBlock,
   CountdownBlock,
   ImagesBlock,
   YoutubeBlock,
   SpacerBlock,
-  RegistryCardBlock,
-  HotelCardBlock,
   VenueMapBlock,
-  PhotoSplitBlock,
   MediaVideoBlock,
   GalleryBlock,
   InfoCardBlock,
