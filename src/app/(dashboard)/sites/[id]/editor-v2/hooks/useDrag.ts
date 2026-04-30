@@ -114,6 +114,7 @@ export function useDrag(
 ): { isDragging: boolean; draggedId: string | null; collidingIds: string[]; startMove: (blockId: string, e: React.PointerEvent) => void; startResize: (blockId: string, handle: HandlePosition, e: React.PointerEvent) => void } {
 	const blocks = useEditorStore((s) => s.blocks);
 	const updateBlock = useEditorStore((s) => s.updateBlock);
+	const resortByOffsetY = useEditorStore((s) => s.resortByOffsetY);
 	const setDrag = useEditorStore((s) => s.setDrag);
 	const setInspectorTab = useEditorStore((s) => s.setInspectorTab);
 	const temporalStore = useEditorStore.temporal;
@@ -186,6 +187,12 @@ export function useDrag(
 			}
 
 			updateBlock(session.blockId, { config: session.lastConfig });
+
+			// After a move drag, re-index sortOrder to match visual Y order so
+			// tablet/mobile flow order stays in sync with desktop positioning.
+			if (session.kind === "move") {
+				resortByOffsetY();
+			}
 		} else {
 			// No move happened (pointer up immediately) — just resume without
 			// writing so no spurious history entry is created.
@@ -203,7 +210,7 @@ export function useDrag(
 			cleanupRef.current();
 			cleanupRef.current = null;
 		}
-	}, [applyUpdate, setCollidingIds, setDrag, temporalStore, updateBlock]);
+	}, [applyUpdate, resortByOffsetY, setCollidingIds, setDrag, temporalStore, updateBlock]);
 
 	// ── Pointer move ───────────────────────────────────────────────────────
 

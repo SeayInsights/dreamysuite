@@ -93,17 +93,11 @@ export function SiteRenderer({ blocks, ordered = false }: Props) {
 	const gap = Number(sectionSpacing ?? 0) || 0;
 	const breakpoint = useEditorStore((s) => s.breakpoint) as Breakpoint;
 
-	const getOffsetY = (b: SiteBlock) => {
-		const cfg = (typeof b.config === "object" && b.config !== null ? b.config : {}) as Record<string, unknown>;
-		return typeof cfg.blockOffsetY === "number" ? cfg.blockOffsetY : 0;
-	};
-
 	const visible = ordered
-		? blocks
-			.filter((b) => b.isVisible !== 0)
-			// On tablet/mobile, blocks are in normal flow — sort by desktop Y so
-			// flow order matches the desktop visual order (fixes #166).
-			.sort((a, b) => breakpoint === "desktop" ? 0 : getOffsetY(a) - getOffsetY(b))
+		// Editor mode: store array order is authoritative — resortByOffsetY in useDrag
+		// keeps it sorted by Y on every drag-end, so tablet/mobile flow order stays
+		// in sync with desktop visual order automatically.
+		? blocks.filter((b) => b.isVisible !== 0)
 		: blocks.filter((b) => b.isVisible !== 0).sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
 
 	const translated = useTranslatedBlocks(visible);
