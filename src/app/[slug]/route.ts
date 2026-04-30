@@ -234,6 +234,7 @@ interface SiteSettingRow {
   bgImageLayer: string | null;
   bgImageOpacity: number | null;
   bgImageBleed: number | null;
+  backgroundImage: string | null;
   siteMaxWidth: number | null;
   sectionSpacing: string | null;
   passwordPages: string | null;
@@ -461,6 +462,23 @@ function buildStyles(settings: SiteSettingRow | null): BuiltStyles {
     })()}
 
     ${escapedBgImageUrl && settings?.bgImageLayer !== "overlay" && settings?.bgImageBleed === 0 ? `#site-content { background-image: url('${escapedBgImageUrl}'); background-size: cover; background-position: center; background-attachment: fixed; }` : ""}
+
+    ${(() => {
+      if (!settings?.backgroundImage) return "";
+      try {
+        const bi = JSON.parse(settings.backgroundImage) as { url?: string; opacity?: number; fit?: string; position?: string; scope?: string };
+        if (!bi?.url) return "";
+        const safebi = safeUrl(bi.url).replace(/\\/g, "\\\\").replace(/'/g, "\\'");
+        const bsize = bi.fit === "cover" ? "cover" : bi.fit === "contain" ? "contain" : "auto";
+        const brepeat = bi.fit === "repeat" ? "repeat" : "no-repeat";
+        const bpos = bi.position ?? "center";
+        const bop = bi.opacity ?? 1;
+        if (bi.scope === "page") {
+          return `#site-content::before { content:''; position:absolute; inset:0; z-index:0; pointer-events:none; background-image:url('${safebi}'); background-size:${bsize}; background-repeat:${brepeat}; background-position:${bpos}; opacity:${bop}; }`;
+        }
+        return "";
+      } catch { return ""; }
+    })()}
 
     /* ── Intro overlay base ── */
     .intro-overlay { position:fixed; inset:0; z-index:9999; display:flex; align-items:center; justify-content:center; background:transparent; cursor:pointer; overflow:hidden; }
@@ -2521,6 +2539,38 @@ function buildMessageListenerScript(): string {
         }
       }
     }
+    if ('backgroundImage' in delta) {
+      var pageBg = document.getElementById('page-bg-image');
+      var sc = document.getElementById('site-content');
+      if (delta.backgroundImage) {
+        try {
+          var bi = JSON.parse(String(delta.backgroundImage));
+          if (bi && bi.url) {
+            var bsize = bi.fit === 'cover' ? 'cover' : bi.fit === 'contain' ? 'contain' : 'auto';
+            var brepeat = bi.fit === 'repeat' ? 'repeat' : 'no-repeat';
+            var bpos = bi.position || 'center';
+            var bop = bi.opacity != null ? String(bi.opacity) : '1';
+            if (bi.scope === 'page') {
+              if (!pageBg) { pageBg = document.createElement('div'); pageBg.id = 'page-bg-image'; pageBg.style.cssText = 'position:fixed;inset:0;z-index:0;pointer-events:none;'; document.body.insertBefore(pageBg, document.body.firstChild); }
+              pageBg.style.display = 'none';
+              if (sc) { sc.style.backgroundImage = "url('" + bi.url + "')"; sc.style.backgroundSize = bsize; sc.style.backgroundRepeat = brepeat; sc.style.backgroundPosition = bpos; }
+            } else {
+              if (sc) { sc.style.backgroundImage = ''; sc.style.backgroundSize = ''; sc.style.backgroundRepeat = ''; sc.style.backgroundPosition = ''; }
+              if (!pageBg) { pageBg = document.createElement('div'); pageBg.id = 'page-bg-image'; pageBg.style.cssText = 'position:fixed;inset:0;z-index:0;pointer-events:none;background-attachment:fixed;'; document.body.insertBefore(pageBg, document.body.firstChild); }
+              pageBg.style.backgroundImage = "url('" + bi.url + "')";
+              pageBg.style.backgroundSize = bsize;
+              pageBg.style.backgroundRepeat = brepeat;
+              pageBg.style.backgroundPosition = bpos;
+              pageBg.style.opacity = bop;
+              pageBg.style.display = '';
+            }
+          }
+        } catch(e) {}
+      } else {
+        if (pageBg) pageBg.style.display = 'none';
+        if (sc) { sc.style.backgroundImage = ''; }
+      }
+    }
     if ('envelopeColor' in delta) {
       var introOverlay = document.getElementById('intro-overlay');
       if (introOverlay) {
@@ -3557,6 +3607,19 @@ function toggleMusic(){var a=document.getElementById('audio-player'),b=document.
   ${settings?.effectCursor ? `<div id="effect-cursor" style="position:fixed;inset:0;z-index:9999;pointer-events:none;overflow:hidden;" aria-hidden="true"></div>` : ""}
   ${settings?.effectDecoration ? `<div id="effect-decoration" style="position:fixed;inset:0;z-index:1;pointer-events:none;overflow:hidden;" aria-hidden="true"></div>` : ""}
   ${escapedBgImageUrl ? `<div id="bg-overlay" style="position:fixed;inset:0;z-index:0;pointer-events:none;background-image:url('${escapedBgImageUrl}');background-size:cover;background-position:center;background-attachment:fixed;opacity:${settings?.bgImageOpacity ?? 1};display:${settings?.bgImageLayer === 'overlay' ? '' : 'none'};"></div>` : ""}
+  ${(() => {
+    if (!settings?.backgroundImage) return "";
+    try {
+      const bi = JSON.parse(settings.backgroundImage) as { url?: string; opacity?: number; fit?: string; position?: string; scope?: string };
+      if (!bi?.url || bi.scope === "page") return "";
+      const safebi = safeUrl(bi.url).replace(/\\/g, "\\\\").replace(/'/g, "\\'");
+      const bsize = bi.fit === "cover" ? "cover" : bi.fit === "contain" ? "contain" : "auto";
+      const brepeat = bi.fit === "repeat" ? "repeat" : "no-repeat";
+      const bpos = bi.position ?? "center";
+      const bop = bi.opacity ?? 1;
+      return `<div id="page-bg-image" style="position:fixed;inset:0;z-index:0;pointer-events:none;background-image:url('${safebi}');background-size:${bsize};background-repeat:${brepeat};background-position:${bpos};background-attachment:fixed;opacity:${bop};"></div>`;
+    } catch { return ""; }
+  })()}
   <div class="margin-curtain-t"></div>
   <div class="margin-curtain-b"></div>
   <div class="margin-curtain-l"></div>
