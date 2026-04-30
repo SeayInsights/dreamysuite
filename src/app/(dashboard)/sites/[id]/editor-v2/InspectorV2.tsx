@@ -8,12 +8,13 @@ import { cn } from "@/lib/utils";
 import { useEditorStore, type InspectorTab } from "@/app/stores/editorStore";
 import { duration, EASING } from "@/lib/motion";
 import { PageSettingsPanel } from "./inspector/PageSettingsPanel";
+import { ContentTab } from "./inspector/ContentTab";
 import { DesignTab } from "./inspector/DesignTab";
 import { AdvancedTab } from "./inspector/AdvancedTab";
 
 const PANEL_WIDTH = 320;
-type TabId = "design" | "advanced";
-const TABS: { id: TabId; label: string }[] = [
+const TABS: { id: InspectorTab; label: string }[] = [
+	{ id: "content", label: "Content" },
 	{ id: "design", label: "Design" },
 	{ id: "advanced", label: "Advanced" },
 ];
@@ -40,9 +41,9 @@ export function InspectorV2() {
 		[blocks, selectedBlockId]
 	);
 
-	// Reset to Design tab whenever the selected block changes
+	// Reset to Content tab whenever the selected block changes
 	useEffect(() => {
-		setInspectorTab("design");
+		setInspectorTab("content");
 	}, [selectedBlockId]); // eslint-disable-line react-hooks/exhaustive-deps
 
 	useEffect(() => {
@@ -139,7 +140,9 @@ export function InspectorV2() {
 							))}
 						</div>
 						<div className="overflow-y-auto h-[calc(100%-4.5rem)]">
-							{tab === "design" && selectedBlock ? (
+							{tab === "content" ? (
+								<ContentTab />
+							) : tab === "design" && selectedBlock ? (
 								<DesignTab block={selectedBlock} breakpoint={breakpoint} updateBlock={updateBlock} />
 							) : tab === "advanced" && selectedBlock ? (
 								<AdvancedTab block={selectedBlock} breakpoint={breakpoint} updateBlock={updateBlock} />

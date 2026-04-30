@@ -3,7 +3,7 @@ import type { ThemeSlice } from "./theme";
 
 export type Breakpoint = "desktop" | "tablet" | "mobile";
 export type EditorMode = "simple" | "pro";
-export type InspectorTab = "design" | "advanced";
+export type InspectorTab = "content" | "design" | "advanced";
 export type Section =
 	| "pages"
 	| "elements"
@@ -106,7 +106,7 @@ export const createEditorShellSlice: StateCreator<EditorShellSlice & ThemeSlice,
 	railCollapsed: false,
 	openTray: null,
 	inspectorOpen: false,
-	inspectorTab: "design",
+	inspectorTab: "content",
 	fullPreview: false,
 
 	setBreakpoint: (breakpoint) => set({ breakpoint }),
