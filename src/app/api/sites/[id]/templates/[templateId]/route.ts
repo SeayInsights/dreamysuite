@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getEnv } from "@/lib/cloudflare";
 import { requireSiteOwnership, apiOwnershipError } from "@/lib/api/site-auth";
-import { parseBlockConfig } from "@/lib/validation";
+import { parseBlockConfig, safeJsonParse } from "@/lib/validation";
 import {
   SettingsSchema,
   upsertSiteSettings,
@@ -79,10 +79,8 @@ export async function POST(
   }
 
   // Apply snapshot: restore pages, blocks, and settings
-  let snapshot: { pages: SnapshotPage[]; settings?: Record<string, unknown> | null };
-  try {
-    snapshot = JSON.parse(template.snapshot);
-  } catch {
+  const snapshot = safeJsonParse<{ pages: SnapshotPage[]; settings?: Record<string, unknown> | null } | null>(template.snapshot, null);
+  if (!snapshot) {
     return NextResponse.json({ error: { code: "INTERNAL_ERROR", message: "Snapshot is corrupted" } }, { status: 500 });
   }
 
