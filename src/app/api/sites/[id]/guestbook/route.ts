@@ -62,7 +62,7 @@ export async function POST(
   // Rate limit: 5 requests per 600 s per IP on guestbook
   const ip = req.headers.get("cf-connecting-ip") ?? "unknown";
   if (await isRateLimited(env.KV, `guestbook:${ip}`, 5, 600)) {
-    return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+    return NextResponse.json({ error: { code: "RATE_LIMITED", message: "Too many requests" } }, { status: 429 });
   }
 
   const { id: siteId } = await params;

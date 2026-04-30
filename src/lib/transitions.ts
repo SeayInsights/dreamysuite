@@ -272,26 +272,3 @@ export function transition(...keys: TransitionKey[]): string {
 	return keys.map((key) => TRANSITIONS[key]).join(", ");
 }
 
-/**
- * Create a custom transition string
- *
- * @param property - CSS property to transition
- * @param duration - Duration in milliseconds
- * @param easing - Easing function (default: cubic-bezier(0.2, 0, 0, 1))
- * @returns Custom transition string
- *
- * @example
- * ```typescript
- * import { customTransition } from "@/lib/transitions";
- *
- * const myTransition = customTransition("width", 500);
- * // "width 500ms cubic-bezier(0.2, 0, 0, 1)"
- * ```
- */
-export function customTransition(
-	property: string,
-	duration: number,
-	easing: string = "cubic-bezier(0.2, 0, 0, 1)"
-): string {
-	return `${property} ${duration}ms ${easing}`;
-}

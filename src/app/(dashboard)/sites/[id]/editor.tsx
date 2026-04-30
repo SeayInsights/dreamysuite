@@ -744,6 +744,8 @@ export function SiteEditor({ site: initialSite }: { site: Site }) {
   const blockListRef = useRef<HTMLDivElement | null>(null);
   const blocksRef = useRef<Block[]>(blocks);
   const iframeRef = useRef<HTMLIFrameElement>(null);
+  const addTypeInlineRef = useRef<HTMLSelectElement>(null);
+  const addTypeModalRef = useRef<HTMLSelectElement>(null);
   blocksRef.current = blocks;
 
   const previewUrl = (activePage ? `/${site.slug}?_page=${activePage.id}&_t=${previewKey}` : `/${site.slug}?_t=${previewKey}`) + (previewLang ? `&_lang=${previewLang}` : "");
@@ -2515,10 +2517,10 @@ export function SiteEditor({ site: initialSite }: { site: Site }) {
                                         </div>
                                       ))}
                                       <div style={{display:'flex',gap:'6px',alignItems:'center'}}>
-                                        <select className="sf-input" id="ps-add-type-inline" style={{flex:1,fontSize:'0.78rem'}}>
+                                        <select className="sf-input" ref={addTypeInlineRef} style={{flex:1,fontSize:'0.78rem'}}>
                                           <option value="text">Text</option>
                                         </select>
-                                        <button className="btn-ghost" style={{whiteSpace:'nowrap',fontSize:'0.78rem'}} onClick={()=>{const sel=document.getElementById('ps-add-type-inline') as unknown as HTMLSelectElement|null;const type=sel?.value||'text';setField('components',[...comps,{type,heading:'',body:''}]);}}>+ Add</button>
+                                        <button className="btn-ghost" style={{whiteSpace:'nowrap',fontSize:'0.78rem'}} onClick={()=>{const type=addTypeInlineRef.current?.value||'text';setField('components',[...comps,{type,heading:'',body:''}]);}}>+ Add</button>
                                       </div>
                                     </>);
                                   })()}
@@ -3467,15 +3469,7 @@ export function SiteEditor({ site: initialSite }: { site: Site }) {
                   setCopyLinkFeedback(true);
                   setTimeout(() => setCopyLinkFeedback(false), 2000);
                 } catch {
-                  // fallback: select a temp input
-                  const el = document.createElement("input");
-                  el.value = publicUrl;
-                  document.body.appendChild(el);
-                  el.select();
-                  document.execCommand("copy");
-                  document.body.removeChild(el);
-                  setCopyLinkFeedback(true);
-                  setTimeout(() => setCopyLinkFeedback(false), 2000);
+                  setCopyLinkFeedback(false);
                 }
               }
 
@@ -4463,10 +4457,10 @@ export function SiteEditor({ site: initialSite }: { site: Site }) {
                     </div>
                   ))}
                   <div style={{display:"flex",gap:"6px",alignItems:"center",marginBottom:"0.5rem"}}>
-                    <select className="sf-input" id="ps-add-type-modal" style={{flex:1,fontSize:"0.78rem"}}>
+                    <select className="sf-input" ref={addTypeModalRef} style={{flex:1,fontSize:"0.78rem"}}>
                       <option value="text">Text</option>
                     </select>
-                    <button className="btn-ghost" style={{whiteSpace:"nowrap",fontSize:"0.78rem"}} onClick={()=>{const sel=document.getElementById("ps-add-type-modal") as unknown as HTMLSelectElement|null;const type=sel?.value||"text";setField("components",[...comps,{type,heading:"",body:""}]);}}>+ Add</button>
+                    <button className="btn-ghost" style={{whiteSpace:"nowrap",fontSize:"0.78rem"}} onClick={()=>{const type=addTypeModalRef.current?.value||"text";setField("components",[...comps,{type,heading:"",body:""}]);}}>+ Add</button>
                   </div>
                 </>);
               })()}

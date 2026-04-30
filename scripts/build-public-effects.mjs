@@ -1,5 +1,5 @@
 import { build } from "esbuild";
-import { readdirSync, mkdirSync, writeFileSync } from "fs";
+import { readdirSync, mkdirSync, writeFileSync, existsSync } from "fs";
 import { join, basename, resolve } from "path";
 import { fileURLToPath } from "url";
 
@@ -9,13 +9,8 @@ const COMPONENTS_DIR = join(ROOT, "src/lib/effects/components");
 const OUT_DIR = join(ROOT, "public/effects");
 
 const SKIP = new Set([
-  "FallingText",  // matter-js (physics engine — too large for CDN)
-  "Shuffle",      // @gsap/react (not available as ESM CDN)
-  "SplitText",    // @gsap/react
   "Carousel",     // react-icons (icon pack — too large)
   "ScrollStack",  // lenis (scroll library)
-  "CardNav",      // react-icons
-  "InfiniteMenu", // gl-matrix (math lib)
   "GradualBlur",  // mathjs (math lib — too large for CDN)
 ]);
 
@@ -93,6 +88,7 @@ const results = { success: [], skipped: [], failed: [] };
 
 for (const category of CATEGORIES) {
   const catDir = join(COMPONENTS_DIR, category);
+  if (!existsSync(catDir)) continue;
   const files = readdirSync(catDir).filter((f) => f.endsWith(".tsx"));
 
   for (const file of files) {
