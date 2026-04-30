@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getEnv } from "@/lib/cloudflare";
 import { requireSiteOwnership, apiOwnershipError } from "@/lib/api/site-auth";
+import { safeJsonParse } from "@/lib/validation";
 
 // Helper to transform contact row to legacy guest format
 interface ContactRow {
@@ -18,13 +19,9 @@ interface ContactRow {
 }
 
 function contactToGuest(contact: ContactRow) {
-  let metadata: Record<string, unknown> = {};
-  try {
-    metadata = typeof contact.metadata === 'string' ? JSON.parse(contact.metadata) : (contact.metadata || {});
-  } catch (error) {
-    console.error('[GUEST] Failed to parse contact metadata:', error);
-    metadata = {};
-  }
+  const metadata: Record<string, unknown> = typeof contact.metadata === 'string'
+    ? safeJsonParse(contact.metadata, {})
+    : (contact.metadata as Record<string, unknown> || {});
   const [firstName, ...lastNameParts] = (contact.name || '').split(' ');
 
   return {
@@ -137,13 +134,9 @@ export async function PATCH(
   }
 
   // Parse existing metadata
-  let metadata: Record<string, unknown> = {};
-  try {
-    metadata = typeof contact.metadata === 'string' ? JSON.parse(contact.metadata) : (contact.metadata || {});
-  } catch (error) {
-    console.error('[GUEST] Failed to parse contact metadata:', error);
-    metadata = {};
-  }
+  const metadata: Record<string, unknown> = typeof contact.metadata === 'string'
+    ? safeJsonParse(contact.metadata, {})
+    : (contact.metadata as Record<string, unknown> || {});
   let nameUpdated = false;
   let newName = contact.name;
 
