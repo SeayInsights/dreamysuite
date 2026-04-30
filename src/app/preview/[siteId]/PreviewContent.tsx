@@ -137,7 +137,7 @@ export function PreviewContent({
     };
   }, [mode, scale, blocks]);
 
-  const themeVars = {
+  const siteThemeVars = {
     "--heading-color": theme.colors.primary,
     "--site-muted": theme.colors.secondary,
     "--site-accent": theme.colors.accent,
@@ -174,7 +174,7 @@ export function PreviewContent({
             : ""
       }
       style={{
-        ...themeVars,
+        ...siteThemeVars,
         backgroundColor: settings.bgColor ?? "#ffffff",
         minHeight: "100vh",
         position: "relative",

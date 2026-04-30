@@ -39,7 +39,7 @@ interface Props {
   nav?: ReactNode;
 }
 
-function themeVars(
+function siteThemeVars(
   colors: ThemeColors,
   typography: ThemeTypography,
 ): React.CSSProperties {
@@ -262,7 +262,7 @@ export function BreakpointFrame({ children, nav }: Props) {
           boxShadow: isDesktop
             ? "0 4px 24px rgba(0,0,0,0.08), 0 2px 8px rgba(0,0,0,0.04)"
             : "0 2px 8px rgba(0,0,0,0.04)",
-          ...themeVars(themeTokens.colors, themeTokens.typography),
+          ...siteThemeVars(themeTokens.colors, themeTokens.typography),
           background: pageBgDisabled ? "transparent" : curtainBg,
         }}
       >
