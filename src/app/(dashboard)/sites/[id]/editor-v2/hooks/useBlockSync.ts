@@ -4,6 +4,13 @@ import { useEffect, useRef, useCallback } from "react";
 import { useEditorStore } from "@/app/stores/editorStore";
 import type { PendingOps, Block } from "@/app/stores/slices/document";
 
+// Strip char-spread numeric keys (e.g. {"0":"{","1":"\"" ...}) from a config
+// object before serializing. These appear when a corrupted JSON string is spread
+// character-by-character into the store and would blow past the 64 KB keepalive limit.
+function cleanConfig(cfg: Record<string, unknown>): Record<string, unknown> {
+  return Object.fromEntries(Object.entries(cfg).filter(([k]) => !/^\d+$/.test(k)));
+}
+
 const DEBOUNCE_MS = 1_500;
 const DEBUG_SYNC = false;
 
@@ -40,7 +47,7 @@ export async function flushOps(
           id: block.id,
           pageId,
           type: block.type,
-          config: block.config,
+          config: cleanConfig(block.config),
           sortOrder: idx,
         }),
         keepalive: true,
@@ -52,8 +59,9 @@ export async function flushOps(
     if (ops.inserted.has(id)) continue;
     const block = blocks.find((b) => b.id === id);
     if (!block) continue;
-    const payload: Record<string, unknown> = { type: block.type, config: block.config };
+    const payload: Record<string, unknown> = { type: block.type, config: cleanConfig(block.config) };
     if (block.isVisible !== undefined) payload.isVisible = block.isVisible !== 0;
+    if (block.overrides !== undefined) payload.overrides = block.overrides;
     if (DEBUG_SYNC) {
       console.log(`[useBlockSync] PUT block=${id} type=${block.type} config=`, JSON.parse(JSON.stringify(block.config)));
     }
