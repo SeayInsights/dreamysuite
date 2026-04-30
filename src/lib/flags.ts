@@ -12,8 +12,6 @@ function boolEnv(raw: string | undefined): boolean {
 	return v === "1" || v === "true" || v === "yes" || v === "on";
 }
 
-export const flags = {
-	editorV2: !boolEnv(process.env.NEXT_PUBLIC_EDITOR_V1_FALLBACK),
-} as const;
+export const flags = {} as const;
 
 export type FeatureFlags = typeof flags;
