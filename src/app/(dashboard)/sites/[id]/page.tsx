@@ -1,8 +1,6 @@
 import { redirect, notFound } from "next/navigation";
 import { getEnv } from "@/lib/cloudflare";
 import { getAuthSession } from "@/lib/auth-session";
-import { flags } from "@/lib/flags";
-import { SiteEditor } from "./editor";
 import { SiteEditorV2 } from "./editor-v2";
 
 interface Site {
@@ -55,8 +53,5 @@ export default async function SiteEditorPage({ params }: { params: Promise<{ id:
     redirect("/");
   }
 
-  if (!flags.editorV2) {
-    return <SiteEditor site={result} />;
-  }
   return <SiteEditorV2 site={result} user={session.user} />;
 }
