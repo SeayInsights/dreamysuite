@@ -1,9 +1,29 @@
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import { getEnv } from "@/lib/cloudflare";
+import { getSession } from "@/lib/api/get-session";
+import { isRateLimited } from "@/lib/rateLimit";
 
 export async function GET(req: NextRequest) {
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY;
   if (!apiKey) {
     return new Response("API key not configured", { status: 500 });
+  }
+
+  const env = await getEnv();
+
+  const session = await getSession(req.headers, env);
+  if (!session) {
+    return NextResponse.json(
+      { error: { code: "UNAUTHORIZED", message: "Authentication required" } },
+      { status: 401 },
+    );
+  }
+
+  if (await isRateLimited(env.KV, `maps:${session.user.id}`, 30, 60)) {
+    return NextResponse.json(
+      { error: { code: "RATE_LIMITED", message: "Too many requests" } },
+      { status: 429 },
+    );
   }
 
   const placeId = req.nextUrl.searchParams.get("placeId");

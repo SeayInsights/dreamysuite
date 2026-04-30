@@ -6,10 +6,19 @@ import { safeJsonParse } from "@/lib/validation";
 // Public guest book endpoints — no auth required so site visitors can sign and read.
 
 export async function GET(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
   const env = await getEnv();
+
+  const ip = req.headers.get("cf-connecting-ip") ?? "unknown";
+  if (await isRateLimited(env.KV, `guestbook-read:${ip}`, 60, 60)) {
+    return NextResponse.json(
+      { error: { code: "RATE_LIMITED", message: "Too many requests" } },
+      { status: 429 },
+    );
+  }
+
   const { id: siteId } = await params;
 
   const site = await env.DB.prepare("SELECT id FROM site WHERE id = ? AND status = 'published'").bind(siteId).first();
