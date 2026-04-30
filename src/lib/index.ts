@@ -46,33 +46,14 @@ export {
   ForbiddenError,
   RateLimitError,
   getErrorMessage,
-  getErrorCode,
-  getErrorContext,
-  isErrorType,
-  formatUserError,
-  getErrorStatus,
-  createErrorResponse,
 } from "./errors";
-
-// ── Event Handlers ────────────────────────────────────────────────────────────
-
-export {
-  preventDefault,
-  stopPropagation,
-  stopEvent,
-  extractFormData,
-  extractFormDataWith,
-  onKey,
-  onKeyPrevent,
-  combineHandlers,
-} from "./handlers";
 
 // ── Custom Hooks ──────────────────────────────────────────────────────────────
 
 export * from "./hooks";
 
 // ── Inspector Registry ────────────────────────────────────────────────────────
-export { BLOCK_INSPECTOR_CONFIG, DEFAULT_INSPECTOR_CONFIG, getInspectorConfig, type BlockInspectorConfig } from "./inspectorRegistry";
+export { BLOCK_INSPECTOR_CONFIG, DEFAULT_INSPECTOR_CONFIG, getInspectorConfig, getAnimationPresetFilter, type BlockInspectorConfig } from "./inspectorRegistry";
 
 // ── Block & Layout ────────────────────────────────────────────────────────────
 
@@ -94,6 +75,7 @@ export {
 export {
   detectDesignedAtWidth,
   isDecorativeOffscreen,
+  DEFAULT_DESIGNED_AT_WIDTH,
 } from "./responsiveScale";
 
 // ── Motion & Animation ────────────────────────────────────────────────────────
@@ -103,7 +85,7 @@ export { TRANSITIONS, transition, customTransition, type TransitionKey } from ".
 
 // ── Internationalization ──────────────────────────────────────────────────────
 
-export { LANGUAGES, LANG_FLAGS } from "./languages";
+export { LANGUAGES, LANG_FLAGS, LANG_NATIVE } from "./languages";
 export { TRANSLATABLE_FIELDS } from "./translations";
 
 // ── Environment & Config ──────────────────────────────────────────────────────
