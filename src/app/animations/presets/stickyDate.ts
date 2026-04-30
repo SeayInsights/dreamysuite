@@ -1,7 +1,9 @@
 /**
  * stickyDate — sticky header that scales down on scroll (for date/header blocks)
  */
-const stickyDate = async (el: Element): Promise<void> => {
+import type { AnimOpts } from "../registry";
+
+const stickyDate = async (el: Element, opts?: AnimOpts): Promise<void> => {
   if (!el) return;
   const { gsap } = await import("gsap");
   const { ScrollTrigger } = await import("gsap/ScrollTrigger");

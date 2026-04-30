@@ -2,7 +2,9 @@
  * parallaxMonogram — subtle vertical parallax on scroll (ScrollTrigger), 0.3x speed.
  * Detects nearest scrollable ancestor so it works inside the editor's nested scroll container.
  */
-const parallaxMonogram = async (el: Element): Promise<void> => {
+import type { AnimOpts } from "../registry";
+
+const parallaxMonogram = async (el: Element, opts?: AnimOpts): Promise<void> => {
   if (!el) return;
   const { gsap } = await import("gsap");
   const { ScrollTrigger } = await import("gsap/ScrollTrigger");

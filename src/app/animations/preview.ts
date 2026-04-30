@@ -1,10 +1,11 @@
 import { getPreset } from "./registry";
+import type { AnimOpts } from "./registry";
 
 // Tracks the cancel function for any in-flight preview, keyed by block ID.
 // Allows a new preview to cancel the previous one before starting.
 const activeByBlock = new Map<string, () => void>();
 
-export function runPreviewAnimation(blockId: string, presetId: string): void {
+export function runPreviewAnimation(blockId: string, presetId: string, opts?: AnimOpts): void {
   // Cancel any previous preview for this block immediately.
   activeByBlock.get(blockId)?.();
   activeByBlock.delete(blockId);
@@ -60,7 +61,7 @@ export function runPreviewAnimation(blockId: string, presetId: string): void {
     .then((fn) => {
       if (cancelled) return;
       try {
-        fn(clone);
+        fn(clone, opts);
       } catch {
         clearTimeout(fallback);
         restore();
