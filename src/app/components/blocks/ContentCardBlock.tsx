@@ -437,7 +437,6 @@ export function ContentCardBlock({ block }: { block: Block }) {
 
   function openPicker(e: React.MouseEvent) {
     e.stopPropagation();
-    console.log("[ContentCardBlock] openPicker displayMode:", displayMode, "block.config.displayMode:", cfg.displayMode);
     const el = e.currentTarget as HTMLElement;
     setPickerAnchor(el.getBoundingClientRect());
     setPickerOpen(true);
