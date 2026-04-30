@@ -29,6 +29,8 @@ export interface DocumentSlice {
 	insertBlock: (block: Block, atIndex: number) => void;
 	removeBlock: (id: string) => void;
 	reorderBlocks: (fromIndex: number, toIndex: number) => void;
+	/** Re-sort the block array ascending by blockOffsetY and mark reordered. */
+	resortByOffsetY: () => void;
 	markClean: () => void;
 	markFlushed: (flushedOps: PendingOps) => void;
 }
@@ -122,6 +124,16 @@ export const createDocumentSlice: StateCreator<
 			const [moved] = blocks.splice(from, 1);
 			blocks.splice(to, 0, moved);
 			return { blocks, isDirty: true, pendingOps: { ...state.pendingOps, reordered: true } };
+		}),
+	resortByOffsetY: () =>
+		set((state) => {
+			const sorted = [...state.blocks].sort((a, b) => {
+				const ay = typeof a.config.blockOffsetY === "number" ? a.config.blockOffsetY : 0;
+				const by = typeof b.config.blockOffsetY === "number" ? b.config.blockOffsetY : 0;
+				return ay - by;
+			});
+			if (sorted.every((b, i) => b === state.blocks[i])) return state;
+			return { blocks: sorted, isDirty: true, pendingOps: { ...state.pendingOps, reordered: true } };
 		}),
 	markClean: () => set({ isDirty: false, pendingOps: emptyOps() }),
 	markFlushed: (flushedOps) =>
