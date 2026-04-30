@@ -110,6 +110,7 @@ export { TRANSLATABLE_FIELDS } from "./translations";
 
 export { getEnv } from "./cloudflare";
 export { flags, type FeatureFlags } from "./flags";
+export { getAuthSession } from "./auth-session";
 
 // ── Rate Limiting ─────────────────────────────────────────────────────────────
 

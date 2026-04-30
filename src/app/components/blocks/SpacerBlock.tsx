@@ -13,6 +13,7 @@ export function SpacerBlock({ block }: { block: Block }) {
       className="block-spacer"
       data-block-id={block.id}
       data-block-type={block.type}
+      data-block-label="Spacer"
       style={{ height: `${height}px` }}
       aria-hidden="true"
     />

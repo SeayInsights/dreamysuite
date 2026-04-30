@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getEnv } from "@/lib/cloudflare";
 import { isRateLimited } from "@/lib/rateLimit";
+import { safeJsonParse } from "@/lib/validation";
 
 // Public guest book endpoints — no auth required so site visitors can sign and read.
 
@@ -34,7 +35,7 @@ export async function GET(
 
     // Transform submissions to extract name/message from data JSON
     const entries = result.results.map((row) => {
-      const data = JSON.parse(row.data) as { name: string; message: string };
+      const data = safeJsonParse<{ name: string; message: string }>(row.data, { name: "", message: "" });
       return {
         id: row.id,
         name: data.name,

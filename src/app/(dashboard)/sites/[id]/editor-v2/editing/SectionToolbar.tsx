@@ -173,7 +173,6 @@ export function SectionToolbar({
   const selectedBlockId = useEditorStore((s) => s.selectedBlockId);
   const blockToolbarVisible = useEditorStore((s) => s.blockToolbarVisible);
   const updateBlock = useEditorStore((s) => s.updateBlock);
-  const selectBlock = useEditorStore((s) => s.selectBlock);
   const selectedBlock = useSelectedBlock();
   const mode = useEditorStore((s) => s.mode);
   const themeColors = useEditorStore((s) => s.themeTokens.colors);
