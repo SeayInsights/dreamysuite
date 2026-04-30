@@ -28,7 +28,6 @@ import {
 } from "./slices/translation";
 import {
 	createThemeSlice,
-	settingsToTheme,
 	type ThemeSlice,
 	type ThemeTokens,
 	type ThemeColors,
@@ -109,11 +108,3 @@ useEditorStore.subscribe((state) => {
 	prevPageId = nextPageId;
 });
 
-// Keep themeTokens in sync when settings change (e.g. via undo/redo)
-let prevSettings = useEditorStore.getState().settings;
-useEditorStore.subscribe((state) => {
-	if (state.settings !== prevSettings) {
-		prevSettings = state.settings;
-		useEditorStore.setState({ themeTokens: settingsToTheme(state.settings) });
-	}
-});
