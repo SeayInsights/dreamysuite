@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { safeJsonParse } from "@/lib/validation";
 
 /**
  * Contact metadata schemas with discriminated unions for type-specific fields.
@@ -81,7 +82,7 @@ export function parseContactMetadata(
   contactType: string,
   json: unknown,
 ): ContactMetadata {
-  const parsed = typeof json === "string" ? JSON.parse(json) : json;
+  const parsed: Record<string, unknown> = typeof json === "string" ? safeJsonParse<Record<string, unknown>>(json, {}) : (json as Record<string, unknown>);
   return ContactMetadataSchema.parse({
     type: contactType,
     ...parsed,
