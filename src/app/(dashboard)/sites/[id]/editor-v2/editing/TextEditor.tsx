@@ -115,6 +115,7 @@ export function TextEditor({
 }): JSX.Element {
   const updateBlock = useEditorStore((s) => s.updateBlock);
   const setIsTextEditing = useEditorStore((s) => s.setIsTextEditing);
+  const setSelectedField = useEditorStore((s) => s.setSelectedField);
   const setTranslation = useEditorStore((s) => s.setTranslation);
 
   const [editState, setEditState] = useState<EditState | null>(null);
@@ -173,8 +174,9 @@ export function TextEditor({
       toolbar.hide();
       setEditState(null);
       setIsTextEditing(false);
+      setSelectedField(null);
     },
-    [updateBlock, setTranslation, toolbar, setIsTextEditing],
+    [updateBlock, setTranslation, toolbar, setIsTextEditing, setSelectedField],
   );
 
   const discard = useCallback((state: EditState) => {
@@ -191,7 +193,8 @@ export function TextEditor({
     toolbar.hide();
     setEditState(null);
     setIsTextEditing(false);
-  }, [updateBlock, toolbar, setIsTextEditing]);
+    setSelectedField(null);
+  }, [updateBlock, toolbar, setIsTextEditing, setSelectedField]);
 
   // -------------------------------------------------------------------------
   // dblclick listener
@@ -252,6 +255,7 @@ export function TextEditor({
         };
         setEditState(state);
         setIsTextEditing(true);
+        setSelectedField(itemField);
 
         requestAnimationFrame(() => {
           itemEl.focus();
@@ -332,6 +336,7 @@ export function TextEditor({
       };
       setEditState(state);
       setIsTextEditing(true);
+      setSelectedField(field);
 
       requestAnimationFrame(() => {
         fieldEl.focus();
@@ -350,7 +355,7 @@ export function TextEditor({
 
     container.addEventListener("dblclick", handleDblClick);
     return () => container.removeEventListener("dblclick", handleDblClick);
-  }, [containerRef, toolbar]);
+  }, [containerRef, toolbar, setSelectedField]);
 
   // -------------------------------------------------------------------------
   // Blur → commit
