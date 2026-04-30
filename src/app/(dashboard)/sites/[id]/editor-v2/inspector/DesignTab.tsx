@@ -6,6 +6,7 @@ import { CollapsibleSection } from "./CollapsibleSection";
 import { getInspectorConfig } from "@/lib/inspectorRegistry";
 import { parseCfg } from "@/lib/editableField";
 import { AnimationPresetPicker } from "./AnimationPresetPicker";
+import { BlockContentPanel } from "./BlockContentPanel";
 import { runPreviewAnimation } from "@/app/animations/preview";
 import "@/app/animations/presets/index";
 import type { Block } from "@/app/stores/editorStore";
@@ -113,14 +114,11 @@ export function DesignTab({ block, breakpoint: _, updateBlock }: DesignTabProps)
     ...(parsed.animation as Partial<AnimationConfig> | undefined),
   };
 
-  // Determine if the block's rendered element contains visible text so we can
-  // hide text-only animation presets (split-text, letter-cascade) when irrelevant.
-  const hasText = typeof document !== "undefined"
-    ? (document.querySelector<HTMLElement>(`[data-block-id="${block.id}"]`)?.textContent ?? "").trim().length > 0
-    : true;
-
   return (
     <div className="space-y-0">
+      <CollapsibleSection title="Content" defaultOpen>
+        <BlockContentPanel block={block} updateBlock={updateBlock} />
+      </CollapsibleSection>
       {cfg.showBackground && (
         <CollapsibleSection title="Background" defaultOpen={false}>
           <div className="flex items-center gap-2">
@@ -260,7 +258,7 @@ export function DesignTab({ block, breakpoint: _, updateBlock }: DesignTabProps)
               <p className="mb-1.5 text-[10px] text-muted-foreground">Entrance</p>
               <AnimationPresetPicker
                 value={currentAnim.presetId}
-                hasText={hasText}
+                blockType={block.type}
                 onChange={(id) => {
                   updateBlock(block.id, {
                     config: { ...parsed, animation: { ...currentAnim, presetId: id } },

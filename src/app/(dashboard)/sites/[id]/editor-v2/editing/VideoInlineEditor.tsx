@@ -409,34 +409,6 @@ export function VideoInlineEditor({ containerRef }: Props) {
       })()
     : null;
 
-  return (
-    <div
-      className="pointer-events-none fixed inset-0 z-[100]"
-      aria-hidden
-    >
-      <div className="pointer-events-auto">
-        <AnimatePresence>
-          {active && (
-            <FloatingToolbar
-              key="toolbar"
-              blockRect={active.blockRect}
-              videoPanelOpen={videoPanel}
-              currentFit={currentFit}
-              onVideoToggle={() => setVideoPanel((v) => !v)}
-              onFitChange={handleFitChange}
-              onDismiss={dismiss}
-            />
-          )}
-          {active && videoPanel && panelStyle && (
-            <InlineVideoPanel
-              key="video-panel"
-              blockId={active.blockId}
-              style={panelStyle}
-              onDismiss={() => setVideoPanel(false)}
-            />
-          )}
-        </AnimatePresence>
-      </div>
-    </div>
-  );
+  // Floating toolbar suppressed — video controls live in inspector Design > Content
+  return null;
 }

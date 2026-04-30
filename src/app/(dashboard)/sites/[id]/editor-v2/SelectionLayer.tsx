@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { Pencil } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { prefersReducedMotion, MOTION } from "@/lib/motion";
@@ -135,7 +134,6 @@ export function SelectionLayer({ frameRef }: Props) {
 					rect={selectedRect}
 					label={selectedLabel}
 					variant="selected"
-					blockId={selectedBlockId}
 				/>
 			)}
 			{Array.from(collisionRects.entries()).map(([id, rect]) => (
@@ -158,13 +156,9 @@ interface OutlineProps {
 	rect: Rect;
 	label: string | null;
 	variant: "hover" | "selected";
-	blockId?: string | null;
 }
 
-function Outline({ rect, label, variant, blockId }: OutlineProps) {
-	const editingPanelBlockId = useEditorStore((s) => s.editingPanelBlockId);
-	const setEditingPanel = useEditorStore((s) => s.setEditingPanel);
-	const pencilActive = blockId != null && editingPanelBlockId === blockId;
+function Outline({ rect, label, variant }: OutlineProps) {
 	const ref = useRef<HTMLDivElement>(null);
 
 	useLayoutEffect(() => {
@@ -199,50 +193,17 @@ function Outline({ rect, label, variant, blockId }: OutlineProps) {
 			}}
 		>
 			{label && (
-				<div className="absolute -top-5 left-0 flex items-end">
-					<span
-						className={cn(
-							"rounded-t-sm px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider",
-							variant === "selected"
-								? "bg-primary text-primary-foreground"
-								: "bg-primary/70 text-primary-foreground",
-						)}
-						style={{ boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)" }}
-					>
-						{label}
-					</span>
-					{variant === "selected" && blockId && (
-						<button
-							type="button"
-							aria-label="Edit block content"
-							aria-pressed={pencilActive}
-							className={cn(
-								"pointer-events-auto ml-px flex h-[18px] w-[18px] items-center justify-center rounded-t-sm border border-b-0 transition-colors",
-								pencilActive
-									? "border-primary bg-primary text-primary-foreground"
-									: "border-primary/30 bg-white text-primary hover:bg-primary/10",
-							)}
-							onPointerDown={(e) => e.stopPropagation()}
-							onClick={(e) => {
-								e.stopPropagation();
-								if (pencilActive) {
-									setEditingPanel(null);
-									return;
-								}
-								const frame = document.querySelector<HTMLElement>(`[data-block-id="${blockId}"]`);
-								const blockType = frame?.dataset.blockType;
-								const INLINE_EDITOR_TYPES = new Set(["images", "photo-split", "home-hero", "gallery", "media-video", "video", "youtube"]);
-								if (frame && blockType && INLINE_EDITOR_TYPES.has(blockType)) {
-									frame.dispatchEvent(new MouseEvent("dblclick", { bubbles: true }));
-								} else {
-									setEditingPanel(blockId);
-								}
-							}}
-						>
-							<Pencil className="size-2.5" />
-						</button>
+				<span
+					className={cn(
+						"absolute -top-5 left-0 rounded-t-sm px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider",
+						variant === "selected"
+							? "bg-primary text-primary-foreground"
+							: "bg-primary/70 text-primary-foreground",
 					)}
-				</div>
+					style={{ boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)" }}
+				>
+					{label}
+				</span>
 			)}
 		</div>
 	);

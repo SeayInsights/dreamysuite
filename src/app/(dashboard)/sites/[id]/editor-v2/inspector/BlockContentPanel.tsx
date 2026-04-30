@@ -10,7 +10,6 @@ import { VideoEditor } from "./editors/VideoEditor";
 import { GalleryEditor } from "./editors/GalleryEditor";
 import { VenueMapEditor } from "./editors/VenueMapEditor";
 import { RegistryEditor } from "./editors/RegistryEditor";
-import { TextBlockEditor } from "./editors/TextBlockEditor";
 import { ImageBlockEditor } from "./editors/ImageBlockEditor";
 
 // ---------------------------------------------------------------------------
@@ -44,8 +43,6 @@ export function BlockContentPanel({ block, updateBlock }: Props) {
   }
 
   switch (block.type) {
-    case "multi-text":
-      return <TextBlockEditor cfg={cfg} updateConfig={updateConfig} />;
     case "home-hero":
     case "photo-split":
       return <ImageBlockEditor cfg={cfg} updateConfig={updateConfig} />;

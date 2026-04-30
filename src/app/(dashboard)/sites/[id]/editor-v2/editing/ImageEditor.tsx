@@ -506,42 +506,6 @@ export function ImageEditor({ containerRef }: Props) {
       })()
     : null;
 
-  return (
-    <div
-      data-image-editor-overlay
-      className="pointer-events-none fixed inset-0 z-[100]"
-      aria-hidden
-    >
-      <div className="pointer-events-auto">
-        <AnimatePresence>
-          {active && (
-            <FloatingToolbar
-              key="toolbar"
-              imageRect={active.imageRect}
-              cropActive={cropMode}
-              replaceActive={photoPanel}
-              currentFit={currentFit}
-              onReplace={() => setPhotoPanel((v) => !v)}
-              onCropToggle={() => setCropMode((v) => !v)}
-              onFitChange={handleFitChange}
-              onDismiss={dismiss}
-            />
-          )}
-          {active && photoPanel && panelStyle && (
-            <InlinePhotoPanel
-              key="photo-panel"
-              blockId={active.blockId}
-              blockType={activeBlockType}
-              style={panelStyle}
-              onDismiss={() => setPhotoPanel(false)}
-            />
-          )}
-        </AnimatePresence>
-      </div>
-
-      {active && cropMode && (
-        <CropHandles blockId={active.blockId} rect={active.imageRect} />
-      )}
-    </div>
-  );
+  // Floating toolbar suppressed — image controls live in inspector Design > Content
+  return null;
 }
