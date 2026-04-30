@@ -28,7 +28,12 @@ import { useEditorStore } from "@/app/stores/editorStore";
 
 // Constants
 
-const IMAGE_BEARING_TYPES = new Set(["images", "photo-split", "home-hero", "gallery"]);
+const IMAGE_BEARING_TYPES = new Set([
+  "images",
+  "photo-split",
+  "home-hero",
+  "gallery",
+]);
 
 // Types
 
@@ -65,19 +70,20 @@ interface Props {
 }
 
 export function ImageEditor({ containerRef }: Props) {
-  const blocks = useEditorStore((s) => s.blocks);
-
   const [active, setActive] = useState<ActiveImage | null>(null);
   const [_activeBlockType, setActiveBlockType] = useState<string>("");
   const [cropMode, setCropModeLocal] = useState(false);
   const setIsCropping = useEditorStore((s) => s.setIsCropping);
-  const setCropMode = useCallback((v: boolean | ((prev: boolean) => boolean)) => {
-    setCropModeLocal((prev) => {
-      const next = typeof v === "function" ? v(prev) : v;
-      setIsCropping(next);
-      return next;
-    });
-  }, [setIsCropping]);
+  const setCropMode = useCallback(
+    (v: boolean | ((prev: boolean) => boolean)) => {
+      setCropModeLocal((prev) => {
+        const next = typeof v === "function" ? v(prev) : v;
+        setIsCropping(next);
+        return next;
+      });
+    },
+    [setIsCropping],
+  );
   const [photoPanel, setPhotoPanel] = useState(false);
   const rafRef = useRef<number | null>(null);
 
@@ -93,9 +99,13 @@ export function ImageEditor({ containerRef }: Props) {
     const handler = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         e.stopPropagation();
-        if (photoPanel) { setPhotoPanel(false); }
-        else if (cropMode) { setCropMode(false); }
-        else { dismiss(); }
+        if (photoPanel) {
+          setPhotoPanel(false);
+        } else if (cropMode) {
+          setCropMode(false);
+        } else {
+          dismiss();
+        }
       }
     };
     window.addEventListener("keydown", handler, true);
@@ -107,7 +117,9 @@ export function ImageEditor({ containerRef }: Props) {
     if (!container) return;
 
     const handler = (e: MouseEvent) => {
-      const blockRoot = (e.target as HTMLElement).closest<HTMLElement>("[data-block-id]");
+      const blockRoot = (e.target as HTMLElement).closest<HTMLElement>(
+        "[data-block-id]",
+      );
       if (!blockRoot) return;
 
       const blockId = blockRoot.dataset.blockId;
@@ -140,12 +152,14 @@ export function ImageEditor({ containerRef }: Props) {
     const recompute = () => {
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
       rafRef.current = requestAnimationFrame(() => {
-        const blockRoot = container.querySelector<HTMLElement>(`[data-block-id="${active.blockId}"]`);
+        const blockRoot = container.querySelector<HTMLElement>(
+          `[data-block-id="${active.blockId}"]`,
+        );
         if (!blockRoot) return;
         const imageEl = findImageElement(blockRoot);
         const blockRect = getViewportRect(blockRoot);
         const imageRect = imageEl ? getViewportRect(imageEl) : blockRect;
-        setActive((prev) => prev ? { ...prev, imageRect, blockRect } : prev);
+        setActive((prev) => (prev ? { ...prev, imageRect, blockRect } : prev));
       });
     };
 
@@ -164,9 +178,13 @@ export function ImageEditor({ containerRef }: Props) {
     const handler = (e: MouseEvent) => {
       const container = containerRef.current;
       if (!container) return;
-      const blockRoot = container.querySelector<HTMLElement>(`[data-block-id="${active.blockId}"]`);
+      const blockRoot = container.querySelector<HTMLElement>(
+        `[data-block-id="${active.blockId}"]`,
+      );
       if (blockRoot && blockRoot.contains(e.target as Node)) return;
-      const overlay = document.querySelector<HTMLElement>("[data-image-editor-overlay]");
+      const overlay = document.querySelector<HTMLElement>(
+        "[data-image-editor-overlay]",
+      );
       if (overlay && overlay.contains(e.target as Node)) return;
       dismiss();
     };
@@ -175,7 +193,11 @@ export function ImageEditor({ containerRef }: Props) {
     return () => document.removeEventListener("mousedown", handler, true);
   }, [active, photoPanel, dismiss, containerRef]);
 
-  const blockExists = active !== null && blocks.some((b) => b.id === active.blockId);
+  const activeBlockId = active?.blockId ?? null;
+  const blockExists = useEditorStore(
+    (s) =>
+      activeBlockId !== null && s.blocks.some((b) => b.id === activeBlockId),
+  );
 
   if (!blockExists && active) {
     Promise.resolve().then(dismiss);

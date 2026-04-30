@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useShallow } from "zustand/react/shallow";
 import { useEditorStore } from "@/app/stores/editorStore";
 import { InsertPalette } from "./InsertPalette";
 
@@ -19,8 +20,14 @@ interface Props {
 const HOVER_ZONE = 24;
 
 export function InsertButton({ containerRef }: Props) {
-  const blocks = useEditorStore((s) => s.blocks);
-  const selectedBlockId = useEditorStore((s) => s.selectedBlockId);
+  const { selectedBlockId, selectedBlockIndex } = useEditorStore(
+    useShallow((s) => ({
+      selectedBlockId: s.selectedBlockId,
+      selectedBlockIndex: s.selectedBlockId
+        ? s.blocks.findIndex((b) => b.id === s.selectedBlockId)
+        : -1,
+    })),
+  );
   const [slot, setSlot] = useState<InsertSlot | null>(null);
   const [paletteOpen, setPaletteOpen] = useState(false);
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -123,11 +130,10 @@ export function InsertButton({ containerRef }: Props) {
   // selected block (above and below it) — they visually collide with the
   // selection ring. Slots between other blocks remain interactive.
   if (selectedBlockId) {
-    const selectedIndex = blocks.findIndex((b) => b.id === selectedBlockId);
     if (
-      selectedIndex !== -1 &&
-      (slot.insertIndex === selectedIndex ||
-        slot.insertIndex === selectedIndex + 1)
+      selectedBlockIndex !== -1 &&
+      (slot.insertIndex === selectedBlockIndex ||
+        slot.insertIndex === selectedBlockIndex + 1)
     ) {
       return null;
     }

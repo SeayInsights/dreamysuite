@@ -27,15 +27,7 @@ export interface CropDelta {
   bottom: number;
 }
 
-type HandlePosition =
-  | "nw"
-  | "n"
-  | "ne"
-  | "e"
-  | "se"
-  | "s"
-  | "sw"
-  | "w";
+type HandlePosition = "nw" | "n" | "ne" | "e" | "se" | "s" | "sw" | "w";
 
 interface HandleDef {
   pos: HandlePosition;
@@ -109,13 +101,17 @@ interface Props {
 
 export function CropHandles({ blockId, rect }: Props) {
   const updateBlock = useEditorStore((s) => s.updateBlock);
-  const blocks = useEditorStore((s) => s.blocks);
+  const block = useEditorStore((s) => s.blocks.find((b) => b.id === blockId));
 
   // Read existing cropDelta so we accumulate correctly across drags
-  const currentDelta = useRef<CropDelta>({ top: 0, left: 0, right: 0, bottom: 0 });
+  const currentDelta = useRef<CropDelta>({
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  });
 
   // Sync currentDelta from store on each render, normalizing legacy pixel values
-  const block = blocks.find((b) => b.id === blockId);
   const blockCfg = parseCfg(block?.config);
   if (blockCfg.cropDelta) {
     const cd = blockCfg.cropDelta as CropDelta;
@@ -129,7 +125,9 @@ export function CropHandles({ blockId, rect }: Props) {
         right: cd.right / w,
         bottom: cd.bottom / h,
       };
-      updateBlock(blockId, { config: { ...blockCfg, cropDelta: currentDelta.current } });
+      updateBlock(blockId, {
+        config: { ...blockCfg, cropDelta: currentDelta.current },
+      });
     } else {
       currentDelta.current = { ...cd };
     }
@@ -152,27 +150,44 @@ export function CropHandles({ blockId, rect }: Props) {
         const next: CropDelta = { ...startDelta };
 
         if (axes.deltaTop !== undefined) {
-          next.top = Math.min(1, Math.max(0, startDelta.top + (dy * axes.deltaTop) / h));
+          next.top = Math.min(
+            1,
+            Math.max(0, startDelta.top + (dy * axes.deltaTop) / h),
+          );
         }
         if (axes.deltaBottom !== undefined) {
-          next.bottom = Math.min(1, Math.max(0, startDelta.bottom - (dy * axes.deltaBottom) / h));
+          next.bottom = Math.min(
+            1,
+            Math.max(0, startDelta.bottom - (dy * axes.deltaBottom) / h),
+          );
         }
         if (axes.deltaLeft !== undefined) {
-          next.left = Math.min(1, Math.max(0, startDelta.left + (dx * axes.deltaLeft) / w));
+          next.left = Math.min(
+            1,
+            Math.max(0, startDelta.left + (dx * axes.deltaLeft) / w),
+          );
         }
         if (axes.deltaRight !== undefined) {
-          next.right = Math.min(1, Math.max(0, startDelta.right - (dx * axes.deltaRight) / w));
+          next.right = Math.min(
+            1,
+            Math.max(0, startDelta.right - (dx * axes.deltaRight) / w),
+          );
         }
 
         currentDelta.current = next;
-        const block = useEditorStore.getState().blocks.find((b) => b.id === blockId);
+        const block = useEditorStore
+          .getState()
+          .blocks.find((b) => b.id === blockId);
         const cfg = parseCfg(block?.config);
         updateBlock(blockId, { config: { ...cfg, cropDelta: next } });
       };
 
       const onPointerUp = (e: PointerEvent) => {
         (e.target as HTMLElement).releasePointerCapture(e.pointerId);
-        (e.target as HTMLElement).removeEventListener("pointermove", onPointerMove);
+        (e.target as HTMLElement).removeEventListener(
+          "pointermove",
+          onPointerMove,
+        );
         (e.target as HTMLElement).removeEventListener("pointerup", onPointerUp);
       };
 
@@ -212,7 +227,7 @@ export function CropHandles({ blockId, rect }: Props) {
           width: rect.width,
           height: rect.height,
           background: "rgba(0,0,0,0.45)",
-          clipPath: `polygon(0 0, 100% 0, 100% 100%, 0 100%, 0 0, ${(cd.left * 100)}% ${(cd.top * 100)}%, ${(cd.left * 100)}% ${((1 - cd.bottom) * 100)}%, ${((1 - cd.right) * 100)}% ${((1 - cd.bottom) * 100)}%, ${((1 - cd.right) * 100)}% ${(cd.top * 100)}%, ${(cd.left * 100)}% ${(cd.top * 100)}%)`,
+          clipPath: `polygon(0 0, 100% 0, 100% 100%, 0 100%, 0 0, ${cd.left * 100}% ${cd.top * 100}%, ${cd.left * 100}% ${(1 - cd.bottom) * 100}%, ${(1 - cd.right) * 100}% ${(1 - cd.bottom) * 100}%, ${(1 - cd.right) * 100}% ${cd.top * 100}%, ${cd.left * 100}% ${cd.top * 100}%)`,
         }}
         aria-hidden
       />
@@ -229,23 +244,23 @@ export function CropHandles({ blockId, rect }: Props) {
       >
         <div className="absolute inset-0 border-2 border-primary" />
 
-      {HANDLES.map((handle) => {
-        const handlers = buildPointerHandlers(handle);
-        return (
-          <div
-            key={handle.pos}
-            onPointerDown={handlers.onPointerDown}
-            className={[
-              "pointer-events-auto absolute h-3 w-3 rounded-sm",
-              "border-2 border-primary bg-white shadow-sm",
-              "transition-transform hover:scale-125",
-              handle.cls,
-              handle.cursor,
-            ].join(" ")}
-            style={{ touchAction: "none" }}
-          />
-        );
-      })}
+        {HANDLES.map((handle) => {
+          const handlers = buildPointerHandlers(handle);
+          return (
+            <div
+              key={handle.pos}
+              onPointerDown={handlers.onPointerDown}
+              className={[
+                "pointer-events-auto absolute h-3 w-3 rounded-sm",
+                "border-2 border-primary bg-white shadow-sm",
+                "transition-transform hover:scale-125",
+                handle.cls,
+                handle.cursor,
+              ].join(" ")}
+              style={{ touchAction: "none" }}
+            />
+          );
+        })}
       </div>
     </>
   );
