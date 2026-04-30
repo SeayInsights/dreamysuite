@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { safeJsonParse } from "@/lib/validation";
 
 /**
  * Submission data schemas with discriminated unions for type-specific fields.
@@ -113,7 +114,7 @@ export function parseSubmissionData(
   submissionType: string,
   json: unknown,
 ): SubmissionData {
-  const parsed = typeof json === "string" ? JSON.parse(json) : json;
+  const parsed: Record<string, unknown> = typeof json === "string" ? safeJsonParse<Record<string, unknown>>(json, {}) : (json as Record<string, unknown>);
   return SubmissionDataSchema.parse({
     type: submissionType,
     ...parsed,
@@ -122,6 +123,7 @@ export function parseSubmissionData(
 
 /**
  * Partial submission schema for PATCH-like updates.
+ * Used for updating individual fields without requiring all fields.
  */
 export const SubmissionPatchSchema = SubmissionSchema.partial();
 export type SubmissionPatch = z.infer<typeof SubmissionPatchSchema>;

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { safeJsonParse } from "@/lib/validation";
 
 /**
  * Site type settings schemas with discriminated unions for type-specific configurations.
@@ -69,7 +70,7 @@ export function parseTypeSettings(
   siteType: string,
   json: unknown,
 ): TypeSettings {
-  const parsed = typeof json === "string" ? JSON.parse(json) : json;
+  const parsed: Record<string, unknown> = typeof json === "string" ? safeJsonParse<Record<string, unknown>>(json, {}) : (json as Record<string, unknown>);
   return TypeSettingsSchema.parse({
     siteType,
     ...parsed,
@@ -103,7 +104,7 @@ export async function getSiteTypeSettings(
 
   if (!row) return null;
 
-  const settingsJson = typeof row.settings === "string" ? JSON.parse(row.settings) : row.settings;
+  const settingsJson = typeof row.settings === "string" ? safeJsonParse<Record<string, unknown>>(row.settings, {}) : row.settings;
   const validated = TypeSettingsSchema.parse({
     siteType: row.site_type,
     ...settingsJson,

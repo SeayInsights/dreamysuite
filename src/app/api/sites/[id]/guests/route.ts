@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getEnv } from "@/lib/cloudflare";
 import { z } from "zod";
 import { requireSiteOwnership, apiOwnershipError, parseJsonBody } from "@/lib/api/site-auth";
+import { safeJsonParse } from "@/lib/validation";
 
 const GuestSchema = z.object({
   firstName: z.string().min(1).max(100),
@@ -38,13 +39,9 @@ interface ContactRow {
 }
 
 function contactToGuest(contact: ContactRow) {
-  let metadata: Record<string, unknown> = {};
-  try {
-    metadata = typeof contact.metadata === 'string' ? JSON.parse(contact.metadata) : (contact.metadata || {});
-  } catch (error) {
-    console.error('[GUEST] Failed to parse contact metadata:', error);
-    metadata = {};
-  }
+  const metadata: Record<string, unknown> = typeof contact.metadata === 'string'
+    ? safeJsonParse(contact.metadata, {})
+    : (contact.metadata as Record<string, unknown> || {});
   const [firstName, ...lastNameParts] = (contact.name || '').split(' ');
 
   return {
