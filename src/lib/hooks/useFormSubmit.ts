@@ -95,6 +95,7 @@
  */
 
 import { useState, useCallback, useRef, useEffect } from "react";
+import { getErrorMessage } from "@/lib/errors";
 
 export type FormStatus = "idle" | "submitting" | "success" | "error";
 
@@ -180,34 +181,6 @@ export interface FormSubmitResult {
 }
 
 /**
- * Extract error message from API response
- */
-function extractErrorMessage(error: unknown): string {
-	if (error instanceof Error) {
-		return error.message;
-	}
-
-	if (typeof error === "string") {
-		return error;
-	}
-
-	// Handle API error response format: { error: string | { message: string } }
-	if (error && typeof error === "object") {
-		const err = error as Record<string, unknown>;
-		if (err.error) {
-			if (typeof err.error === "string") return err.error;
-			if (typeof err.error === "object" && err.error !== null) {
-				const errorObj = err.error as Record<string, unknown>;
-				if (typeof errorObj.message === "string") return errorObj.message;
-			}
-		}
-		if (typeof err.message === "string") return err.message;
-	}
-
-	return "Something went wrong. Please try again.";
-}
-
-/**
  * Form submission hook with status management and error handling
  */
 export function useFormSubmit<TData = unknown, TResponse = unknown>(
@@ -289,7 +262,7 @@ export function useFormSubmit<TData = unknown, TResponse = unknown>(
 				// Handle non-OK responses
 				if (!res.ok) {
 					const errorData = await res.json().catch(() => ({}));
-					throw new Error(extractErrorMessage(errorData));
+					throw new Error(getErrorMessage(errorData));
 				}
 
 				// Parse response
@@ -316,7 +289,7 @@ export function useFormSubmit<TData = unknown, TResponse = unknown>(
 					}, resetDelay);
 				}
 			} catch (err) {
-				const errorMessage = extractErrorMessage(err);
+				const errorMessage = getErrorMessage(err);
 				setError(errorMessage);
 				setStatus("error");
 

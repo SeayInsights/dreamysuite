@@ -21,14 +21,17 @@ export function StoryTimelineBlock({ block }: { block: Block }) {
   const breakpoint = useEditorStore((s) => s.breakpoint) as "desktop" | "tablet" | "mobile";
   const cfg = parseCfg(block.config);
   const heading = String(cfg.heading ?? "Our Story");
-  const events: TimelineEvent[] = Array.isArray(cfg.events) && cfg.events.length > 0
-    ? cfg.events as TimelineEvent[]
-    : DEFAULT_EVENTS;
+  const events: TimelineEvent[] = cfg.events === undefined
+    ? DEFAULT_EVENTS
+    : Array.isArray(cfg.events) ? cfg.events as TimelineEvent[] : [];
 
   return (
     <section className="block block-story-timeline" data-block-id={block.id} data-block-type={block.type}
       style={{ padding: "2rem 1rem", ...blockSectionStyle(cfg, breakpoint) }}>
       {heading && <TextEffectWrapper as="h2" style={{ textAlign: "center", marginBottom: "2rem" }}>{heading}</TextEffectWrapper>}
+      {events.length === 0 ? (
+        <p style={{ textAlign: "center", color: "var(--muted)", margin: "0 auto" }}>No events added yet.</p>
+      ) : (
       <div style={{ position: "relative", maxWidth: "600px", margin: "0 auto" }}>
         {/* Vertical line */}
         <div style={{
@@ -81,6 +84,7 @@ export function StoryTimelineBlock({ block }: { block: Block }) {
           );
         })}
       </div>
+      )}
     </section>
   );
 }

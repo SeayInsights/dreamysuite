@@ -205,13 +205,21 @@ export function getErrorMessage(error: unknown): string {
     return error;
   }
 
-  if (
-    error &&
-    typeof error === 'object' &&
-    'message' in error &&
-    typeof error.message === 'string'
-  ) {
-    return error.message;
+  if (error && typeof error === 'object') {
+    const err = error as Record<string, unknown>;
+
+    // Handle API error response format: { error: string | { message: string } }
+    if (err.error) {
+      if (typeof err.error === 'string') return err.error;
+      if (typeof err.error === 'object' && err.error !== null) {
+        const errorObj = err.error as Record<string, unknown>;
+        if (typeof errorObj.message === 'string') return errorObj.message;
+      }
+    }
+
+    if (typeof err.message === 'string') {
+      return err.message;
+    }
   }
 
   return 'An unknown error occurred';

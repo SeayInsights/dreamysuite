@@ -51,7 +51,8 @@ export const createSettingsSlice: StateCreator<SettingsSlice & ThemeSlice, [], [
 
   updateSettings: (patch) => {
     const prev = get().settings;
-    set({ settings: { ...prev, ...patch }, settingsDirty: true });
+    const next = { ...prev, ...patch };
+    set({ settings: next, settingsDirty: true, themeTokens: settingsToTheme(next) });
   },
 
   saveSettings: async (siteId) => {
