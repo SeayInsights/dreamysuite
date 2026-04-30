@@ -55,6 +55,7 @@ export function SitePhotoPicker({ value, onChange, label }: Props) {
 						src={value}
 						alt="Selected"
 						fill
+						unoptimized
 						className="object-cover"
 						onError={(e) => {
 							(e.target as HTMLImageElement).style.display = "none";
@@ -101,7 +102,11 @@ export function SitePhotoPicker({ value, onChange, label }: Props) {
 									src={url}
 									alt={photo.filename}
 									fill
+									unoptimized
 									className="object-cover"
+									onError={(e) => {
+										(e.target as HTMLImageElement).style.display = "none";
+									}}
 								/>
 							</button>
 						);
