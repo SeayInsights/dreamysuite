@@ -21,6 +21,7 @@
     "test:e2e:ui": "npx playwright test --ui",
     "test:e2e:report": "npx playwright show-report",
     "audit": "npm audit --audit-level=high",
+    "sbom": "node scripts/sbom.mjs",
     "format": "prettier --write .",
     "prepare": "husky"
   },
