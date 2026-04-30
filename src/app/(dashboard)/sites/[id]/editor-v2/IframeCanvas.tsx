@@ -16,6 +16,7 @@ interface Props {
   themeStyles: CSSProperties;
   background?: string;
   googleFontsHref?: string | null;
+  onDocumentReady?: (doc: Document) => void;
 }
 
 export function IframeCanvas({
@@ -24,6 +25,7 @@ export function IframeCanvas({
   themeStyles,
   background,
   googleFontsHref,
+  onDocumentReady,
 }: Props) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [iframeDoc, setIframeDoc] = useState<Document | null>(null);
@@ -45,7 +47,8 @@ export function IframeCanvas({
     doc.head.appendChild(baseStyles);
 
     setIframeDoc(doc);
-  }, []);
+    onDocumentReady?.(doc);
+  }, [onDocumentReady]);
 
   useEffect(() => {
     if (iframeDoc) iframeDoc.body.setAttribute("data-breakpoint", breakpoint);
