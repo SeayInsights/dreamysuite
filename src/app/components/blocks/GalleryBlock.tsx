@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { useEditorStore } from "@/app/stores/editorStore";
 import { blockSectionStyle, parseCfg, cropClipPath } from "@/lib/editableField";
 import { TextEffectWrapper } from "@/app/components/TextEffectWrapper";
@@ -27,9 +28,9 @@ export function GalleryBlock({ block }: { block: Block }) {
           alignItems: sized ? "stretch" : "center",
           ...(sized ? { width: "100%", height: "100%", minHeight: 0, overflow: "hidden" } : {}),
         }}>
-          <div style={{ flex: 1, ...(sized ? { minHeight: 0, overflow: "hidden", height: "100%", position: "relative" as const } : {}) }}>
+          <div style={{ flex: 1, position: "relative" as const, ...(sized ? { minHeight: 0, overflow: "hidden", height: "100%" } : { minHeight: "200px" }) }}>
             {imageUrl ? (
-              <img src={imageUrl} alt={String(cfg.imageAlt || cfg.heading || "Wedding photo")} style={{ width: "100%", height: "100%", borderRadius: "8px", objectFit: imageFit, objectPosition: "center", display: "block", ...(clipPath ? { clipPath } : {}) }} />
+              <Image src={imageUrl} alt={String(cfg.imageAlt || cfg.heading || "Wedding photo")} fill sizes="(max-width: 768px) 100vw, 50vw" style={{ borderRadius: "8px", objectFit: imageFit, objectPosition: "center", ...(clipPath ? { clipPath } : {}) }} />
             ) : (
               <div style={{ background: "var(--bg)", borderRadius: "8px", height: "200px", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--muted)" }}>
                 Photo
@@ -57,7 +58,9 @@ export function GalleryBlock({ block }: { block: Block }) {
       {images.length > 0 ? (
         <div style={{ display: "grid", gap: "0.5rem", gridTemplateColumns: images.length > 1 ? "1fr 1fr" : "1fr", ...(sized ? { minHeight: 0, height: "100%", width: "100%", gridAutoRows: "1fr" } : {}) }}>
           {images.map((url, i) => (
-            <img key={i} src={url} alt={String(cfg.imageAlt || cfg.heading || "Wedding photo")} style={{ width: "100%", height: "100%", borderRadius: "8px", objectFit: imageFit, objectPosition: "center", display: "block", ...(clipPath ? { clipPath } : {}) }} />
+            <div key={i} style={{ position: "relative", width: "100%", paddingBottom: sized ? undefined : "75%", height: sized ? "100%" : undefined }}>
+              <Image src={url} alt={String(cfg.imageAlt || cfg.heading || "Wedding photo")} fill sizes="(max-width: 768px) 100vw, 50vw" style={{ borderRadius: "8px", objectFit: imageFit, objectPosition: "center", ...(clipPath ? { clipPath } : {}) }} />
+            </div>
           ))}
         </div>
       ) : (

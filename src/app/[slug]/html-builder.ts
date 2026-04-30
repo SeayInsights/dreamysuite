@@ -2,7 +2,7 @@ import { type SiteRow, type SiteSettingRow, type PageRow, type PageWithBlocks, t
 import { escHtml, safeUrl, parseMusicSource } from "./helpers";
 import { buildStyles } from "./styles";
 import { renderBlock } from "./renderers";
-import { buildCountdownScript, buildMessageListenerScript, buildBlockAnimationScript, buildResponsiveScript, VALID_PRESET_IDS } from "./scripts";
+import { buildCountdownScript, buildMessageListenerScript, buildBlockAnimationScript, buildResponsiveScript } from "./scripts";
 import { buildIntroHtml } from "./pages";
 import { LANG_NATIVE } from "@/lib/i18n/languages";
 import { detectDesignedAtWidth } from "@/lib/responsiveScale";
@@ -21,12 +21,10 @@ export function buildHtml(
   lockedPageIds: Set<string> = new Set(),
 ): string {
   const mainLang = settings?.mainLanguage ?? "en";
-  const lang = escHtml(mainLang);
   const eventTitle = settings?.eventName ?? site.name;
   const eventDate = settings?.eventDate ?? null;
   const eventLocation = settings?.eventLocation ?? null;
   const greeting = settings?.greeting ?? null;
-  const accent = settings?.accentColor ?? "#B8921A";
 
   const bgImageRaw = settings?.bgImage ?? null;
   const escapedBgImageUrl = bgImageRaw ? safeUrl(bgImageRaw).replace(/\\/g, "\\\\").replace(/'/g, "\\'") : null;

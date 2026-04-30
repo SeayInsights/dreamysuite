@@ -6,6 +6,7 @@ import {
   useState,
   useCallback,
 } from "react";
+import Image from "next/image";
 import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useEditorStore } from "@/app/stores/editorStore";
@@ -36,8 +37,11 @@ export function ReplaceMediaDialog({ open, onClose, onSelect }: Props) {
 
   useEffect(() => {
     if (!open || !siteId) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setSelectedUrl(null);
+     
     setQuery("");
+     
     setLoading(true);
     fetch(`/api/sites/${siteId}/photos`)
       .then((r) => (r.ok ? r.json() : Promise.reject()))
@@ -145,10 +149,12 @@ export function ReplaceMediaDialog({ open, onClose, onSelect }: Props) {
                           : "ring-transparent hover:ring-primary/40",
                       ].join(" ")}
                     >
-                      <img
+                      <Image
                         src={url}
                         alt={photo.filename}
-                        className="h-full w-full object-cover"
+                        fill
+                        className="object-cover"
+                        sizes="80px"
                       />
                       {isSelected && (
                         <div className="absolute inset-0 flex items-center justify-center bg-primary/20">

@@ -62,14 +62,16 @@ export function BackgroundPopover({ currentValue, onSelect, swatches, gradients 
   useEffect(() => {
     const isGrad = currentValue.startsWith("linear-gradient") || currentValue.startsWith("radial-gradient");
     const isTrans = currentValue === "transparent" || currentValue === "";
-    setTab(isGrad ? "gradient" : isTrans ? "transparent" : "solid");
+    const nextTab = isGrad ? "gradient" : isTrans ? "transparent" : "solid";
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setTab((prev) => (prev !== nextTab ? nextTab : prev));
     if (!isGrad && !isTrans) {
       const p = parseRgbaOpacity(currentValue);
-      setHex(p.hex);
-      setOpacity(p.opacity);
+      setHex((prev) => (prev !== p.hex ? p.hex : prev));
+      setOpacity((prev) => (prev !== p.opacity ? p.opacity : prev));
     } else {
-      setHex("#ffffff");
-      setOpacity(100);
+      setHex((prev) => (prev !== "#ffffff" ? "#ffffff" : prev));
+      setOpacity((prev) => (prev !== 100 ? 100 : prev));
     }
   }, [currentValue]);
   const [gradDir, setGradDir] = useState("135deg");

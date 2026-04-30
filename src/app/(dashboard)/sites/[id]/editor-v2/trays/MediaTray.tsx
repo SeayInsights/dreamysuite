@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import { Upload, Trash2, Film, Plus, X, Music } from "lucide-react";
 
 import { useEditorStore } from "@/app/stores/editorStore";
@@ -165,10 +166,12 @@ function PhotosPanel() {
 					<div className="grid grid-cols-3 gap-1.5">
 						{photos.map((photo) => (
 							<div key={photo.id} className="group relative aspect-square overflow-hidden rounded-md bg-muted">
-								<img
+								<Image
 									src={`/api/sites/${siteId}/photos/${photo.id}`}
 									alt={photo.filename}
-									className="size-full object-cover"
+									fill
+									className="object-cover"
+									sizes="80px"
 								/>
 								<button
 									type="button"

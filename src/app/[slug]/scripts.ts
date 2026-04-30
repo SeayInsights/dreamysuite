@@ -1,5 +1,3 @@
-import { escHtml } from "./helpers";
-
 // ── Countdown script ──────────────────────────────────────────────────────────
 
 export function buildCountdownScript(): string {

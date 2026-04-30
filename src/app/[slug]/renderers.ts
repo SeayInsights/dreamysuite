@@ -946,7 +946,6 @@ export function renderBlock(
     case "guest-book": {
       const heading = String(cfg.heading ?? "Guest Book");
       const placeholderText = String(cfg.placeholder ?? "Leave a message for the happy couple…");
-      const slug = siteSlug ?? "";
       const formId = `gb-form-${escHtml(block.id)}`;
       const listId = `gb-list-${escHtml(block.id)}`;
       return `

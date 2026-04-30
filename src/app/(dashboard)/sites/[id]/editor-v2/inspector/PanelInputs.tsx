@@ -44,7 +44,7 @@ function ResetOverrideButton({
     const currentOverrides = block.overrides?.[breakpoint] || {};
 
     // Create new overrides object without this property
-    const { [propertyName]: _removed, ...remainingOverrides } = currentOverrides;
+    const { [propertyName]: _omit, ...remainingOverrides } = currentOverrides;
 
     // Update block with new overrides
     const newOverrides = {
@@ -96,7 +96,8 @@ export function PanelTextInput({
   const isOverridden = isPropertyOverridden(block, breakpoint, propertyName);
 
   useEffect(() => {
-    setDraft(value);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setDraft((prev) => (prev !== value ? value : prev));
   }, [value]);
 
   function commit() {
@@ -160,7 +161,8 @@ export function PanelTextArea({
   const isOverridden = isPropertyOverridden(block, breakpoint, propertyName);
 
   useEffect(() => {
-    setDraft(value);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setDraft((prev) => (prev !== value ? value : prev));
   }, [value]);
 
   function commit() {

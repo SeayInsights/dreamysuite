@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { useEditorStore } from "@/app/stores/editorStore";
 import { blockSectionStyle, parseCfg } from "@/lib/editableField";
 import { TextEffectWrapper } from "@/app/components/TextEffectWrapper";
@@ -69,8 +70,9 @@ export function StoryTimelineBlock({ block }: { block: Block }) {
                 marginRight: isLeft ? undefined : 0,
               }}>
                 {event.imageUrl && (
-                  <img src={event.imageUrl} alt={event.title || "Timeline photo"}
-                    style={{ width: "100%", borderRadius: "4px", marginBottom: "0.5rem", objectFit: "cover", maxHeight: "120px" }} />
+                  <div style={{ position: "relative", width: "100%", height: "120px", marginBottom: "0.5rem" }}>
+                    <Image src={event.imageUrl} alt={event.title || "Timeline photo"} fill sizes="(max-width: 768px) 100vw, 300px" style={{ borderRadius: "4px", objectFit: "cover" }} />
+                  </div>
                 )}
                 {event.date && (
                   <p style={{ fontSize: "0.75rem", color: "var(--accent, #B8921A)", fontWeight: 600, margin: "0 0 0.25rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>

@@ -1,4 +1,4 @@
-import { blockSectionStyle, editableProps, parseCfg, styleFromField } from "@/lib/editableField";
+import { blockSectionStyle, parseCfg, styleFromField } from "@/lib/editableField";
 import { TextEffectWrapper } from "@/app/components/TextEffectWrapper";
 import { useEditorStore } from "@/app/stores/editorStore";
 

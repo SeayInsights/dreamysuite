@@ -132,6 +132,7 @@ export function useBlockSync(siteId: string) {
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const retryRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const siteIdRef = useRef(siteId);
+  // eslint-disable-next-line react-hooks/refs
   siteIdRef.current = siteId;
 
   const flushNow = useCallback(() => {
@@ -143,6 +144,7 @@ export function useBlockSync(siteId: string) {
     flushOps(siteIdRef.current, pageId, state.pendingOps, state.blocks);
   }, []);
 
+  const debouncedFlushRef = useRef<() => void>(() => undefined);
   const debouncedFlush = useCallback(() => {
     const state = useEditorStore.getState();
     const pageId = state.currentPageId;
@@ -160,15 +162,17 @@ export function useBlockSync(siteId: string) {
           setSaveError(null);
         } else {
           setSaveError("Some changes could not be saved. Retrying…");
-          retryRef.current = setTimeout(debouncedFlush, DEBOUNCE_MS * 2);
+          retryRef.current = setTimeout(() => debouncedFlushRef.current(), DEBOUNCE_MS * 2);
         }
       },
       () => {
         setSaveError("Save failed — retrying…");
-        retryRef.current = setTimeout(debouncedFlush, DEBOUNCE_MS * 2);
+        retryRef.current = setTimeout(() => debouncedFlushRef.current(), DEBOUNCE_MS * 2);
       },
     );
   }, [markFlushed, setSaveError]);
+  // eslint-disable-next-line react-hooks/refs
+  debouncedFlushRef.current = debouncedFlush;
 
   useEffect(() => {
     if (!isDirty) return;

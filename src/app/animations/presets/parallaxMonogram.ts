@@ -4,7 +4,7 @@
  */
 import type { AnimOpts } from "../registry";
 
-const parallaxMonogram = async (el: Element, opts?: AnimOpts): Promise<void> => {
+const parallaxMonogram = async (el: Element, _opts?: AnimOpts): Promise<void> => {
   if (!el) return;
   const { gsap } = await import("gsap");
   const { ScrollTrigger } = await import("gsap/ScrollTrigger");

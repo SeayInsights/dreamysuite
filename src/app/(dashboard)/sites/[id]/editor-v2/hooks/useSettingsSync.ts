@@ -14,6 +14,7 @@ export function useSettingsSync(siteId: string) {
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const transTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const siteIdRef = useRef(siteId);
+  // eslint-disable-next-line react-hooks/refs
   siteIdRef.current = siteId;
 
   const flushNow = useCallback(() => {

@@ -1,4 +1,4 @@
-import { redirect, notFound } from "next/navigation";
+import { redirect } from "next/navigation";
 import { getEnv } from "@/lib/cloudflare";
 import { getAuthSession } from "@/lib/auth-session";
 import { SiteEditorV2 } from "./editor-v2";

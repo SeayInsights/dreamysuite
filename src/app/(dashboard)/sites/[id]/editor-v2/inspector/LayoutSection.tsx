@@ -129,7 +129,9 @@ function SpacingInput({
   const [draft, setDraft] = useState(value ?? "");
 
   useEffect(() => {
-    setDraft(value ?? "");
+    const next = value ?? "";
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setDraft((prev) => (prev !== next ? next : prev));
   }, [value]);
 
   function commit() {

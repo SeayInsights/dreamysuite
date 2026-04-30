@@ -102,7 +102,7 @@ function ResetButton({
 }) {
   function handleReset() {
     const currentOverrides = block.overrides?.[breakpoint] || {};
-    const { [propertyName]: _, ...remainingOverrides } = currentOverrides;
+    const { [propertyName]: _omit, ...remainingOverrides } = currentOverrides;
 
     const newOverrides = {
       ...block.overrides,
@@ -146,7 +146,8 @@ export function FormInput(props: FormInputProps) {
   const [draft, setDraft] = useState(value);
 
   useEffect(() => {
-    setDraft(value);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setDraft((prev) => (prev !== value ? value : prev));
   }, [value]);
 
   // Cascading indicator logic (only for block mode with all required props)

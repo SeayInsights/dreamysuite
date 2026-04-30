@@ -16,7 +16,6 @@ interface Props {
 export function InsertPalette({ insertIndex, onClose, anchorRef }: Props) {
   const mode = useEditorStore((s) => s.mode);
   const insertBlock = useEditorStore((s) => s.insertBlock);
-  const blocks = useEditorStore((s) => s.blocks);
 
   const [query, setQuery] = useState("");
   const [activeIndex, setActiveIndex] = useState(0);
@@ -33,6 +32,7 @@ export function InsertPalette({ insertIndex, onClose, anchorRef }: Props) {
     : allEntries;
 
   // Reset active index when filter changes
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { setActiveIndex(0); }, [query]);
 
   // Focus input on mount
@@ -104,7 +104,7 @@ export function InsertPalette({ insertIndex, onClose, anchorRef }: Props) {
       }
     });
     onClose();
-  }, [insertBlock, insertIndex, blocks, onClose]);
+  }, [insertBlock, insertIndex, onClose]);
 
   function onKeyDown(e: React.KeyboardEvent) {
     if (e.key === "ArrowDown") { e.preventDefault(); setActiveIndex((i) => Math.min(i + 1, filtered.length - 1)); }

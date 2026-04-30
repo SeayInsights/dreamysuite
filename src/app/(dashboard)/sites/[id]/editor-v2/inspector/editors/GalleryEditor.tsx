@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import Image from "next/image";
 import { ImagePlus } from "lucide-react";
 import { useEditorStore } from "@/app/stores/editorStore";
 
@@ -20,9 +21,9 @@ interface Photo {
 export function GalleryEditor({
   cfg,
   updateConfig,
-  block,
-  breakpoint,
-  updateBlock,
+  block: _block,
+  breakpoint: _breakpoint,
+  updateBlock: _updateBlock,
 }: {
   cfg: Record<string, unknown>;
   updateConfig: (patch: Record<string, unknown>) => void;
@@ -90,10 +91,12 @@ export function GalleryEditor({
                 }
                 title={photo.filename}
               >
-                <img
+                <Image
                   src={url}
                   alt={photo.filename}
-                  className="size-full object-cover"
+                  fill
+                  className="object-cover"
+                  sizes="80px"
                 />
                 {isSelected && (
                   <div className="absolute inset-0 flex items-center justify-center bg-primary/20">

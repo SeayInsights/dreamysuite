@@ -56,6 +56,7 @@ export function PickerModal({ onAddStore, onAddCustomStore, onAddFund, onClose }
                   className="flex flex-col items-center gap-1.5 rounded-lg border border-border p-3 text-xs transition-colors hover:border-primary hover:bg-accent/30"
                 >
                   <div style={{ width: 40, height: 40, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    {/* eslint-disable-next-line @next/next/no-img-element -- src is a data: URI (inline SVG); next/image does not support data: URIs */}
                     <img
                       src={STORE_LOGOS[store]}
                       alt={store}

@@ -24,7 +24,6 @@ export function TranslateTab() {
 	const siteId = useEditorStore((s) => s.siteId);
 	const getTranslation = useEditorStore((s) => s.getTranslation);
 	const setTranslation = useEditorStore((s) => s.setTranslation);
-	const translations = useEditorStore((s) => s.translations);
 
 	const langs = parseSiteLanguages(settings.siteLanguages ?? null);
 	const mainLang = settings.mainLanguage || "en";
@@ -110,7 +109,7 @@ export function TranslateTab() {
 function LanguageSection({
 	lang,
 	blockId,
-	blockType,
+	blockType: _blockType,
 	fields,
 	cfg,
 	mainLang,
@@ -324,7 +323,6 @@ function PageTranslationSummary({
 	const translations = useEditorStore((s) => s.translations);
 	const siteId = useEditorStore((s) => s.siteId);
 	const setTranslation = useEditorStore((s) => s.setTranslation);
-	const settings = useEditorStore((s) => s.settings);
 	const [busy, setBusy] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 
@@ -345,6 +343,7 @@ function PageTranslationSummary({
 		return { lang, total, filled };
 	});
 
+	// eslint-disable-next-line react-hooks/preserve-manual-memoization
 	const translateEntirePage = useCallback(async () => {
 		if (!siteId) return;
 		setBusy(true);
@@ -393,6 +392,7 @@ function PageTranslationSummary({
 			setBusy(false);
 			if (failures > 0) setError(`${failures} language(s) failed — try again shortly`);
 		}
+	// eslint-disable-next-line react-hooks/preserve-manual-memoization
 	}, [siteId, langs, mainLang, translatableBlocks, translations, setTranslation]);
 
 	return (
