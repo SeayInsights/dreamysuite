@@ -1,14 +1,32 @@
-import { type SiteRow, type SiteSettingRow, type PageRow, type PageWithBlocks, type ContentMap, type BlockTransMap } from "./types";
+import {
+  type SiteRow,
+  type SiteSettingRow,
+  type PageRow,
+  type PageWithBlocks,
+  type ContentMap,
+  type BlockTransMap,
+} from "./types";
 import { escHtml, safeUrl, parseMusicSource } from "./helpers";
 import { buildStyles } from "./styles";
 import { renderBlock } from "./renderers";
-import { buildCountdownScript, buildMessageListenerScript, buildBlockAnimationScript, buildResponsiveScript } from "./scripts";
+import {
+  buildCountdownScript,
+  buildMessageListenerScript,
+  buildBlockAnimationScript,
+  buildResponsiveScript,
+} from "./scripts";
 import { buildIntroHtml } from "./pages";
 import { LANG_NATIVE } from "@/lib/i18n/languages";
 import { detectDesignedAtWidth } from "@/lib/responsiveScale";
 
 // Allowlist prevents arbitrary path injection into import() URLs
-const R3F_EFFECTS = new Set(["silk", "beams", "dither", "antigravity", "pixel-trail"]);
+const R3F_EFFECTS = new Set([
+  "silk",
+  "beams",
+  "dither",
+  "antigravity",
+  "pixel-trail",
+]);
 
 export function buildHtml(
   site: SiteRow,
@@ -27,29 +45,36 @@ export function buildHtml(
   const greeting = settings?.greeting ?? null;
 
   const bgImageRaw = settings?.bgImage ?? null;
-  const escapedBgImageUrl = bgImageRaw ? safeUrl(bgImageRaw).replace(/\\/g, "\\\\").replace(/'/g, "\\'") : null;
+  const escapedBgImageUrl = bgImageRaw
+    ? safeUrl(bgImageRaw).replace(/\\/g, "\\\\").replace(/'/g, "\\'")
+    : null;
 
   const allBlocks = pages.flatMap((p) => p.blocks);
   const designedAtWidth = detectDesignedAtWidth(allBlocks);
-  const hasCountdown = allBlocks.some((b) => b.type === "countdown")
-    || (!!settings?.eventDate && allBlocks.some((b) => b.type === "video" && !!(b.config as Record<string, unknown>).showCountdown));
+  const hasCountdown =
+    allBlocks.some((b) => b.type === "countdown") ||
+    (!!settings?.eventDate &&
+      allBlocks.some(
+        (b) =>
+          b.type === "video" &&
+          !!(b.config as Record<string, unknown>).showCountdown,
+      ));
 
   const usedBlockPresets = new Set(
-    allBlocks
-      .flatMap((b) => {
-        const a = (b.config as Record<string, unknown>).animation;
-        const id =
-          typeof a === "object" && a !== null
-            ? ((a as { presetId?: string }).presetId ?? "")
-            : typeof a === "string"
+    allBlocks.flatMap((b) => {
+      const a = (b.config as Record<string, unknown>).animation;
+      const id =
+        typeof a === "object" && a !== null
+          ? ((a as { presetId?: string }).presetId ?? "")
+          : typeof a === "string"
             ? a
             : "";
-        return id ? [id] : [];
-      })
+      return id ? [id] : [];
+    }),
   );
   const blockPresetNeedsScrollTrigger =
     ["parallax-monogram", "scroll-pinned-story", "sticky-date"].some((id) =>
-      usedBlockPresets.has(id)
+      usedBlockPresets.has(id),
     ) ||
     allBlocks.some((b) => {
       const a = (b.config as Record<string, unknown>).animation;
@@ -73,7 +98,11 @@ export function buildHtml(
   // Parse all configured languages
   let extraLangs: string[] = [];
   if (settings?.siteLanguages) {
-    try { extraLangs = JSON.parse(settings.siteLanguages); } catch { /* ignore */ }
+    try {
+      extraLangs = JSON.parse(settings.siteLanguages);
+    } catch {
+      /* ignore */
+    }
   }
   if (!extraLangs.length && settings?.secondLanguage) {
     extraLangs = [settings.secondLanguage];
@@ -84,29 +113,44 @@ export function buildHtml(
 
   const navShape = settings?.navShape ?? "";
   const navMaterial = settings?.navMaterial ?? "solid";
-  const navUnderlineClass = (settings?.navUnderline ?? "on") !== "off" ? " nav-underline" : "";
-  const navMaterialClass = navMaterial === "glass" ? " nav-glass" : navMaterial === "frosted" ? " nav-frosted" : "";
-  const navShapeClass = (navShape === "pill" ? " nav-pill" : navShape === "floating" ? " nav-floating" : "") + navUnderlineClass + navMaterialClass;
+  const navUnderlineClass =
+    (settings?.navUnderline ?? "on") !== "off" ? " nav-underline" : "";
+  const navMaterialClass =
+    navMaterial === "glass"
+      ? " nav-glass"
+      : navMaterial === "frosted"
+        ? " nav-frosted"
+        : "";
+  const navShapeClass =
+    (navShape === "pill"
+      ? " nav-pill"
+      : navShape === "floating"
+        ? " nav-floating"
+        : "") +
+    navUnderlineClass +
+    navMaterialClass;
   const isPillOrFloating = navShape === "pill" || navShape === "floating";
   const navLinksHtml = visiblePages
     .map(
       (p, i) =>
-        `<li><button class="site-nav-link${i === 0 ? " active" : ""}" data-page="${escHtml(p.id)}" onclick="showPage('${escHtml(p.id)}')">${pageLabel(p)}</button></li>`
+        `<li><button class="site-nav-link${i === 0 ? " active" : ""}" data-page="${escHtml(p.id)}" onclick="showPage('${escHtml(p.id)}')">${pageLabel(p)}</button></li>`,
     )
     .join("");
   const mainNative = LANG_NATIVE[mainLang] ?? mainLang.toUpperCase();
   const currentLang = activeLang ?? mainLang;
-  const navLangToggle = extraLangs.length > 0
-    ? isMultiLang
-      ? `<div class="lang-toggle">
+  const navLangToggle =
+    extraLangs.length > 0
+      ? isMultiLang
+        ? `<div class="lang-toggle">
           <select class="lang-select" id="lang-select" onchange="switchLangTo(this.value)" aria-label="Select language">
             ${allLangs.map((l) => `<option value="${escHtml(l)}"${l === currentLang ? " selected" : ""}>${escHtml(LANG_NATIVE[l] ?? l)}</option>`).join("")}
           </select>
         </div>`
-      : (() => {
-          const secondNative = LANG_NATIVE[secondLang!] ?? secondLang!.toUpperCase();
-          const isSecondActive = activeLang === secondLang;
-          return `<div class="lang-toggle">
+        : (() => {
+            const secondNative =
+              LANG_NATIVE[secondLang!] ?? secondLang!.toUpperCase();
+            const isSecondActive = activeLang === secondLang;
+            return `<div class="lang-toggle">
             <button class="lang-btn" id="lang-toggle-btn"
               data-main="${escHtml(mainLang)}" data-second="${escHtml(secondLang!)}"
               data-main-label="${escHtml(mainNative)}" data-second-label="${escHtml(secondNative)}"
@@ -114,8 +158,8 @@ export function buildHtml(
               aria-label="Switch language"
             >${isSecondActive ? escHtml(mainNative) : escHtml(secondNative)}</button>
           </div>`;
-        })()
-    : "";
+          })()
+      : "";
   const showNavBrand = !!(settings?.showNavBrand ?? 1);
   const navHtml = hasMultiplePages
     ? isPillOrFloating
@@ -157,15 +201,31 @@ export function buildHtml(
 
       const pageContentByLang = contentMap.get(page.slug);
       const renderLang = activeLang ?? mainLang;
-      if (activeLang && !pageContentByLang?.get(activeLang)) _anyLangFallback = true;
-      const pageContent = pageContentByLang?.get(renderLang)
-        ?? pageContentByLang?.get(mainLang)
-        ?? (pageContentByLang ? [...pageContentByLang.values()][0] : undefined);
+      if (activeLang && !pageContentByLang?.get(activeLang))
+        _anyLangFallback = true;
+      const pageContent =
+        pageContentByLang?.get(renderLang) ??
+        pageContentByLang?.get(mainLang) ??
+        (pageContentByLang ? [...pageContentByLang.values()][0] : undefined);
       const blocksHtml = page.blocks
         .map((block) => {
-          const html = renderBlock(block, settings, pageContent, siteSlug, blockTransMap, renderLang, mainLang);
+          const html = renderBlock(
+            block,
+            settings,
+            pageContent,
+            siteSlug,
+            blockTransMap,
+            renderLang,
+            mainLang,
+          );
           const animRaw = (block.config as Record<string, unknown>).animation;
-          type AnimConfig = { presetId?: string; duration?: number; delay?: number; easing?: string; trigger?: string };
+          type AnimConfig = {
+            presetId?: string;
+            duration?: number;
+            delay?: number;
+            easing?: string;
+            trigger?: string;
+          };
           let animPreset = "";
           let animDuration: number | undefined;
           let animDelay: number | undefined;
@@ -184,10 +244,14 @@ export function buildHtml(
           if (!animPreset) return html;
           // Build data attribute string — only emit non-default values to keep HTML lean
           let dataAttrs = ` data-animation="${escHtml(animPreset)}"`;
-          if (animDuration !== undefined && animDuration !== 0.6) dataAttrs += ` data-animation-duration="${animDuration}"`;
-          if (animDelay !== undefined && animDelay !== 0) dataAttrs += ` data-animation-delay="${animDelay}"`;
-          if (animEasing !== undefined && animEasing !== "power2.out") dataAttrs += ` data-animation-easing="${escHtml(animEasing)}"`;
-          if (animTrigger !== undefined && animTrigger !== "on-view") dataAttrs += ` data-animation-trigger="${escHtml(animTrigger)}"`;
+          if (animDuration !== undefined && animDuration !== 0.6)
+            dataAttrs += ` data-animation-duration="${animDuration}"`;
+          if (animDelay !== undefined && animDelay !== 0)
+            dataAttrs += ` data-animation-delay="${animDelay}"`;
+          if (animEasing !== undefined && animEasing !== "power2.out")
+            dataAttrs += ` data-animation-easing="${escHtml(animEasing)}"`;
+          if (animTrigger !== undefined && animTrigger !== "on-view")
+            dataAttrs += ` data-animation-trigger="${escHtml(animTrigger)}"`;
           return html.replace(/(<section\b[^>]*)(>)/, `$1${dataAttrs}$2`);
         })
         .join("\n");
@@ -196,32 +260,40 @@ export function buildHtml(
     .join("\n");
 
   // Content margin padding
-  const mTop    = Number(settings?.marginTop    ?? 0) || 0;
-  const mRight  = Number(settings?.marginRight  ?? 0) || 0;
+  const mTop = Number(settings?.marginTop ?? 0) || 0;
+  const mRight = Number(settings?.marginRight ?? 0) || 0;
   const mBottom = Number(settings?.marginBottom ?? 0) || 0;
-  const mLeft   = Number(settings?.marginLeft   ?? 0) || 0;
+  const mLeft = Number(settings?.marginLeft ?? 0) || 0;
   const mMaxWidth = Number(settings?.siteMaxWidth ?? 0) || 0;
   const contentStyles: string[] = [];
   if (mTop || mRight || mBottom || mLeft) {
     contentStyles.push(`padding:${mTop}px ${mRight}px ${mBottom}px ${mLeft}px`);
     contentStyles.push(`overflow:hidden`);
   }
-  if (mMaxWidth) contentStyles.push(`max-width:${mMaxWidth}px`, `margin-left:auto`, `margin-right:auto`);
+  if (mMaxWidth)
+    contentStyles.push(
+      `max-width:${mMaxWidth}px`,
+      `margin-left:auto`,
+      `margin-right:auto`,
+    );
   contentStyles.push(`position:relative`, `z-index:2`);
-  const contentPadStyle = ` style="${contentStyles.join(';')}"`;
+  const contentPadStyle = ` style="${contentStyles.join(";")}"`;
 
   // No-pages fallback — site exists but has no pages yet
-  const fallbackHtml = visiblePages.length === 0
-    ? `<div class="site-wrapper"><p style="text-align:center;padding:4rem 1rem;color:var(--muted);font-style:italic;">This site has no published content yet.</p></div>`
-    : "";
+  const fallbackHtml =
+    visiblePages.length === 0
+      ? `<div class="site-wrapper"><p style="text-align:center;padding:4rem 1rem;color:var(--site-muted);font-style:italic;">This site has no published content yet.</p></div>`
+      : "";
 
   // Language fallback banner — shown when the requested language has no content yet
-  const langFallbackBanner = (activeLang && _anyLangFallback)
-    ? `<div style="background:#fffbeb;border-bottom:1px solid #fcd34d;padding:8px 16px;font-size:0.82rem;color:#92400e;text-align:center;">${LANG_NATIVE[activeLang] ?? activeLang.toUpperCase()} content not yet available — showing original language</div>`
-    : "";
+  const langFallbackBanner =
+    activeLang && _anyLangFallback
+      ? `<div style="background:#fffbeb;border-bottom:1px solid #fcd34d;padding:8px 16px;font-size:0.82rem;color:#92400e;text-align:center;">${LANG_NATIVE[activeLang] ?? activeLang.toUpperCase()} content not yet available — showing original language</div>`
+      : "";
 
-  const hideOnScrollScript = (settings?.navPosition === "hide-on-scroll")
-    ? `
+  const hideOnScrollScript =
+    settings?.navPosition === "hide-on-scroll"
+      ? `
 (function(){
   var nav = document.querySelector('.site-nav, .site-nav-row');
   if (!nav) return;
@@ -234,7 +306,7 @@ export function buildHtml(
     lastY = y;
   }, {passive:true});
 })();`
-    : "";
+      : "";
   const navScript = hasMultiplePages
     ? `<script>
 function showPage(pageId) {
@@ -260,15 +332,21 @@ ${hideOnScrollScript}
   const popupTitle = settings?.popupTitle ?? null;
   const popupTicker = settings?.popupTicker ?? 0;
   const showPopup = greeting && popupEnabled !== 0;
-  const tickerText = popupTicker ? escHtml(eventTitle + (eventDate ? "  ·  " + eventDate : "")) : null;
+  const tickerText = popupTicker
+    ? escHtml(eventTitle + (eventDate ? "  ·  " + eventDate : ""))
+    : null;
   // Suppress the separate greeting-overlay when the popup is bundled inside the animation —
   // the bundle card IS the popup. Also always start hidden when any animation is active so
   // the overlay doesn't bleed through while the intro fades in (z-index 999 < 9999 but visible
   // during the 0→1 opacity ramp).
-  const bundledWithAnim = !!(settings?.popupBundle) && !!settings?.animation
-    && settings?.animation !== "none" && settings?.animation !== "envelope";
-  const greetingHtml = showPopup && !bundledWithAnim
-    ? `<div class="greeting-overlay${settings?.animation && settings.animation !== "none" ? " hidden" : ""}" id="greeting-overlay" role="dialog" aria-modal="true" aria-label="Welcome message"
+  const bundledWithAnim =
+    !!settings?.popupBundle &&
+    !!settings?.animation &&
+    settings?.animation !== "none" &&
+    settings?.animation !== "envelope";
+  const greetingHtml =
+    showPopup && !bundledWithAnim
+      ? `<div class="greeting-overlay${settings?.animation && settings.animation !== "none" ? " hidden" : ""}" id="greeting-overlay" role="dialog" aria-modal="true" aria-label="Welcome message"
         onclick="document.getElementById('greeting-overlay').classList.add('hidden');">
         <div class="greeting-modal" onclick="event.stopPropagation();">
           ${popupTitle ? `<h2 class="greeting-title">${escHtml(popupTitle)}</h2>` : ""}
@@ -281,19 +359,21 @@ ${hideOnScrollScript}
           >View Site</button>
         </div>
       </div>`
-    : "";
+      : "";
 
   // Language toggle — fallback for single-page sites with no nav
-  const langToggleHtml = extraLangs.length > 0 && !hasMultiplePages
-    ? isMultiLang
-      ? `<div style="position:fixed;top:1rem;right:1rem;z-index:200">
+  const langToggleHtml =
+    extraLangs.length > 0 && !hasMultiplePages
+      ? isMultiLang
+        ? `<div style="position:fixed;top:1rem;right:1rem;z-index:200">
           <select class="lang-select" id="lang-select" onchange="switchLangTo(this.value)" aria-label="Select language">
             ${allLangs.map((l) => `<option value="${escHtml(l)}"${l === currentLang ? " selected" : ""}>${escHtml(LANG_NATIVE[l] ?? l)}</option>`).join("")}
           </select>
         </div>`
-      : (() => {
-          const secondNative = LANG_NATIVE[secondLang!] ?? secondLang!.toUpperCase();
-          return `<div style="position:fixed;top:1rem;right:1rem;z-index:200">
+        : (() => {
+            const secondNative =
+              LANG_NATIVE[secondLang!] ?? secondLang!.toUpperCase();
+            return `<div style="position:fixed;top:1rem;right:1rem;z-index:200">
             <button class="lang-btn" id="lang-toggle-btn"
               data-main="${escHtml(mainLang)}" data-second="${escHtml(secondLang!)}"
               data-main-label="${escHtml(mainNative)}" data-second-label="${escHtml(secondNative)}"
@@ -301,10 +381,11 @@ ${hideOnScrollScript}
               aria-label="Switch language"
             >${escHtml(secondNative)}</button>
           </div>`;
-        })()
-    : "";
-  const langScript = extraLangs.length > 0
-    ? `<script>
+          })()
+      : "";
+  const langScript =
+    extraLangs.length > 0
+      ? `<script>
 function switchLangTo(target) {
   var url = new URL(location.href);
   if (target === '${escHtml(mainLang)}') { url.searchParams.delete('_lang'); } else { url.searchParams.set('_lang', target); }
@@ -320,27 +401,29 @@ function switchLang() {
   switchLangTo(target);
 }
 </script>`
-    : "";
+      : "";
 
   // Serialize the per-lang content for client-side switching
-  const langContentJson = extraLangs.length > 0
-    ? (() => {
-        const out: Record<string, Record<string, unknown>> = {};
-        for (const [, langMap] of contentMap) {
-          for (const [lg, data] of langMap) {
-            if (!out[lg]) out[lg] = {};
-            Object.assign(out[lg], data);
+  const langContentJson =
+    extraLangs.length > 0
+      ? (() => {
+          const out: Record<string, Record<string, unknown>> = {};
+          for (const [, langMap] of contentMap) {
+            for (const [lg, data] of langMap) {
+              if (!out[lg]) out[lg] = {};
+              Object.assign(out[lg], data);
+            }
           }
-        }
-        return JSON.stringify(out).replace(/</g, "\\u003c");
-      })()
-    : null;
+          return JSON.stringify(out).replace(/</g, "\\u003c");
+        })()
+      : null;
 
   const pageTitle = settings?.seoTitle
     ? escHtml(settings.seoTitle)
     : `${escHtml(eventTitle)}${eventDate ? ` &middot; ${escHtml(eventDate)}` : ""}`;
-  const metaDesc = settings?.seoDescription
-    ?? [eventTitle, eventDate, eventLocation].filter(Boolean).join(" \u00b7 ");
+  const metaDesc =
+    settings?.seoDescription ??
+    [eventTitle, eventDate, eventLocation].filter(Boolean).join(" \u00b7 ");
   const ogImageUrl = settings?.ogImage ?? null;
   const canonicalUrl = `https://dreamysuite.com/${escHtml(siteSlug)}`;
 
@@ -352,17 +435,28 @@ function switchLang() {
   const sealInitials = settings?.sealInitials ?? null;
   const cardColor = settings?.cardColor ?? null;
   const cardImage = settings?.cardImage ?? null;
-  const popupBundleActive = !!(settings?.popupBundle) && !!animation && animation !== "none" && animation !== "envelope";
+  const popupBundleActive =
+    !!settings?.popupBundle &&
+    !!animation &&
+    animation !== "none" &&
+    animation !== "envelope";
   const introHtml = buildIntroHtml(
-    animation, eventTitle, eventDate, envelopeColor, sealInitials, cardColor, cardImage,
+    animation,
+    eventTitle,
+    eventDate,
+    envelopeColor,
+    sealInitials,
+    cardColor,
+    cardImage,
     settings?.bgImage ?? null,
     popupBundleActive,
     settings?.popupTitle ?? null,
-    greeting
+    greeting,
   );
-  const gsapCdn = (introHtml || usedBlockPresets.size > 0)
-    ? `<script defer src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.15.0/gsap.min.js"></script>\n  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.15.0/CustomEase.min.js"></script>${blockPresetNeedsScrollTrigger ? "\n  <script defer src=\"https://cdnjs.cloudflare.com/ajax/libs/gsap/3.15.0/ScrollTrigger.min.js\"></script>" : ""}`
-    : "";
+  const gsapCdn =
+    introHtml || usedBlockPresets.size > 0
+      ? `<script defer src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.15.0/gsap.min.js"></script>\n  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.15.0/CustomEase.min.js"></script>${blockPresetNeedsScrollTrigger ? '\n  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.15.0/ScrollTrigger.min.js"></script>' : ""}`
+      : "";
 
   const triggerPopupAfterAnim = showPopup && !!animation && !popupBundleActive;
   const introScript = introHtml
@@ -386,7 +480,9 @@ function _addReplayBtn() {
       gsap.killTweensOf('*');
       el.style.display = '';
       gsap.set(el, { opacity:1, scale:1, clearProps:'background' });
-      ${animation === "envelope" ? `
+      ${
+        animation === "envelope"
+          ? `
       gsap.set('.envfs-card',       { xPercent:-50, yPercent:-50, y:'100vh', opacity:0, scale:1, filter:'blur(12px)' });
       gsap.set('.envfs-flap',       { rotateX:0 });
       gsap.set('.envfs-glow',       { opacity:0 });
@@ -397,7 +493,9 @@ function _addReplayBtn() {
       gsap.set('.intro-env-fs',     { clearProps:'scale,y,opacity' });
       var _namesEl = document.querySelector('.envfs-names');
       if (_namesEl) _namesEl.style.animation = 'envfs-names-bounce 2s ease-in-out infinite';
-      ` : animation === "doors" ? `
+      `
+          : animation === "doors"
+            ? `
       gsap.set('.door-l', { rotateY:0, opacity:1 });
       gsap.set('.door-r', { rotateY:0, opacity:1 });
       gsap.set('.door-glow', { width:'3px', filter:'blur(2px)', opacity:1 });
@@ -407,13 +505,17 @@ function _addReplayBtn() {
       gsap.set('.door-light-flood', { scaleX:0.1, scaleY:0.1, opacity:0 });
       gsap.set('.door-ao',            { opacity:0.55, width:'70px' });
       gsap.set('.door-surface-light', { opacity:0 });
-      ` : animation === "storybook" ? `
+      `
+            : animation === "storybook"
+              ? `
       gsap.set('.book-cover', { rotateY:0, transformOrigin:'right center' });
       gsap.set(['.book-page-1','.book-page-2','.book-page-3'], { rotateY:0, opacity:1 });
       gsap.set('.book-final-page', { opacity:0 });
       gsap.set('.book-page-bg', { filter:'none' });
       gsap.set('.book-cue', { opacity:1 });
-      ` : ``}
+      `
+              : ``
+      }
       _introOpened = false;
       el.addEventListener('click', openIntro);
       openIntro();
@@ -437,7 +539,9 @@ function openIntro() {
   _introOpened = true;
   var el = document.getElementById('intro-overlay');
   if (!el) return;
-  ${animation === "envelope" ? `
+  ${
+    animation === "envelope"
+      ? `
   gsap.killTweensOf('.intro-env-fs');
   var _namesEl2 = document.querySelector('.envfs-names');
   if (_namesEl2) _namesEl2.style.animation = 'none';
@@ -466,7 +570,9 @@ function openIntro() {
     .to('.envfs-card',        { scale:1.0,  duration:0.6, ease:'sine.inOut' }, 6.42)
     .to({},                   { duration:1.5 })
     .to(el,                   { opacity:0, duration:0.95, ease:'power2.in' });
-  ` : animation === "doors" ? `
+  `
+      : animation === "doors"
+        ? `
   var _bundleCard = document.getElementById('intro-bundle-card');
   var tl = gsap.timeline({ onComplete: function(){
     if (_bundleCard) {
@@ -497,7 +603,9 @@ function openIntro() {
     .to('.door-glow',         { width:'380px', filter:'blur(48px)', opacity:0.5, duration:0.6, ease:'power1.out' }, 0.88)
     .to('.door-glow',         { opacity:0, duration:0.6, ease:'power2.in' }, '-=0.15')
     ${popupBundleActive ? `.to(['.door-l','.door-r','.door-centre-text'], { opacity:0, duration:0.45 }, '-=0.38')` : `.to(el, { opacity:0, duration:0.58, ease:'power2.in' }, '-=0.42')`};
-  ` : animation === "storybook" ? `
+  `
+        : animation === "storybook"
+          ? `
   var _bundleCard = document.getElementById('intro-bundle-card');
   gsap.set(['.book-page-1','.book-page-2','.book-page-3'], { rotateY:0, transformOrigin:'right center' });
   gsap.set('.book-final-page', { opacity:0 });
@@ -520,14 +628,20 @@ function openIntro() {
     /* The world inside dissolves in slowly — watercolour warmth, like a Disney fade */
     .to('.book-final-page', { opacity:1, duration:1.1,  ease:'power1.inOut' }, 3.15)
     .to('.book-page-bg', { filter:'brightness(1.12)', duration:0.85, ease:'power1.inOut' }, 3.25)
-    ${popupBundleActive
-      ? `.to(['.book-cover','.book-spine','.book-page-bg','.book-page-1','.book-page-2','.book-page-3'], { opacity:0, duration:0.5 }, '-=0.3')`
-      : `.to(el, { opacity:0, duration:0.85, ease:'power2.in' }, '-=0.5')`};
-  ` : `
+    ${
+      popupBundleActive
+        ? `.to(['.book-cover','.book-spine','.book-page-bg','.book-page-1','.book-page-2','.book-page-3'], { opacity:0, duration:0.5 }, '-=0.3')`
+        : `.to(el, { opacity:0, duration:0.85, ease:'power2.in' }, '-=0.5')`
+    };
+  `
+          : `
   gsap.to(el, { opacity:0, duration:0.4, onComplete:function(){ _afterAnimDone(el); } });
-  `}
+  `
+  }
 }
-${animation === "envelope" ? `
+${
+  animation === "envelope"
+    ? `
 if (!_introOpened) {
   gsap.set('.envfs-card',   { xPercent:-50, yPercent:-50, y:'100vh', opacity:0, filter:'blur(12px)' });
   gsap.set('.intro-env-fs', { scale:0.96, y:40, opacity:0 });
@@ -537,7 +651,9 @@ if (!_introOpened) {
   gsap.timeline()
     .to('.intro-env-fs', { scale:1, y:0, opacity:1, duration:2.4, ease:'expo.out' })
     .to(['#intro-lbox-t','#intro-lbox-b'], { height:48, duration:1.1, ease:'expo.out' }, 0.8);
-}` : animation === "doors" ? `
+}`
+    : animation === "doors"
+      ? `
 if (!_introOpened) {
   var _doorsEl = document.getElementById('intro-overlay');
   if (_doorsEl) {
@@ -545,7 +661,9 @@ if (!_introOpened) {
     /* Atmosphere materialises slowly — fog drifts into frame, warmth builds */
     gsap.to(_doorsEl, { opacity:1, scale:1, duration:2.2, ease:'expo.out' });
   }
-}` : animation === "storybook" ? `
+}`
+      : animation === "storybook"
+        ? `
 if (!_introOpened) {
   var _bookEl = document.getElementById('intro-overlay');
   if (_bookEl) {
@@ -553,7 +671,9 @@ if (!_introOpened) {
     /* Book surfaces slowly — like a cherished memory drifting into focus */
     gsap.to(_bookEl, { opacity:1, scale:1, duration:2.8, ease:'expo.out' });
   }
-}` : ""}
+}`
+        : ""
+}
 if (_introOpened) {
   var _skipEl = document.getElementById('intro-overlay');
   if (_skipEl) _afterAnimDone(_skipEl);
@@ -587,7 +707,9 @@ function _ytSendPlay(){var f=document.getElementById('yt-player');if(f)f.content
 function toggleMusic(){var f=document.getElementById('yt-player'),b=document.getElementById('music-btn');if(!f||!b)return;if(b.classList.contains('playing')){f.contentWindow.postMessage('{"event":"command","func":"pauseVideo","args":""}','*');b.classList.remove('playing');b.setAttribute('aria-label','Play background music');}else{b.classList.add('playing');b.setAttribute('aria-label','Pause background music');if(f.contentDocument||_ytReady){_ytSendPlay();}else{_ytPendingPlay=true;f.addEventListener('load',function(){if(_ytPendingPlay){_ytPendingPlay=false;_ytSendPlay();}},{once:true});}}}
 </script>`;
       } else if (musicSource.type === "spotify") {
-        const embedUrl = escHtml(`https://open.spotify.com/embed/${musicSource.kind}/${musicSource.id}?theme=0`);
+        const embedUrl = escHtml(
+          `https://open.spotify.com/embed/${musicSource.kind}/${musicSource.id}?theme=0`,
+        );
         musicPlayerHtml = `
   <div class="music-player" id="music-player">
     <iframe id="spotify-player" src="${embedUrl}" allow="autoplay; encrypted-media" style="position:fixed;left:-2px;top:-2px;width:300px;height:80px;pointer-events:none;opacity:0;" title="Background music"></iframe>
@@ -597,7 +719,9 @@ function toggleMusic(){var f=document.getElementById('yt-player'),b=document.get
 function toggleMusic(){var b=document.getElementById('music-btn'),f=document.getElementById('spotify-player');if(!b||!f)return;if(b.classList.contains('playing')){f.style.pointerEvents='none';f.style.opacity='0';b.classList.remove('playing');b.setAttribute('aria-label','Play background music');}else{f.style.pointerEvents='auto';f.style.opacity='1';f.style.position='fixed';f.style.bottom='4.5rem';f.style.right='1.5rem';f.style.left='auto';f.style.top='auto';f.style.width='300px';f.style.height='80px';f.style.borderRadius='12px';f.style.zIndex='201';b.classList.add('playing');b.setAttribute('aria-label','Hide music player');}}
 </script>`;
       } else if (musicSource.type === "soundcloud") {
-        const scUrl = escHtml(`https://w.soundcloud.com/player/?url=${encodeURIComponent(musicUrl)}&color=%23B8921A&auto_play=false&hide_related=true&show_comments=false&show_user=true&show_reposts=false&show_teaser=false&visual=false`);
+        const scUrl = escHtml(
+          `https://w.soundcloud.com/player/?url=${encodeURIComponent(musicUrl)}&color=%23B8921A&auto_play=false&hide_related=true&show_comments=false&show_user=true&show_reposts=false&show_teaser=false&visual=false`,
+        );
         musicPlayerHtml = `
   <div class="music-player" id="music-player">
     <iframe id="sc-player" src="${scUrl}" allow="autoplay" style="position:fixed;left:-2px;top:-2px;width:300px;height:120px;pointer-events:none;opacity:0;" title="Background music"></iframe>
@@ -621,12 +745,19 @@ function toggleMusic(){var a=document.getElementById('audio-player'),b=document.
   }
 
   // hreflang tags for SEO
-  const hreflangTags = extraLangs.length > 0
-    ? allLangs.map((l) => {
-        const href = l === mainLang ? `/${escHtml(siteSlug)}` : `/${escHtml(siteSlug)}?_lang=${escHtml(l)}`;
-        return `<link rel="alternate" hreflang="${escHtml(l)}" href="${href}" />`;
-      }).join("\n  ") + `\n  <link rel="alternate" hreflang="x-default" href="/${escHtml(siteSlug)}" />`
-    : "";
+  const hreflangTags =
+    extraLangs.length > 0
+      ? allLangs
+          .map((l) => {
+            const href =
+              l === mainLang
+                ? `/${escHtml(siteSlug)}`
+                : `/${escHtml(siteSlug)}?_lang=${escHtml(l)}`;
+            return `<link rel="alternate" hreflang="${escHtml(l)}" href="${href}" />`;
+          })
+          .join("\n  ") +
+        `\n  <link rel="alternate" hreflang="x-default" href="/${escHtml(siteSlug)}" />`
+      : "";
 
   return `<!DOCTYPE html>
 <html lang="${escHtml(currentLang)}"${currentLang === "ar" || currentLang === "he" ? ' dir="rtl"' : ""}>
@@ -649,14 +780,24 @@ function toggleMusic(){var a=document.getElementById('audio-player'),b=document.
   ${fontsTag}
   ${gsapCdn}
   ${(() => {
-    const allEffects = [settings?.effectBg, settings?.effectText, settings?.effectCard, settings?.effectTransition, settings?.effectCursor, settings?.effectDecoration, settings?.effectNavStyle].filter(Boolean) as string[];
+    const allEffects = [
+      settings?.effectBg,
+      settings?.effectText,
+      settings?.effectCard,
+      settings?.effectTransition,
+      settings?.effectCursor,
+      settings?.effectDecoration,
+      settings?.effectNavStyle,
+    ].filter(Boolean) as string[];
     if (!allEffects.length) return "";
-    const needsR3F = allEffects.some(id => R3F_EFFECTS.has(id));
-    const r3fImports = needsR3F ? ',"@react-three/fiber":"https://esm.sh/@react-three/fiber@9.6.0?external=react,react-dom,three","@react-three/drei":"https://esm.sh/@react-three/drei@10.7.7?external=react,react-dom,three,@react-three/fiber","@react-three/postprocessing":"https://esm.sh/@react-three/postprocessing@3.0.4?external=react,react-dom,three,@react-three/fiber,postprocessing"' : "";
+    const needsR3F = allEffects.some((id) => R3F_EFFECTS.has(id));
+    const r3fImports = needsR3F
+      ? ',"@react-three/fiber":"https://esm.sh/@react-three/fiber@9.6.0?external=react,react-dom,three","@react-three/drei":"https://esm.sh/@react-three/drei@10.7.7?external=react,react-dom,three,@react-three/fiber","@react-three/postprocessing":"https://esm.sh/@react-three/postprocessing@3.0.4?external=react,react-dom,three,@react-three/fiber,postprocessing"'
+      : "";
     return `<script type="importmap">{"imports":{"react":"https://esm.sh/react@19.1.5","react/":"https://esm.sh/react@19.1.5/","react-dom":"https://esm.sh/react-dom@19.1.5","react-dom/":"https://esm.sh/react-dom@19.1.5/","motion/react":"https://esm.sh/motion@12.38.0/react?external=react,react-dom","motion":"https://esm.sh/motion@12.38.0?external=react,react-dom"${r3fImports},"three":"https://esm.sh/three@0.184.0","three/":"https://esm.sh/three@0.184.0/","postprocessing":"https://esm.sh/postprocessing@6.39.1?external=three","ogl":"https://esm.sh/ogl@1.0.11","gsap":"https://esm.sh/gsap@3.15.0","gsap/":"https://esm.sh/gsap@3.15.0/"}}</script>`;
   })()}
   <style>${siteCss}
-  .lang-select{appearance:none;border:1px solid var(--border,#e7e5e4);border-radius:6px;padding:0.375rem 1.75rem 0.375rem 0.625rem;font-family:inherit;font-size:0.8125rem;background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23666' d='M3 4.5L6 7.5L9 4.5'/%3E%3C/svg%3E") no-repeat right 0.5rem center;cursor:pointer;outline:none;color:var(--text,#292524)}
+  .lang-select{appearance:none;border:1px solid var(--site-border,#e7e5e4);border-radius:6px;padding:0.375rem 1.75rem 0.375rem 0.625rem;font-family:inherit;font-size:0.8125rem;background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23666' d='M3 4.5L6 7.5L9 4.5'/%3E%3C/svg%3E") no-repeat right 0.5rem center;cursor:pointer;outline:none;color:var(--text,#292524)}
   /* ── Responsive: Reflow mode ── */
   body.ds-reflow .page-section{display:flex!important;flex-direction:column!important}
   body.ds-reflow .block[data-block-id]{width:100%!important;margin-left:0!important;margin-right:0!important;transform:none!important;height:auto!important;position:static!important;z-index:auto!important;padding-left:1rem!important;padding-right:1rem!important}
@@ -681,19 +822,34 @@ function toggleMusic(){var a=document.getElementById('audio-player'),b=document.
   ${settings?.effectBg ? `<div id="effect-bg" style="position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;" aria-hidden="true"></div>` : ""}
   ${settings?.effectCursor ? `<div id="effect-cursor" style="position:fixed;inset:0;z-index:9999;pointer-events:none;overflow:hidden;" aria-hidden="true"></div>` : ""}
   ${settings?.effectDecoration ? `<div id="effect-decoration" style="position:fixed;inset:0;z-index:1;pointer-events:none;overflow:hidden;" aria-hidden="true"></div>` : ""}
-  ${escapedBgImageUrl ? `<div id="bg-overlay" style="position:fixed;inset:0;z-index:0;pointer-events:none;background-image:url('${escapedBgImageUrl}');background-size:cover;background-position:center;background-attachment:fixed;opacity:${settings?.bgImageOpacity ?? 1};display:${settings?.bgImageLayer === 'overlay' ? '' : 'none'};"></div>` : ""}
+  ${escapedBgImageUrl ? `<div id="bg-overlay" style="position:fixed;inset:0;z-index:0;pointer-events:none;background-image:url('${escapedBgImageUrl}');background-size:cover;background-position:center;background-attachment:fixed;opacity:${settings?.bgImageOpacity ?? 1};display:${settings?.bgImageLayer === "overlay" ? "" : "none"};"></div>` : ""}
   ${(() => {
     if (!settings?.backgroundImage) return "";
     try {
-      const bi = JSON.parse(settings.backgroundImage) as { url?: string; opacity?: number; fit?: string; position?: string; scope?: string };
+      const bi = JSON.parse(settings.backgroundImage) as {
+        url?: string;
+        opacity?: number;
+        fit?: string;
+        position?: string;
+        scope?: string;
+      };
       if (!bi?.url || bi.scope === "page") return "";
-      const safebi = safeUrl(bi.url).replace(/\\/g, "\\\\").replace(/'/g, "\\'");
-      const bsize = bi.fit === "cover" ? "cover" : bi.fit === "contain" ? "contain" : "auto";
+      const safebi = safeUrl(bi.url)
+        .replace(/\\/g, "\\\\")
+        .replace(/'/g, "\\'");
+      const bsize =
+        bi.fit === "cover"
+          ? "cover"
+          : bi.fit === "contain"
+            ? "contain"
+            : "auto";
       const brepeat = bi.fit === "repeat" ? "repeat" : "no-repeat";
       const bpos = bi.position ?? "center";
       const bop = bi.opacity ?? 1;
       return `<div id="page-bg-image" style="position:fixed;inset:0;z-index:0;pointer-events:none;background-image:url('${safebi}');background-size:${bsize};background-repeat:${brepeat};background-position:${bpos};background-attachment:fixed;opacity:${bop};"></div>`;
-    } catch { return ""; }
+    } catch {
+      return "";
+    }
   })()}
   <div class="margin-curtain-t"></div>
   <div class="margin-curtain-b"></div>
@@ -807,7 +963,9 @@ function submitGuestBook(event, siteId, formId, listId) {
   });
 }
   </script>
-  ${settings?.effectBg ? `<script type="module">
+  ${
+    settings?.effectBg
+      ? `<script type="module">
 (async()=>{
   if(window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
   var c=navigator.hardwareConcurrency||4,m=navigator.deviceMemory||4;
@@ -838,8 +996,12 @@ function submitGuestBook(event, siteId, formId, listId) {
     cr(el).render(h(E,{color:c1,colors:[c1,c2,c3],lineColor:c1,backgroundColor:"transparent",particleColors:[c1,c2,c3]}));
   }catch(e){console.warn('Effect unavailable:',e)}
 })();
-</script>` : ""}
-  ${settings?.effectCursor ? `<script type="module">
+</script>`
+      : ""
+  }
+  ${
+    settings?.effectCursor
+      ? `<script type="module">
 (async()=>{
   if(window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
   var c=navigator.hardwareConcurrency||4,m=navigator.deviceMemory||4;
@@ -858,8 +1020,12 @@ function submitGuestBook(event, siteId, formId, listId) {
     cr(el).render(h(E,{color:c1,colors:[c1,c2,c3]}));
   }catch(e){console.warn('Cursor effect unavailable:',e)}
 })();
-</script>` : ""}
-  ${settings?.effectDecoration ? `<script type="module">
+</script>`
+      : ""
+  }
+  ${
+    settings?.effectDecoration
+      ? `<script type="module">
 (async()=>{
   if(window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
   var el=document.getElementById('effect-decoration');
@@ -876,8 +1042,12 @@ function submitGuestBook(event, siteId, formId, listId) {
     cr(el).render(h(E,{color:c1,colors:[c1,c2,c3]}));
   }catch(e){console.warn('Decoration effect unavailable:',e)}
 })();
-</script>` : ""}
-  ${settings?.effectTransition ? `<script type="module">
+</script>`
+      : ""
+  }
+  ${
+    settings?.effectTransition
+      ? `<script type="module">
 (async()=>{
   if(window.__dsTextDone) await window.__dsTextDone;
   if(window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
@@ -926,8 +1096,12 @@ function submitGuestBook(event, siteId, formId, listId) {
     });
   }catch(e){console.warn('Transition effect unavailable:',e)}
 })();
-</script>` : ""}
-  ${settings?.effectText ? `<script type="module">
+</script>`
+      : ""
+  }
+  ${
+    settings?.effectText
+      ? `<script type="module">
 window.__dsTextDone=(async()=>{
   if(window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
   try{
@@ -952,8 +1126,12 @@ window.__dsTextDone=(async()=>{
     });
   }catch(e){console.warn('Text effect unavailable:',e)}
 })();
-</script>` : ""}
-  ${settings?.effectCard ? `<script type="module">
+</script>`
+      : ""
+  }
+  ${
+    settings?.effectCard
+      ? `<script type="module">
 (async()=>{
   if(window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
   try{
@@ -983,18 +1161,30 @@ window.__dsTextDone=(async()=>{
     });
   }catch(e){console.warn('Card effect unavailable:',e)}
 })();
-</script>` : ""}
-  ${settings?.effectNavStyle && hasMultiplePages ? (() => {
-    const nsAccent = escHtml(settings.navHighlightColor ?? settings.accentColor ?? "#B8921A");
-    const nsBg = escHtml(settings.navBg ?? "#ffffff");
-    const nsText = escHtml(settings.navLinkColor ?? "#6B6560");
-    const nsBrand = escHtml(settings.navBrandColor ?? "#1C1917");
-    const nsHFont = escHtml(settings.headingFont ?? "Georgia, serif");
-    const nsBFont = escHtml(settings.bodyFont ?? "system-ui, sans-serif");
-    const nsBrandName = settings.eventName ?? "";
-    const nsInitials = (settings.eventName ?? "").split(/[\s&+]+/).map((w: string) => w.charAt(0)).filter(Boolean).join("").toUpperCase().slice(0, 3);
-    const nsLogoSvg = `data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 80 80"><circle cx="40" cy="40" r="38" fill="${nsAccent}"/><text x="40" y="40" text-anchor="middle" dominant-baseline="central" font-family="Georgia,serif" font-size="24" font-weight="bold" fill="#fff">${nsInitials}</text></svg>`)}`;
-    return `<script type="module">
+</script>`
+      : ""
+  }
+  ${
+    settings?.effectNavStyle && hasMultiplePages
+      ? (() => {
+          const nsAccent = escHtml(
+            settings.navHighlightColor ?? settings.accentColor ?? "#B8921A",
+          );
+          const nsBg = escHtml(settings.navBg ?? "#ffffff");
+          const nsText = escHtml(settings.navLinkColor ?? "#6B6560");
+          const nsBrand = escHtml(settings.navBrandColor ?? "#1C1917");
+          const nsHFont = escHtml(settings.headingFont ?? "Georgia, serif");
+          const nsBFont = escHtml(settings.bodyFont ?? "system-ui, sans-serif");
+          const nsBrandName = settings.eventName ?? "";
+          const nsInitials = (settings.eventName ?? "")
+            .split(/[\s&+]+/)
+            .map((w: string) => w.charAt(0))
+            .filter(Boolean)
+            .join("")
+            .toUpperCase()
+            .slice(0, 3);
+          const nsLogoSvg = `data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 80 80"><circle cx="40" cy="40" r="38" fill="${nsAccent}"/><text x="40" y="40" text-anchor="middle" dominant-baseline="central" font-family="Georgia,serif" font-size="24" font-weight="bold" fill="#fff">${nsInitials}</text></svg>`)}`;
+          return `<script type="module">
 (async()=>{
   if(window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
   try{
@@ -1065,8 +1255,10 @@ window.__dsTextDone=(async()=>{
   }catch(e){console.warn('Nav style unavailable:',e)}
 })();
 </script>`;
-  })() : ""}
+        })()
+      : ""
+  }
   ${buildResponsiveScript()}
 </body>
 </html>`;
-}
+}

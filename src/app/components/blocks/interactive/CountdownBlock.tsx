@@ -4,10 +4,19 @@ import { useState, useEffect } from "react";
 import { useEditorStore } from "@/app/stores/editorStore";
 import { blockSectionStyle, parseCfg } from "@/lib/editableField";
 
-interface Block { id: string; type: string; [key: string]: unknown }
+interface Block {
+  id: string;
+  type: string;
+  [key: string]: unknown;
+}
 
 function useCountdown(target: string | null) {
-  const [remaining, setRemaining] = useState({ days: 0, hours: 0, mins: 0, secs: 0 });
+  const [remaining, setRemaining] = useState({
+    days: 0,
+    hours: 0,
+    mins: 0,
+    secs: 0,
+  });
 
   useEffect(() => {
     if (!target) return;
@@ -29,7 +38,10 @@ function useCountdown(target: string | null) {
 }
 
 export function CountdownBlock({ block }: { block: Block }) {
-  const breakpoint = useEditorStore((s) => s.breakpoint) as "desktop" | "tablet" | "mobile";
+  const breakpoint = useEditorStore((s) => s.breakpoint) as
+    | "desktop"
+    | "tablet"
+    | "mobile";
   const cfg = parseCfg(block.config);
   const label = String(cfg.label ?? "Until we say I do");
   const daysLabel = String(cfg.daysLabel ?? "Days");
@@ -51,13 +63,52 @@ export function CountdownBlock({ block }: { block: Block }) {
   }
 
   return (
-    <section className="block block-countdown" data-block-id={block.id} data-block-type={block.type} style={blockSectionStyle(cfg, breakpoint)}>
-      <p className="countdown-label" data-editable-field="label">{label}</p>
+    <section
+      className="block block-countdown"
+      data-block-id={block.id}
+      data-block-type={block.type}
+      style={blockSectionStyle(cfg, breakpoint)}
+    >
+      <p className="countdown-label" data-editable-field="label">
+        {label}
+      </p>
       <div className="countdown-units">
-        <div className="countdown-unit"><span className="countdown-num">{hasDate ? days : "--"}</span><span className="countdown-unit-label" data-editable-field="daysLabel">{daysLabel}</span></div>
-        <div className="countdown-unit"><span className="countdown-num">{hasDate ? hours : "--"}</span><span className="countdown-unit-label" data-editable-field="hoursLabel">{hoursLabel}</span></div>
-        <div className="countdown-unit"><span className="countdown-num">{hasDate ? mins : "--"}</span><span className="countdown-unit-label" data-editable-field="minsLabel">{minsLabel}</span></div>
-        <div className="countdown-unit"><span className="countdown-num">{hasDate ? secs : "--"}</span><span className="countdown-unit-label" data-editable-field="secsLabel">{secsLabel}</span></div>
+        <div className="countdown-unit">
+          <span className="countdown-num">{hasDate ? days : "--"}</span>
+          <span
+            className="countdown-unit-label"
+            data-editable-field="daysLabel"
+          >
+            {daysLabel}
+          </span>
+        </div>
+        <div className="countdown-unit">
+          <span className="countdown-num">{hasDate ? hours : "--"}</span>
+          <span
+            className="countdown-unit-label"
+            data-editable-field="hoursLabel"
+          >
+            {hoursLabel}
+          </span>
+        </div>
+        <div className="countdown-unit">
+          <span className="countdown-num">{hasDate ? mins : "--"}</span>
+          <span
+            className="countdown-unit-label"
+            data-editable-field="minsLabel"
+          >
+            {minsLabel}
+          </span>
+        </div>
+        <div className="countdown-unit">
+          <span className="countdown-num">{hasDate ? secs : "--"}</span>
+          <span
+            className="countdown-unit-label"
+            data-editable-field="secsLabel"
+          >
+            {secsLabel}
+          </span>
+        </div>
       </div>
       {showRsvpButton && (
         <div style={{ textAlign: "center", marginTop: "1.25rem" }}>
@@ -65,15 +116,24 @@ export function CountdownBlock({ block }: { block: Block }) {
             type="button"
             onClick={scrollToRsvp}
             className="rsvp-submit"
-            style={{ background: "var(--accent, #B8921A)" }}
+            style={{ background: "var(--site-accent, #B8921A)" }}
           >
             RSVP
           </button>
         </div>
       )}
       {!hasDate && editing && (
-        <p style={{ fontSize: "0.75rem", color: "var(--muted)", marginTop: "0.75rem", textAlign: "center", fontStyle: "italic" }}>
-          Set your event date in Page Settings &rarr; Info to start the countdown
+        <p
+          style={{
+            fontSize: "0.75rem",
+            color: "var(--site-muted)",
+            marginTop: "0.75rem",
+            textAlign: "center",
+            fontStyle: "italic",
+          }}
+        >
+          Set your event date in Page Settings &rarr; Info to start the
+          countdown
         </p>
       )}
     </section>

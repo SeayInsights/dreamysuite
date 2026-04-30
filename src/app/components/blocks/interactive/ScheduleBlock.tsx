@@ -1,10 +1,19 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { blockSectionStyle, editableProps, parseCfg } from "@/lib/editableField";
+import {
+  blockSectionStyle,
+  editableProps,
+  parseCfg,
+} from "@/lib/editableField";
 import { TextEffectWrapper } from "@/app/components/TextEffectWrapper";
 import { useEditorStore } from "@/app/stores/editorStore";
-import { ScheduleEvent, Block, PopoverType, PopoverState } from "./ScheduleTypes";
+import {
+  ScheduleEvent,
+  Block,
+  PopoverType,
+  PopoverState,
+} from "./ScheduleTypes";
 import {
   EmojiPicker,
   DatePickerPopover,
@@ -16,12 +25,17 @@ import { EventCard } from "./ScheduleEventCard";
 import { ScheduleTimeline } from "./ScheduleTimeline";
 
 export function ScheduleBlock({ block }: { block: Block }) {
-  const breakpoint = useEditorStore((s) => s.breakpoint) as "desktop" | "tablet" | "mobile";
+  const breakpoint = useEditorStore((s) => s.breakpoint) as
+    | "desktop"
+    | "tablet"
+    | "mobile";
   const cfg = parseCfg(block.config);
   const heading = String(cfg.heading ?? "Schedule of Events");
   const displayMode = String(cfg.displayMode ?? "timeline");
   const events: ScheduleEvent[] = Array.isArray(cfg.events)
-    ? (cfg.events as ScheduleEvent[]).filter((e) => e && typeof e === "object" && typeof e.id === "string")
+    ? (cfg.events as ScheduleEvent[]).filter(
+        (e) => e && typeof e === "object" && typeof e.id === "string",
+      )
     : [];
 
   const fullPreview = useEditorStore((s) => s.fullPreview);
@@ -35,31 +49,52 @@ export function ScheduleBlock({ block }: { block: Block }) {
   // ── Event mutation helpers ──────────────────────────────────────────────────
   const addEvent = useCallback(() => {
     const currentCfg = parseCfg(block.config);
-    const currentEvents = Array.isArray(currentCfg.events) ? (currentCfg.events as ScheduleEvent[]) : [];
-    const newEvent: ScheduleEvent = { id: crypto.randomUUID(), name: "", icon: "🎉" };
+    const currentEvents = Array.isArray(currentCfg.events)
+      ? (currentCfg.events as ScheduleEvent[])
+      : [];
+    const newEvent: ScheduleEvent = {
+      id: crypto.randomUUID(),
+      name: "",
+      icon: "🎉",
+    };
     updateBlock(block.id, {
       config: { ...currentCfg, events: [...currentEvents, newEvent] },
     });
   }, [block.id, block.config, updateBlock]);
 
-  const deleteEvent = useCallback((id: string) => {
-    const currentCfg = parseCfg(block.config);
-    const currentEvents = Array.isArray(currentCfg.events) ? (currentCfg.events as ScheduleEvent[]) : [];
-    updateBlock(block.id, {
-      config: { ...currentCfg, events: currentEvents.filter((e) => e.id !== id) },
-    });
-  }, [block.id, block.config, updateBlock]);
+  const deleteEvent = useCallback(
+    (id: string) => {
+      const currentCfg = parseCfg(block.config);
+      const currentEvents = Array.isArray(currentCfg.events)
+        ? (currentCfg.events as ScheduleEvent[])
+        : [];
+      updateBlock(block.id, {
+        config: {
+          ...currentCfg,
+          events: currentEvents.filter((e) => e.id !== id),
+        },
+      });
+    },
+    [block.id, block.config, updateBlock],
+  );
 
-  const updateEvent = useCallback((id: string, patch: Partial<ScheduleEvent>) => {
-    const currentCfg = parseCfg(block.config);
-    const currentEvents = Array.isArray(currentCfg.events) ? (currentCfg.events as ScheduleEvent[]) : [];
-    updateBlock(block.id, {
-      config: {
-        ...currentCfg,
-        events: currentEvents.map((e) => (e.id === id ? { ...e, ...patch } : e)),
-      },
-    });
-  }, [block.id, block.config, updateBlock]);
+  const updateEvent = useCallback(
+    (id: string, patch: Partial<ScheduleEvent>) => {
+      const currentCfg = parseCfg(block.config);
+      const currentEvents = Array.isArray(currentCfg.events)
+        ? (currentCfg.events as ScheduleEvent[])
+        : [];
+      updateBlock(block.id, {
+        config: {
+          ...currentCfg,
+          events: currentEvents.map((e) =>
+            e.id === id ? { ...e, ...patch } : e,
+          ),
+        },
+      });
+    },
+    [block.id, block.config, updateBlock],
+  );
 
   // ── Drag-and-drop ───────────────────────────────────────────────────────────
   const handleDragStart = useCallback((index: number) => {
@@ -70,22 +105,27 @@ export function ScheduleBlock({ block }: { block: Block }) {
     setDropIndex(index);
   }, []);
 
-  const handleDrop = useCallback((index: number) => {
-    if (dragIndex === null || dragIndex === index) {
+  const handleDrop = useCallback(
+    (index: number) => {
+      if (dragIndex === null || dragIndex === index) {
+        setDragIndex(null);
+        setDropIndex(null);
+        return;
+      }
+      const currentCfg = parseCfg(block.config);
+      const currentEvents = Array.isArray(currentCfg.events)
+        ? [...(currentCfg.events as ScheduleEvent[])]
+        : [];
+      const [moved] = currentEvents.splice(dragIndex, 1);
+      currentEvents.splice(index, 0, moved);
+      updateBlock(block.id, {
+        config: { ...currentCfg, events: currentEvents },
+      });
       setDragIndex(null);
       setDropIndex(null);
-      return;
-    }
-    const currentCfg = parseCfg(block.config);
-    const currentEvents = Array.isArray(currentCfg.events) ? [...(currentCfg.events as ScheduleEvent[])] : [];
-    const [moved] = currentEvents.splice(dragIndex, 1);
-    currentEvents.splice(index, 0, moved);
-    updateBlock(block.id, {
-      config: { ...currentCfg, events: currentEvents },
-    });
-    setDragIndex(null);
-    setDropIndex(null);
-  }, [dragIndex, block.id, block.config, updateBlock]);
+    },
+    [dragIndex, block.id, block.config, updateBlock],
+  );
 
   const handleDragEnd = useCallback(() => {
     setDragIndex(null);
@@ -93,14 +133,19 @@ export function ScheduleBlock({ block }: { block: Block }) {
   }, []);
 
   // ── Popover open/close ──────────────────────────────────────────────────────
-  const handleOpenPopover = useCallback((type: PopoverType, eventId: string, rect: DOMRect) => {
-    setPopover({ type, eventId, rect });
-  }, []);
+  const handleOpenPopover = useCallback(
+    (type: PopoverType, eventId: string, rect: DOMRect) => {
+      setPopover({ type, eventId, rect });
+    },
+    [],
+  );
 
   const handleClosePopover = useCallback(() => setPopover(null), []);
 
   // Find event for active popover
-  const activeEvent = popover ? events.find((e) => e.id === popover.eventId) : null;
+  const activeEvent = popover
+    ? events.find((e) => e.id === popover.eventId)
+    : null;
 
   // ── Shared drag/event props ─────────────────────────────────────────────────
   const dragProps = {
@@ -120,14 +165,27 @@ export function ScheduleBlock({ block }: { block: Block }) {
       data-block-type={block.type}
       style={{ padding: "3rem 1.5rem", ...blockSectionStyle(cfg, breakpoint) }}
     >
-      <TextEffectWrapper as="h2" className="section-heading" {...editableProps(cfg, "heading")}>
-        {heading || <span style={{ opacity: 0.4, fontStyle: "italic" }}>Add heading</span>}
+      <TextEffectWrapper
+        as="h2"
+        className="section-heading"
+        {...editableProps(cfg, "heading")}
+      >
+        {heading || (
+          <span style={{ opacity: 0.4, fontStyle: "italic" }}>Add heading</span>
+        )}
       </TextEffectWrapper>
       <div className="section-rule" aria-hidden="true" />
 
       {/* ── Empty state ── */}
       {events.length === 0 && !editing && (
-        <p style={{ color: "var(--muted)", fontStyle: "italic", textAlign: "center", marginTop: "1.5rem" }}>
+        <p
+          style={{
+            color: "var(--site-muted)",
+            fontStyle: "italic",
+            textAlign: "center",
+            marginTop: "1.5rem",
+          }}
+        >
           No events yet
         </p>
       )}
@@ -140,10 +198,15 @@ export function ScheduleBlock({ block }: { block: Block }) {
 
       {/* ── Cards mode ── */}
       {events.length > 0 && displayMode === "cards" && (
-        <div style={{
-          display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))",
-          gap: "1.25rem", maxWidth: "900px", margin: "2rem auto 0",
-        }}>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))",
+            gap: "1.25rem",
+            maxWidth: "900px",
+            margin: "2rem auto 0",
+          }}
+        >
           {events.map((event, i) => (
             <EventCard
               key={event.id}
@@ -177,7 +240,10 @@ export function ScheduleBlock({ block }: { block: Block }) {
       {popover && activeEvent && popover.type === "emoji" && (
         <EmojiPicker
           anchorRect={popover.rect}
-          onSelect={(emoji) => { updateEvent(popover.eventId, { icon: emoji }); handleClosePopover(); }}
+          onSelect={(emoji) => {
+            updateEvent(popover.eventId, { icon: emoji });
+            handleClosePopover();
+          }}
           onClose={handleClosePopover}
         />
       )}

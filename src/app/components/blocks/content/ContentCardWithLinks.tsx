@@ -2,7 +2,11 @@
 
 import { useState, useRef } from "react";
 import { LinkPopover } from "./ContentCardLinkPopover";
-import { LINK_BTN_STYLE, type ContentCardItem, type LinkItem } from "./ContentCardTypes";
+import {
+  LINK_BTN_STYLE,
+  type ContentCardItem,
+  type LinkItem,
+} from "./ContentCardTypes";
 
 export interface CardWithLinksProps {
   item: ContentCardItem;
@@ -16,8 +20,21 @@ export interface CardWithLinksProps {
   onDeleteLink: (itemId: string, linkIndex: number) => void;
 }
 
-export function CardWithLinks({ item, index, cardStyle, editing, displayMode, onDelete, onAddLink, onEditLink, onDeleteLink }: CardWithLinksProps) {
-  const [linkPopover, setLinkPopover] = useState<{ rect: DOMRect; linkIndex?: number } | null>(null);
+export function CardWithLinks({
+  item,
+  index,
+  cardStyle,
+  editing,
+  displayMode,
+  onDelete,
+  onAddLink,
+  onEditLink,
+  onDeleteLink,
+}: CardWithLinksProps) {
+  const [linkPopover, setLinkPopover] = useState<{
+    rect: DOMRect;
+    linkIndex?: number;
+  } | null>(null);
   const addBtnRef = useRef<HTMLButtonElement>(null);
 
   function handleAddLinkClick(e: React.MouseEvent) {
@@ -46,28 +63,39 @@ export function CardWithLinks({ item, index, cardStyle, editing, displayMode, on
         </button>
       )}
 
-      {item.icon && (
-        displayMode === "travel" ? (
-          <p style={{
-            margin: 0, fontSize: "0.72rem", fontWeight: 700,
-            color: "var(--accent, #B8921A)", textTransform: "uppercase", letterSpacing: "0.06em",
-          }}>
+      {item.icon &&
+        (displayMode === "travel" ? (
+          <p
+            style={{
+              margin: 0,
+              fontSize: "0.72rem",
+              fontWeight: 700,
+              color: "var(--site-accent, #B8921A)",
+              textTransform: "uppercase",
+              letterSpacing: "0.06em",
+            }}
+          >
             {item.icon}
           </p>
         ) : (
-          <div style={{ fontSize: "1.75rem", marginBottom: "0.5rem" }}>{item.icon}</div>
-        )
-      )}
+          <div style={{ fontSize: "1.75rem", marginBottom: "0.5rem" }}>
+            {item.icon}
+          </div>
+        ))}
 
-      {(item.question || editing) && (
-        displayMode === "travel" ? (
+      {(item.question || editing) &&
+        (displayMode === "travel" ? (
           <h4
             style={{ margin: 0, fontSize: "0.95rem", fontWeight: 600 }}
             data-editable-item-index={index}
             data-editable-item-field="question"
             data-editable-array-key="items"
           >
-            {item.question || <span style={{ color: "var(--muted)", fontStyle: "italic" }}>Heading</span>}
+            {item.question || (
+              <span style={{ color: "var(--site-muted)", fontStyle: "italic" }}>
+                Heading
+              </span>
+            )}
           </h4>
         ) : (
           <p
@@ -75,7 +103,7 @@ export function CardWithLinks({ item, index, cardStyle, editing, displayMode, on
               margin: "0 0 0.5rem",
               fontSize: "0.8rem",
               fontWeight: 500,
-              color: "var(--accent, var(--muted))",
+              color: "var(--site-accent, var(--site-muted))",
               fontStyle: item.question ? "normal" : "italic",
               opacity: item.question ? 1 : 0.4,
             }}
@@ -85,18 +113,27 @@ export function CardWithLinks({ item, index, cardStyle, editing, displayMode, on
           >
             {item.question || "Double-click to add question"}
           </p>
-        )
-      )}
+        ))}
 
-      {(item.body || editing) && (
-        displayMode === "travel" ? (
+      {(item.body || editing) &&
+        (displayMode === "travel" ? (
           <p
-            style={{ margin: 0, fontSize: "0.85rem", color: "var(--body-color)", lineHeight: 1.55, whiteSpace: "pre-wrap" }}
+            style={{
+              margin: 0,
+              fontSize: "0.85rem",
+              color: "var(--body-color)",
+              lineHeight: 1.55,
+              whiteSpace: "pre-wrap",
+            }}
             data-editable-item-index={index}
             data-editable-item-field="body"
             data-editable-array-key="items"
           >
-            {item.body || <span style={{ color: "var(--muted)", fontStyle: "italic" }}>Details</span>}
+            {item.body || (
+              <span style={{ color: "var(--site-muted)", fontStyle: "italic" }}>
+                Details
+              </span>
+            )}
           </p>
         ) : (
           <p
@@ -115,14 +152,29 @@ export function CardWithLinks({ item, index, cardStyle, editing, displayMode, on
           >
             {item.body || "Double-click to add answer"}
           </p>
-        )
-      )}
+        ))}
 
       {links.length > 0 && (
-        <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem", marginTop: "0.75rem" }}>
+        <div
+          style={{
+            display: "flex",
+            flexWrap: "wrap",
+            gap: "0.5rem",
+            marginTop: "0.75rem",
+          }}
+        >
           {links.map((link, li) => (
-            <div key={li} style={{ position: "relative" }} className="group/link">
-              <a href={link.url} target="_blank" rel="noopener noreferrer" style={LINK_BTN_STYLE}>
+            <div
+              key={li}
+              style={{ position: "relative" }}
+              className="group/link"
+            >
+              <a
+                href={link.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={LINK_BTN_STYLE}
+              >
                 {link.label}
               </a>
               {editing && (
@@ -151,16 +203,30 @@ export function CardWithLinks({ item, index, cardStyle, editing, displayMode, on
         </button>
       )}
 
-      {!item.question && !item.body && !item.icon && !editing && links.length === 0 && (
-        <span style={{ color: "var(--muted)", fontStyle: "italic", fontSize: "0.85rem" }}>
-          {displayMode === "travel" ? "Empty travel card" : "Empty card"}
-        </span>
-      )}
+      {!item.question &&
+        !item.body &&
+        !item.icon &&
+        !editing &&
+        links.length === 0 && (
+          <span
+            style={{
+              color: "var(--site-muted)",
+              fontStyle: "italic",
+              fontSize: "0.85rem",
+            }}
+          >
+            {displayMode === "travel" ? "Empty travel card" : "Empty card"}
+          </span>
+        )}
 
       {linkPopover && item.id && (
         <LinkPopover
           anchorRect={linkPopover.rect}
-          existingLink={linkPopover.linkIndex !== undefined ? links[linkPopover.linkIndex] : undefined}
+          existingLink={
+            linkPopover.linkIndex !== undefined
+              ? links[linkPopover.linkIndex]
+              : undefined
+          }
           onSave={(link) => {
             if (linkPopover.linkIndex !== undefined) {
               onEditLink(item.id!, linkPopover.linkIndex, link);
@@ -169,10 +235,14 @@ export function CardWithLinks({ item, index, cardStyle, editing, displayMode, on
             }
             setLinkPopover(null);
           }}
-          onDelete={linkPopover.linkIndex !== undefined ? () => {
-            onDeleteLink(item.id!, linkPopover.linkIndex!);
-            setLinkPopover(null);
-          } : undefined}
+          onDelete={
+            linkPopover.linkIndex !== undefined
+              ? () => {
+                  onDeleteLink(item.id!, linkPopover.linkIndex!);
+                  setLinkPopover(null);
+                }
+              : undefined
+          }
           onClose={() => setLinkPopover(null)}
         />
       )}

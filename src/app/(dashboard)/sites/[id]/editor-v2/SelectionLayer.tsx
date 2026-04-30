@@ -185,7 +185,7 @@ function Outline({ rect, label, variant }: OutlineProps) {
     return () => clearTimeout(timer);
   }, []);
 
-  const accentColor = "var(--theme-accent, #B8921A)";
+  const accentColor = "var(--site-accent, #B8921A)";
 
   return (
     <div
