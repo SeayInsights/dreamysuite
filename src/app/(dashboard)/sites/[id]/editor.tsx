@@ -9,7 +9,6 @@ import Sortable from "sortablejs";
 import { useDebouncedCallback } from "use-debounce";
 import { useEditorStore } from "@/app/stores/editorStore";
 import type { Block as StoreBlock } from "@/app/stores/slices/document";
-import { BLOCK_COMPONENTS } from "@/app/components/blocks";
 import { safeBlockConfig } from "@/lib/validation";
 import { hexToRgb, rgbToHex } from "@/lib/color";
 import { LANGUAGES, LANG_FLAGS } from "@/lib/languages";
@@ -502,11 +501,6 @@ export function SiteEditor({ site: initialSite }: { site: Site }) {
   const [blockConfigFields, setBlockConfigFields] = useState<Record<string, unknown>>({});
   const [expandedBlockId, setExpandedBlockId]   = useState<string | null>(null);
 
-  // Style tab
-  const [styleHeadingFont, setStyleHeadingFont] = useState("Georgia");
-  const [styleBodyFont, setStyleBodyFont]       = useState("Inter");
-  const [styleAccent, setStyleAccent]           = useState(site.previewColor);
-
   // Photos section state
   const [photos, setPhotos]               = useState<Photo[]>([]);
   const [photosLoading, setPhotosLoading] = useState(false);
@@ -560,7 +554,6 @@ export function SiteEditor({ site: initialSite }: { site: Site }) {
   const [savingType, setSavingType]       = useState(false);
   const [copyLinkFeedback, setCopyLinkFeedback] = useState(false);
   const [qrDownloading, setQrDownloading]       = useState(false);
-  const [customDomainInput, setCustomDomainInput] = useState(site.customDomain ?? "");
   const [domainModalOpen, setDomainModalOpen] = useState(false);
   const [domainTab, setDomainTab] = useState<"free" | "buy">("free");
   const [domainSearch, setDomainSearch] = useState("");
@@ -950,9 +943,6 @@ export function SiteEditor({ site: initialSite }: { site: Site }) {
         bgImageOpacity:     data.settings.bgImageOpacity      ?? 1,
         siteMaxWidth:       String(data.settings.siteMaxWidth ?? ""),
       });
-      setStyleHeadingFont(data.settings.headingFont ?? "Georgia");
-      setStyleBodyFont(data.settings.bodyFont ?? "Inter");
-      setStyleAccent(data.settings.accentColor ?? site.previewColor);
     } catch (err) {
       toast(err instanceof Error ? err.message : "Failed to load settings", true);
     } finally {
@@ -1859,23 +1849,6 @@ export function SiteEditor({ site: initialSite }: { site: Site }) {
     toast(`Imported ${successCount} of ${total} guest${total !== 1 ? "s" : ""}`);
   }
 
-  async function handleSaveStyle() {
-    try {
-      await apiFetch("/settings", {
-        method: "PUT",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-          headingFont: styleHeadingFont,
-          bodyFont:    styleBodyFont,
-          accentColor: styleAccent,
-        }),
-      });
-      toast("Style saved");
-    } catch (err) {
-      toast(err instanceof Error ? err.message : "Failed to save style", true);
-    }
-  }
-
   // ── Helpers ─────────────────────────────────────────────────────────────────
 
   function extractYoutubeId(url: string): string | null {
@@ -2184,30 +2157,6 @@ export function SiteEditor({ site: initialSite }: { site: Site }) {
                                     <TextStyleRow prefix="title" cfg={cfg} setF={setField} />
                                   </>)}
 
-                                  {block.type === 'text' && (() => {
-                                    const textItems = Array.isArray(cfg.textItems)
-                                      ? (cfg.textItems as Array<{heading: string; body: string}>)
-                                      : [{ heading: String(cfg.heading ?? ''), body: String(cfg.body ?? '') }];
-                                    return (<>
-                                      {textItems.map((item, idx) => (
-                                        <div key={idx} style={{ border: '1px solid #f0ede8', borderRadius: '8px', padding: '0.6rem', marginBottom: '0.5rem' }}>
-                                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
-                                            <span style={{ fontSize: '0.72rem', fontWeight: 600, color: '#9b8e85' }}>{textItems.length > 1 ? `Text ${idx + 1}` : 'Content'}</span>
-                                            {textItems.length > 1 && (
-                                              <button type="button" onClick={() => setField('textItems', textItems.filter((_, i) => i !== idx))} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ccc', fontSize: '0.8rem' }}>×</button>
-                                            )}
-                                          </div>
-                                          <div className="sf-group"><label className="sf-lbl">Heading</label><input className="sf-input" value={item.heading} onChange={e => setField('textItems', textItems.map((it, i) => i === idx ? { ...it, heading: e.target.value } : it))} placeholder="Section heading…"/></div>
-                                          <div className="sf-group"><label className="sf-lbl">Body</label><textarea className="sf-input" rows={3} value={item.body} onChange={e => setField('textItems', textItems.map((it, i) => i === idx ? { ...it, body: e.target.value } : it))} style={{resize:'vertical'}}/></div>
-                                        </div>
-                                      ))}
-                                      <button type="button" className="btn-ghost" style={{ width: '100%', fontSize: '0.74rem', marginBottom: '0.5rem' }} onClick={() => setField('textItems', [...textItems, { heading: '', body: '' }])}>+ Add Text Section</button>
-                                      <TextStyleRow prefix="heading" cfg={cfg} setF={setField} />
-                                      <TextStyleRow prefix="body" cfg={cfg} setF={setField} />
-                                      <div className="sf-group"><label className="sf-lbl">Content Key <span style={{fontWeight:400,color:'#b0a99f'}}>(advanced)</span></label><input className="sf-input" value={String(cfg.contentKey??'')} onChange={e=>setField('contentKey',e.target.value)} placeholder="story / home-welcome / registry…"/></div>
-                                    </>);
-                                  })()}
-
                                   {block.type === 'video' && (<>
                                     <div className="sf-group">
                                       <label className="sf-lbl">Video</label>
@@ -2287,7 +2236,7 @@ export function SiteEditor({ site: initialSite }: { site: Site }) {
                                             </button>
                                           )}
                                         </div>
-                                        <ColorSwatch value={String(cfg.rsvpButtonColor ?? styleAccent)} onChange={v => setField('rsvpButtonColor', v)} />
+                                        <ColorSwatch value={String(cfg.rsvpButtonColor ?? settingsForm.accentColor)} onChange={v => setField('rsvpButtonColor', v)} />
                                       </div>
                                       <div className="sf-group">
                                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -5114,9 +5063,6 @@ export function SiteEditor({ site: initialSite }: { site: Site }) {
                                 <option key={m.id} value={m.url}>{m.title ?? m.url}</option>
                               ))}
                             </select>
-                            {settingsForm.musicUrl && (
-                              <div style={{ display: "none" }}>{settingsForm.musicUrl}</div>
-                            )}
                           </>
                         )}
                       </div>
