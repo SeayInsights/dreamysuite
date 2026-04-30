@@ -33,7 +33,7 @@ export function MediaVideoBlock({ block }: { block: Block }) {
   if (!url) {
     return (
       <section className="block block-media-video" data-block-id={block.id} data-block-type={block.type}
-        style={{ height: "160px", display: "flex", alignItems: "center", justifyContent: "center", color: "#9b8e85", border: "1px dashed #e0dbd4", borderRadius: "8px", ...sectionStyle }}>
+        style={{ height: "160px", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--muted)", border: "1px dashed var(--border)", borderRadius: "8px", ...sectionStyle }}>
         No video selected
       </section>
     );
@@ -54,7 +54,7 @@ export function MediaVideoBlock({ block }: { block: Block }) {
             />
           </div>
         ) : (
-          <p style={{ color: "#9b8e85", fontStyle: "italic", textAlign: "center", padding: "2rem 0" }}>
+          <p style={{ color: "var(--muted)", fontStyle: "italic", textAlign: "center", padding: "2rem 0" }}>
             Invalid YouTube URL.
           </p>
         )}
@@ -81,7 +81,7 @@ export function MediaVideoBlock({ block }: { block: Block }) {
             style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", border: 0 }}
           />
         ) : (
-          <p style={{ color: "#9b8e85", fontStyle: "italic", textAlign: "center", padding: "2rem 0" }}>
+          <p style={{ color: "var(--muted)", fontStyle: "italic", textAlign: "center", padding: "2rem 0" }}>
             Invalid Vimeo URL.
           </p>
         )}
