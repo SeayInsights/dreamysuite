@@ -33,19 +33,35 @@ function formatDate(d?: string): string | null {
   if (!d) return null;
   try {
     const [y, mo, da] = d.split("-").map(Number);
-    return new Date(y, mo - 1, da).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+    return new Date(y, mo - 1, da).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
   } catch {
     return d;
   }
 }
 
 export function EventCard({
-  event, index, editing, isDragging, isDropTarget,
-  onUpdate, onDelete, onDragStart, onDragOver, onDrop, onDragEnd, onOpenPopover,
+  event,
+  index,
+  editing,
+  isDragging,
+  isDropTarget,
+  onUpdate,
+  onDelete,
+  onDragStart,
+  onDragOver,
+  onDrop,
+  onDragEnd,
+  onOpenPopover,
 }: EventCardProps) {
   const cardStyle: React.CSSProperties = {
     background: "var(--bg, #fff)",
-    border: isDropTarget ? "2px dashed var(--accent, #B8921A)" : "1px solid var(--border)",
+    border: isDropTarget
+      ? "2px dashed var(--site-accent, #B8921A)"
+      : "1px solid var(--site-border)",
     borderRadius: "10px",
     padding: "1.25rem",
     display: "flex",
@@ -102,8 +118,14 @@ export function EventCard({
     <div
       style={cardStyle}
       className="group/event"
-      onDragOver={(e) => { e.preventDefault(); onDragOver(e, index); }}
-      onDrop={(e) => { e.preventDefault(); onDrop(index); }}
+      onDragOver={(e) => {
+        e.preventDefault();
+        onDragOver(e, index);
+      }}
+      onDrop={(e) => {
+        e.preventDefault();
+        onDrop(index);
+      }}
     >
       {/* Drag handle + delete — visible on hover in editing mode */}
       {editing && (
@@ -130,14 +152,28 @@ export function EventCard({
       )}
 
       {/* Icon + Title row */}
-      <div style={{ display: "flex", alignItems: "center", gap: "0.4rem", paddingLeft: editing ? "1.25rem" : 0 }}>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "0.4rem",
+          paddingLeft: editing ? "1.25rem" : 0,
+        }}
+      >
         {editing ? (
           <button
             type="button"
             onClick={(e) => openPopover("emoji", e)}
             style={{
-              fontSize: "1.25rem", background: "none", border: "none", cursor: "pointer",
-              lineHeight: 1, minWidth: "1.5rem", flexShrink: 0, borderRadius: "4px", padding: "1px",
+              fontSize: "1.25rem",
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+              lineHeight: 1,
+              minWidth: "1.5rem",
+              flexShrink: 0,
+              borderRadius: "4px",
+              padding: "1px",
             }}
             className="hover:bg-accent/20"
             title="Change icon"
@@ -146,7 +182,9 @@ export function EventCard({
           </button>
         ) : (
           event.icon && (
-            <span style={{ fontSize: "1.25rem", lineHeight: 1, flexShrink: 0 }}>{event.icon}</span>
+            <span style={{ fontSize: "1.25rem", lineHeight: 1, flexShrink: 0 }}>
+              {event.icon}
+            </span>
           )
         )}
         <div
@@ -155,73 +193,151 @@ export function EventCard({
           onBlur={handleTitleBlur}
           onKeyDown={handleTitleKeyDown}
           style={{
-            fontWeight: 600, fontSize: "0.95rem", flex: 1, outline: "none",
-            borderBottom: editing ? "1px dashed var(--border)" : "none",
+            fontWeight: 600,
+            fontSize: "0.95rem",
+            flex: 1,
+            outline: "none",
+            borderBottom: editing ? "1px dashed var(--site-border)" : "none",
             minHeight: "1.2em",
             cursor: editing ? "text" : "default",
           }}
           data-placeholder="Event name"
         >
-          {event.name || (editing ? "" : <span style={{ color: "var(--muted)", fontStyle: "italic" }}>Event name</span>)}
+          {event.name ||
+            (editing ? (
+              ""
+            ) : (
+              <span style={{ color: "var(--site-muted)", fontStyle: "italic" }}>
+                Event name
+              </span>
+            ))}
         </div>
       </div>
 
       {/* Date row */}
-      {(event.date || editing) && (
-        editing ? (
+      {(event.date || editing) &&
+        (editing ? (
           <button
             type="button"
             onClick={(e) => openPopover("date", e)}
             style={{
-              background: "none", border: "none", cursor: "pointer", padding: 0,
-              textAlign: "left", fontSize: "0.72rem", fontWeight: 700,
-              color: "var(--accent, #B8921A)", textTransform: "uppercase", letterSpacing: "0.04em",
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+              padding: 0,
+              textAlign: "left",
+              fontSize: "0.72rem",
+              fontWeight: 700,
+              color: "var(--site-accent, #B8921A)",
+              textTransform: "uppercase",
+              letterSpacing: "0.04em",
             }}
             className="hover:opacity-70"
           >
-            {event.date ? formatDate(event.date) : <span style={{ opacity: 0.4, fontStyle: "italic" }}>+ Add date</span>}
+            {event.date ? (
+              formatDate(event.date)
+            ) : (
+              <span style={{ opacity: 0.4, fontStyle: "italic" }}>
+                + Add date
+              </span>
+            )}
           </button>
         ) : (
-          <p style={{ margin: 0, fontSize: "0.72rem", fontWeight: 700, color: "var(--accent, #B8921A)", textTransform: "uppercase", letterSpacing: "0.04em" }}>
+          <p
+            style={{
+              margin: 0,
+              fontSize: "0.72rem",
+              fontWeight: 700,
+              color: "var(--site-accent, #B8921A)",
+              textTransform: "uppercase",
+              letterSpacing: "0.04em",
+            }}
+          >
             {formatDate(event.date)}
           </p>
-        )
-      )}
+        ))}
 
       {/* Time row */}
       {(event.time || event.endTime || editing) && (
-        <div style={{ display: "flex", gap: "0.5rem", alignItems: "center", flexWrap: "wrap" }}>
+        <div
+          style={{
+            display: "flex",
+            gap: "0.5rem",
+            alignItems: "center",
+            flexWrap: "wrap",
+          }}
+        >
           {editing ? (
             <>
               <button
                 type="button"
                 onClick={(e) => openPopover("time", e)}
                 style={{
-                  background: "none", border: "none", cursor: "pointer", padding: 0,
-                  fontSize: "0.8rem", color: "var(--accent, #B8921A)", fontWeight: 600,
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  padding: 0,
+                  fontSize: "0.8rem",
+                  color: "var(--site-accent, #B8921A)",
+                  fontWeight: 600,
                 }}
                 className="hover:opacity-70"
               >
-                {event.time ? formatTime(event.time) : <span style={{ opacity: 0.4, fontStyle: "italic" }}>+ Time</span>}
+                {event.time ? (
+                  formatTime(event.time)
+                ) : (
+                  <span style={{ opacity: 0.4, fontStyle: "italic" }}>
+                    + Time
+                  </span>
+                )}
               </button>
               {(event.time || event.endTime) && (
-                <span style={{ fontSize: "0.75rem", color: "var(--muted)" }}>–</span>
+                <span
+                  style={{ fontSize: "0.75rem", color: "var(--site-muted)" }}
+                >
+                  –
+                </span>
               )}
               <button
                 type="button"
                 onClick={(e) => openPopover("endTime", e)}
                 style={{
-                  background: "none", border: "none", cursor: "pointer", padding: 0,
-                  fontSize: "0.8rem", color: "var(--accent, #B8921A)", fontWeight: 600,
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  padding: 0,
+                  fontSize: "0.8rem",
+                  color: "var(--site-accent, #B8921A)",
+                  fontWeight: 600,
                 }}
                 className="hover:opacity-70"
               >
-                {event.endTime ? formatTime(event.endTime) : <span style={{ opacity: 0.4, fontStyle: "italic", fontSize: "0.75rem" }}>+ End</span>}
+                {event.endTime ? (
+                  formatTime(event.endTime)
+                ) : (
+                  <span
+                    style={{
+                      opacity: 0.4,
+                      fontStyle: "italic",
+                      fontSize: "0.75rem",
+                    }}
+                  >
+                    + End
+                  </span>
+                )}
               </button>
             </>
           ) : (
-            <p style={{ margin: 0, fontSize: "0.8rem", color: "var(--accent, #B8921A)", fontWeight: 600 }}>
-              {formatTime(event.time)}{event.endTime ? ` – ${formatTime(event.endTime)}` : ""}
+            <p
+              style={{
+                margin: 0,
+                fontSize: "0.8rem",
+                color: "var(--site-accent, #B8921A)",
+                fontWeight: 600,
+              }}
+            >
+              {formatTime(event.time)}
+              {event.endTime ? ` – ${formatTime(event.endTime)}` : ""}
             </p>
           )}
         </div>
@@ -235,13 +351,28 @@ export function EventCard({
           onBlur={handleDescriptionBlur}
           onKeyDown={handleDescriptionKeyDown}
           style={{
-            fontSize: "0.82rem", color: "var(--body-color)", lineHeight: 1.55,
-            outline: "none", whiteSpace: "pre-wrap", minHeight: "1.3em",
-            borderBottom: editing ? "1px dashed var(--border)" : "none",
+            fontSize: "0.82rem",
+            color: "var(--body-color)",
+            lineHeight: 1.55,
+            outline: "none",
+            whiteSpace: "pre-wrap",
+            minHeight: "1.3em",
+            borderBottom: editing ? "1px dashed var(--site-border)" : "none",
             cursor: editing ? "text" : "default",
           }}
         >
-          {event.description || (editing ? <span style={{ color: "var(--muted)", opacity: 0.5, fontStyle: "italic" }}>+ Description</span> : null)}
+          {event.description ||
+            (editing ? (
+              <span
+                style={{
+                  color: "var(--site-muted)",
+                  opacity: 0.5,
+                  fontStyle: "italic",
+                }}
+              >
+                + Description
+              </span>
+            ) : null)}
         </div>
       )}
 
@@ -253,17 +384,21 @@ export function EventCard({
           onBlur={handleDressCodeBlur}
           onKeyDown={handleDressCodeKeyDown}
           style={{
-            fontSize: "0.75rem", color: "var(--muted)", outline: "none",
-            borderBottom: editing ? "1px dashed var(--border)" : "none",
+            fontSize: "0.75rem",
+            color: "var(--site-muted)",
+            outline: "none",
+            borderBottom: editing ? "1px dashed var(--site-border)" : "none",
             cursor: editing ? "text" : "default",
           }}
           data-placeholder="Dress code"
         >
-          {event.dressCode
-            ? `Dress code: ${event.dressCode}`
-            : editing
-            ? <span style={{ opacity: 0.4, fontStyle: "italic" }}>+ Dress code</span>
-            : null}
+          {event.dressCode ? (
+            `Dress code: ${event.dressCode}`
+          ) : editing ? (
+            <span style={{ opacity: 0.4, fontStyle: "italic" }}>
+              + Dress code
+            </span>
+          ) : null}
         </div>
       )}
 
@@ -273,13 +408,26 @@ export function EventCard({
           type="button"
           onClick={(e) => openPopover("mapsUrl", e)}
           style={{
-            background: "none", border: "none", cursor: "pointer", padding: 0,
-            fontSize: "0.78rem", color: event.mapsUrl ? "var(--accent, #B8921A)" : "var(--muted)",
-            textAlign: "left", textDecoration: event.mapsUrl ? "underline" : "none",
+            background: "none",
+            border: "none",
+            cursor: "pointer",
+            padding: 0,
+            fontSize: "0.78rem",
+            color: event.mapsUrl
+              ? "var(--site-accent, #B8921A)"
+              : "var(--site-muted)",
+            textAlign: "left",
+            textDecoration: event.mapsUrl ? "underline" : "none",
           }}
           className="hover:opacity-70"
         >
-          {event.mapsUrl ? "Edit location link" : <span style={{ fontStyle: "italic", opacity: 0.5 }}>+ Add location</span>}
+          {event.mapsUrl ? (
+            "Edit location link"
+          ) : (
+            <span style={{ fontStyle: "italic", opacity: 0.5 }}>
+              + Add location
+            </span>
+          )}
         </button>
       ) : (
         event.mapsUrl && (
@@ -287,7 +435,11 @@ export function EventCard({
             href={event.mapsUrl}
             target="_blank"
             rel="noopener noreferrer"
-            style={{ fontSize: "0.78rem", color: "var(--accent, #B8921A)", textDecoration: "underline" }}
+            style={{
+              fontSize: "0.78rem",
+              color: "var(--site-accent, #B8921A)",
+              textDecoration: "underline",
+            }}
           >
             {event.location || "View on map"}
           </a>

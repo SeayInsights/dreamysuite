@@ -35,7 +35,17 @@ export function ContentCardNumbered({
   return (
     <div style={{ maxWidth: "680px", margin: "2rem auto 0" }}>
       {items.map((item, i) => (
-        <div key={item.id ?? i} style={{ display: "flex", gap: "1.5rem", alignItems: "flex-start", marginBottom: "1.75rem", position: "relative" }} className="group/fact">
+        <div
+          key={item.id ?? i}
+          style={{
+            display: "flex",
+            gap: "1.5rem",
+            alignItems: "flex-start",
+            marginBottom: "1.75rem",
+            position: "relative",
+          }}
+          className="group/fact"
+        >
           {editing && item.id && (
             <button
               type="button"
@@ -45,39 +55,65 @@ export function ContentCardNumbered({
               ✕
             </button>
           )}
-          <span style={{
-            flexShrink: 0, fontFamily: "var(--heading-font)", fontSize: "2.5rem", fontWeight: 700,
-            lineHeight: 1, color: "var(--accent)", opacity: 0.35, width: "3rem", textAlign: "right",
-          }}>
+          <span
+            style={{
+              flexShrink: 0,
+              fontFamily: "var(--heading-font)",
+              fontSize: "2.5rem",
+              fontWeight: 700,
+              lineHeight: 1,
+              color: "var(--site-accent)",
+              opacity: 0.35,
+              width: "3rem",
+              textAlign: "right",
+            }}
+          >
             {String(i + 1).padStart(2, "0")}
           </span>
           <div style={{ flex: 1 }}>
-            {item.icon && <div style={{ fontSize: "1.5rem", marginBottom: "0.25rem" }}>{item.icon}</div>}
+            {item.icon && (
+              <div style={{ fontSize: "1.5rem", marginBottom: "0.25rem" }}>
+                {item.icon}
+              </div>
+            )}
             {(item.question || editing) && (
               <p
                 style={{
-                  margin: "0 0 0.25rem", fontSize: "0.8rem", fontWeight: 500,
-                  color: "var(--accent, var(--muted))",
+                  margin: "0 0 0.25rem",
+                  fontSize: "0.8rem",
+                  fontWeight: 500,
+                  color: "var(--site-accent, var(--site-muted))",
                   opacity: item.question ? 1 : 0.4,
                   fontStyle: item.question ? "normal" : "italic",
                 }}
-                data-editable-item-index={i} data-editable-item-field="question" data-editable-array-key="items"
+                data-editable-item-index={i}
+                data-editable-item-field="question"
+                data-editable-array-key="items"
               >
                 {item.question || "Double-click to add question"}
               </p>
             )}
             {(item.body || editing) && (
-              <p style={{
-                  margin: 0, fontSize: "0.85rem", color: "var(--body-color)", lineHeight: 1.55,
+              <p
+                style={{
+                  margin: 0,
+                  fontSize: "0.85rem",
+                  color: "var(--body-color)",
+                  lineHeight: 1.55,
                   opacity: item.body ? 1 : 0.4,
                   fontStyle: item.body ? "normal" : "italic",
                   whiteSpace: "pre-wrap",
                 }}
-                 data-editable-item-index={i} data-editable-item-field="body" data-editable-array-key="items">
+                data-editable-item-index={i}
+                data-editable-item-field="body"
+                data-editable-array-key="items"
+              >
                 {item.body || "Double-click to add answer"}
               </p>
             )}
-            {(item.links ?? []).length > 0 && <LinkButtons links={item.links!} />}
+            {(item.links ?? []).length > 0 && (
+              <LinkButtons links={item.links!} />
+            )}
           </div>
         </div>
       ))}

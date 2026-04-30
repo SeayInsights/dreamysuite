@@ -34,36 +34,68 @@ function formatDate(d?: string): string | null {
   if (!d) return null;
   try {
     const [y, mo, da] = d.split("-").map(Number);
-    return new Date(y, mo - 1, da).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+    return new Date(y, mo - 1, da).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
   } catch {
     return d;
   }
 }
 
 export function ScheduleTimeline({
-  events, editing, dragIndex, dropIndex,
-  onAddEvent, onDeleteEvent, onUpdateEvent,
-  onDragStart, onDragOver, onDrop, onDragEnd, onOpenPopover,
+  events,
+  editing,
+  dragIndex,
+  dropIndex,
+  onAddEvent,
+  onDeleteEvent,
+  onUpdateEvent,
+  onDragStart,
+  onDragOver,
+  onDrop,
+  onDragEnd,
+  onOpenPopover,
 }: ScheduleTimelineProps) {
   return (
-    <div className="timeline" style={{ maxWidth: "600px", margin: "2rem auto 0", position: "relative" }}>
+    <div
+      className="timeline"
+      style={{ maxWidth: "600px", margin: "2rem auto 0", position: "relative" }}
+    >
       {/* Vertical rule */}
-      <div style={{
-        position: "absolute", left: "5.5rem", top: 0, bottom: 0,
-        width: "2px", background: "var(--border)",
-      }} aria-hidden="true" />
+      <div
+        style={{
+          position: "absolute",
+          left: "5.5rem",
+          top: 0,
+          bottom: 0,
+          width: "2px",
+          background: "var(--site-border)",
+        }}
+        aria-hidden="true"
+      />
 
       {events.map((event, i) => (
         <div
           key={event.id}
           className="timeline-item group/event"
           style={{
-            display: "flex", gap: "1.25rem", marginBottom: "1.75rem", position: "relative",
+            display: "flex",
+            gap: "1.25rem",
+            marginBottom: "1.75rem",
+            position: "relative",
             opacity: dragIndex === i ? 0.4 : 1,
             transition: "opacity 0.15s",
           }}
-          onDragOver={(e) => { e.preventDefault(); onDragOver(e, i); }}
-          onDrop={(e) => { e.preventDefault(); onDrop(i); }}
+          onDragOver={(e) => {
+            e.preventDefault();
+            onDragOver(e, i);
+          }}
+          onDrop={(e) => {
+            e.preventDefault();
+            onDrop(i);
+          }}
         >
           {/* Drag handle — editing only */}
           {editing && (
@@ -93,26 +125,66 @@ export function ScheduleTimeline({
 
           {/* Drop indicator */}
           {dropIndex === i && dragIndex !== i && (
-            <div style={{
-              position: "absolute", left: 0, right: 0, top: -8,
-              height: "2px", background: "var(--accent, #B8921A)", borderRadius: "1px",
-            }} />
+            <div
+              style={{
+                position: "absolute",
+                left: 0,
+                right: 0,
+                top: -8,
+                height: "2px",
+                background: "var(--site-accent, #B8921A)",
+                borderRadius: "1px",
+              }}
+            />
           )}
 
           {/* Time column */}
-          <div className="timeline-time" style={{
-            width: "4.5rem", flexShrink: 0, textAlign: "right",
-            fontSize: "0.8rem", color: "var(--accent, #B8921A)", fontWeight: 600,
-            paddingTop: "0.2rem",
-          }}>
+          <div
+            className="timeline-time"
+            style={{
+              width: "4.5rem",
+              flexShrink: 0,
+              textAlign: "right",
+              fontSize: "0.8rem",
+              color: "var(--site-accent, #B8921A)",
+              fontWeight: 600,
+              paddingTop: "0.2rem",
+            }}
+          >
             {editing ? (
               <button
                 type="button"
-                onClick={(e) => { e.stopPropagation(); const rect = (e.currentTarget as HTMLElement).getBoundingClientRect(); onOpenPopover("time", event.id, rect); }}
-                style={{ background: "none", border: "none", cursor: "pointer", padding: 0, color: "var(--accent, #B8921A)", fontWeight: 600, fontSize: "0.8rem" }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  const rect = (
+                    e.currentTarget as HTMLElement
+                  ).getBoundingClientRect();
+                  onOpenPopover("time", event.id, rect);
+                }}
+                style={{
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  padding: 0,
+                  color: "var(--site-accent, #B8921A)",
+                  fontWeight: 600,
+                  fontSize: "0.8rem",
+                }}
                 className="hover:opacity-70"
               >
-                {event.time ? formatTime(event.time) : <span style={{ opacity: 0.4, fontStyle: "italic", fontSize: "0.7rem" }}>+ Time</span>}
+                {event.time ? (
+                  formatTime(event.time)
+                ) : (
+                  <span
+                    style={{
+                      opacity: 0.4,
+                      fontStyle: "italic",
+                      fontSize: "0.7rem",
+                    }}
+                  >
+                    + Time
+                  </span>
+                )}
               </button>
             ) : (
               formatTime(event.time)
@@ -120,127 +192,300 @@ export function ScheduleTimeline({
           </div>
 
           {/* Dot */}
-          <div style={{
-            position: "absolute", left: "5rem", top: "0.4rem",
-            width: "10px", height: "10px",
-            background: "var(--accent, #B8921A)", borderRadius: "50%",
-            border: "2px solid var(--bg, #fff)", zIndex: 1,
-          }} aria-hidden="true" />
+          <div
+            style={{
+              position: "absolute",
+              left: "5rem",
+              top: "0.4rem",
+              width: "10px",
+              height: "10px",
+              background: "var(--site-accent, #B8921A)",
+              borderRadius: "50%",
+              border: "2px solid var(--bg, #fff)",
+              zIndex: 1,
+            }}
+            aria-hidden="true"
+          />
 
           {/* Content */}
-          <div className="timeline-content" style={{ paddingLeft: "1.25rem", flex: 1, paddingRight: editing ? "1.5rem" : 0 }}>
-            {(event.date || editing) && (
-              editing ? (
+          <div
+            className="timeline-content"
+            style={{
+              paddingLeft: "1.25rem",
+              flex: 1,
+              paddingRight: editing ? "1.5rem" : 0,
+            }}
+          >
+            {(event.date || editing) &&
+              (editing ? (
                 <button
                   type="button"
-                  onClick={(e) => { e.stopPropagation(); const rect = (e.currentTarget as HTMLElement).getBoundingClientRect(); onOpenPopover("date", event.id, rect); }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    const rect = (
+                      e.currentTarget as HTMLElement
+                    ).getBoundingClientRect();
+                    onOpenPopover("date", event.id, rect);
+                  }}
                   style={{
-                    background: "none", border: "none", cursor: "pointer", padding: 0,
-                    margin: "0 0 0.1rem", fontSize: "0.72rem", fontWeight: 600,
-                    color: "var(--accent, #B8921A)", textTransform: "uppercase", letterSpacing: "0.04em", display: "block",
+                    background: "none",
+                    border: "none",
+                    cursor: "pointer",
+                    padding: 0,
+                    margin: "0 0 0.1rem",
+                    fontSize: "0.72rem",
+                    fontWeight: 600,
+                    color: "var(--site-accent, #B8921A)",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.04em",
+                    display: "block",
                   }}
                   className="hover:opacity-70"
                 >
-                  {event.date ? formatDate(event.date) : <span style={{ opacity: 0.4, fontStyle: "italic" }}>+ Date</span>}
+                  {event.date ? (
+                    formatDate(event.date)
+                  ) : (
+                    <span style={{ opacity: 0.4, fontStyle: "italic" }}>
+                      + Date
+                    </span>
+                  )}
                 </button>
               ) : (
-                <p style={{ margin: "0 0 0.1rem", fontSize: "0.72rem", fontWeight: 600, color: "var(--accent, #B8921A)", textTransform: "uppercase", letterSpacing: "0.04em" }}>
+                <p
+                  style={{
+                    margin: "0 0 0.1rem",
+                    fontSize: "0.72rem",
+                    fontWeight: 600,
+                    color: "var(--site-accent, #B8921A)",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.04em",
+                  }}
+                >
                   {formatDate(event.date)}
                 </p>
-              )
-            )}
+              ))}
 
             {/* Title */}
-            <p style={{ margin: "0 0 0.125rem", fontWeight: 600, fontSize: "0.95rem", display: "flex", alignItems: "center", gap: "0.35rem" }}>
+            <p
+              style={{
+                margin: "0 0 0.125rem",
+                fontWeight: 600,
+                fontSize: "0.95rem",
+                display: "flex",
+                alignItems: "center",
+                gap: "0.35rem",
+              }}
+            >
               {editing ? (
                 <button
                   type="button"
-                  onClick={(e) => { e.stopPropagation(); const rect = (e.currentTarget as HTMLElement).getBoundingClientRect(); onOpenPopover("emoji", event.id, rect); }}
-                  style={{ background: "none", border: "none", cursor: "pointer", fontSize: "1.1rem", padding: "1px", borderRadius: "3px", lineHeight: 1 }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    const rect = (
+                      e.currentTarget as HTMLElement
+                    ).getBoundingClientRect();
+                    onOpenPopover("emoji", event.id, rect);
+                  }}
+                  style={{
+                    background: "none",
+                    border: "none",
+                    cursor: "pointer",
+                    fontSize: "1.1rem",
+                    padding: "1px",
+                    borderRadius: "3px",
+                    lineHeight: 1,
+                  }}
                   className="hover:bg-accent/20"
                   title="Change icon"
                 >
                   {event.icon || "✨"}
                 </button>
               ) : (
-                event.icon && <span style={{ marginRight: "0.4rem" }}>{event.icon}</span>
+                event.icon && (
+                  <span style={{ marginRight: "0.4rem" }}>{event.icon}</span>
+                )
               )}
               <span
                 contentEditable={editing}
                 suppressContentEditableWarning
-                onBlur={(e) => onUpdateEvent(event.id, { name: e.currentTarget.textContent ?? "" })}
-                onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); (e.currentTarget as HTMLElement).blur(); } e.stopPropagation(); }}
+                onBlur={(e) =>
+                  onUpdateEvent(event.id, {
+                    name: e.currentTarget.textContent ?? "",
+                  })
+                }
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    (e.currentTarget as HTMLElement).blur();
+                  }
+                  e.stopPropagation();
+                }}
                 style={{
-                  outline: "none", flex: 1,
-                  borderBottom: editing ? "1px dashed var(--border)" : "none",
+                  outline: "none",
+                  flex: 1,
+                  borderBottom: editing
+                    ? "1px dashed var(--site-border)"
+                    : "none",
                   cursor: editing ? "text" : "default",
                 }}
               >
-                {event.name || (editing ? "" : <span style={{ color: "var(--muted)", fontStyle: "italic" }}>Event name</span>)}
+                {event.name ||
+                  (editing ? (
+                    ""
+                  ) : (
+                    <span
+                      style={{
+                        color: "var(--site-muted)",
+                        fontStyle: "italic",
+                      }}
+                    >
+                      Event name
+                    </span>
+                  ))}
               </span>
             </p>
 
             {/* End time */}
-            {(event.endTime || editing) && (
-              editing ? (
+            {(event.endTime || editing) &&
+              (editing ? (
                 <button
                   type="button"
-                  onClick={(e) => { e.stopPropagation(); const rect = (e.currentTarget as HTMLElement).getBoundingClientRect(); onOpenPopover("endTime", event.id, rect); }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    const rect = (
+                      e.currentTarget as HTMLElement
+                    ).getBoundingClientRect();
+                    onOpenPopover("endTime", event.id, rect);
+                  }}
                   style={{
-                    background: "none", border: "none", cursor: "pointer", padding: 0,
-                    fontSize: "0.78rem", color: "var(--accent, #B8921A)", display: "block",
+                    background: "none",
+                    border: "none",
+                    cursor: "pointer",
+                    padding: 0,
+                    fontSize: "0.78rem",
+                    color: "var(--site-accent, #B8921A)",
+                    display: "block",
                   }}
                   className="hover:opacity-70"
                 >
-                  {event.endTime ? `Until ${formatTime(event.endTime)}` : <span style={{ opacity: 0.35, fontStyle: "italic", fontSize: "0.72rem" }}>+ End time</span>}
+                  {event.endTime ? (
+                    `Until ${formatTime(event.endTime)}`
+                  ) : (
+                    <span
+                      style={{
+                        opacity: 0.35,
+                        fontStyle: "italic",
+                        fontSize: "0.72rem",
+                      }}
+                    >
+                      + End time
+                    </span>
+                  )}
                 </button>
               ) : (
                 event.endTime && (
-                  <p style={{ margin: "0 0 0.1rem", fontSize: "0.78rem", color: "var(--accent, #B8921A)" }}>
+                  <p
+                    style={{
+                      margin: "0 0 0.1rem",
+                      fontSize: "0.78rem",
+                      color: "var(--site-accent, #B8921A)",
+                    }}
+                  >
                     Until {formatTime(event.endTime)}
                   </p>
                 )
-              )
-            )}
+              ))}
 
             {/* Description */}
             {(event.description || editing) && (
-              <p style={{ margin: "0.125rem 0 0", fontSize: "0.82rem", color: "var(--body-color)", lineHeight: 1.55, minHeight: "1.3em" }}>
+              <p
+                style={{
+                  margin: "0.125rem 0 0",
+                  fontSize: "0.82rem",
+                  color: "var(--body-color)",
+                  lineHeight: 1.55,
+                  minHeight: "1.3em",
+                }}
+              >
                 <span
                   contentEditable={editing}
                   suppressContentEditableWarning
-                  onBlur={(e) => onUpdateEvent(event.id, { description: e.currentTarget.textContent ?? "" })}
-                  onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); (e.currentTarget as HTMLElement).blur(); } e.stopPropagation(); }}
+                  onBlur={(e) =>
+                    onUpdateEvent(event.id, {
+                      description: e.currentTarget.textContent ?? "",
+                    })
+                  }
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      (e.currentTarget as HTMLElement).blur();
+                    }
+                    e.stopPropagation();
+                  }}
                   style={{
-                    outline: "none", whiteSpace: "pre-wrap",
-                    borderBottom: editing ? "1px dashed var(--border)" : "none",
+                    outline: "none",
+                    whiteSpace: "pre-wrap",
+                    borderBottom: editing
+                      ? "1px dashed var(--site-border)"
+                      : "none",
                     cursor: editing ? "text" : "default",
                   }}
                 >
-                  {event.description || (editing ? <span style={{ color: "var(--muted)", opacity: 0.5, fontStyle: "italic" }}>+ Description</span> : null)}
+                  {event.description ||
+                    (editing ? (
+                      <span
+                        style={{
+                          color: "var(--site-muted)",
+                          opacity: 0.5,
+                          fontStyle: "italic",
+                        }}
+                      >
+                        + Description
+                      </span>
+                    ) : null)}
                 </span>
               </p>
             )}
 
             {/* Dress code */}
             {(event.dressCode || editing) && (
-              <p style={{ margin: "0.2rem 0 0", fontSize: "0.75rem", color: "var(--muted)" }}>
+              <p
+                style={{
+                  margin: "0.2rem 0 0",
+                  fontSize: "0.75rem",
+                  color: "var(--site-muted)",
+                }}
+              >
                 <span
                   contentEditable={editing}
                   suppressContentEditableWarning
-                  onBlur={(e) => onUpdateEvent(event.id, { dressCode: e.currentTarget.textContent ?? "" })}
-                  onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); (e.currentTarget as HTMLElement).blur(); } e.stopPropagation(); }}
+                  onBlur={(e) =>
+                    onUpdateEvent(event.id, {
+                      dressCode: e.currentTarget.textContent ?? "",
+                    })
+                  }
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      (e.currentTarget as HTMLElement).blur();
+                    }
+                    e.stopPropagation();
+                  }}
                   style={{
                     outline: "none",
-                    borderBottom: editing ? "1px dashed var(--border)" : "none",
+                    borderBottom: editing
+                      ? "1px dashed var(--site-border)"
+                      : "none",
                     cursor: editing ? "text" : "default",
                   }}
                 >
-                  {event.dressCode
-                    ? `Dress code: ${event.dressCode}`
-                    : editing
-                    ? <span style={{ opacity: 0.4, fontStyle: "italic" }}>+ Dress code</span>
-                    : null}
+                  {event.dressCode ? (
+                    `Dress code: ${event.dressCode}`
+                  ) : editing ? (
+                    <span style={{ opacity: 0.4, fontStyle: "italic" }}>
+                      + Dress code
+                    </span>
+                  ) : null}
                 </span>
               </p>
             )}
@@ -249,20 +494,45 @@ export function ScheduleTimeline({
             {editing ? (
               <button
                 type="button"
-                onClick={(e) => { e.stopPropagation(); const rect = (e.currentTarget as HTMLElement).getBoundingClientRect(); onOpenPopover("mapsUrl", event.id, rect); }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  const rect = (
+                    e.currentTarget as HTMLElement
+                  ).getBoundingClientRect();
+                  onOpenPopover("mapsUrl", event.id, rect);
+                }}
                 style={{
-                  background: "none", border: "none", cursor: "pointer", padding: 0,
-                  fontSize: "0.75rem", display: "block", marginTop: "0.2rem",
-                  color: event.mapsUrl ? "var(--accent, #B8921A)" : "var(--muted)",
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  padding: 0,
+                  fontSize: "0.75rem",
+                  display: "block",
+                  marginTop: "0.2rem",
+                  color: event.mapsUrl
+                    ? "var(--site-accent, #B8921A)"
+                    : "var(--site-muted)",
                   textDecoration: event.mapsUrl ? "underline" : "none",
                 }}
                 className="hover:opacity-70"
               >
-                {event.mapsUrl ? "Edit location link" : <span style={{ fontStyle: "italic", opacity: 0.5 }}>+ Add location</span>}
+                {event.mapsUrl ? (
+                  "Edit location link"
+                ) : (
+                  <span style={{ fontStyle: "italic", opacity: 0.5 }}>
+                    + Add location
+                  </span>
+                )}
               </button>
             ) : (
               event.mapsUrl && (
-                <p style={{ margin: "0.125rem 0 0", fontSize: "0.82rem", color: "var(--body-color)" }}>
+                <p
+                  style={{
+                    margin: "0.125rem 0 0",
+                    fontSize: "0.82rem",
+                    color: "var(--body-color)",
+                  }}
+                >
                   <a
                     href={event.mapsUrl}
                     target="_blank"

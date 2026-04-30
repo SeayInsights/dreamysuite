@@ -29,7 +29,9 @@ export function InsertButton({ containerRef }: Props) {
   const computeSlots = useCallback((): InsertSlot[] => {
     const container = containerRef.current;
     if (!container) return [];
-    const blockEls = Array.from(container.querySelectorAll<HTMLElement>("[data-block-id]"));
+    const blockEls = Array.from(
+      container.querySelectorAll<HTMLElement>("[data-block-id]"),
+    );
     if (!blockEls.length) return [];
 
     const containerBox = container.getBoundingClientRect();
@@ -60,29 +62,41 @@ export function InsertButton({ containerRef }: Props) {
     return slots;
   }, [containerRef]);
 
-  const onMouseMove = useCallback((e: MouseEvent) => {
-    if (paletteOpen) return;
-    const container = containerRef.current;
-    if (!container) return;
+  const onMouseMove = useCallback(
+    (e: MouseEvent) => {
+      if (paletteOpen) return;
+      const container = containerRef.current;
+      if (!container) return;
 
-    const containerBox = container.getBoundingClientRect();
-    const relY = e.clientY - containerBox.top + container.scrollTop;
+      const containerBox = container.getBoundingClientRect();
+      const relY = e.clientY - containerBox.top + container.scrollTop;
 
-    const slots = computeSlots();
-    const hit = slots.find((s) => Math.abs(relY - s.top) < HOVER_ZONE);
-    if (hit) {
-      if (hideTimerRef.current) { clearTimeout(hideTimerRef.current); hideTimerRef.current = null; }
-      setSlot(hit);
-    } else {
-      if (!hideTimerRef.current) {
-        hideTimerRef.current = setTimeout(() => { setSlot(null); hideTimerRef.current = null; }, 200);
+      const slots = computeSlots();
+      const hit = slots.find((s) => Math.abs(relY - s.top) < HOVER_ZONE);
+      if (hit) {
+        if (hideTimerRef.current) {
+          clearTimeout(hideTimerRef.current);
+          hideTimerRef.current = null;
+        }
+        setSlot(hit);
+      } else {
+        if (!hideTimerRef.current) {
+          hideTimerRef.current = setTimeout(() => {
+            setSlot(null);
+            hideTimerRef.current = null;
+          }, 200);
+        }
       }
-    }
-  }, [paletteOpen, containerRef, computeSlots]);
+    },
+    [paletteOpen, containerRef, computeSlots],
+  );
 
   const onMouseLeave = useCallback(() => {
     if (paletteOpen) return;
-    hideTimerRef.current = setTimeout(() => { setSlot(null); hideTimerRef.current = null; }, 300);
+    hideTimerRef.current = setTimeout(() => {
+      setSlot(null);
+      hideTimerRef.current = null;
+    }, 300);
   }, [paletteOpen]);
 
   useEffect(() => {
@@ -96,9 +110,12 @@ export function InsertButton({ containerRef }: Props) {
     };
   }, [containerRef, onMouseMove, onMouseLeave]);
 
-  useEffect(() => () => {
-    if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
-  }, []);
+  useEffect(
+    () => () => {
+      if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
+    },
+    [],
+  );
 
   if (!slot) return null;
 
@@ -109,7 +126,8 @@ export function InsertButton({ containerRef }: Props) {
     const selectedIndex = blocks.findIndex((b) => b.id === selectedBlockId);
     if (
       selectedIndex !== -1 &&
-      (slot.insertIndex === selectedIndex || slot.insertIndex === selectedIndex + 1)
+      (slot.insertIndex === selectedIndex ||
+        slot.insertIndex === selectedIndex + 1)
     ) {
       return null;
     }
@@ -133,7 +151,7 @@ export function InsertButton({ containerRef }: Props) {
           width: 24,
           height: 24,
           borderRadius: "50%",
-          background: "var(--accent, #B8921A)",
+          background: "var(--site-accent, #B8921A)",
           color: "#fff",
           border: "2px solid #fff",
           boxShadow: "0 1px 4px rgba(0,0,0,0.18)",
@@ -158,7 +176,7 @@ export function InsertButton({ containerRef }: Props) {
           left: 0,
           right: 0,
           height: 1,
-          background: "var(--accent, #B8921A)",
+          background: "var(--site-accent, #B8921A)",
           opacity: 0.4,
           pointerEvents: "none",
           zIndex: 39,
@@ -169,7 +187,10 @@ export function InsertButton({ containerRef }: Props) {
         <InsertPalette
           insertIndex={slot.insertIndex}
           anchorRef={buttonRef as React.RefObject<HTMLElement | null>}
-          onClose={() => { setPaletteOpen(false); setSlot(null); }}
+          onClose={() => {
+            setPaletteOpen(false);
+            setSlot(null);
+          }}
         />
       )}
     </>

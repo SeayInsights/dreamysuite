@@ -37,11 +37,24 @@ export function ContentCardAccordion({
   const addBtnRef = useRef<HTMLDivElement>(null);
 
   return (
-    <div style={{ maxWidth: "720px", margin: "0 auto", borderTop: "1px solid var(--border)" }}>
+    <div
+      style={{
+        maxWidth: "720px",
+        margin: "0 auto",
+        borderTop: "1px solid var(--site-border)",
+      }}
+    >
       {items.map((item, i) => {
         const isOpen = openAccordionId === (item.id ?? String(i));
         return (
-          <div key={item.id ?? i} style={{ borderBottom: "1px solid var(--border)", position: "relative" }} className="group/fact">
+          <div
+            key={item.id ?? i}
+            style={{
+              borderBottom: "1px solid var(--site-border)",
+              position: "relative",
+            }}
+            className="group/fact"
+          >
             {editing && item.id && (
               <button
                 type="button"
@@ -53,33 +66,80 @@ export function ContentCardAccordion({
             )}
             <button
               type="button"
-              onClick={() => onToggleAccordion(isOpen ? null : (item.id ?? String(i)))}
+              onClick={() =>
+                onToggleAccordion(isOpen ? null : (item.id ?? String(i)))
+              }
               style={{
-                width: "100%", display: "flex", justifyContent: "space-between", alignItems: "center",
-                padding: "1rem 0", background: "none", border: "none", cursor: "pointer",
-                textAlign: "left", fontWeight: 600, fontSize: "0.95rem",
+                width: "100%",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                padding: "1rem 0",
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                textAlign: "left",
+                fontWeight: 600,
+                fontSize: "0.95rem",
               }}
               data-editable-item-index={i}
               data-editable-item-field="question"
               data-editable-array-key="items"
             >
-              <span>{item.question || <span style={{ color: "var(--muted)", fontStyle: "italic" }}>Question</span>}</span>
+              <span>
+                {item.question || (
+                  <span
+                    style={{ color: "var(--site-muted)", fontStyle: "italic" }}
+                  >
+                    Question
+                  </span>
+                )}
+              </span>
               <svg
-                width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden
-                style={{ flexShrink: 0, marginLeft: "1rem", transform: isOpen ? "rotate(180deg)" : "none", transition: "transform 0.2s" }}
+                width="16"
+                height="16"
+                viewBox="0 0 16 16"
+                fill="none"
+                aria-hidden
+                style={{
+                  flexShrink: 0,
+                  marginLeft: "1rem",
+                  transform: isOpen ? "rotate(180deg)" : "none",
+                  transition: "transform 0.2s",
+                }}
               >
-                <path d="M4 6 L8 10 L12 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                <path
+                  d="M4 6 L8 10 L12 6"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
               </svg>
             </button>
             {isOpen && (
               <div
-                style={{ paddingBottom: "1rem", color: "var(--body-color)", lineHeight: 1.6, fontSize: "0.9rem", whiteSpace: "pre-wrap" }}
+                style={{
+                  paddingBottom: "1rem",
+                  color: "var(--body-color)",
+                  lineHeight: 1.6,
+                  fontSize: "0.9rem",
+                  whiteSpace: "pre-wrap",
+                }}
                 data-editable-item-index={i}
                 data-editable-item-field="body"
                 data-editable-array-key="items"
               >
-                {item.body || <span style={{ color: "var(--muted)", fontStyle: "italic" }}>Answer</span>}
-                {(item.links ?? []).length > 0 && <LinkButtons links={item.links!} />}
+                {item.body || (
+                  <span
+                    style={{ color: "var(--site-muted)", fontStyle: "italic" }}
+                  >
+                    Answer
+                  </span>
+                )}
+                {(item.links ?? []).length > 0 && (
+                  <LinkButtons links={item.links!} />
+                )}
               </div>
             )}
           </div>

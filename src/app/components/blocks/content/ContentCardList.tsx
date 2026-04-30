@@ -35,7 +35,11 @@ export function ContentCardList({
   return (
     <dl style={{ maxWidth: "720px", margin: "0 auto" }}>
       {items.map((item, i) => (
-        <div key={item.id ?? i} style={{ marginBottom: "1.5rem", position: "relative" }} className="group/fact">
+        <div
+          key={item.id ?? i}
+          style={{ marginBottom: "1.5rem", position: "relative" }}
+          className="group/fact"
+        >
           {editing && item.id && (
             <button
               type="button"
@@ -51,15 +55,28 @@ export function ContentCardList({
             data-editable-item-field="question"
             data-editable-array-key="items"
           >
-            {item.question || <span style={{ color: "var(--muted)", fontStyle: "italic" }}>Question</span>}
+            {item.question || (
+              <span style={{ color: "var(--site-muted)", fontStyle: "italic" }}>
+                Question
+              </span>
+            )}
           </dt>
           <dd
-            style={{ margin: 0, color: "var(--body-color)", lineHeight: 1.6, whiteSpace: "pre-wrap" }}
+            style={{
+              margin: 0,
+              color: "var(--body-color)",
+              lineHeight: 1.6,
+              whiteSpace: "pre-wrap",
+            }}
             data-editable-item-index={i}
             data-editable-item-field="body"
             data-editable-array-key="items"
           >
-            {item.body || <span style={{ color: "var(--muted)", fontStyle: "italic" }}>Answer</span>}
+            {item.body || (
+              <span style={{ color: "var(--site-muted)", fontStyle: "italic" }}>
+                Answer
+              </span>
+            )}
           </dd>
           {(item.links ?? []).length > 0 && <LinkButtons links={item.links!} />}
         </div>

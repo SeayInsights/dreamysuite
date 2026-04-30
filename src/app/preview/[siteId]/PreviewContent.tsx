@@ -65,13 +65,20 @@ function useResponsiveScale(designedAtWidth: number) {
   return { mode, scale };
 }
 
-export function PreviewContent({ blocks, settings, theme, designedAtWidth = 1440 }: Props) {
+export function PreviewContent({
+  blocks,
+  settings,
+  theme,
+  designedAtWidth = 1440,
+}: Props) {
   const { mode, scale } = useResponsiveScale(designedAtWidth);
   const rendererRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (mode !== "proportional" || !rendererRef.current) return;
-    const els = rendererRef.current.querySelectorAll("h1,h2,h3,h4,h5,h6,p,li,dd,dt,label,strong,em,a,span,button");
+    const els = rendererRef.current.querySelectorAll(
+      "h1,h2,h3,h4,h5,h6,p,li,dd,dt,label,strong,em,a,span,button",
+    );
     const cleanups: Array<() => void> = [];
     els.forEach((el) => {
       const htmlEl = el as HTMLElement;
@@ -80,17 +87,23 @@ export function PreviewContent({ blocks, settings, theme, designedAtWidth = 1440
       if (rendered < 11) {
         const prev = htmlEl.style.fontSize;
         htmlEl.style.fontSize = `${11 / scale}px`;
-        cleanups.push(() => { htmlEl.style.fontSize = prev; });
+        cleanups.push(() => {
+          htmlEl.style.fontSize = prev;
+        });
       }
     });
-    return () => { cleanups.forEach((fn) => fn()); };
+    return () => {
+      cleanups.forEach((fn) => fn());
+    };
   }, [mode, scale]);
 
   useEffect(() => {
     if (mode !== "proportional" || !rendererRef.current) return;
     const container = rendererRef.current;
     const blockEls = Array.from(
-      container.querySelectorAll<HTMLElement>(":scope > .block, :scope > [data-block-id]"),
+      container.querySelectorAll<HTMLElement>(
+        ":scope > .block, :scope > [data-block-id]",
+      ),
     );
     if (blockEls.length < 2) return;
 
@@ -102,7 +115,11 @@ export function PreviewContent({ blocks, settings, theme, designedAtWidth = 1440
       const cur = blockEls[i].getBoundingClientRect();
       for (let j = 0; j < i; j++) {
         const prev = blockEls[j].getBoundingClientRect();
-        if (cur.left < prev.right && cur.right > prev.left && cur.top < prev.bottom) {
+        if (
+          cur.left < prev.right &&
+          cur.right > prev.left &&
+          cur.top < prev.bottom
+        ) {
           maxPush = Math.max(maxPush, prev.bottom - cur.top + 8);
         }
       }
@@ -112,8 +129,11 @@ export function PreviewContent({ blocks, settings, theme, designedAtWidth = 1440
     }
 
     return () => {
-      Array.from(container.querySelectorAll<HTMLElement>(":scope > .block, :scope > [data-block-id]"))
-        .forEach((el) => el.style.removeProperty("margin-top"));
+      Array.from(
+        container.querySelectorAll<HTMLElement>(
+          ":scope > .block, :scope > [data-block-id]",
+        ),
+      ).forEach((el) => el.style.removeProperty("margin-top"));
     };
   }, [mode, scale, blocks]);
 
@@ -139,13 +159,21 @@ export function PreviewContent({ blocks, settings, theme, designedAtWidth = 1440
     zIndex: 2,
     ...(gap ? { display: "flex", flexDirection: "column", gap } : {}),
     ...(mode === "proportional" ? { zoom: scale } : {}),
-    ...(isReflow ? { display: "flex", flexDirection: "column", padding: "0 10px" } : {}),
+    ...(isReflow
+      ? { display: "flex", flexDirection: "column", padding: "0 10px" }
+      : {}),
   };
 
   return (
     <div
       data-breakpoint="desktop"
-      className={isReflow ? "ds-reflow" : mode === "proportional" ? "ds-proportional" : ""}
+      className={
+        isReflow
+          ? "ds-reflow"
+          : mode === "proportional"
+            ? "ds-proportional"
+            : ""
+      }
       style={{
         ...themeVars,
         backgroundColor: settings.bgColor ?? "#ffffff",
@@ -172,7 +200,11 @@ export function PreviewContent({ blocks, settings, theme, designedAtWidth = 1440
         {visible.map((block) => {
           const Component = BLOCK_COMPONENTS[block.type];
           if (!Component) return null;
-          if (isReflow && isDecorativeOffscreen(parseCfg(block.config), designedAtWidth)) return null;
+          if (
+            isReflow &&
+            isDecorativeOffscreen(parseCfg(block.config), designedAtWidth)
+          )
+            return null;
           return <Component key={block.id} block={block} />;
         })}
       </div>
@@ -247,7 +279,7 @@ const RESPONSIVE_CSS = `
   gap: 0.25rem !important;
   margin-bottom: 1rem !important;
   padding-bottom: 1rem !important;
-  border-bottom: 1px solid var(--border, #e7e5e4);
+  border-bottom: 1px solid var(--site-border, #e7e5e4);
 }
 .ds-reflow .timeline-item:last-child {
   border-bottom: none !important;
