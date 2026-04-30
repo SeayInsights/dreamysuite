@@ -110,6 +110,7 @@ export async function POST(
 
   const email = (env as unknown as Record<string, string>).MYMEMORY_EMAIL ?? "";
 
+  let partial = false;
   for (const entry of entries) {
     try {
       const result = await translateText(entry.text, langPair, email);
@@ -119,9 +120,14 @@ export async function POST(
       if (result.translated) {
         if (!translations[entry.blockId]) translations[entry.blockId] = {};
         translations[entry.blockId][entry.field] = result.translated;
+      } else {
+        partial = true;
       }
-    } catch { /* skip individual field */ }
+    } catch (err) {
+      console.error(`[TRANSLATE] Failed to translate ${entry.blockId}.${entry.field}:`, err instanceof Error ? err.message : String(err));
+      partial = true;
+    }
   }
 
-  return NextResponse.json({ translations });
+  return NextResponse.json({ translations, partial });
 }
