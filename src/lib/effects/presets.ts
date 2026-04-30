@@ -10,7 +10,7 @@ export const EFFECT_PRESETS: EffectPreset[] = [
     eventTypes: ["wedding", "vow-renewal"],
     effects: {
       background: "silk",
-      text: "blur-text",
+      text: "shiny-text",
       cursor: "crosshair",
       decoration: "ribbons",
     },
@@ -23,7 +23,7 @@ export const EFFECT_PRESETS: EffectPreset[] = [
     eventTypes: ["wedding"],
     effects: {
       background: "soft-aurora",
-      text: "scroll-reveal",
+      text: "gradient-text",
       cursor: "crosshair",
       decoration: "ribbons",
     },
@@ -36,7 +36,7 @@ export const EFFECT_PRESETS: EffectPreset[] = [
     eventTypes: ["wedding", "anniversary"],
     effects: {
       background: "threads",
-      text: "split-text",
+      text: "shiny-text",
       cursor: "crosshair",
       decoration: "ribbons",
     },
@@ -51,7 +51,7 @@ export const EFFECT_PRESETS: EffectPreset[] = [
     eventTypes: ["anniversary"],
     effects: {
       background: "grainient",
-      text: "count-up",
+      text: "gradient-text",
       cursor: "crosshair",
       decoration: "magic-rings",
     },
@@ -79,7 +79,7 @@ export const EFFECT_PRESETS: EffectPreset[] = [
     eventTypes: ["vow-renewal", "wedding"],
     effects: {
       background: "floating-lines",
-      text: "scroll-float",
+      text: "shiny-text",
       cursor: "crosshair",
       decoration: "ribbons",
     },
@@ -107,7 +107,7 @@ export const EFFECT_PRESETS: EffectPreset[] = [
     eventTypes: ["engagement", "celebration"],
     effects: {
       background: "particles",
-      text: "rotating-text",
+      text: "fuzzy-text",
       cursor: "pixel-trail",
       decoration: "ribbons",
     },
@@ -120,7 +120,7 @@ export const EFFECT_PRESETS: EffectPreset[] = [
     eventTypes: ["engagement"],
     effects: {
       background: "aurora",
-      text: "decrypted-text",
+      text: "glitch-text",
       cursor: "pixel-trail",
       decoration: "electric-border",
     },
@@ -135,7 +135,7 @@ export const EFFECT_PRESETS: EffectPreset[] = [
     eventTypes: ["elopement"],
     effects: {
       background: "galaxy",
-      text: "text-type",
+      text: "text-pressure",
       cursor: "pixel-trail",
       decoration: "magic-rings",
     },
@@ -148,7 +148,7 @@ export const EFFECT_PRESETS: EffectPreset[] = [
     eventTypes: ["elopement", "wedding"],
     effects: {
       background: "light-pillar",
-      text: "blur-text",
+      text: "shiny-text",
       cursor: "crosshair",
       decoration: "ribbons",
     },
@@ -176,7 +176,7 @@ export const EFFECT_PRESETS: EffectPreset[] = [
     eventTypes: ["celebration", "engagement"],
     effects: {
       background: "liquid-chrome",
-      text: "scrambled-text",
+      text: "glitch-text",
       cursor: "pixel-trail",
       decoration: "electric-border",
     },
@@ -191,7 +191,7 @@ export const EFFECT_PRESETS: EffectPreset[] = [
     eventTypes: "*",
     effects: {
       background: "dot-field",
-      text: "text-type",
+      text: "text-pressure",
       cursor: "crosshair",
       decoration: "magic-rings",
     },
@@ -204,7 +204,7 @@ export const EFFECT_PRESETS: EffectPreset[] = [
     eventTypes: "*",
     effects: {
       background: "waves",
-      text: "scroll-float",
+      text: "gradient-text",
       cursor: "crosshair",
       decoration: "ribbons",
     },
