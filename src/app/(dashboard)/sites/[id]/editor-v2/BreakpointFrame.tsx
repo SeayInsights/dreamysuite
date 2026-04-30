@@ -205,7 +205,7 @@ export function BreakpointFrame({ children, nav }: Props) {
 			<div
 				ref={ref}
 				data-breakpoint={breakpoint}
-				className="relative max-w-full h-full overflow-x-hidden overflow-y-hidden"
+				className="relative max-w-full h-full overflow-hidden"
 				style={{
 					width: `${normalizedWidth}px`,
 					borderRadius: "8px",
@@ -229,7 +229,7 @@ export function BreakpointFrame({ children, nav }: Props) {
 				)}
 				{bgImage && !pageBgDisabled && (
 					<div
-						className="pointer-events-none absolute"
+						className="pointer-events-none absolute overflow-hidden"
 						style={{
 							zIndex: 1,
 							top: bgImageBleed ? 0 : mT,
