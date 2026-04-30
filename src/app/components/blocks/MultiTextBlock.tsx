@@ -29,7 +29,7 @@ export function MultiTextBlock({ block }: { block: Block }) {
       <div className="text-body">
         <p {...editableProps(cfg, "body", { whiteSpace: "pre-wrap" })}>
           {body || (
-            <span style={{ color: "#9b8e85", fontStyle: "italic" }}>
+            <span style={{ color: "var(--muted)", fontStyle: "italic" }}>
               {labels[mode] ?? "Text"} content will appear here.
             </span>
           )}

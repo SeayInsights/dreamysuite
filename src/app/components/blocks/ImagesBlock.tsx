@@ -20,7 +20,7 @@ export function ImagesBlock({ block }: { block: Block }) {
           ))}
         </div>
       ) : (
-        <p style={{ color: "#9b8e85", fontStyle: "italic", textAlign: "center", padding: "2rem 0" }}>
+        <p style={{ color: "var(--muted)", fontStyle: "italic", textAlign: "center", padding: "2rem 0" }}>
           Images will appear here once added.
         </p>
       )}

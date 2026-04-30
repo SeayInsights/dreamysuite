@@ -89,7 +89,7 @@ export function GuestBookBlock({ block }: { block: Block }) {
   });
 
   const inputStyle: React.CSSProperties = {
-    width: "100%", padding: "0.5rem 0.75rem", border: "1px solid #e0dbd4",
+    width: "100%", padding: "0.5rem 0.75rem", border: "1px solid var(--border)",
     borderRadius: "6px", fontSize: "0.9rem", boxSizing: "border-box",
   };
 
@@ -105,7 +105,7 @@ export function GuestBookBlock({ block }: { block: Block }) {
           placeholder={placeholder} value={message}
           onChange={(e) => setMessage(e.target.value)} required disabled={status === "submitting"} />
         <button type="submit" style={{
-          alignSelf: "flex-end", background: "var(--accent, #B8921A)", color: "#fff",
+          alignSelf: "flex-end", background: "var(--accent, #B8921A)", color: "var(--bg)",
           border: "none", padding: "0.5rem 1.25rem", borderRadius: "6px",
           fontSize: "0.875rem", fontWeight: 600, cursor: "pointer",
           opacity: status === "submitting" ? 0.6 : 1,
@@ -115,13 +115,13 @@ export function GuestBookBlock({ block }: { block: Block }) {
       </form>
 
       {status === "success" && (
-        <div role="alert" aria-live="polite" style={{ textAlign: "center", color: "#22c55e", padding: "0.5rem", marginBottom: "1rem", fontSize: "0.875rem" }}>
+        <div role="alert" aria-live="polite" className="text-green-500" style={{ textAlign: "center", padding: "0.5rem", marginBottom: "1rem", fontSize: "0.875rem" }}>
           Thank you for signing!
         </div>
       )}
 
       {status === "error" && error && (
-        <div role="alert" aria-live="polite" style={{ textAlign: "center", color: "#ef4444", padding: "0.5rem", marginBottom: "1rem", fontSize: "0.875rem" }}>
+        <div role="alert" aria-live="polite" className="text-red-500" style={{ textAlign: "center", padding: "0.5rem", marginBottom: "1rem", fontSize: "0.875rem" }}>
           {error}
         </div>
       )}
@@ -130,18 +130,18 @@ export function GuestBookBlock({ block }: { block: Block }) {
         <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
           {entries.map((entry) => (
             <div key={entry.id} style={{
-              background: "#faf8f6", border: "1px solid #e0dbd4",
+              background: "var(--bg)", border: "1px solid var(--border)",
               borderRadius: "8px", padding: "0.875rem 1rem",
             }}>
               <p style={{ margin: "0 0 0.25rem", fontWeight: 600, fontSize: "0.875rem" }}>{escapeHtml(entry.name)}</p>
-              <p style={{ margin: 0, color: "#4a4540", fontSize: "0.875rem" }}>{escapeHtml(entry.message)}</p>
+              <p style={{ margin: 0, color: "var(--body-color)", fontSize: "0.875rem" }}>{escapeHtml(entry.message)}</p>
             </div>
           ))}
         </div>
       )}
 
       {entries.length === 0 && (
-        <p style={{ textAlign: "center", color: "#9b8e85", fontStyle: "italic", fontSize: "0.875rem" }}>
+        <p style={{ textAlign: "center", color: "var(--muted)", fontStyle: "italic", fontSize: "0.875rem" }}>
           Be the first to sign!
         </p>
       )}
