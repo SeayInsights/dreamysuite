@@ -10,6 +10,7 @@ import {
   type ReactNode,
 } from "react";
 import { animate } from "motion/mini";
+import { useShallow } from "zustand/react/shallow";
 
 import { useEditorStore, type Breakpoint } from "@/app/stores/editorStore";
 import { duration, EASING } from "@/lib/animation/motion";
@@ -58,7 +59,27 @@ export function BreakpointFrame({ children, nav }: Props) {
   const ref = useRef<HTMLDivElement>(null);
   const breakpoint = useEditorStore((s) => s.breakpoint);
   const themeTokens = useEditorStore((s) => s.themeTokens);
-  const settings = useEditorStore((s) => s.settings);
+  const settings = useEditorStore(
+    useShallow((s) => ({
+      pageBgDisabled: s.settings.pageBgDisabled,
+      effectBg: s.settings.effectBg,
+      effectCursor: s.settings.effectCursor,
+      effectDecoration: s.settings.effectDecoration,
+      effectTransition: s.settings.effectTransition,
+      effectColor1: s.settings.effectColor1,
+      effectColor2: s.settings.effectColor2,
+      effectColor3: s.settings.effectColor3,
+      effectBleed: s.settings.effectBleed,
+      marginTop: s.settings.marginTop,
+      marginRight: s.settings.marginRight,
+      marginBottom: s.settings.marginBottom,
+      marginLeft: s.settings.marginLeft,
+      bgColor: s.settings.bgColor,
+      bgImage: s.settings.bgImage,
+      bgImageOpacity: s.settings.bgImageOpacity,
+      bgImageBleed: s.settings.bgImageBleed,
+    })),
+  );
   const pageBgDisabled = !!settings.pageBgDisabled;
   const effectsEnabled = useEffectsEnabled();
   const handleDeselect = useCallback((e: React.MouseEvent) => {

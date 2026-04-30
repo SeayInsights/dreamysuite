@@ -25,15 +25,15 @@ interface Props {
 export function BlockEditPanel({ containerRef }: Props) {
   const editingPanelBlockId = useEditorStore((s) => s.editingPanelBlockId);
   const setEditingPanel = useEditorStore((s) => s.setEditingPanel);
-  const blocks = useEditorStore((s) => s.blocks);
+  const block = useEditorStore((s) =>
+    s.editingPanelBlockId
+      ? (s.blocks.find((b) => b.id === s.editingPanelBlockId) ?? null)
+      : null,
+  );
   const updateBlock = useEditorStore((s) => s.updateBlock);
   const inspectorOpen = useEditorStore((s) => s.inspectorOpen);
 
   const panelRef = useRef<HTMLDivElement>(null);
-
-  const block = editingPanelBlockId
-    ? (blocks.find((b) => b.id === editingPanelBlockId) ?? null)
-    : null;
 
   // Close on Escape
   useEffect(() => {
@@ -128,10 +128,9 @@ export function BlockEditPanel({ containerRef }: Props) {
     };
   }
 
-  const blockTypeLabel =
-    block.type
-      .replace(/-/g, " ")
-      .replace(/\b\w/g, (c) => c.toUpperCase());
+  const blockTypeLabel = block.type
+    .replace(/-/g, " ")
+    .replace(/\b\w/g, (c) => c.toUpperCase());
 
   return createPortal(
     <div

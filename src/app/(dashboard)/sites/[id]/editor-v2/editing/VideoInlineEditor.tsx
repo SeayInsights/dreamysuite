@@ -34,9 +34,10 @@ interface Props {
 }
 
 export function VideoInlineEditor({ containerRef }: Props) {
-  const blocks = useEditorStore((s) => s.blocks);
-
-  const [active, setActive] = useState<{ blockId: string; blockRect: DOMRect } | null>(null);
+  const [active, setActive] = useState<{
+    blockId: string;
+    blockRect: DOMRect;
+  } | null>(null);
   const [videoPanel, setVideoPanel] = useState(false);
   const rafRef = useRef<number | null>(null);
 
@@ -50,7 +51,11 @@ export function VideoInlineEditor({ containerRef }: Props) {
     const handler = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         e.stopPropagation();
-        if (videoPanel) { setVideoPanel(false); } else { dismiss(); }
+        if (videoPanel) {
+          setVideoPanel(false);
+        } else {
+          dismiss();
+        }
       }
     };
     window.addEventListener("keydown", handler, true);
@@ -62,7 +67,9 @@ export function VideoInlineEditor({ containerRef }: Props) {
     if (!container) return;
 
     const handler = (e: MouseEvent) => {
-      const blockRoot = (e.target as HTMLElement).closest<HTMLElement>("[data-block-id]");
+      const blockRoot = (e.target as HTMLElement).closest<HTMLElement>(
+        "[data-block-id]",
+      );
       if (!blockRoot) return;
       const blockId = blockRoot.dataset.blockId;
       const blockType = blockRoot.dataset.blockType;
@@ -88,10 +95,12 @@ export function VideoInlineEditor({ containerRef }: Props) {
     const recompute = () => {
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
       rafRef.current = requestAnimationFrame(() => {
-        const blockRoot = container.querySelector<HTMLElement>(`[data-block-id="${active.blockId}"]`);
+        const blockRoot = container.querySelector<HTMLElement>(
+          `[data-block-id="${active.blockId}"]`,
+        );
         if (!blockRoot) return;
         const blockRect = getViewportRect(blockRoot);
-        setActive((prev) => prev ? { ...prev, blockRect } : prev);
+        setActive((prev) => (prev ? { ...prev, blockRect } : prev));
       });
     };
 
@@ -109,12 +118,16 @@ export function VideoInlineEditor({ containerRef }: Props) {
     const handler = (e: MouseEvent) => {
       const container = containerRef.current;
       if (!container) return;
-      const blockRoot = container.querySelector<HTMLElement>(`[data-block-id="${active.blockId}"]`);
+      const blockRoot = container.querySelector<HTMLElement>(
+        `[data-block-id="${active.blockId}"]`,
+      );
       if (blockRoot && blockRoot.contains(e.target as Node)) return;
       // Both FloatingToolbar and InlineVideoPanel carry data-video-editor-overlay,
       // so any click inside either stops propagation before reaching here.
       // The querySelectorAll handles the case where both are mounted simultaneously.
-      for (const overlay of document.querySelectorAll<HTMLElement>("[data-video-editor-overlay]")) {
+      for (const overlay of document.querySelectorAll<HTMLElement>(
+        "[data-video-editor-overlay]",
+      )) {
         if (overlay.contains(e.target as Node)) return;
       }
       dismiss();
@@ -123,7 +136,11 @@ export function VideoInlineEditor({ containerRef }: Props) {
     return () => document.removeEventListener("mousedown", handler, true);
   }, [active, dismiss, containerRef]);
 
-  const blockExists = active !== null && blocks.some((b) => b.id === active.blockId);
+  const activeBlockId = active?.blockId ?? null;
+  const blockExists = useEditorStore(
+    (s) =>
+      activeBlockId !== null && s.blocks.some((b) => b.id === activeBlockId),
+  );
   if (!blockExists && active) {
     Promise.resolve().then(dismiss);
     return null;
