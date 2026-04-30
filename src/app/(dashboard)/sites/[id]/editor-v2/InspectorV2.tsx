@@ -7,6 +7,7 @@ import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useEditorStore, type InspectorTab } from "@/app/stores/editorStore";
 import { duration, EASING } from "@/lib/animation/motion";
+import { useLastFocus } from "./hooks/useLastFocus";
 import { PageSettingsPanel } from "./inspector/PageSettingsPanel";
 import { DesignTab } from "./inspector/DesignTab";
 import { AdvancedTab } from "./inspector/AdvancedTab";
@@ -20,6 +21,7 @@ const TABS: { id: InspectorTab; label: string }[] = [
 export function InspectorV2() {
   const ref = useRef<HTMLDivElement>(null);
   const wasOpen = useRef(false);
+  const { restoreFocus } = useLastFocus();
 
   useEffect(() => {
     if (ref.current)
@@ -92,7 +94,7 @@ export function InspectorV2() {
       role="complementary"
       aria-label="Inspector"
       aria-hidden={!inspectorOpen}
-      data-inspector
+      onMouseDown={restoreFocus}
       className="pointer-events-none absolute bottom-0 right-0 top-0 z-[150] w-80 border-l border-border bg-white shadow-lg"
       style={{}}
     >

@@ -34,22 +34,27 @@ export function useEditEventHandlers({
   const updateBlock = useEditorStore((s) => s.updateBlock);
 
   // -------------------------------------------------------------------------
-  // Blur → commit
+  // Blur → commit (with focus-restoration for inspector/toolbar interactions)
+  //
+  // Instead of exempting specific panels via closest() checks, we use a
+  // requestAnimationFrame delay to let the browser settle focus, then check
+  // whether focus is still inside the editable element. If focus moved to a
+  // panel that called restoreFocus(), the element will still have focus and
+  // we skip the commit. If focus genuinely left (e.g. canvas click), we commit.
   // -------------------------------------------------------------------------
 
   useEffect(() => {
     if (!editState) return;
     const el = editState.element;
 
-    function handleBlur(e: FocusEvent) {
-      const rt = e.relatedTarget as HTMLElement | null;
-      if (
-        rt?.closest("[data-format-toolbar]") ||
-        rt?.closest("[data-inspector]")
-      )
-        return;
-      const state = editStateRef.current;
-      if (state) commit(state);
+    function handleBlur() {
+      requestAnimationFrame(() => {
+        // If focus was restored back to this element (e.g. by inspector
+        // onMouseDown calling restoreFocus()), don't commit
+        if (document.activeElement === el) return;
+        const state = editStateRef.current;
+        if (state) commit(state);
+      });
     }
 
     el.addEventListener("blur", handleBlur);
@@ -67,11 +72,7 @@ export function useEditEventHandlers({
     function handleDocMouseDown(e: MouseEvent) {
       const target = e.target as HTMLElement;
       if (el.contains(target)) return;
-      if (
-        target.closest("[data-format-toolbar]") ||
-        target.closest("[data-inspector]")
-      )
-        return;
+      if (target.closest("[data-format-toolbar]")) return;
       const state = editStateRef.current;
       if (state) commit(state);
     }
