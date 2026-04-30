@@ -12,6 +12,8 @@
  * field so the registry can drop legacy aliases in a future phase.
  */
 
+import { safeJsonParse } from "@/lib/validation";
+
 interface RawBlock {
   id: string;
   type: string;
@@ -23,7 +25,7 @@ interface RawBlock {
 
 function parseConfig(raw: unknown): Record<string, unknown> {
   if (typeof raw === "string") {
-    try { return raw.length ? JSON.parse(raw) : {}; } catch { return {}; }
+    return raw.length ? safeJsonParse<Record<string, unknown>>(raw, {}) : {};
   }
   if (raw && typeof raw === "object") return raw as Record<string, unknown>;
   return {};

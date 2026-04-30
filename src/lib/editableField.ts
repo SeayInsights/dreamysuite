@@ -25,25 +25,6 @@ const BREAKPOINT_WIDTHS = {
 
 import type { CSSProperties } from "react";
 
-export type EditableStyleKey =
-  | "FontFamily"
-  | "Size"
-  | "Color"
-  | "Align"
-  | "Bold"
-  | "Italic"
-  | "Underline";
-
-export const EDITABLE_STYLE_KEYS: EditableStyleKey[] = [
-  "FontFamily",
-  "Size",
-  "Color",
-  "Align",
-  "Bold",
-  "Italic",
-  "Underline",
-];
-
 export function styleFromField(
   cfg: Record<string, unknown>,
   field: string,

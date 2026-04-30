@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { safeJsonParse } from "@/lib/validation";
 
 /**
  * Zod schemas for all supported block types.
@@ -318,14 +319,19 @@ export function parseBlockConfig(
 ): BlockParseResult {
   let candidate: unknown;
   if (typeof raw === "string") {
-    try {
-      candidate = raw.length === 0 ? {} : JSON.parse(raw);
-    } catch {
-      return {
-        ok: false,
-        error: `Invalid JSON in ${type} block config`,
-        fallback: {},
-      };
+    if (raw.length === 0) {
+      candidate = {};
+    } else {
+      // Use safeJsonParse with undefined fallback; undefined is not valid JSON so it signals failure.
+      const parsed = safeJsonParse<undefined | unknown>(raw, undefined);
+      if (parsed === undefined) {
+        return {
+          ok: false,
+          error: `Invalid JSON in ${type} block config`,
+          fallback: {},
+        };
+      }
+      candidate = parsed;
     }
   } else if (raw == null) {
     candidate = {};

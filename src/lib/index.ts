@@ -81,7 +81,7 @@ export {
 // ── Motion & Animation ────────────────────────────────────────────────────────
 
 export { duration, prefersReducedMotion, type MotionDuration, EASING } from "./motion";
-export { TRANSITIONS, transition, customTransition, type TransitionKey } from "./transitions";
+export { TRANSITIONS, transition, type TransitionKey } from "./transitions";
 
 // ── Internationalization ──────────────────────────────────────────────────────
 
