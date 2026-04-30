@@ -6,7 +6,14 @@
  * ever fetched by the browser.
  */
 
-export type PresetFn = (el: Element) => void;
+export interface AnimOpts {
+  duration?: number;
+  delay?: number;
+  easing?: string;
+  scrub?: boolean;
+}
+
+export type PresetFn = (el: Element, opts?: AnimOpts) => void;
 
 const registry = new Map<string, () => Promise<PresetFn>>();
 
@@ -17,4 +24,3 @@ export function registerPreset(id: string, loader: () => Promise<PresetFn>): voi
 export function getPreset(id: string): (() => Promise<PresetFn>) | undefined {
   return registry.get(id);
 }
-

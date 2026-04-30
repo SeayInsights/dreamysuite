@@ -1,7 +1,9 @@
 /**
  * scrollPinnedStory — pin the element while scrolling through 200vh, then unpin
  */
-const scrollPinnedStory = async (el: Element): Promise<void> => {
+import type { AnimOpts } from "../registry";
+
+const scrollPinnedStory = async (el: Element, opts?: AnimOpts): Promise<void> => {
   if (!el) return;
   const { gsap } = await import("gsap");
   const { ScrollTrigger } = await import("gsap/ScrollTrigger");
