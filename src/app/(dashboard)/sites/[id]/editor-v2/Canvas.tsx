@@ -16,7 +16,6 @@ import { NavPreview } from "./NavPreview";
 import { TextEditor } from "./editing/TextEditor";
 import { ImageEditor } from "./editing/ImageEditor";
 import { VideoInlineEditor } from "./editing/VideoInlineEditor";
-import { BlockEditPanel } from "./editing/BlockEditPanel";
 import { DragHandles } from "./editing/DragHandles";
 import { ContextMenu } from "./editing/ContextMenu";
 
@@ -209,10 +208,6 @@ export function Canvas({ siteId }: Props) {
 				<TextEditor containerRef={containerRef} />
 				<ImageEditor containerRef={containerRef} />
 				<VideoInlineEditor containerRef={containerRef} />
-
-				{/* BlockEditPanel portals to document.body — lives here for
-				    containerRef access but renders outside the scroll container */}
-				<BlockEditPanel containerRef={containerRef} />
 			</div>
 		</ContextMenu>
 	);
