@@ -46,12 +46,11 @@ export function useEditEventHandlers({
   useEffect(() => {
     if (!editState) return;
     const el = editState.element;
+    const ownerDoc = el.ownerDocument;
 
     function handleBlur() {
       requestAnimationFrame(() => {
-        // If focus was restored back to this element (e.g. by inspector
-        // onMouseDown calling restoreFocus()), don't commit
-        if (document.activeElement === el) return;
+        if (ownerDoc.activeElement === el) return;
         const state = editStateRef.current;
         if (state) commit(state);
       });
@@ -68,6 +67,7 @@ export function useEditEventHandlers({
   useEffect(() => {
     if (!editState) return;
     const el = editState.element;
+    const ownerDoc = el.ownerDocument;
 
     function handleDocMouseDown(e: MouseEvent) {
       const target = e.target as HTMLElement;
@@ -77,8 +77,12 @@ export function useEditEventHandlers({
       if (state) commit(state);
     }
 
+    ownerDoc.addEventListener("mousedown", handleDocMouseDown);
     document.addEventListener("mousedown", handleDocMouseDown);
-    return () => document.removeEventListener("mousedown", handleDocMouseDown);
+    return () => {
+      ownerDoc.removeEventListener("mousedown", handleDocMouseDown);
+      document.removeEventListener("mousedown", handleDocMouseDown);
+    };
   }, [editState, commit, editStateRef]);
 
   // -------------------------------------------------------------------------
@@ -92,11 +96,12 @@ export function useEditEventHandlers({
     function handlePaste(e: ClipboardEvent) {
       e.preventDefault();
       const text = e.clipboardData?.getData("text/plain") ?? "";
-      const sel = window.getSelection();
+      const ownerDoc = el.ownerDocument;
+      const sel = ownerDoc.defaultView?.getSelection();
       if (sel && sel.rangeCount > 0) {
         const range = sel.getRangeAt(0);
         range.deleteContents();
-        range.insertNode(document.createTextNode(text));
+        range.insertNode(ownerDoc.createTextNode(text));
         range.collapse(false);
         sel.removeAllRanges();
         sel.addRange(range);
@@ -168,37 +173,39 @@ export function useEditEventHandlers({
       const state = editStateRef.current;
       if (!state) return;
 
-      state.element.focus();
+      const el = state.element;
+      const ownerDoc = el.ownerDocument;
+      el.focus();
       switch (cmd.type) {
         case "bold":
-          document.execCommand("bold");
+          ownerDoc.execCommand("bold");
           break;
         case "italic":
-          document.execCommand("italic");
+          ownerDoc.execCommand("italic");
           break;
         case "underline":
-          document.execCommand("underline");
+          ownerDoc.execCommand("underline");
           break;
         case "foreColor":
-          document.execCommand("foreColor", false, cmd.value);
+          ownerDoc.execCommand("foreColor", false, cmd.value);
           break;
         case "fontName":
-          document.execCommand("fontName", false, cmd.value);
+          ownerDoc.execCommand("fontName", false, cmd.value);
           break;
         case "justifyLeft":
-          document.execCommand("justifyLeft");
+          ownerDoc.execCommand("justifyLeft");
           break;
         case "justifyCenter":
-          document.execCommand("justifyCenter");
+          ownerDoc.execCommand("justifyCenter");
           break;
         case "justifyRight":
-          document.execCommand("justifyRight");
+          ownerDoc.execCommand("justifyRight");
           break;
         case "fontSize": {
-          const sel = window.getSelection();
+          const sel = ownerDoc.defaultView?.getSelection();
           if (sel && sel.rangeCount > 0 && !sel.isCollapsed) {
             const range = sel.getRangeAt(0);
-            const span = document.createElement("span");
+            const span = ownerDoc.createElement("span");
             span.style.fontSize =
               cmd.value.includes("px") || cmd.value.includes("rem")
                 ? cmd.value

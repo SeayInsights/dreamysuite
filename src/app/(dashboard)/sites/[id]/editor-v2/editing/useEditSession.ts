@@ -9,10 +9,8 @@ import { useCallback, useRef, useState } from "react";
 
 import { useEditorStore } from "@/app/stores/editorStore";
 import { useFloatingToolbar } from "../hooks/useFloatingToolbar";
-import {
-  type EditState,
-  parseCfgFromBlock,
-} from "./textEditorTypes";
+import { setLastFocusedElement } from "../hooks/useLastFocus";
+import { type EditState, parseCfgFromBlock } from "./textEditorTypes";
 
 export interface UseEditSessionReturn {
   editState: EditState | null;
@@ -57,9 +55,7 @@ export function useEditSession(
             ? (currentCfg[state.arrayKey] as Record<string, unknown>[])
             : [];
           const nextArr = arr.map((item, i) =>
-            i === state.itemIndex
-              ? { ...item, [state.field]: text }
-              : item,
+            i === state.itemIndex ? { ...item, [state.field]: text } : item,
           );
           updateBlock(state.blockId, {
             config: { ...currentCfg, [state.arrayKey]: nextArr },
@@ -74,6 +70,7 @@ export function useEditSession(
       el.removeAttribute("contenteditable");
       el.removeAttribute("spellcheck");
       el.style.outline = "";
+      setLastFocusedElement(null);
       toolbar.hide();
       setEditState(null);
       setIsTextEditing(false);
@@ -89,6 +86,7 @@ export function useEditSession(
       el.removeAttribute("contenteditable");
       el.removeAttribute("spellcheck");
       el.style.outline = "";
+      setLastFocusedElement(null);
 
       updateBlock(state.blockId, { config: state.originalCfg });
 
