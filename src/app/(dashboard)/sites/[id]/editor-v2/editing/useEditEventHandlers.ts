@@ -43,7 +43,11 @@ export function useEditEventHandlers({
 
     function handleBlur(e: FocusEvent) {
       const rt = e.relatedTarget as HTMLElement | null;
-      if (rt?.closest("[data-format-toolbar]")) return;
+      if (
+        rt?.closest("[data-format-toolbar]") ||
+        rt?.closest("[data-inspector]")
+      )
+        return;
       const state = editStateRef.current;
       if (state) commit(state);
     }
@@ -63,7 +67,11 @@ export function useEditEventHandlers({
     function handleDocMouseDown(e: MouseEvent) {
       const target = e.target as HTMLElement;
       if (el.contains(target)) return;
-      if (target.closest("[data-format-toolbar]")) return;
+      if (
+        target.closest("[data-format-toolbar]") ||
+        target.closest("[data-inspector]")
+      )
+        return;
       const state = editStateRef.current;
       if (state) commit(state);
     }
@@ -161,22 +169,39 @@ export function useEditEventHandlers({
 
       state.element.focus();
       switch (cmd.type) {
-        case "bold":          document.execCommand("bold"); break;
-        case "italic":        document.execCommand("italic"); break;
-        case "underline":     document.execCommand("underline"); break;
-        case "foreColor":     document.execCommand("foreColor", false, cmd.value); break;
-        case "fontName":      document.execCommand("fontName", false, cmd.value); break;
-        case "justifyLeft":   document.execCommand("justifyLeft"); break;
-        case "justifyCenter": document.execCommand("justifyCenter"); break;
-        case "justifyRight":  document.execCommand("justifyRight"); break;
+        case "bold":
+          document.execCommand("bold");
+          break;
+        case "italic":
+          document.execCommand("italic");
+          break;
+        case "underline":
+          document.execCommand("underline");
+          break;
+        case "foreColor":
+          document.execCommand("foreColor", false, cmd.value);
+          break;
+        case "fontName":
+          document.execCommand("fontName", false, cmd.value);
+          break;
+        case "justifyLeft":
+          document.execCommand("justifyLeft");
+          break;
+        case "justifyCenter":
+          document.execCommand("justifyCenter");
+          break;
+        case "justifyRight":
+          document.execCommand("justifyRight");
+          break;
         case "fontSize": {
           const sel = window.getSelection();
           if (sel && sel.rangeCount > 0 && !sel.isCollapsed) {
             const range = sel.getRangeAt(0);
             const span = document.createElement("span");
-            span.style.fontSize = cmd.value.includes("px") || cmd.value.includes("rem")
-              ? cmd.value
-              : cmd.value + "px";
+            span.style.fontSize =
+              cmd.value.includes("px") || cmd.value.includes("rem")
+                ? cmd.value
+                : cmd.value + "px";
             range.surroundContents(span);
           }
           break;
