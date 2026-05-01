@@ -160,6 +160,11 @@ export function BreakpointFrame({ children, nav }: Props) {
   );
 
   useEffect(() => {
+    useEditorStore.getState().setContentDocument(iframeDoc);
+    return () => useEditorStore.getState().setContentDocument(null);
+  }, [iframeDoc]);
+
+  useEffect(() => {
     if (!iframeDoc) return;
     function forward(e: KeyboardEvent) {
       if ((e.target as HTMLElement)?.isContentEditable) return;
