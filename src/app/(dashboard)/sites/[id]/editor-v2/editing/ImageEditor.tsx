@@ -67,9 +67,10 @@ function findImageElement(blockRoot: HTMLElement): HTMLElement | null {
 
 interface Props {
   containerRef: RefObject<HTMLElement | null>;
+  containerReady?: boolean;
 }
 
-export function ImageEditor({ containerRef }: Props) {
+export function ImageEditor({ containerRef, containerReady }: Props) {
   const [active, setActive] = useState<ActiveImage | null>(null);
   const [_activeBlockType, setActiveBlockType] = useState<string>("");
   const [cropMode, setCropModeLocal] = useState(false);
@@ -142,7 +143,7 @@ export function ImageEditor({ containerRef }: Props) {
 
     container.addEventListener("dblclick", handler);
     return () => container.removeEventListener("dblclick", handler);
-  }, [containerRef, setCropMode]);
+  }, [containerRef, containerReady, setCropMode]);
 
   useEffect(() => {
     if (!active) return;

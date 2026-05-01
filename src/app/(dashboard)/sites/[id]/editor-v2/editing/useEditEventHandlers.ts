@@ -51,6 +51,8 @@ export function useEditEventHandlers({
     function handleBlur() {
       requestAnimationFrame(() => {
         if (ownerDoc.activeElement === el) return;
+        const a = ownerDoc.activeElement;
+        if (!a || a === ownerDoc.body || a === ownerDoc.documentElement) return;
         const state = editStateRef.current;
         if (state) commit(state);
       });
@@ -73,6 +75,7 @@ export function useEditEventHandlers({
       const target = e.target as HTMLElement;
       if (el.contains(target)) return;
       if (target.closest("[data-format-toolbar]")) return;
+      if (target.closest("[data-inspector]")) return;
       const state = editStateRef.current;
       if (state) commit(state);
     }

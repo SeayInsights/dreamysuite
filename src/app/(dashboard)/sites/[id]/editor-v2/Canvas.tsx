@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useShallow } from "zustand/react/shallow";
 import { useEditorStore } from "@/app/stores/editorStore";
 import { parseCfg } from "@/lib/editableField";
@@ -26,6 +26,8 @@ interface Props {
 
 export function Canvas({ siteId }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const [containerReady, setContainerReady] = useState(false);
+  const onContainerReady = useCallback(() => setContainerReady(true), []);
   const [loading, setLoading] = useState(true);
   const [blocksLoading, setBlocksLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -208,7 +210,10 @@ export function Canvas({ siteId }: Props) {
     <ContextMenu>
       <div className="relative h-full w-full">
         <BreakpointFrame nav={<NavPreview />}>
-          <EditorOverlay containerRef={containerRef}>
+          <EditorOverlay
+            containerRef={containerRef}
+            onContainerReady={onContainerReady}
+          >
             <SiteRenderer blocks={blocks} ordered />
             <GridOverlay />
             {/* SectionToolbar removed (E019) — controls moved to inspector Design/Advanced tabs */}
@@ -216,9 +221,18 @@ export function Canvas({ siteId }: Props) {
         </BreakpointFrame>
 
         <DragHandles containerRef={containerRef} />
-        <TextEditor containerRef={containerRef} />
-        <ImageEditor containerRef={containerRef} />
-        <VideoInlineEditor containerRef={containerRef} />
+        <TextEditor
+          containerRef={containerRef}
+          containerReady={containerReady}
+        />
+        <ImageEditor
+          containerRef={containerRef}
+          containerReady={containerReady}
+        />
+        <VideoInlineEditor
+          containerRef={containerRef}
+          containerReady={containerReady}
+        />
       </div>
     </ContextMenu>
   );

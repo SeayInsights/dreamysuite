@@ -19,12 +19,14 @@ import { type EditState, parseCfgFromBlock } from "./textEditorTypes";
 
 export function useDblClickActivation({
   containerRef,
+  containerReady,
   toolbar,
   setEditState,
   setIsTextEditing,
   setSelectedField,
 }: {
   containerRef: React.RefObject<HTMLElement | null>;
+  containerReady?: boolean;
   toolbar: ReturnType<typeof useFloatingToolbar>;
   setEditState: React.Dispatch<React.SetStateAction<EditState | null>>;
   setIsTextEditing: (v: boolean) => void;
@@ -36,11 +38,35 @@ export function useDblClickActivation({
 
     function handleDblClick(e: MouseEvent) {
       const target = e.target as HTMLElement;
+      const doc = target.ownerDocument;
+      const selectedId = useEditorStore.getState().selectedBlockId;
+
+      // When overlapping blocks obscure the selected block, e.target may land
+      // on the wrong block. Fall back to elementsFromPoint to find an editable
+      // field on the already-selected block.
+      function resolveEditable<T extends HTMLElement>(
+        selector: string,
+      ): T | null {
+        const direct = target.closest<T>(selector);
+        if (direct) return direct;
+        if (!selectedId) return null;
+        for (const el of doc.elementsFromPoint(e.clientX, e.clientY)) {
+          const candidate = (el as HTMLElement).closest<T>(selector);
+          if (
+            candidate &&
+            candidate
+              .closest("[data-block-id]")
+              ?.getAttribute("data-block-id") === selectedId
+          )
+            return candidate;
+        }
+        return null;
+      }
 
       // -----------------------------------------------------------------------
       // Path 1: array-item field  (data-editable-item-index / item-field / array-key)
       // -----------------------------------------------------------------------
-      const itemEl = target.closest<HTMLElement>("[data-editable-item-index]");
+      const itemEl = resolveEditable<HTMLElement>("[data-editable-item-index]");
       if (itemEl) {
         const rawIndex = itemEl.dataset.editableItemIndex;
         const itemField = itemEl.dataset.editableItemField;
@@ -106,7 +132,7 @@ export function useDblClickActivation({
       // -----------------------------------------------------------------------
       // Path 2: top-level field  (data-editable-field)
       // -----------------------------------------------------------------------
-      const fieldEl = target.closest<HTMLElement>("[data-editable-field]");
+      const fieldEl = resolveEditable<HTMLElement>("[data-editable-field]");
       if (!fieldEl) return;
 
       const field = fieldEl.dataset.editableField;
@@ -184,5 +210,12 @@ export function useDblClickActivation({
 
     container.addEventListener("dblclick", handleDblClick);
     return () => container.removeEventListener("dblclick", handleDblClick);
-  }, [containerRef, toolbar, setEditState, setIsTextEditing, setSelectedField]);
+  }, [
+    containerRef,
+    containerReady,
+    toolbar,
+    setEditState,
+    setIsTextEditing,
+    setSelectedField,
+  ]);
 }

@@ -16,15 +16,21 @@ const DRAG_THRESHOLD_PX = 4;
 interface Props {
   children: ReactNode;
   containerRef: RefObject<HTMLDivElement | null>;
+  onContainerReady?: () => void;
 }
 
-export function EditorOverlay({ children, containerRef }: Props) {
+export function EditorOverlay({
+  children,
+  containerRef,
+  onContainerReady,
+}: Props) {
   const { select, hover, clear } = useSelection();
   const { startMove } = useDrag(containerRef);
 
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
+    onContainerReady?.();
     const doc = el.ownerDocument;
 
     function elementsAtPoint(x: number, y: number): string[] {
@@ -42,6 +48,7 @@ export function EditorOverlay({ children, containerRef }: Props) {
     }
 
     function handleClick(e: MouseEvent) {
+      if (e.detail > 1) return;
       const currentId = useEditorStore.getState().selectedBlockId;
       const stackIds = elementsAtPoint(e.clientX, e.clientY);
 
@@ -108,7 +115,6 @@ export function EditorOverlay({ children, containerRef }: Props) {
       )
         return;
 
-      e.preventDefault();
       pending = {
         blockId: state.selectedBlockId,
         startX: e.clientX,
