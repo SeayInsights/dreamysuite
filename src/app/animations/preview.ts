@@ -31,6 +31,8 @@ export function runPreviewAnimation(
   clone.removeAttribute("data-block-id");
   clone.style.pointerEvents = "none";
   clone.style.visibility = "";
+  clone.style.overflow = "visible";
+  clone.style.zIndex = "9999";
   el.parentElement.insertBefore(clone, el);
   el.style.visibility = "hidden";
 
