@@ -41,19 +41,19 @@ const EASING_OPTIONS = [
 ];
 
 const FONT_FAMILIES = [
-  { label: "System Sans",        value: "ui-sans-serif, system-ui, sans-serif" },
-  { label: "System Serif",       value: "ui-serif, Georgia, serif" },
-  { label: "Monospace",          value: "ui-monospace, 'Courier New', monospace" },
-  { label: "Inter",              value: "'Inter', sans-serif" },
-  { label: "Playfair",           value: "'Playfair Display', Georgia, serif" },
-  { label: "Cormorant",          value: "'Cormorant Garamond', Georgia, serif" },
-  { label: "Lora",               value: "'Lora', Georgia, serif" },
-  { label: "Montserrat",         value: "'Montserrat', sans-serif" },
-  { label: "Raleway",            value: "'Raleway', sans-serif" },
-  { label: "Nunito",             value: "'Nunito', sans-serif" },
-  { label: "Great Vibes",        value: "'Great Vibes', cursive" },
-  { label: "Dancing Script",     value: "'Dancing Script', cursive" },
-  { label: "Libre Baskerville",  value: "'Libre Baskerville', serif" },
+  { label: "System Sans", value: "ui-sans-serif, system-ui, sans-serif" },
+  { label: "System Serif", value: "ui-serif, Georgia, serif" },
+  { label: "Monospace", value: "ui-monospace, 'Courier New', monospace" },
+  { label: "Inter", value: "'Inter', sans-serif" },
+  { label: "Playfair", value: "'Playfair Display', Georgia, serif" },
+  { label: "Cormorant", value: "'Cormorant Garamond', Georgia, serif" },
+  { label: "Lora", value: "'Lora', Georgia, serif" },
+  { label: "Montserrat", value: "'Montserrat', sans-serif" },
+  { label: "Raleway", value: "'Raleway', sans-serif" },
+  { label: "Nunito", value: "'Nunito', sans-serif" },
+  { label: "Great Vibes", value: "'Great Vibes', cursive" },
+  { label: "Dancing Script", value: "'Dancing Script', cursive" },
+  { label: "Libre Baskerville", value: "'Libre Baskerville', serif" },
 ];
 
 interface DesignTabProps {
@@ -110,18 +110,25 @@ function NumericInput({
           }}
           className="h-7 w-full rounded border border-input bg-background px-2 text-xs focus:outline-none focus:ring-1 focus:ring-ring"
         />
-        <span className="shrink-0 text-[10px] text-muted-foreground">{unit}</span>
+        <span className="shrink-0 text-[10px] text-muted-foreground">
+          {unit}
+        </span>
       </div>
     </div>
   );
 }
 
-export function DesignTab({ block, breakpoint: _breakpoint, updateBlock }: DesignTabProps) {
+export function DesignTab({
+  block,
+  breakpoint: _breakpoint,
+  updateBlock,
+}: DesignTabProps) {
   const cfg = getInspectorConfig(block.type);
   const parsed = parseCfg(block.config);
 
   const isTextEditing = useEditorStore((s) => s.isTextEditing);
   const selectedField = useEditorStore((s) => s.selectedField);
+  const contentDocument = useEditorStore((s) => s.contentDocument);
 
   const [linked, setLinked] = useState(false);
 
@@ -149,10 +156,17 @@ export function DesignTab({ block, breakpoint: _breakpoint, updateBlock }: Desig
             <div className="flex flex-col gap-0.5">
               <span className="text-[10px] text-muted-foreground">Font</span>
               <select
-                value={(parsed[selectedField + "FontFamily"] as string | undefined) ?? ""}
+                value={
+                  (parsed[selectedField + "FontFamily"] as
+                    | string
+                    | undefined) ?? ""
+                }
                 onChange={(e) =>
                   updateBlock(block.id, {
-                    config: { ...parsed, [selectedField + "FontFamily"]: e.target.value },
+                    config: {
+                      ...parsed,
+                      [selectedField + "FontFamily"]: e.target.value,
+                    },
                   })
                 }
                 onKeyDown={(e) => e.stopPropagation()}
@@ -172,11 +186,16 @@ export function DesignTab({ block, breakpoint: _breakpoint, updateBlock }: Desig
               <div className="flex items-center gap-0.5">
                 <input
                   type="text"
-                  value={(parsed[selectedField + "Size"] as string | undefined) ?? ""}
+                  value={
+                    (parsed[selectedField + "Size"] as string | undefined) ?? ""
+                  }
                   placeholder="e.g. 16px"
                   onChange={(e) =>
                     updateBlock(block.id, {
-                      config: { ...parsed, [selectedField + "Size"]: e.target.value },
+                      config: {
+                        ...parsed,
+                        [selectedField + "Size"]: e.target.value,
+                      },
                     })
                   }
                   onKeyDown={(e) => e.stopPropagation()}
@@ -196,7 +215,8 @@ export function DesignTab({ block, breakpoint: _breakpoint, updateBlock }: Desig
                       updateBlock(block.id, {
                         config: {
                           ...parsed,
-                          [selectedField + style]: !parsed[selectedField + style],
+                          [selectedField + style]:
+                            !parsed[selectedField + style],
                         },
                       })
                     }
@@ -204,7 +224,7 @@ export function DesignTab({ block, breakpoint: _breakpoint, updateBlock }: Desig
                       "h-7 w-8 rounded border text-xs font-medium transition-colors",
                       parsed[selectedField + style]
                         ? "border-foreground bg-foreground text-background"
-                        : "border-input bg-background text-muted-foreground hover:border-foreground"
+                        : "border-input bg-background text-muted-foreground hover:border-foreground",
                     )}
                   >
                     {style[0]}
@@ -218,10 +238,16 @@ export function DesignTab({ block, breakpoint: _breakpoint, updateBlock }: Desig
               <div className="flex items-center gap-2">
                 <input
                   type="color"
-                  value={(parsed[selectedField + "Color"] as string | undefined) || "#000000"}
+                  value={
+                    (parsed[selectedField + "Color"] as string | undefined) ||
+                    "#000000"
+                  }
                   onChange={(e) =>
                     updateBlock(block.id, {
-                      config: { ...parsed, [selectedField + "Color"]: e.target.value },
+                      config: {
+                        ...parsed,
+                        [selectedField + "Color"]: e.target.value,
+                      },
                     })
                   }
                   onKeyDown={(e) => e.stopPropagation()}
@@ -229,11 +255,17 @@ export function DesignTab({ block, breakpoint: _breakpoint, updateBlock }: Desig
                 />
                 <input
                   type="text"
-                  value={(parsed[selectedField + "Color"] as string | undefined) ?? ""}
+                  value={
+                    (parsed[selectedField + "Color"] as string | undefined) ??
+                    ""
+                  }
                   placeholder="#000000"
                   onChange={(e) =>
                     updateBlock(block.id, {
-                      config: { ...parsed, [selectedField + "Color"]: e.target.value },
+                      config: {
+                        ...parsed,
+                        [selectedField + "Color"]: e.target.value,
+                      },
                     })
                   }
                   onKeyDown={(e) => e.stopPropagation()}
@@ -258,7 +290,7 @@ export function DesignTab({ block, breakpoint: _breakpoint, updateBlock }: Desig
                       "h-7 flex-1 rounded border text-xs capitalize transition-colors",
                       parsed[selectedField + "Align"] === align
                         ? "border-foreground bg-foreground text-background"
-                        : "border-input bg-background text-muted-foreground hover:border-foreground"
+                        : "border-input bg-background text-muted-foreground hover:border-foreground",
                     )}
                   >
                     {align[0].toUpperCase() + align.slice(1)}
@@ -276,7 +308,9 @@ export function DesignTab({ block, breakpoint: _breakpoint, updateBlock }: Desig
               type="color"
               value={bgColor || "#ffffff"}
               onChange={(e) =>
-                updateBlock(block.id, { config: { ...parsed, backgroundColor: e.target.value } })
+                updateBlock(block.id, {
+                  config: { ...parsed, backgroundColor: e.target.value },
+                })
               }
               onKeyDown={(e) => e.stopPropagation()}
               className="h-7 w-7 cursor-pointer rounded border border-input p-0.5"
@@ -287,7 +321,9 @@ export function DesignTab({ block, breakpoint: _breakpoint, updateBlock }: Desig
               placeholder="None"
               onChange={(e) => {
                 const v = e.target.value.trim();
-                updateBlock(block.id, { config: { ...parsed, backgroundColor: v || undefined } });
+                updateBlock(block.id, {
+                  config: { ...parsed, backgroundColor: v || undefined },
+                });
               }}
               onKeyDown={(e) => e.stopPropagation()}
               className="h-7 flex-1 rounded border border-input bg-background px-2 text-xs focus:outline-none focus:ring-1 focus:ring-ring"
@@ -306,11 +342,17 @@ export function DesignTab({ block, breakpoint: _breakpoint, updateBlock }: Desig
                 onChange={(v) => {
                   if (linked) {
                     updateBlock(block.id, {
-                      config: { ...parsed, padding: { top: v, right: v, bottom: v, left: v } },
+                      config: {
+                        ...parsed,
+                        padding: { top: v, right: v, bottom: v, left: v },
+                      },
                     });
                   } else {
                     updateBlock(block.id, {
-                      config: { ...parsed, padding: { ...padding, top: v as number } },
+                      config: {
+                        ...parsed,
+                        padding: { ...padding, top: v as number },
+                      },
                     });
                   }
                 }}
@@ -321,11 +363,17 @@ export function DesignTab({ block, breakpoint: _breakpoint, updateBlock }: Desig
                 onChange={(v) => {
                   if (linked) {
                     updateBlock(block.id, {
-                      config: { ...parsed, padding: { top: v, right: v, bottom: v, left: v } },
+                      config: {
+                        ...parsed,
+                        padding: { top: v, right: v, bottom: v, left: v },
+                      },
                     });
                   } else {
                     updateBlock(block.id, {
-                      config: { ...parsed, padding: { ...padding, right: v as number } },
+                      config: {
+                        ...parsed,
+                        padding: { ...padding, right: v as number },
+                      },
                     });
                   }
                 }}
@@ -336,11 +384,17 @@ export function DesignTab({ block, breakpoint: _breakpoint, updateBlock }: Desig
                 onChange={(v) => {
                   if (linked) {
                     updateBlock(block.id, {
-                      config: { ...parsed, padding: { top: v, right: v, bottom: v, left: v } },
+                      config: {
+                        ...parsed,
+                        padding: { top: v, right: v, bottom: v, left: v },
+                      },
                     });
                   } else {
                     updateBlock(block.id, {
-                      config: { ...parsed, padding: { ...padding, bottom: v as number } },
+                      config: {
+                        ...parsed,
+                        padding: { ...padding, bottom: v as number },
+                      },
                     });
                   }
                 }}
@@ -351,11 +405,17 @@ export function DesignTab({ block, breakpoint: _breakpoint, updateBlock }: Desig
                 onChange={(v) => {
                   if (linked) {
                     updateBlock(block.id, {
-                      config: { ...parsed, padding: { top: v, right: v, bottom: v, left: v } },
+                      config: {
+                        ...parsed,
+                        padding: { top: v, right: v, bottom: v, left: v },
+                      },
                     });
                   } else {
                     updateBlock(block.id, {
-                      config: { ...parsed, padding: { ...padding, left: v as number } },
+                      config: {
+                        ...parsed,
+                        padding: { ...padding, left: v as number },
+                      },
                     });
                   }
                 }}
@@ -368,7 +428,7 @@ export function DesignTab({ block, breakpoint: _breakpoint, updateBlock }: Desig
                 "flex h-6 w-full items-center justify-center gap-1 rounded border text-[10px] transition-colors",
                 linked
                   ? "border-foreground bg-foreground text-background"
-                  : "border-input bg-background text-muted-foreground hover:border-foreground"
+                  : "border-input bg-background text-muted-foreground hover:border-foreground",
               )}
             >
               {linked ? "Linked" : "Link all sides"}
@@ -383,14 +443,16 @@ export function DesignTab({ block, breakpoint: _breakpoint, updateBlock }: Desig
             <div
               className={cn(
                 "relative h-4 w-7 rounded-full transition-colors",
-                isVisible ? "bg-foreground" : "bg-muted"
+                isVisible ? "bg-foreground" : "bg-muted",
               )}
-              onClick={() => updateBlock(block.id, { isVisible: isVisible ? 0 : 1 })}
+              onClick={() =>
+                updateBlock(block.id, { isVisible: isVisible ? 0 : 1 })
+              }
             >
               <div
                 className={cn(
                   "absolute top-0.5 h-3 w-3 rounded-full bg-white transition-transform",
-                  isVisible ? "translate-x-3.5" : "translate-x-0.5"
+                  isVisible ? "translate-x-3.5" : "translate-x-0.5",
                 )}
               />
             </div>
@@ -405,25 +467,41 @@ export function DesignTab({ block, breakpoint: _breakpoint, updateBlock }: Desig
         <CollapsibleSection title="Motion" defaultOpen={false}>
           <div className="space-y-3">
             <div>
-              <p className="mb-1.5 text-[10px] text-muted-foreground">Entrance</p>
+              <p className="mb-1.5 text-[10px] text-muted-foreground">
+                Entrance
+              </p>
               <AnimationPresetPicker
                 value={currentAnim.presetId}
                 blockType={block.type}
                 onChange={(id) => {
                   updateBlock(block.id, {
-                    config: { ...parsed, animation: { ...currentAnim, presetId: id } },
+                    config: {
+                      ...parsed,
+                      animation: { ...currentAnim, presetId: id },
+                    },
                   });
-                  if (id) runPreviewAnimation(block.id, id);
+                  if (id)
+                    runPreviewAnimation(
+                      block.id,
+                      id,
+                      undefined,
+                      contentDocument,
+                    );
                 }}
               />
             </div>
             <div className="flex items-center gap-2">
-              <label className="w-14 shrink-0 text-[11px] text-muted-foreground">Easing</label>
+              <label className="w-14 shrink-0 text-[11px] text-muted-foreground">
+                Easing
+              </label>
               <select
                 value={currentAnim.easing}
                 onChange={(e) =>
                   updateBlock(block.id, {
-                    config: { ...parsed, animation: { ...currentAnim, easing: e.target.value } },
+                    config: {
+                      ...parsed,
+                      animation: { ...currentAnim, easing: e.target.value },
+                    },
                   })
                 }
                 onKeyDown={(e) => e.stopPropagation()}

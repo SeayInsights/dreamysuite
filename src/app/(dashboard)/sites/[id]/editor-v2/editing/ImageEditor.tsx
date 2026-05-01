@@ -191,7 +191,11 @@ export function ImageEditor({ containerRef, containerReady }: Props) {
     };
 
     document.addEventListener("mousedown", handler, true);
-    return () => document.removeEventListener("mousedown", handler, true);
+    window.addEventListener("mousedown", handler, true);
+    return () => {
+      document.removeEventListener("mousedown", handler, true);
+      window.removeEventListener("mousedown", handler, true);
+    };
   }, [active, photoPanel, dismiss, containerRef]);
 
   const activeBlockId = active?.blockId ?? null;

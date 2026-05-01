@@ -134,7 +134,11 @@ export function VideoInlineEditor({ containerRef, containerReady }: Props) {
       dismiss();
     };
     document.addEventListener("mousedown", handler, true);
-    return () => document.removeEventListener("mousedown", handler, true);
+    window.addEventListener("mousedown", handler, true);
+    return () => {
+      document.removeEventListener("mousedown", handler, true);
+      window.removeEventListener("mousedown", handler, true);
+    };
   }, [active, dismiss, containerRef]);
 
   const activeBlockId = active?.blockId ?? null;

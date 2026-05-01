@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useEditorStore } from "@/app/stores/editorStore";
 import {
   blockSectionStyle,
@@ -58,16 +58,19 @@ export function CountdownBlock({ block }: { block: Block }) {
   const editing = !fullPreview;
   const { days, hours, mins, secs } = useCountdown(eventDate);
   const hasDate = !!eventDate;
+  const sectionRef = useRef<HTMLElement>(null);
 
   function scrollToRsvp() {
+    const doc = sectionRef.current?.ownerDocument ?? document;
     const el =
-      document.querySelector('[data-block-type="rsvp-form"]') ??
-      document.querySelector('[data-block-type="rsvp"]');
+      doc.querySelector('[data-block-type="rsvp-form"]') ??
+      doc.querySelector('[data-block-type="rsvp"]');
     if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
   return (
     <section
+      ref={sectionRef}
       className="block block-countdown"
       data-block-id={block.id}
       data-block-type={block.type}
