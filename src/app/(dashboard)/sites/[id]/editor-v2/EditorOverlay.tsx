@@ -49,6 +49,17 @@ export function EditorOverlay({
 
     function handleClick(e: MouseEvent) {
       if (e.detail > 1) return;
+
+      // If clicking on an editable field, don't auto-select the block
+      // to avoid re-render that would invalidate a subsequent dblclick
+      const target = e.target as HTMLElement;
+      if (
+        target.closest("[data-editable-field]") ||
+        target.closest("[data-editable-item-index]")
+      ) {
+        return;
+      }
+
       const currentId = useEditorStore.getState().selectedBlockId;
       const stackIds = elementsAtPoint(e.clientX, e.clientY);
 
@@ -66,6 +77,16 @@ export function EditorOverlay({
     }
 
     function handleDblClick(e: MouseEvent) {
+      // If the target is an editable text field, let the text editor handle it
+      // to avoid a competing select() call that triggers re-render and detaches the target
+      const target = e.target as HTMLElement;
+      if (
+        target.closest("[data-editable-field]") ||
+        target.closest("[data-editable-item-index]")
+      ) {
+        return;
+      }
+
       const stackIds = elementsAtPoint(e.clientX, e.clientY);
       const blockId = stackIds[0];
       if (!blockId) return;
