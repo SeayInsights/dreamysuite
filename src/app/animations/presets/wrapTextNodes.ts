@@ -1,22 +1,25 @@
 /**
  * Shared utility for text-splitting animation presets.
  * Uses TreeWalker to find all text nodes and wrap words or characters
- * in <span> elements while preserving the existing DOM structure
- * (inline formatting, nested elements, etc.).
+ * in <span> elements while preserving the existing DOM structure.
  *
- * Industry standard approach — same pattern as Splitting.js and GSAP SplitText.
+ * Returns spans grouped by block-level element (h1-h6, p, li, etc.) so
+ * each visual "line" can cascade independently — the industry standard
+ * behavior (Splitting.js, GSAP SplitText).
  */
 
 type SplitMode = "word" | "char";
 
-export function wrapTextNodes(
-  container: Element,
+const LINE_SELECTOR =
+  "h1, h2, h3, h4, h5, h6, p, li, blockquote, figcaption, dt, dd, td, th";
+
+function wrapTextNodesIn(
+  doc: Document,
+  root: Element | Node,
   mode: SplitMode,
 ): HTMLElement[] {
-  const doc = container.ownerDocument ?? document;
   const spans: HTMLElement[] = [];
-
-  const walker = doc.createTreeWalker(container, NodeFilter.SHOW_TEXT);
+  const walker = doc.createTreeWalker(root, NodeFilter.SHOW_TEXT);
   const textNodes: Text[] = [];
   let node: Node | null;
   while ((node = walker.nextNode())) {
@@ -48,7 +51,7 @@ export function wrapTextNodes(
       for (const ch of text) {
         if (/\s/.test(ch)) {
           const span = doc.createElement("span");
-          span.textContent = " ";
+          span.textContent = " ";
           span.style.display = "inline-block";
           span.style.width = ch === "\n" ? "100%" : "";
           spans.push(span);
@@ -67,4 +70,30 @@ export function wrapTextNodes(
   }
 
   return spans;
+}
+
+/**
+ * Walk an element's DOM, group text by block-level containers, and wrap each
+ * word or character in a span. Returns one group per visual "line" so the
+ * caller can cascade each line independently.
+ */
+export function wrapTextNodes(
+  container: Element,
+  mode: SplitMode,
+): HTMLElement[][] {
+  const doc = container.ownerDocument ?? document;
+  const lineEls = container.querySelectorAll(LINE_SELECTOR);
+
+  if (!lineEls.length) {
+    const spans = wrapTextNodesIn(doc, container, mode);
+    return spans.length ? [spans] : [];
+  }
+
+  const groups: HTMLElement[][] = [];
+  for (const lineEl of lineEls) {
+    if (lineEl.querySelector(LINE_SELECTOR)) continue;
+    const spans = wrapTextNodesIn(doc, lineEl, mode);
+    if (spans.length) groups.push(spans);
+  }
+  return groups;
 }
