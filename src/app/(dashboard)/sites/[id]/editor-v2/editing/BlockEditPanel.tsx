@@ -80,7 +80,17 @@ export function BlockEditPanel({ containerRef }: Props) {
   const container = containerRef.current;
   if (container) {
     // eslint-disable-next-line react-hooks/refs
-    const box = container.getBoundingClientRect();
+    const rawBox = container.getBoundingClientRect();
+    const frame = container.ownerDocument?.defaultView?.frameElement;
+    const frameRect = frame
+      ? frame.getBoundingClientRect()
+      : { top: 0, left: 0 };
+    const box = {
+      top: rawBox.top + frameRect.top,
+      left: rawBox.left + frameRect.left,
+      width: rawBox.width,
+      height: rawBox.height,
+    };
     const toolbarWidth = 320;
     const inspectorWidth = 320;
     const padding = 16;

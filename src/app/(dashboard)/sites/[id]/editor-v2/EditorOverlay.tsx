@@ -165,11 +165,7 @@ export function EditorOverlay({ children, containerRef }: Props) {
   }, [containerRef, select, hover, clear, startMove]);
 
   return (
-    <div
-      ref={containerRef}
-      className="editor-canvas-scroll relative min-h-full w-full overflow-y-auto pb-8"
-      style={{ contain: "layout" }}
-    >
+    <div ref={containerRef} className="relative min-h-full w-full pb-8">
       {children}
     </div>
   );

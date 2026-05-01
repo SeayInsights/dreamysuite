@@ -53,10 +53,15 @@ export function InlinePhotoPanel({
       .finally(() => setLoading(false));
   }, [siteId]);
 
-  const photoUrl = useCallback((id: string) => `/api/sites/${siteId}/photos/${id}`, [siteId]);
+  const photoUrl = useCallback(
+    (id: string) => `/api/sites/${siteId}/photos/${id}`,
+    [siteId],
+  );
 
   function selectPhoto(url: string) {
-    const block = useEditorStore.getState().blocks.find((b) => b.id === blockId);
+    const block = useEditorStore
+      .getState()
+      .blocks.find((b) => b.id === blockId);
     const cfg = parseCfg(block?.config);
 
     if (blockType === "gallery" && (cfg.layout ?? "grid") === "grid") {
@@ -72,7 +77,9 @@ export function InlinePhotoPanel({
   }
 
   function getSelected(): string[] {
-    const block = useEditorStore.getState().blocks.find((b) => b.id === blockId);
+    const block = useEditorStore
+      .getState()
+      .blocks.find((b) => b.id === blockId);
     const cfg = parseCfg(block?.config);
     if (blockType === "gallery" && (cfg.layout ?? "grid") === "grid") {
       return Array.isArray(cfg.urls) ? (cfg.urls as string[]) : [];
@@ -111,7 +118,9 @@ export function InlinePhotoPanel({
       </div>
       <div className="max-h-56 overflow-y-auto p-2">
         {loading ? (
-          <p className="py-4 text-center text-[10px] text-muted-foreground">Loading...</p>
+          <p className="py-4 text-center text-[10px] text-muted-foreground">
+            Loading...
+          </p>
         ) : photos.length === 0 ? (
           <div className="flex flex-col items-center gap-1 py-4">
             <ImagePlus className="size-4 text-muted-foreground" />
@@ -131,11 +140,20 @@ export function InlinePhotoPanel({
                   onClick={() => selectPhoto(url)}
                   className={
                     "relative aspect-square overflow-hidden rounded ring-2 transition-all " +
-                    (isSelected ? "ring-primary" : "ring-transparent hover:ring-primary/40")
+                    (isSelected
+                      ? "ring-primary"
+                      : "ring-transparent hover:ring-primary/40")
                   }
                   title={photo.filename}
                 >
-                  <Image src={url} alt={photo.filename} fill className="object-cover" sizes="80px" />
+                  <Image
+                    src={url}
+                    alt={photo.filename}
+                    fill
+                    unoptimized
+                    className="object-cover"
+                    sizes="80px"
+                  />
                   {isSelected && isGalleryGrid && (
                     <div className="absolute inset-0 flex items-center justify-center bg-primary/20">
                       <span className="flex size-4 items-center justify-center rounded-full bg-primary text-[9px] font-bold text-primary-foreground">

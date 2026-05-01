@@ -97,6 +97,7 @@ export function MediaVideoBlock({ block }: { block: Block }) {
                 width: "100%",
                 height: "100%",
                 border: 0,
+                pointerEvents: "none",
               }}
             />
           </div>
@@ -128,31 +129,35 @@ export function MediaVideoBlock({ block }: { block: Block }) {
         className="block block-media-video"
         data-block-id={block.id}
         data-block-type={block.type}
-        style={{
-          position: "relative",
-          width: "100%",
-          height,
-          aspectRatio,
-          overflow: "hidden",
-          background: "#000",
-          ...sectionStyle,
-        }}
+        style={sectionStyle}
       >
         {vimeoSrc ? (
-          <iframe
-            src={vimeoSrc}
-            title="Vimeo video"
-            allow="autoplay; fullscreen; picture-in-picture"
-            allowFullScreen
+          <div
             style={{
-              position: "absolute",
-              top: 0,
-              left: 0,
-              width: "100%",
-              height: "100%",
-              border: 0,
+              position: "relative",
+              paddingBottom: "56.25%",
+              height: 0,
+              overflow: "hidden",
+              background: "#000",
+              borderRadius: "8px",
             }}
-          />
+          >
+            <iframe
+              src={vimeoSrc}
+              title="Vimeo video"
+              allow="autoplay; fullscreen; picture-in-picture"
+              allowFullScreen
+              style={{
+                position: "absolute",
+                top: 0,
+                left: 0,
+                width: "100%",
+                height: "100%",
+                border: 0,
+                pointerEvents: "none",
+              }}
+            />
+          </div>
         ) : (
           <p
             style={{
@@ -188,7 +193,12 @@ export function MediaVideoBlock({ block }: { block: Block }) {
         muted
         loop
         playsInline
-        style={{ width: "100%", height: "100%", objectFit }}
+        style={{
+          width: "100%",
+          height: "100%",
+          objectFit,
+          pointerEvents: "none",
+        }}
       />
     </section>
   );
