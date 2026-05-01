@@ -41,24 +41,26 @@ export function useDblClickActivation({
       const doc = target.ownerDocument;
       const selectedId = useEditorStore.getState().selectedBlockId;
 
-      // When overlapping blocks obscure the selected block, e.target may land
-      // on the wrong block. Fall back to elementsFromPoint to find an editable
-      // field on the already-selected block.
+      // Resolve the editable field from the click target, falling back to
+      // elementsFromPoint when the target is detached (e.g. React re-rendered
+      // between the first click and dblclick on a previously-unselected block).
       function resolveEditable<T extends HTMLElement>(
         selector: string,
       ): T | null {
         const direct = target.closest<T>(selector);
         if (direct) return direct;
-        if (!selectedId) return null;
         for (const el of doc.elementsFromPoint(e.clientX, e.clientY)) {
           const candidate = (el as HTMLElement).closest<T>(selector);
-          if (
-            candidate &&
-            candidate
-              .closest("[data-block-id]")
-              ?.getAttribute("data-block-id") === selectedId
-          )
-            return candidate;
+          if (!candidate) continue;
+          const blockId = candidate
+            .closest("[data-block-id]")
+            ?.getAttribute("data-block-id");
+          if (!blockId) continue;
+          if (selectedId && blockId !== selectedId) continue;
+          if (!selectedId) {
+            useEditorStore.getState().selectBlock(blockId);
+          }
+          return candidate;
         }
         return null;
       }
