@@ -39,6 +39,7 @@ export function Canvas({ siteId }: Props) {
   const setCurrentPageId = useEditorStore((s) => s.setCurrentPageId);
   const loadTranslations = useEditorStore((s) => s.loadTranslations);
   const settingsLoaded = useEditorStore((s) => s.settingsLoaded);
+  const setCachedPageBlocks = useEditorStore((s) => s.setCachedPageBlocks);
 
   const blocks = useMemo(() => {
     // Apply effective config to each block
@@ -75,9 +76,6 @@ export function Canvas({ siteId }: Props) {
 
         if (!cancelled) {
           setPages(pages);
-          if (pages.length) {
-            setCurrentPageId(pages[0].id);
-          }
           loadTranslations(siteId);
         }
 
@@ -86,6 +84,57 @@ export function Canvas({ siteId }: Props) {
             setBlocks([]);
             setBlocksLoading(false);
           }
+          return;
+        }
+
+        // Pre-fetch all pages' blocks in parallel
+        const blocksPromises = pages.map(async (page) => {
+          try {
+            const res = await fetch(`/api/sites/${siteId}/pages/${page.id}`);
+            if (!res.ok) throw new Error(`Failed to load blocks for page ${page.id}`);
+            const { blocks: rawBlocks } = (await res.json()) as { blocks: unknown[] };
+            const parsed = (rawBlocks as Block[]).map((b) => ({
+              ...b,
+              config: parseCfg(b.config),
+              overrides: typeof b.overrides === "string" ? JSON.parse(b.overrides) : b.overrides,
+            }));
+            const { blocks: consolidated, migrations } = consolidateBlocks(parsed);
+            return { pageId: page.id, blocks: consolidated as Block[], parsed, migrations };
+          } catch (err) {
+            console.error(`Failed to pre-fetch page ${page.id}:`, err);
+            return { pageId: page.id, blocks: [], parsed: [], migrations: null };
+          }
+        });
+
+        const allPageBlocks = await Promise.all(blocksPromises);
+
+        if (!cancelled) {
+          // Cache all pages
+          allPageBlocks.forEach(({ pageId, blocks }) => {
+            setCachedPageBlocks(pageId, blocks);
+          });
+
+          // Set first page as current and load its blocks
+          if (pages.length) {
+            const firstPage = allPageBlocks[0];
+            setCurrentPageId(pages[0].id);
+            setBlocks(firstPage.blocks);
+
+            // Run migrations if needed (matching the loadBlocks logic)
+            if (firstPage.migrations) {
+              const updateBlock = useEditorStore.getState().updateBlock;
+              for (let i = 0; i < firstPage.parsed.length; i++) {
+                if (firstPage.parsed[i].type !== firstPage.blocks[i].type) {
+                  updateBlock(firstPage.blocks[i].id, {
+                    type: firstPage.blocks[i].type,
+                    config: parseCfg(firstPage.blocks[i].config),
+                  });
+                }
+              }
+            }
+          }
+
+          setBlocksLoading(false);
         }
       } catch (err) {
         if (!cancelled) {
@@ -104,12 +153,32 @@ export function Canvas({ siteId }: Props) {
     return () => {
       cancelled = true;
     };
-  }, [siteId, setBlocks, setPages, setCurrentPageId]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [siteId, setBlocks, setPages, setCurrentPageId, setCachedPageBlocks]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Track previous page to save blocks on navigation
+  const prevPageIdRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (!currentPageId) return;
+
+    // Save previous page's blocks to cache before switching
+    if (prevPageIdRef.current && prevPageIdRef.current !== currentPageId) {
+      const currentBlocks = useEditorStore.getState().blocks;
+      setCachedPageBlocks(prevPageIdRef.current, currentBlocks);
+    }
+    prevPageIdRef.current = currentPageId;
+
+    // Check cache first (read from store to avoid dependency)
+    const cachedBlocks = useEditorStore.getState().pageBlocksCache[currentPageId];
+    if (cachedBlocks) {
+      // Instant navigation from cache
+      setBlocks(cachedBlocks);
+      setBlocksLoading(false);
+      return;
+    }
+
+    // Fallback: fetch if not in cache (shouldn't happen after initial load)
     let cancelled = false;
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setBlocksLoading(true);
 
     async function loadBlocks() {
@@ -188,7 +257,7 @@ export function Canvas({ siteId }: Props) {
     return () => {
       cancelled = true;
     };
-  }, [siteId, currentPageId, setBlocks]);
+  }, [siteId, currentPageId, setBlocks, setCachedPageBlocks]);
 
   if (loading || blocksLoading || !settingsLoaded) {
     return (

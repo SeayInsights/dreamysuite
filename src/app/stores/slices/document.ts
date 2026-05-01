@@ -24,6 +24,7 @@ export interface DocumentSlice {
 	blocks: Block[];
 	isDirty: boolean;
 	pendingOps: PendingOps;
+	pageBlocksCache: Record<string, Block[]>;
 	setBlocks: (blocks: Block[]) => void;
 	updateBlock: (id: string, updates: Partial<Block>) => void;
 	insertBlock: (block: Block, atIndex: number) => void;
@@ -33,6 +34,8 @@ export interface DocumentSlice {
 	resortByOffsetY: () => void;
 	markClean: () => void;
 	markFlushed: (flushedOps: PendingOps) => void;
+	setCachedPageBlocks: (pageId: string, blocks: Block[]) => void;
+	invalidatePageCache: (pageId: string) => void;
 }
 
 const emptyOps = (): PendingOps => ({
@@ -51,6 +54,7 @@ export const createDocumentSlice: StateCreator<
 	blocks: [],
 	isDirty: false,
 	pendingOps: emptyOps(),
+	pageBlocksCache: {},
 	setBlocks: (blocks) => set({ blocks }),
 	updateBlock: (id, updates) =>
 		set((state) => {
@@ -146,5 +150,15 @@ export const createDocumentSlice: StateCreator<
 			};
 			const stillDirty = remaining.updated.size > 0 || remaining.inserted.size > 0 || remaining.removed.size > 0 || remaining.reordered;
 			return { isDirty: stillDirty, pendingOps: remaining };
+		}),
+	setCachedPageBlocks: (pageId, blocks) =>
+		set((state) => ({
+			pageBlocksCache: { ...state.pageBlocksCache, [pageId]: blocks },
+		})),
+	invalidatePageCache: (pageId) =>
+		set((state) => {
+			const cache = { ...state.pageBlocksCache };
+			delete cache[pageId];
+			return { pageBlocksCache: cache };
 		}),
 });
