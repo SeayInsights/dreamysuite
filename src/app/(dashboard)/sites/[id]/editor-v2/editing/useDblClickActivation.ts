@@ -36,30 +36,41 @@ export function useDblClickActivation({
     const container = containerRef.current;
     if (!container) return;
 
+    // Container is already in the iframe via createPortal
+    // So container.ownerDocument IS the iframe document
+    const iframeDoc = container.ownerDocument;
+
     function handleDblClick(e: MouseEvent) {
       const target = e.target as HTMLElement;
       const doc = target.ownerDocument;
       const selectedId = useEditorStore.getState().selectedBlockId;
 
-      // When overlapping blocks obscure the selected block, e.target may land
-      // on the wrong block. Fall back to elementsFromPoint to find an editable
-      // field on the already-selected block.
+      // When overlapping blocks obscure the selected block, or when e.target
+      // is stale due to React re-render, fall back to elementsFromPoint.
+      // If a block is already selected, only return editable fields from that block.
+      // If no block is selected, return the first editable field found at the click coordinates.
       function resolveEditable<T extends HTMLElement>(
         selector: string,
       ): T | null {
         const direct = target.closest<T>(selector);
         if (direct) return direct;
+
         const bid = selectedId ?? useEditorStore.getState().selectedBlockId;
-        if (!bid) return null;
+
         for (const el of doc.elementsFromPoint(e.clientX, e.clientY)) {
           const candidate = (el as HTMLElement).closest<T>(selector);
-          if (
-            candidate &&
-            candidate
+          if (!candidate) continue;
+
+          // If we have a selected block, only return fields from that block
+          if (bid) {
+            const candidateBlockId = candidate
               .closest("[data-block-id]")
-              ?.getAttribute("data-block-id") === bid
-          )
+              ?.getAttribute("data-block-id");
+            if (candidateBlockId === bid) return candidate;
+          } else {
+            // No selected block — return the first editable field found
             return candidate;
+          }
         }
         return null;
       }
@@ -114,7 +125,16 @@ export function useDblClickActivation({
         setIsTextEditing(true);
         setSelectedField(itemField);
 
+        // Stop propagation to prevent EditorOverlay from interfering
+        e.stopImmediatePropagation();
+
         requestAnimationFrame(() => {
+          // Select the block for inspector panel (after editing is set up)
+          const state = useEditorStore.getState();
+          if (state.selectedBlockId !== blockId) {
+            state.selectBlock(blockId);
+          }
+
           itemEl.focus();
           setLastFocusedElement(itemEl);
           const sel = itemEl.ownerDocument.defaultView?.getSelection();
@@ -194,7 +214,16 @@ export function useDblClickActivation({
       setIsTextEditing(true);
       setSelectedField(field);
 
+      // Stop propagation to prevent EditorOverlay from interfering
+      e.stopImmediatePropagation();
+
       requestAnimationFrame(() => {
+        // Select the block for inspector panel (after editing is set up)
+        const state = useEditorStore.getState();
+        if (state.selectedBlockId !== blockId) {
+          state.selectBlock(blockId);
+        }
+
         fieldEl.focus();
         setLastFocusedElement(fieldEl);
         const sel = fieldEl.ownerDocument.defaultView?.getSelection();
@@ -209,8 +238,10 @@ export function useDblClickActivation({
       });
     }
 
-    container.addEventListener("dblclick", handleDblClick);
-    return () => container.removeEventListener("dblclick", handleDblClick);
+    // Attach to iframe document to catch events before they bubble to parent
+    iframeDoc.addEventListener("dblclick", handleDblClick, true);
+    return () =>
+      iframeDoc.removeEventListener("dblclick", handleDblClick, true);
   }, [
     containerRef,
     containerReady,

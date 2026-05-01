@@ -14,6 +14,15 @@ const letterCascade = async (el: Element, opts?: AnimOpts): Promise<void> => {
   const groups = wrapTextNodes(el, "word");
   if (!groups.length) return;
 
+  // Scale stagger based on total word count so preview completes in ~2.5s
+  const totalWords = groups.reduce((sum, g) => sum + g.length, 0);
+  const baseStagger = 0.08;
+  const targetPreviewTime = 2.5; // seconds
+  const stagger =
+    totalWords > 15
+      ? Math.max(0.005, targetPreviewTime / totalWords)
+      : baseStagger;
+
   const tl = gsap.timeline({ delay });
   for (const spans of groups) {
     tl.fromTo(
@@ -25,7 +34,7 @@ const letterCascade = async (el: Element, opts?: AnimOpts): Promise<void> => {
         rotateZ: 0,
         duration,
         ease: easing,
-        stagger: 0.08,
+        stagger,
       },
       groups.length > 1 ? "-=40%" : 0,
     );
