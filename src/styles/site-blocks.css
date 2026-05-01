@@ -46,6 +46,16 @@
   flex: 1;
   min-height: 0;
 }
+[data-editable-field] {
+  min-height: 1.5em;
+}
+[data-editable-field]:empty::before {
+  content: "Click to edit";
+  color: var(--site-muted, #999);
+  font-style: italic;
+  opacity: 0.5;
+  pointer-events: none;
+}
 .block-images,
 .block-video {
   padding-left: 0;
