@@ -126,6 +126,8 @@ export function DesignTab({
   const cfg = getInspectorConfig(block.type);
   const parsed = parseCfg(block.config);
 
+  const mode = useEditorStore((s) => s.mode);
+  const isPro = mode === "pro";
   const isTextEditing = useEditorStore((s) => s.isTextEditing);
   const selectedField = useEditorStore((s) => s.selectedField);
   const contentDocument = useEditorStore((s) => s.contentDocument);
@@ -301,7 +303,7 @@ export function DesignTab({
           </div>
         )}
       </CollapsibleSection>
-      {cfg.showBackground && (
+      {cfg.showBackground && isPro && (
         <CollapsibleSection title="Background" defaultOpen={false}>
           <div className="flex items-center gap-2">
             <input
@@ -332,7 +334,7 @@ export function DesignTab({
         </CollapsibleSection>
       )}
 
-      {cfg.showPadding && (
+      {cfg.showPadding && isPro && (
         <CollapsibleSection title="Padding" defaultOpen={false}>
           <div className="space-y-2">
             <div className="grid grid-cols-2 gap-2">
@@ -490,30 +492,32 @@ export function DesignTab({
                 }}
               />
             </div>
-            <div className="flex items-center gap-2">
-              <label className="w-14 shrink-0 text-[11px] text-muted-foreground">
-                Easing
-              </label>
-              <select
-                value={currentAnim.easing}
-                onChange={(e) =>
-                  updateBlock(block.id, {
-                    config: {
-                      ...parsed,
-                      animation: { ...currentAnim, easing: e.target.value },
-                    },
-                  })
-                }
-                onKeyDown={(e) => e.stopPropagation()}
-                className="h-7 flex-1 rounded border border-input bg-background px-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-ring"
-              >
-                {EASING_OPTIONS.map((opt) => (
-                  <option key={opt} value={opt}>
-                    {opt}
-                  </option>
-                ))}
-              </select>
-            </div>
+            {isPro && (
+              <div className="flex items-center gap-2">
+                <label className="w-14 shrink-0 text-[11px] text-muted-foreground">
+                  Easing
+                </label>
+                <select
+                  value={currentAnim.easing}
+                  onChange={(e) =>
+                    updateBlock(block.id, {
+                      config: {
+                        ...parsed,
+                        animation: { ...currentAnim, easing: e.target.value },
+                      },
+                    })
+                  }
+                  onKeyDown={(e) => e.stopPropagation()}
+                  className="h-7 flex-1 rounded border border-input bg-background px-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-ring"
+                >
+                  {EASING_OPTIONS.map((opt) => (
+                    <option key={opt} value={opt}>
+                      {opt}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
           </div>
         </CollapsibleSection>
       )}
