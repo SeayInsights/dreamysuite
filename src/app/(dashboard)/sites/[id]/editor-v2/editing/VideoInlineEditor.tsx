@@ -31,9 +31,10 @@ function getViewportRect(element: HTMLElement): DOMRect {
 
 interface Props {
   containerRef: RefObject<HTMLElement | null>;
+  containerReady?: boolean;
 }
 
-export function VideoInlineEditor({ containerRef }: Props) {
+export function VideoInlineEditor({ containerRef, containerReady }: Props) {
   const [active, setActive] = useState<{
     blockId: string;
     blockRect: DOMRect;
@@ -85,7 +86,7 @@ export function VideoInlineEditor({ containerRef }: Props) {
 
     container.addEventListener("dblclick", handler);
     return () => container.removeEventListener("dblclick", handler);
-  }, [containerRef]);
+  }, [containerRef, containerReady]);
 
   useEffect(() => {
     if (!active) return;

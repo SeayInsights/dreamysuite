@@ -35,7 +35,9 @@ export function styleFromField(
   const co = cfg[field + "Color"];
   const al = cfg[field + "Align"];
   if (typeof ff === "string" && ff) style.fontFamily = ff;
-  if (typeof sz === "string" && sz) style.fontSize = sz;
+  if (typeof sz === "string" && sz) {
+    style.fontSize = /^\d+(\.\d+)?$/.test(sz.trim()) ? sz.trim() + "px" : sz;
+  }
   if (typeof co === "string" && co) style.color = co;
   if (al === "left" || al === "center" || al === "right") style.textAlign = al;
   if (cfg[field + "Bold"]) style.fontWeight = 700;

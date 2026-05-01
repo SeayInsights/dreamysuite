@@ -21,8 +21,10 @@ import { useEditSession } from "./useEditSession";
  */
 export function TextEditor({
   containerRef,
+  containerReady,
 }: {
   containerRef: React.RefObject<HTMLElement | null>;
+  containerReady?: boolean;
 }): JSX.Element {
   const setIsTextEditing = useEditorStore((s) => s.setIsTextEditing);
   const setSelectedField = useEditorStore((s) => s.setSelectedField);
@@ -34,6 +36,7 @@ export function TextEditor({
 
   useDblClickActivation({
     containerRef,
+    containerReady,
     toolbar,
     setEditState,
     setIsTextEditing,

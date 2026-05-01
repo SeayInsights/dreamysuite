@@ -94,6 +94,7 @@ export function InspectorV2() {
       role="complementary"
       aria-label="Inspector"
       aria-hidden={!inspectorOpen}
+      data-inspector
       onMouseDown={restoreFocus}
       className="pointer-events-none absolute bottom-0 right-0 top-0 z-[150] w-80 border-l border-border bg-white shadow-lg"
       style={{}}

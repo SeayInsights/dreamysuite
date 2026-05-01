@@ -2,7 +2,11 @@
 
 import { useState, useEffect } from "react";
 import { useEditorStore } from "@/app/stores/editorStore";
-import { blockSectionStyle, parseCfg } from "@/lib/editableField";
+import {
+  blockSectionStyle,
+  editableProps,
+  parseCfg,
+} from "@/lib/editableField";
 
 interface Block {
   id: string;
@@ -69,7 +73,7 @@ export function CountdownBlock({ block }: { block: Block }) {
       data-block-type={block.type}
       style={blockSectionStyle(cfg, breakpoint)}
     >
-      <p className="countdown-label" data-editable-field="label">
+      <p className="countdown-label" {...editableProps(cfg, "label")}>
         {label}
       </p>
       <div className="countdown-units">
@@ -77,7 +81,7 @@ export function CountdownBlock({ block }: { block: Block }) {
           <span className="countdown-num">{hasDate ? days : "--"}</span>
           <span
             className="countdown-unit-label"
-            data-editable-field="daysLabel"
+            {...editableProps(cfg, "daysLabel")}
           >
             {daysLabel}
           </span>
@@ -86,7 +90,7 @@ export function CountdownBlock({ block }: { block: Block }) {
           <span className="countdown-num">{hasDate ? hours : "--"}</span>
           <span
             className="countdown-unit-label"
-            data-editable-field="hoursLabel"
+            {...editableProps(cfg, "hoursLabel")}
           >
             {hoursLabel}
           </span>
@@ -95,7 +99,7 @@ export function CountdownBlock({ block }: { block: Block }) {
           <span className="countdown-num">{hasDate ? mins : "--"}</span>
           <span
             className="countdown-unit-label"
-            data-editable-field="minsLabel"
+            {...editableProps(cfg, "minsLabel")}
           >
             {minsLabel}
           </span>
@@ -104,7 +108,7 @@ export function CountdownBlock({ block }: { block: Block }) {
           <span className="countdown-num">{hasDate ? secs : "--"}</span>
           <span
             className="countdown-unit-label"
-            data-editable-field="secsLabel"
+            {...editableProps(cfg, "secsLabel")}
           >
             {secsLabel}
           </span>
