@@ -381,6 +381,7 @@ export function BreakpointFrame({ children, nav }: Props) {
             <div
               style={{
                 padding: `${isDesktop ? mT : mT + navHeight}px ${mR}px ${mB}px ${mL}px`,
+                overflow: "hidden",
               }}
             >
               {children}

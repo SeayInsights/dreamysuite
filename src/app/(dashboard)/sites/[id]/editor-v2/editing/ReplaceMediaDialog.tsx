@@ -1,11 +1,6 @@
 "use client";
 
-import {
-  useEffect,
-  useRef,
-  useState,
-  useCallback,
-} from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import Image from "next/image";
 import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -39,9 +34,9 @@ export function ReplaceMediaDialog({ open, onClose, onSelect }: Props) {
     if (!open || !siteId) return;
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setSelectedUrl(null);
-     
+
     setQuery("");
-     
+
     setLoading(true);
     fetch(`/api/sites/${siteId}/photos`)
       .then((r) => (r.ok ? r.json() : Promise.reject()))
@@ -82,7 +77,9 @@ export function ReplaceMediaDialog({ open, onClose, onSelect }: Props) {
   const photoUrl = (id: string) => `/api/sites/${siteId}/photos/${id}`;
 
   const filtered = query.trim()
-    ? photos.filter((p) => p.filename.toLowerCase().includes(query.toLowerCase()))
+    ? photos.filter((p) =>
+        p.filename.toLowerCase().includes(query.toLowerCase()),
+      )
     : photos;
 
   return (
@@ -153,6 +150,7 @@ export function ReplaceMediaDialog({ open, onClose, onSelect }: Props) {
                         src={url}
                         alt={photo.filename}
                         fill
+                        unoptimized
                         className="object-cover"
                         sizes="80px"
                       />
@@ -187,11 +185,7 @@ export function ReplaceMediaDialog({ open, onClose, onSelect }: Props) {
           <Button variant="ghost" size="sm" onClick={onClose}>
             Cancel
           </Button>
-          <Button
-            size="sm"
-            disabled={!selectedUrl}
-            onClick={handleConfirm}
-          >
+          <Button size="sm" disabled={!selectedUrl} onClick={handleConfirm}>
             Use Image
           </Button>
         </div>

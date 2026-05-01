@@ -23,6 +23,13 @@ interface Props {
 
 // ─── Geometry helpers ───────────────────────────────────────────────────────
 
+function iframeOffset(el: HTMLElement): { top: number; left: number } {
+  const frame = el.ownerDocument?.defaultView?.frameElement;
+  if (!frame) return { top: 0, left: 0 };
+  const r = frame.getBoundingClientRect();
+  return { top: r.top, left: r.left };
+}
+
 function measureBlock(
   container: HTMLElement | null,
   blockId: string | null,
@@ -33,6 +40,7 @@ function measureBlock(
   );
   if (!el) return null;
 
+  const off = iframeOffset(el);
   const block = useEditorStore.getState().blocks.find((b) => b.id === blockId);
   const cfg = parseCfg(block?.config);
   const cd = cfg.cropDelta as
@@ -55,8 +63,8 @@ function measureBlock(
     const cropR = isLegacy ? r : r * contentBox.width;
     const cropB = isLegacy ? b : b * contentBox.height;
     return {
-      top: contentBox.top + cropT,
-      left: contentBox.left + cropL,
+      top: contentBox.top + cropT + off.top,
+      left: contentBox.left + cropL + off.left,
       width: contentBox.width - cropL - cropR,
       height: contentBox.height - cropT - cropB,
     };
@@ -64,8 +72,8 @@ function measureBlock(
 
   const elBox = el.getBoundingClientRect();
   return {
-    top: elBox.top,
-    left: elBox.left,
+    top: elBox.top + off.top,
+    left: elBox.left + off.left,
     width: elBox.width,
     height: elBox.height,
   };

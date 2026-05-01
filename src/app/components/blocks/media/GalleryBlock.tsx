@@ -68,6 +68,7 @@ export function GalleryBlock({ block }: { block: Block }) {
                 src={imageUrl}
                 alt={String(cfg.imageAlt || cfg.heading || "Wedding photo")}
                 fill
+                unoptimized
                 sizes="(max-width: 768px) 100vw, 50vw"
                 style={{
                   borderRadius: "8px",
@@ -151,6 +152,7 @@ export function GalleryBlock({ block }: { block: Block }) {
                 src={url}
                 alt={String(cfg.imageAlt || cfg.heading || "Wedding photo")}
                 fill
+                unoptimized
                 sizes="(max-width: 768px) 100vw, 50vw"
                 style={{
                   borderRadius: "8px",

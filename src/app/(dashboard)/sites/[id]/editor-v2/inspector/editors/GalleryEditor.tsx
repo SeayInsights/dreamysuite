@@ -44,9 +44,14 @@ export function GalleryEditor({
       .finally(() => setLoading(false));
   }, [siteId]);
 
-  const photoUrl = useCallback((id: string) => `/api/sites/${siteId}/photos/${id}`, [siteId]);
+  const photoUrl = useCallback(
+    (id: string) => `/api/sites/${siteId}/photos/${id}`,
+    [siteId],
+  );
 
-  const selected: string[] = Array.isArray(cfg.urls) ? (cfg.urls as string[]) : [];
+  const selected: string[] = Array.isArray(cfg.urls)
+    ? (cfg.urls as string[])
+    : [];
 
   function toggle(url: string) {
     const next = selected.includes(url)
@@ -62,12 +67,16 @@ export function GalleryEditor({
           Images
         </label>
         {selected.length > 0 && (
-          <span className="text-[10px] text-muted-foreground">{selected.length} selected</span>
+          <span className="text-[10px] text-muted-foreground">
+            {selected.length} selected
+          </span>
         )}
       </div>
 
       {loading ? (
-        <p className="py-2 text-center text-[10px] text-muted-foreground">Loading photos...</p>
+        <p className="py-2 text-center text-[10px] text-muted-foreground">
+          Loading photos...
+        </p>
       ) : photos.length === 0 ? (
         <div className="flex flex-col items-center gap-1 rounded-md border border-dashed border-border px-3 py-4">
           <ImagePlus className="size-4 text-muted-foreground" />
@@ -87,7 +96,9 @@ export function GalleryEditor({
                 onClick={() => toggle(url)}
                 className={
                   "relative aspect-square overflow-hidden rounded-md ring-2 transition-all " +
-                  (isSelected ? "ring-primary" : "ring-transparent hover:ring-primary/40")
+                  (isSelected
+                    ? "ring-primary"
+                    : "ring-transparent hover:ring-primary/40")
                 }
                 title={photo.filename}
               >
@@ -95,6 +106,7 @@ export function GalleryEditor({
                   src={url}
                   alt={photo.filename}
                   fill
+                  unoptimized
                   className="object-cover"
                   sizes="80px"
                 />

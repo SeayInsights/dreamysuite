@@ -2,9 +2,9 @@
  * Breakpoint widths for proportional position scaling
  */
 const BREAKPOINT_WIDTHS = {
-	desktop: 1280,
-	tablet: 768,
-	mobile: 390,
+  desktop: 1280,
+  tablet: 768,
+  mobile: 390,
 };
 
 /**
@@ -65,7 +65,9 @@ function isCharSpread(obj: Record<string, unknown>): string | null {
   if (keys.length < 5) return null;
   const allNumeric = keys.every((k) => /^\d+$/.test(k));
   if (!allNumeric) return null;
-  const allSingleChar = keys.every((k) => typeof obj[k] === "string" && (obj[k] as string).length === 1);
+  const allSingleChar = keys.every(
+    (k) => typeof obj[k] === "string" && (obj[k] as string).length === 1,
+  );
   if (!allSingleChar) return null;
   const sorted = keys.sort((a, b) => Number(a) - Number(b));
   const str = sorted.map((k) => obj[k]).join("");
@@ -81,8 +83,11 @@ export function parseCfg(raw: unknown): Record<string, unknown> {
         if (recovered) {
           try {
             const reparsed = JSON.parse(recovered);
-            if (typeof reparsed === "object" && reparsed !== null) return reparsed as Record<string, unknown>;
-          } catch { /* fall through to parsed */ }
+            if (typeof reparsed === "object" && reparsed !== null)
+              return reparsed as Record<string, unknown>;
+          } catch {
+            /* fall through to parsed */
+          }
         }
         return parsed as Record<string, unknown>;
       }
@@ -97,8 +102,11 @@ export function parseCfg(raw: unknown): Record<string, unknown> {
     if (recovered) {
       try {
         const reparsed = JSON.parse(recovered);
-        if (typeof reparsed === "object" && reparsed !== null) return reparsed as Record<string, unknown>;
-      } catch { /* fall through */ }
+        if (typeof reparsed === "object" && reparsed !== null)
+          return reparsed as Record<string, unknown>;
+      } catch {
+        /* fall through */
+      }
     }
     return obj;
   }
@@ -111,15 +119,22 @@ export function parseCfg(raw: unknown): Record<string, unknown> {
  * by spreading last so individual longhand properties override any shorthand.
  */
 export function blockSectionStyle(
-  cfg: Record<string, unknown>,
-  breakpoint: "desktop" | "tablet" | "mobile" = "desktop"
+  rawCfg: Record<string, unknown>,
+  breakpoint: "desktop" | "tablet" | "mobile" = "desktop",
 ): CSSProperties {
+  const cfg =
+    breakpoint === "desktop"
+      ? rawCfg
+      : resolveBreakpointConfig(rawCfg, breakpoint);
   const style: CSSProperties = {};
 
   if (typeof cfg.backgroundColor === "string" && cfg.backgroundColor) {
     style.background = cfg.backgroundColor;
   } else {
-    const bg = cfg.background as { type?: string; value?: string } | null | undefined;
+    const bg = cfg.background as
+      | { type?: string; value?: string }
+      | null
+      | undefined;
     if (bg?.type === "color" && bg?.value) style.background = bg.value;
   }
 
@@ -129,17 +144,25 @@ export function blockSectionStyle(
   // On desktop, blockWidth/blockMarginLeft are owned by the wrapper div (getBlockStyle).
   // On tablet/mobile the wrapper is in flow, so apply here instead.
   if (breakpoint !== "desktop") {
-    if (typeof cfg.blockWidth === "number" && cfg.blockWidth > 0 && cfg.blockWidth < 100) {
+    if (
+      typeof cfg.blockWidth === "number" &&
+      cfg.blockWidth > 0 &&
+      cfg.blockWidth < 100
+    ) {
       style.width = `${cfg.blockWidth}%`;
-      const ml = typeof cfg.blockMarginLeft === "number" ? cfg.blockMarginLeft : 0;
+      const ml =
+        typeof cfg.blockMarginLeft === "number" ? cfg.blockMarginLeft : 0;
       style.marginLeft = ml > 0 ? `${ml}%` : "0";
       style.marginRight = "0";
     }
   }
 
-  const hasOffsetX = typeof cfg.blockOffsetX === "number" && cfg.blockOffsetX !== 0;
-  const hasOffsetY = typeof cfg.blockOffsetY === "number" && cfg.blockOffsetY !== 0;
-  const hasRotation = typeof cfg.blockRotation === "number" && cfg.blockRotation !== 0;
+  const hasOffsetX =
+    typeof cfg.blockOffsetX === "number" && cfg.blockOffsetX !== 0;
+  const hasOffsetY =
+    typeof cfg.blockOffsetY === "number" && cfg.blockOffsetY !== 0;
+  const hasRotation =
+    typeof cfg.blockRotation === "number" && cfg.blockRotation !== 0;
 
   const transforms: string[] = [];
   // On desktop the wrapper div (getBlockStyle) owns all translate positioning.
@@ -162,14 +185,14 @@ export function blockSectionStyle(
     style.zIndex = cfg.blockZIndex;
   }
 
-    if (typeof cfg.blockHeight === "number" && cfg.blockHeight > 0) {
-      style.height = `${cfg.blockHeight}px`;
-      style.paddingTop = "0";
-      style.paddingBottom = "0";
-      style.display = "flex";
-      style.flexDirection = "column";
-      style.alignItems = "stretch";
-    }
+  if (typeof cfg.blockHeight === "number" && cfg.blockHeight > 0) {
+    style.height = `${cfg.blockHeight * scale}px`;
+    style.paddingTop = "0";
+    style.paddingBottom = "0";
+    style.display = "flex";
+    style.flexDirection = "column";
+    style.alignItems = "stretch";
+  }
 
   // Padding: allowed on all breakpoints
   const pad = cfg.padding;
@@ -192,24 +215,29 @@ export function blockSectionStyle(
  * any key ending in `_tablet` or `_mobile` overrides the corresponding base key.
  */
 export function resolveBreakpointConfig(
-	cfg: Record<string, unknown>,
-	breakpoint: "desktop" | "tablet" | "mobile",
+  cfg: Record<string, unknown>,
+  breakpoint: "desktop" | "tablet" | "mobile",
 ): Record<string, unknown> {
-	if (breakpoint === "desktop") return cfg;
-	const suffix = `_${breakpoint}`;
-	const resolved = { ...cfg };
-	for (const key of Object.keys(cfg)) {
-		if (key.endsWith(suffix)) {
-			resolved[key.slice(0, -suffix.length)] = cfg[key];
-		}
-	}
-	// Reset position/size values on non-desktop breakpoints unless explicitly overridden
-	for (const key of ["blockOffsetX", "blockOffsetY", "blockMarginLeft", "blockWidth"]) {
-		if (cfg[`${key}${suffix}`] === undefined) {
-			resolved[key] = 0;
-		}
-	}
-	return resolved;
+  if (breakpoint === "desktop") return cfg;
+  const suffix = `_${breakpoint}`;
+  const resolved = { ...cfg };
+  for (const key of Object.keys(cfg)) {
+    if (key.endsWith(suffix)) {
+      resolved[key.slice(0, -suffix.length)] = cfg[key];
+    }
+  }
+  // Reset position/size values on non-desktop breakpoints unless explicitly overridden
+  for (const key of [
+    "blockOffsetX",
+    "blockOffsetY",
+    "blockMarginLeft",
+    "blockWidth",
+  ]) {
+    if (cfg[`${key}${suffix}`] === undefined) {
+      resolved[key] = 0;
+    }
+  }
+  return resolved;
 }
 
 /** Clip-path derived from cfg.cropDelta = { top, left, right, bottom } (0-1 normalized). */

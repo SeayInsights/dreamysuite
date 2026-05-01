@@ -554,6 +554,8 @@
     padding: 3.5rem 1rem 3rem;
   }
   .countdown-units {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
     gap: 1rem;
   }
   .timeline-item {
@@ -607,8 +609,8 @@
 }
 
 /* Video blocks need position:relative for absolutely-positioned iframes */
-[data-breakpoint="mobile"] .block-video,
-[data-breakpoint="tablet"] .block-video {
+[data-breakpoint="mobile"] .block-media-video,
+[data-breakpoint="tablet"] .block-media-video {
   position: relative !important;
   overflow: hidden !important;
   max-height: 60vh !important;
@@ -633,6 +635,13 @@
 [data-breakpoint="mobile"] [style*="grid-template-columns"],
 [data-breakpoint="tablet"] [style*="grid-template-columns"] {
   grid-template-columns: 1fr !important;
+}
+
+/* Countdown: 2x2 grid on mobile */
+[data-breakpoint="mobile"] .countdown-units {
+  display: grid !important;
+  grid-template-columns: repeat(2, 1fr) !important;
+  gap: 1rem !important;
 }
 
 /* Photo-split: stack vertically on mobile */
