@@ -92,9 +92,9 @@ export function AnimationPopoverContent({
 
   function updateWithPreview(patch: Partial<AnimationConfig>) {
     onUpdate(patch);
-    const presetId = patch.presetId ?? anim.presetId;
-    if (presetId)
-      runPreviewAnimation(blockId, presetId, undefined, contentDocument);
+    const merged = { ...anim, ...patch };
+    if (merged.presetId)
+      runPreviewAnimation(blockId, merged.presetId, merged, contentDocument);
   }
 
   return (
