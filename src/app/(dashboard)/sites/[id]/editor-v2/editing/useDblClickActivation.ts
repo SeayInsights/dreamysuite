@@ -129,6 +129,12 @@ export function useDblClickActivation({
         e.stopImmediatePropagation();
 
         requestAnimationFrame(() => {
+          // Select the block for inspector panel (after editing is set up)
+          const state = useEditorStore.getState();
+          if (state.selectedBlockId !== blockId) {
+            state.selectBlock(blockId);
+          }
+
           itemEl.focus();
           setLastFocusedElement(itemEl);
           const sel = itemEl.ownerDocument.defaultView?.getSelection();
@@ -212,6 +218,12 @@ export function useDblClickActivation({
       e.stopImmediatePropagation();
 
       requestAnimationFrame(() => {
+        // Select the block for inspector panel (after editing is set up)
+        const state = useEditorStore.getState();
+        if (state.selectedBlockId !== blockId) {
+          state.selectBlock(blockId);
+        }
+
         fieldEl.focus();
         setLastFocusedElement(fieldEl);
         const sel = fieldEl.ownerDocument.defaultView?.getSelection();
