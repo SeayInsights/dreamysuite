@@ -82,7 +82,8 @@ export function runPreviewAnimation(
         return;
       }
       clearTimeout(fallback);
-      setTimeout(restore, 1500);
+      // Give enough time for long text animations to complete with scaled stagger
+      setTimeout(restore, 3000);
     })
     .catch(() => {
       clearTimeout(fallback);
