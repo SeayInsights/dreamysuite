@@ -474,46 +474,106 @@ export function DesignTab({
                 value={currentAnim.presetId}
                 blockType={block.type}
                 onChange={(id) => {
+                  const next = { ...currentAnim, presetId: id };
                   updateBlock(block.id, {
-                    config: {
-                      ...parsed,
-                      animation: { ...currentAnim, presetId: id },
-                    },
+                    config: { ...parsed, animation: next },
                   });
                   if (id)
-                    runPreviewAnimation(
-                      block.id,
-                      id,
-                      undefined,
-                      contentDocument,
-                    );
+                    runPreviewAnimation(block.id, id, next, contentDocument);
                 }}
               />
             </div>
-            <div className="flex items-center gap-2">
-              <label className="w-14 shrink-0 text-[11px] text-muted-foreground">
-                Easing
-              </label>
-              <select
-                value={currentAnim.easing}
-                onChange={(e) =>
-                  updateBlock(block.id, {
-                    config: {
-                      ...parsed,
-                      animation: { ...currentAnim, easing: e.target.value },
-                    },
-                  })
-                }
-                onKeyDown={(e) => e.stopPropagation()}
-                className="h-7 flex-1 rounded border border-input bg-background px-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-ring"
-              >
-                {EASING_OPTIONS.map((opt) => (
-                  <option key={opt} value={opt}>
-                    {opt}
-                  </option>
-                ))}
-              </select>
-            </div>
+            {currentAnim.presetId && (
+              <>
+                <div className="flex items-center gap-2">
+                  <label className="w-14 shrink-0 text-[11px] text-muted-foreground">
+                    Duration
+                  </label>
+                  <input
+                    type="number"
+                    min={50}
+                    max={5000}
+                    step={50}
+                    value={Math.round(currentAnim.duration * 1000)}
+                    onChange={(e) => {
+                      const dur = Math.max(0.05, Number(e.target.value) / 1000);
+                      const next = { ...currentAnim, duration: dur };
+                      updateBlock(block.id, {
+                        config: { ...parsed, animation: next },
+                      });
+                      if (next.presetId)
+                        runPreviewAnimation(
+                          block.id,
+                          next.presetId,
+                          next,
+                          contentDocument,
+                        );
+                    }}
+                    onKeyDown={(e) => e.stopPropagation()}
+                    className="h-7 w-16 rounded border border-input bg-background px-1.5 text-xs tabular-nums focus:outline-none focus:ring-1 focus:ring-ring"
+                  />
+                  <span className="text-[10px] text-muted-foreground">ms</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <label className="w-14 shrink-0 text-[11px] text-muted-foreground">
+                    Delay
+                  </label>
+                  <input
+                    type="number"
+                    min={0}
+                    max={5000}
+                    step={50}
+                    value={Math.round(currentAnim.delay * 1000)}
+                    onChange={(e) => {
+                      const del = Math.max(0, Number(e.target.value) / 1000);
+                      const next = { ...currentAnim, delay: del };
+                      updateBlock(block.id, {
+                        config: { ...parsed, animation: next },
+                      });
+                      if (next.presetId)
+                        runPreviewAnimation(
+                          block.id,
+                          next.presetId,
+                          next,
+                          contentDocument,
+                        );
+                    }}
+                    onKeyDown={(e) => e.stopPropagation()}
+                    className="h-7 w-16 rounded border border-input bg-background px-1.5 text-xs tabular-nums focus:outline-none focus:ring-1 focus:ring-ring"
+                  />
+                  <span className="text-[10px] text-muted-foreground">ms</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <label className="w-14 shrink-0 text-[11px] text-muted-foreground">
+                    Easing
+                  </label>
+                  <select
+                    value={currentAnim.easing}
+                    onChange={(e) => {
+                      const next = { ...currentAnim, easing: e.target.value };
+                      updateBlock(block.id, {
+                        config: { ...parsed, animation: next },
+                      });
+                      if (next.presetId)
+                        runPreviewAnimation(
+                          block.id,
+                          next.presetId,
+                          next,
+                          contentDocument,
+                        );
+                    }}
+                    onKeyDown={(e) => e.stopPropagation()}
+                    className="h-7 flex-1 rounded border border-input bg-background px-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-ring"
+                  >
+                    {EASING_OPTIONS.map((opt) => (
+                      <option key={opt} value={opt}>
+                        {opt}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </>
+            )}
           </div>
         </CollapsibleSection>
       )}
