@@ -1,37 +1,16 @@
 /**
  * letterCascade — split text into words, stagger each word 0.08s with slight rotation.
- * Works per-text-element inside the block to avoid garbling multi-element layouts.
+ * Uses TreeWalker to handle rich text with inline formatting (bold, italic, spans).
  */
 import type { AnimOpts } from "../registry";
+import { wrapTextNodes } from "./wrapTextNodes";
 
 const letterCascade = async (el: Element, opts?: AnimOpts): Promise<void> => {
   if (!el) return;
   const { gsap } = await import("gsap");
   const { duration = 0.6, delay = 0, easing = "power3.out" } = opts ?? {};
 
-  const textEls = el.querySelectorAll("h1, h2, h3, h4, h5, h6, p, span:not(span span), a, li");
-  const targets = textEls.length ? Array.from(textEls) : [el];
-
-  const allSpans: HTMLElement[] = [];
-
-  for (const textEl of targets) {
-    if (textEl.children.length > 0 && textEl !== el) continue;
-    const text = textEl.textContent ?? "";
-    const words = text.split(" ").filter(Boolean);
-    if (!words.length) continue;
-
-    const spans = words.map((word, i) => {
-      const span = document.createElement("span");
-      span.textContent = (i > 0 ? " " : "") + word;
-      span.style.display = "inline-block";
-      return span;
-    });
-
-    textEl.textContent = "";
-    spans.forEach((span) => textEl.appendChild(span));
-    allSpans.push(...spans);
-  }
-
+  const allSpans = wrapTextNodes(el, "word");
   if (!allSpans.length) return;
 
   gsap.fromTo(
@@ -45,7 +24,7 @@ const letterCascade = async (el: Element, opts?: AnimOpts): Promise<void> => {
       delay,
       ease: easing,
       stagger: 0.08,
-    }
+    },
   );
 };
 
