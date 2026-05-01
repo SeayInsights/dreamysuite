@@ -14,6 +14,15 @@ const splitText = async (el: Element, opts?: AnimOpts): Promise<void> => {
   const groups = wrapTextNodes(el, "char");
   if (!groups.length) return;
 
+  // Scale stagger based on total character count so preview completes in ~2.5s
+  const totalChars = groups.reduce((sum, g) => sum + g.length, 0);
+  const baseStagger = 0.05;
+  const targetPreviewTime = 2.5; // seconds
+  const stagger =
+    totalChars > 24
+      ? Math.max(0.005, targetPreviewTime / totalChars)
+      : baseStagger;
+
   const tl = gsap.timeline({ delay });
   for (const spans of groups) {
     tl.fromTo(
@@ -24,7 +33,7 @@ const splitText = async (el: Element, opts?: AnimOpts): Promise<void> => {
         y: 0,
         duration,
         ease: easing,
-        stagger: 0.05,
+        stagger,
       },
       groups.length > 1 ? "-=40%" : 0,
     );
