@@ -126,6 +126,8 @@ export function DesignTab({
   const cfg = getInspectorConfig(block.type);
   const parsed = parseCfg(block.config);
 
+  const mode = useEditorStore((s) => s.mode);
+  const isPro = mode === "pro";
   const isTextEditing = useEditorStore((s) => s.isTextEditing);
   const selectedField = useEditorStore((s) => s.selectedField);
   const contentDocument = useEditorStore((s) => s.contentDocument);
@@ -301,7 +303,7 @@ export function DesignTab({
           </div>
         )}
       </CollapsibleSection>
-      {cfg.showBackground && (
+      {cfg.showBackground && isPro && (
         <CollapsibleSection title="Background" defaultOpen={false}>
           <div className="flex items-center gap-2">
             <input
@@ -332,7 +334,7 @@ export function DesignTab({
         </CollapsibleSection>
       )}
 
-      {cfg.showPadding && (
+      {cfg.showPadding && isPro && (
         <CollapsibleSection title="Padding" defaultOpen={false}>
           <div className="space-y-2">
             <div className="grid grid-cols-2 gap-2">
@@ -483,7 +485,7 @@ export function DesignTab({
                 }}
               />
             </div>
-            {currentAnim.presetId && (
+            {currentAnim.presetId && isPro && (
               <>
                 <div className="flex items-center gap-2">
                   <label className="w-14 shrink-0 text-[11px] text-muted-foreground">

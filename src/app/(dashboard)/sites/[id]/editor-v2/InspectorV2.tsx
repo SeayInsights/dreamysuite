@@ -13,7 +13,7 @@ import { DesignTab } from "./inspector/DesignTab";
 import { AdvancedTab } from "./inspector/AdvancedTab";
 
 const PANEL_WIDTH = 320;
-const TABS: { id: InspectorTab; label: string }[] = [
+const ALL_TABS: { id: InspectorTab; label: string }[] = [
   { id: "design", label: "Design" },
   { id: "advanced", label: "Advanced" },
 ];
@@ -36,6 +36,7 @@ export function InspectorV2() {
   const blocks = useEditorStore((s) => s.blocks);
   const updateBlock = useEditorStore((s) => s.updateBlock);
   const breakpoint = useEditorStore((s) => s.breakpoint);
+  const mode = useEditorStore((s) => s.mode);
 
   const selectedBlock = useMemo(
     () =>
@@ -123,7 +124,10 @@ export function InspectorV2() {
         ) : (
           <>
             <div className="flex border-b border-border">
-              {TABS.map((t) => (
+              {(mode === "pro"
+                ? ALL_TABS
+                : ALL_TABS.filter((t) => t.id === "design")
+              ).map((t) => (
                 <button
                   key={t.id}
                   type="button"
