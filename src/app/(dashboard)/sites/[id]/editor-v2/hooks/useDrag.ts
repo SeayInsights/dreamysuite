@@ -10,6 +10,7 @@ import {
   constrainToBounds,
   type Rect,
 } from "../lib/boundsCalculator";
+import { useCanvasScale } from "../BreakpointFrame";
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 
@@ -144,6 +145,7 @@ export function useDrag(containerRef: React.RefObject<HTMLElement | null>): {
   const setInspectorTab = useEditorStore((s) => s.setInspectorTab);
   const temporalStore = useEditorStore.temporal;
   const pendingTabSwitchRef = useRef(false);
+  const scaleFactor = useCanvasScale();
 
   const sessionRef = useRef<DragSession | null>(null);
   const cleanupRef = useRef<(() => void) | null>(null);
@@ -268,8 +270,11 @@ export function useDrag(containerRef: React.RefObject<HTMLElement | null>): {
       const session = sessionRef.current;
       if (!session) return;
 
-      const dx = e.clientX - session.startX;
-      const dy = e.clientY - session.startY;
+      const screenDx = e.clientX - session.startX;
+      const screenDy = e.clientY - session.startY;
+      // Convert screen-pixel deltas to canonical canvas coordinates
+      const dx = screenDx / scaleFactor;
+      const dy = screenDy / scaleFactor;
 
       if (
         pendingTabSwitchRef.current &&
@@ -295,17 +300,19 @@ export function useDrag(containerRef: React.RefObject<HTMLElement | null>): {
         // Auto-scroll near viewport edges (FR-002)
         handleAutoScroll(e.clientY, container);
 
-        // Calculate raw offset from drag delta
+        // Calculate raw offset from drag delta (dx/dy already in canvas pixels)
         const rawOffsetX = (session.startOffsetX ?? 0) + dx;
         const rawOffsetY = (session.startOffsetY ?? 0) + dy;
 
-        // Get element dimensions and position for bounds checking
+        // Get element dimensions and position for bounds checking.
+        // getBoundingClientRect returns scaled (screen) pixels — divide by
+        // scaleFactor to get canonical canvas pixels.
         const elRect = el.getBoundingClientRect();
         const containerRect = container.getBoundingClientRect();
 
-        // Get element's current position relative to container (including current offset)
-        const currentLeft = elRect.left - containerRect.left;
-        const currentTop = elRect.top - containerRect.top;
+        // Get element's current position relative to container (in canvas pixels)
+        const currentLeft = (elRect.left - containerRect.left) / scaleFactor;
+        const currentTop = (elRect.top - containerRect.top) / scaleFactor;
 
         // Calculate natural position (where element is positioned in the flow without offset)
         const naturalLeft = currentLeft - (session.startOffsetX ?? 0);
@@ -315,16 +322,24 @@ export function useDrag(containerRef: React.RefObject<HTMLElement | null>): {
         const desiredLeft = naturalLeft + rawOffsetX;
         const desiredTop = naturalTop + rawOffsetY;
 
-        // Create element rect for bounds checking
+        // Create element rect for bounds checking (in canvas pixels)
         const elementRect: Rect = {
           top: desiredTop,
           left: desiredLeft,
-          width: elRect.width,
-          height: elRect.height,
+          width: elRect.width / scaleFactor,
+          height: elRect.height / scaleFactor,
         };
 
-        // Get canvas bounds and constrain position (TR-001, TR-004)
-        const bounds = getCanvasBounds(container);
+        // Get canvas bounds and constrain position (TR-001, TR-004).
+        // getCanvasBounds returns screen-pixel dimensions; divide by scaleFactor
+        // to get canonical canvas-pixel bounds that match elementRect.
+        const rawBounds = getCanvasBounds(container);
+        const bounds = {
+          minX: rawBounds.minX / scaleFactor,
+          minY: rawBounds.minY / scaleFactor,
+          maxX: rawBounds.maxX / scaleFactor,
+          maxY: rawBounds.maxY / scaleFactor,
+        };
         const constrained = constrainToBounds(elementRect, bounds);
 
         // Calculate constrained offset (difference from natural position)
@@ -346,12 +361,14 @@ export function useDrag(containerRef: React.RefObject<HTMLElement | null>): {
           ),
         };
 
-        // Detect collisions with constrained bounds
+        // Detect collisions with constrained bounds.
+        // constrained is in canvas pixels; scale back to screen pixels so
+        // the rect aligns with getBoundingClientRect() of sibling elements.
         const newBounds = new DOMRect(
-          containerRect.left + constrained.left,
-          containerRect.top + constrained.top,
-          constrained.width,
-          constrained.height,
+          containerRect.left + constrained.left * scaleFactor,
+          containerRect.top + constrained.top * scaleFactor,
+          constrained.width * scaleFactor,
+          constrained.height * scaleFactor,
         );
         const collisions = detectCollisions(
           session.blockId,
@@ -382,8 +399,15 @@ export function useDrag(containerRef: React.RefObject<HTMLElement | null>): {
         );
         const isWest = ["nw", "sw", "w"].includes(handle);
 
-        // Get canvas bounds for resize constraints (TR-001, TR-004)
-        const bounds = getCanvasBounds(container);
+        // Get canvas bounds for resize constraints (TR-001, TR-004).
+        // Scale to canonical canvas pixels so comparisons match session.*EdgePx.
+        const rawResizeBounds = getCanvasBounds(container);
+        const bounds = {
+          minX: rawResizeBounds.minX / scaleFactor,
+          minY: rawResizeBounds.minY / scaleFactor,
+          maxX: rawResizeBounds.maxX / scaleFactor,
+          maxY: rawResizeBounds.maxY / scaleFactor,
+        };
 
         if (DEBUG_DRAG) {
           console.log(
@@ -626,9 +650,14 @@ export function useDrag(containerRef: React.RefObject<HTMLElement | null>): {
         if (blockEl && container) {
           const blockRect = blockEl.getBoundingClientRect();
           const containerRect = container.getBoundingClientRect();
-          const measuredX = Math.round(blockRect.left - containerRect.left);
+          // getBoundingClientRect returns scaled (screen) pixels — divide by
+          // scaleFactor to seed offsets in canonical canvas pixels.
+          const measuredX = Math.round(
+            (blockRect.left - containerRect.left) / scaleFactor,
+          );
           const measuredY = Math.round(
-            blockRect.top - containerRect.top + container.scrollTop,
+            (blockRect.top - containerRect.top) / scaleFactor +
+              container.scrollTop,
           );
           if (measuredX !== 0 || measuredY !== 0) {
             startOffsetX = measuredX;
@@ -680,15 +709,23 @@ export function useDrag(containerRef: React.RefObject<HTMLElement | null>): {
 
       const blockRect = blockEl.getBoundingClientRect();
       const containerRect = container.getBoundingClientRect();
-      const containerWidth = containerRect.width;
+      // Use canonical (unscaled) width so percentage calculations are correct
+      // regardless of the CSS transform: scale() applied by BreakpointFrame.
+      const containerWidth = containerRect.width / scaleFactor;
 
+      // blockRect values are in screen pixels — divide by scaleFactor to get
+      // canonical canvas pixel positions before computing percentages/offsets.
       const leftEdgePct =
-        ((blockRect.left - containerRect.left) / containerWidth) * 100;
+        ((blockRect.left - containerRect.left) / scaleFactor / containerWidth) *
+        100;
       const rightEdgePct =
-        ((blockRect.right - containerRect.left) / containerWidth) * 100;
+        ((blockRect.right - containerRect.left) /
+          scaleFactor /
+          containerWidth) *
+        100;
 
-      const topEdgePx = blockRect.top - containerRect.top;
-      const bottomEdgePx = blockRect.bottom - containerRect.top;
+      const topEdgePx = (blockRect.top - containerRect.top) / scaleFactor;
+      const bottomEdgePx = (blockRect.bottom - containerRect.top) / scaleFactor;
       const currentOffsetY =
         typeof config.blockOffsetY === "number" ? config.blockOffsetY : 0;
       const naturalTopPx = topEdgePx - currentOffsetY;
@@ -699,7 +736,7 @@ export function useDrag(containerRef: React.RefObject<HTMLElement | null>): {
         );
         console.log("block type:", block?.type);
         console.log("current config:", JSON.parse(JSON.stringify(config)));
-        console.log("containerWidth (px):", containerWidth);
+        console.log("containerWidth (canonical px):", containerWidth);
         console.log("blockRect:", {
           left: blockRect.left,
           right: blockRect.right,
