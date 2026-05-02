@@ -98,11 +98,11 @@ export function Canvas({ siteId }: Props) {
               config: parseCfg(b.config),
               overrides: typeof b.overrides === "string" ? JSON.parse(b.overrides) : b.overrides,
             }));
-            const { blocks: consolidated, migrations } = consolidateBlocks(parsed);
-            return { pageId: page.id, blocks: consolidated as Block[], parsed, migrations };
+            const { blocks: consolidated } = consolidateBlocks(parsed);
+            return { pageId: page.id, blocks: consolidated as Block[], parsed };
           } catch (err) {
             console.error(`Failed to pre-fetch page ${page.id}:`, err);
-            return { pageId: page.id, blocks: [], parsed: [], migrations: null };
+            return { pageId: page.id, blocks: [], parsed: [] };
           }
         });
 
@@ -120,16 +120,14 @@ export function Canvas({ siteId }: Props) {
             setCurrentPageId(pages[0].id);
             setBlocks(firstPage.blocks);
 
-            // Run migrations if needed (matching the loadBlocks logic)
-            if (firstPage.migrations) {
-              const updateBlock = useEditorStore.getState().updateBlock;
-              for (let i = 0; i < firstPage.parsed.length; i++) {
-                if (firstPage.parsed[i].type !== firstPage.blocks[i].type) {
-                  updateBlock(firstPage.blocks[i].id, {
-                    type: firstPage.blocks[i].type,
-                    config: parseCfg(firstPage.blocks[i].config),
-                  });
-                }
+            // Mark type-changed blocks dirty so the new type persists to DB
+            const updateBlock = useEditorStore.getState().updateBlock;
+            for (let i = 0; i < firstPage.parsed.length; i++) {
+              if (firstPage.parsed[i].type !== firstPage.blocks[i].type) {
+                updateBlock(firstPage.blocks[i].id, {
+                  type: firstPage.blocks[i].type,
+                  config: parseCfg(firstPage.blocks[i].config),
+                });
               }
             }
           }
