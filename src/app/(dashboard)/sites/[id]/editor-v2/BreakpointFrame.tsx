@@ -2,7 +2,9 @@
 "use client";
 
 import {
+  createContext,
   useCallback,
+  useContext,
   useEffect,
   useMemo,
   useRef,
@@ -19,6 +21,9 @@ import { getEffectComponent } from "@/lib/effects/loader";
 import { useEffectsEnabled } from "@/lib/effects/performance";
 import { IframeCanvas } from "./IframeCanvas";
 import { SelectionLayer } from "./SelectionLayer";
+
+const ScaleContext = createContext(1);
+export const useCanvasScale = () => useContext(ScaleContext);
 
 const WIDTHS: Record<Breakpoint, number> = {
   desktop: 1280,
@@ -208,31 +213,21 @@ export function BreakpointFrame({ children, nav }: Props) {
     };
   }, [iframeDoc]);
 
+  const outerRef = useRef<HTMLDivElement>(null);
+  const [availableWidth, setAvailableWidth] = useState(1280);
   const [frameReady, setFrameReady] = useState(false);
-  const [devicePixelRatio, setDevicePixelRatio] = useState(1);
   const [navHeight, setNavHeight] = useState(0);
   const navRef = useRef<HTMLDivElement>(null);
   const isDesktop = breakpoint === "desktop";
 
   useEffect(() => {
-    const updateDPR = () => {
-      setDevicePixelRatio(window.devicePixelRatio || 1);
-    };
-    updateDPR();
-
-    const mediaQuery = window.matchMedia(
-      `(resolution: ${window.devicePixelRatio}dppx)`,
-    );
-    const handler = () => updateDPR();
-
-    if (mediaQuery.addEventListener) {
-      mediaQuery.addEventListener("change", handler);
-      return () => mediaQuery.removeEventListener("change", handler);
-    } else {
-      // Fallback for older browsers
-      mediaQuery.addListener(handler);
-      return () => mediaQuery.removeListener(handler);
-    }
+    const el = outerRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(([entry]) => {
+      setAvailableWidth(entry.contentRect.width);
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
   }, []);
 
   useEffect(() => {
@@ -260,12 +255,10 @@ export function BreakpointFrame({ children, nav }: Props) {
     const el = ref.current;
     if (!el) return;
     const dur = duration("traySlide") / 1000;
-    const safeDPR = isDesktop ? 1 : devicePixelRatio || 1;
-    const normalizedWidth = WIDTHS[breakpoint] / safeDPR;
-    const target = { width: `${normalizedWidth}px` };
+    const target = { width: `${WIDTHS[breakpoint]}px` };
     const anim = animate(el, target, { duration: dur, ease: EASING.standard });
     anim.finished.then(() => window.dispatchEvent(new Event("resize")));
-  }, [breakpoint, devicePixelRatio, isDesktop]);
+  }, [breakpoint]);
 
   const googleFontsHref = useMemo(() => {
     const fonts = [
@@ -279,8 +272,8 @@ export function BreakpointFrame({ children, nav }: Props) {
     return `https://fonts.googleapis.com/css2?${fonts.map((f) => `family=${GFONTS_MAP[f]}`).join("&")}&display=swap`;
   }, [themeTokens.typography.headingFont, themeTokens.typography.bodyFont]);
 
-  const safeDPR = isDesktop ? 1 : devicePixelRatio || 1;
-  const normalizedWidth = WIDTHS[breakpoint] / safeDPR;
+  const canonicalWidth = WIDTHS[breakpoint];
+  const scaleFactor = Math.min(1, availableWidth / canonicalWidth);
 
   const rawMT = Number(settings.marginTop ?? 0) || 0;
   const rawMR = Number(settings.marginRight ?? 0) || 0;
@@ -303,146 +296,168 @@ export function BreakpointFrame({ children, nav }: Props) {
 
   return (
     <div
-      className="flex h-full w-full justify-center items-center p-0"
+      ref={outerRef}
+      className="flex h-full w-full justify-center items-start overflow-hidden p-0"
       style={{
         background: isDesktop
           ? "linear-gradient(135deg, #f8f7f5 0%, #ede9e3 100%)"
           : "rgb(var(--site-muted) / 0.4)",
+        paddingTop: scaleFactor < 1 ? "8px" : undefined,
       }}
       onClick={handleDeselect}
     >
-      <div
-        ref={ref}
-        data-breakpoint={breakpoint}
-        className="relative max-w-full h-full overflow-hidden"
-        style={{
-          width: `${normalizedWidth}px`,
-          borderRadius: "8px",
-          border: isDesktop
-            ? "1px solid rgba(0, 0, 0, 0.06)"
-            : "1px solid #e7e5e4",
-          boxShadow: isDesktop
-            ? "0 4px 24px rgba(0,0,0,0.08), 0 2px 8px rgba(0,0,0,0.04)"
-            : "0 2px 8px rgba(0,0,0,0.04)",
-        }}
-      >
-        <IframeCanvas
-          breakpoint={breakpoint}
-          themeStyles={siteThemeVars(
-            themeTokens.colors,
-            themeTokens.typography,
-          )}
-          background={pageBgDisabled ? "transparent" : curtainBg}
-          googleFontsHref={googleFontsHref}
-          onDocumentReady={setIframeDoc}
+      <ScaleContext.Provider value={scaleFactor}>
+        <div
+          style={{
+            width: `${canonicalWidth * scaleFactor}px`,
+            height: "100%",
+            overflow: "visible",
+          }}
         >
-          {BgEffect && frameReady && (
-            <div
-              className="pointer-events-none absolute z-0 overflow-hidden"
-              style={
-                effectBleed
-                  ? { inset: 0 }
-                  : { top: mT, right: mR, bottom: mB, left: mL }
-              }
-            >
-              <BgEffect {...effectColors} />
-            </div>
-          )}
-          {bgImage && !pageBgDisabled && (
-            <div
-              className="pointer-events-none absolute overflow-hidden"
-              style={{
-                zIndex: 1,
-                top: bgImageBleed ? 0 : mT,
-                right: bgImageBleed ? 0 : mR,
-                bottom: bgImageBleed ? 0 : mB,
-                left: bgImageBleed ? 0 : mL,
-                backgroundImage: `url('${bgImage}')`,
-                backgroundSize: "cover",
-                backgroundPosition: "center",
-                opacity: bgImageOpacity,
-              }}
-            />
-          )}
           <div
-            className="editor-canvas-scroll relative h-full overflow-x-hidden overflow-y-auto"
-            style={{ zIndex: 10 }}
+            ref={ref}
+            data-breakpoint={breakpoint}
+            className="relative h-full overflow-hidden"
+            style={{
+              width: `${canonicalWidth}px`,
+              transform: scaleFactor < 1 ? `scale(${scaleFactor})` : undefined,
+              transformOrigin: "top left",
+              borderRadius: "8px",
+              border: isDesktop
+                ? "1px solid rgba(0,0,0,0.06)"
+                : "1px solid #e7e5e4",
+              boxShadow: isDesktop
+                ? "0 4px 24px rgba(0,0,0,0.08), 0 2px 8px rgba(0,0,0,0.04)"
+                : "0 2px 8px rgba(0,0,0,0.04)",
+            }}
           >
-            <div
-              style={{
-                padding: `${isDesktop ? mT : mT + navHeight}px ${mR}px ${mB}px ${mL}px`,
-                overflow: "hidden",
-              }}
+            <IframeCanvas
+              breakpoint={breakpoint}
+              themeStyles={siteThemeVars(
+                themeTokens.colors,
+                themeTokens.typography,
+              )}
+              background={pageBgDisabled ? "transparent" : curtainBg}
+              googleFontsHref={googleFontsHref}
+              onDocumentReady={setIframeDoc}
             >
-              {children}
-            </div>
+              {BgEffect && frameReady && (
+                <div
+                  className="pointer-events-none absolute z-0 overflow-hidden"
+                  style={
+                    effectBleed
+                      ? { inset: 0 }
+                      : { top: mT, right: mR, bottom: mB, left: mL }
+                  }
+                >
+                  <BgEffect {...effectColors} />
+                </div>
+              )}
+              {bgImage && !pageBgDisabled && (
+                <div
+                  className="pointer-events-none absolute overflow-hidden"
+                  style={{
+                    zIndex: 1,
+                    top: bgImageBleed ? 0 : mT,
+                    right: bgImageBleed ? 0 : mR,
+                    bottom: bgImageBleed ? 0 : mB,
+                    left: bgImageBleed ? 0 : mL,
+                    backgroundImage: `url('${bgImage}')`,
+                    backgroundSize: "cover",
+                    backgroundPosition: "center",
+                    opacity: bgImageOpacity,
+                  }}
+                />
+              )}
+              <div
+                className="editor-canvas-scroll relative h-full overflow-x-hidden overflow-y-auto"
+                style={{ zIndex: 10 }}
+              >
+                <div
+                  style={{
+                    padding: `${isDesktop ? mT : mT + navHeight}px ${mR}px ${mB}px ${mL}px`,
+                    overflow: "hidden",
+                  }}
+                >
+                  {children}
+                </div>
+              </div>
+              {DecorationEffect && frameReady && (
+                <div
+                  className="pointer-events-none absolute inset-0 overflow-hidden"
+                  style={{ zIndex: 15 }}
+                >
+                  <DecorationEffect {...effectColors} />
+                </div>
+              )}
+              {TransitionEffect && (
+                <div
+                  className="pointer-events-none absolute inset-0 overflow-hidden"
+                  style={{ zIndex: 16 }}
+                >
+                  <TransitionEffect {...effectColors} />
+                </div>
+              )}
+              {hasMargins &&
+                (!bgImage || !bgImageBleed) &&
+                (!settings.effectBg || !effectBleed) && (
+                  <>
+                    {mT > 0 && (
+                      <div
+                        className="pointer-events-none absolute left-0 right-0 top-0"
+                        style={{
+                          height: mT,
+                          background: curtainBg,
+                          zIndex: 20,
+                        }}
+                      />
+                    )}
+                    {mB > 0 && (
+                      <div
+                        className="pointer-events-none absolute bottom-0 left-0 right-0"
+                        style={{
+                          height: mB,
+                          background: curtainBg,
+                          zIndex: 20,
+                        }}
+                      />
+                    )}
+                    {mL > 0 && (
+                      <div
+                        className="pointer-events-none absolute bottom-0 left-0 top-0"
+                        style={{ width: mL, background: curtainBg, zIndex: 20 }}
+                      />
+                    )}
+                    {mR > 0 && (
+                      <div
+                        className="pointer-events-none absolute bottom-0 right-0 top-0"
+                        style={{ width: mR, background: curtainBg, zIndex: 20 }}
+                      />
+                    )}
+                  </>
+                )}
+              {nav && (
+                <div
+                  ref={navRef}
+                  className="absolute left-0 right-0 top-0"
+                  style={{ zIndex: 30 }}
+                >
+                  {nav}
+                </div>
+              )}
+              {CursorEffect && (
+                <div
+                  className="pointer-events-none absolute inset-0 overflow-hidden"
+                  style={{ zIndex: 40 }}
+                >
+                  <CursorEffect {...effectColors} />
+                </div>
+              )}
+            </IframeCanvas>
+            <SelectionLayer contentDocument={iframeDoc} />
           </div>
-          {DecorationEffect && frameReady && (
-            <div
-              className="pointer-events-none absolute inset-0 overflow-hidden"
-              style={{ zIndex: 15 }}
-            >
-              <DecorationEffect {...effectColors} />
-            </div>
-          )}
-          {TransitionEffect && (
-            <div
-              className="pointer-events-none absolute inset-0 overflow-hidden"
-              style={{ zIndex: 16 }}
-            >
-              <TransitionEffect {...effectColors} />
-            </div>
-          )}
-          {hasMargins &&
-            (!bgImage || !bgImageBleed) &&
-            (!settings.effectBg || !effectBleed) && (
-              <>
-                {mT > 0 && (
-                  <div
-                    className="pointer-events-none absolute left-0 right-0 top-0"
-                    style={{ height: mT, background: curtainBg, zIndex: 20 }}
-                  />
-                )}
-                {mB > 0 && (
-                  <div
-                    className="pointer-events-none absolute bottom-0 left-0 right-0"
-                    style={{ height: mB, background: curtainBg, zIndex: 20 }}
-                  />
-                )}
-                {mL > 0 && (
-                  <div
-                    className="pointer-events-none absolute bottom-0 left-0 top-0"
-                    style={{ width: mL, background: curtainBg, zIndex: 20 }}
-                  />
-                )}
-                {mR > 0 && (
-                  <div
-                    className="pointer-events-none absolute bottom-0 right-0 top-0"
-                    style={{ width: mR, background: curtainBg, zIndex: 20 }}
-                  />
-                )}
-              </>
-            )}
-          {nav && (
-            <div
-              ref={navRef}
-              className="absolute left-0 right-0 top-0"
-              style={{ zIndex: 30 }}
-            >
-              {nav}
-            </div>
-          )}
-          {CursorEffect && (
-            <div
-              className="pointer-events-none absolute inset-0 overflow-hidden"
-              style={{ zIndex: 40 }}
-            >
-              <CursorEffect {...effectColors} />
-            </div>
-          )}
-        </IframeCanvas>
-        <SelectionLayer contentDocument={iframeDoc} />
-      </div>
+        </div>
+      </ScaleContext.Provider>
     </div>
   );
 }
