@@ -37,6 +37,26 @@ export function buildStyles(settings: SiteSettingRow | null): BuiltStyles {
   const escapedBgImageUrl = bgImage
     ? safeUrl(bgImage).replace(/\\/g, "\\\\").replace(/'/g, "\\'")
     : null;
+  const hasBgImageZoom = settings?.bgImageZoom != null;
+  const hasBgImagePosition =
+    settings?.bgImagePositionX != null || settings?.bgImagePositionY != null;
+  const numberOrDefault = (
+    value: number | null | undefined,
+    fallback: number,
+  ) => {
+    const numeric = Number(value);
+    return Number.isFinite(numeric) ? numeric : fallback;
+  };
+  const bgImageSize = hasBgImageZoom
+    ? `${numberOrDefault(settings?.bgImageZoom, 100)}%`
+    : "cover";
+  const bgImagePosition = hasBgImagePosition
+    ? `${numberOrDefault(settings?.bgImagePositionX, 50)}% ${numberOrDefault(settings?.bgImagePositionY, 50)}%`
+    : "center";
+  const bgImageRepeat =
+    hasBgImageZoom || hasBgImagePosition
+      ? " background-repeat: no-repeat;"
+      : "";
 
   // Google Fonts link tag
   const fontsNeeded = [headingFont, bodyFont]
@@ -85,7 +105,7 @@ export function buildStyles(settings: SiteSettingRow | null): BuiltStyles {
     body::-webkit-scrollbar { display: none; }
     body {
       background: var(--bg);
-      ${escapedBgImageUrl && settings?.bgImageLayer !== "overlay" && settings?.bgImageBleed !== 0 ? `background-image: url('${escapedBgImageUrl}'); background-size: cover; background-position: center; background-attachment: fixed;` : ""}
+      ${escapedBgImageUrl && settings?.bgImageLayer !== "overlay" && settings?.bgImageBleed !== 0 ? `background-image: url('${escapedBgImageUrl}'); background-size: ${bgImageSize};${bgImageRepeat} background-position: ${bgImagePosition}; background-attachment: fixed;` : ""}
       color: var(--site-text);
       font-family: var(--body-font);
       font-size: 1rem;
@@ -132,7 +152,7 @@ export function buildStyles(settings: SiteSettingRow | null): BuiltStyles {
       return lines.join("\n    ");
     })()}
 
-    ${escapedBgImageUrl && settings?.bgImageLayer !== "overlay" && settings?.bgImageBleed === 0 ? `#site-content { background-image: url('${escapedBgImageUrl}'); background-size: cover; background-position: center; background-attachment: fixed; }` : ""}
+    ${escapedBgImageUrl && settings?.bgImageLayer !== "overlay" && settings?.bgImageBleed === 0 ? `#site-content { background-image: url('${escapedBgImageUrl}'); background-size: ${bgImageSize};${bgImageRepeat} background-position: ${bgImagePosition}; background-attachment: fixed; }` : ""}
 
     ${(() => {
       if (!settings?.backgroundImage) return "";
