@@ -1,13 +1,28 @@
 import type { StateCreator } from "zustand";
-import type { MergedSettings, MergedSettingsPatch } from "@/lib/schemas/settings";
+import type {
+  MergedSettings,
+  MergedSettingsPatch,
+} from "@/lib/schemas/settings";
 import { MERGED_DEFAULTS } from "@/lib/schemas/settings";
 import { settingsToTheme } from "./theme";
 import type { ThemeSlice } from "./theme";
 
 const NUMBER_FIELDS = new Set([
-  "isLive", "showNavBrand", "popupEnabled", "popupTicker",
-  "popupAfterAnimation", "popupBundle", "pageBgDisabled", "bgImageBleed", "effectBleed",
-  "bgImageOpacity", "defaultAnimDuration", "defaultAnimDelay",
+  "isLive",
+  "showNavBrand",
+  "popupEnabled",
+  "popupTicker",
+  "popupAfterAnimation",
+  "popupBundle",
+  "pageBgDisabled",
+  "bgImageBleed",
+  "effectBleed",
+  "bgImageOpacity",
+  "bgImageZoom",
+  "bgImagePositionX",
+  "bgImagePositionY",
+  "defaultAnimDuration",
+  "defaultAnimDelay",
 ]);
 
 function coerceDbRow(row: Record<string, unknown>): Record<string, unknown> {
@@ -28,7 +43,12 @@ export interface SettingsSlice {
   markSettingsClean: () => void;
 }
 
-export const createSettingsSlice: StateCreator<SettingsSlice & ThemeSlice, [], [], SettingsSlice> = (set, get) => ({
+export const createSettingsSlice: StateCreator<
+  SettingsSlice & ThemeSlice,
+  [],
+  [],
+  SettingsSlice
+> = (set, get) => ({
   settings: { ...MERGED_DEFAULTS },
   settingsLoaded: false,
   settingsDirty: false,
@@ -40,10 +60,17 @@ export const createSettingsSlice: StateCreator<SettingsSlice & ThemeSlice, [], [
         console.error("[settings:load] GET failed", res.status);
         return;
       }
-      const { settings: raw } = (await res.json()) as { settings: Record<string, unknown> };
+      const { settings: raw } = (await res.json()) as {
+        settings: Record<string, unknown>;
+      };
       const settings = coerceDbRow(raw) as MergedSettings;
       const merged = { ...MERGED_DEFAULTS, ...settings };
-      set({ settings: merged, settingsLoaded: true, settingsDirty: false, themeTokens: settingsToTheme(merged) });
+      set({
+        settings: merged,
+        settingsLoaded: true,
+        settingsDirty: false,
+        themeTokens: settingsToTheme(merged),
+      });
     } catch (e) {
       console.error("[settings:load] error:", e);
     }
@@ -52,7 +79,11 @@ export const createSettingsSlice: StateCreator<SettingsSlice & ThemeSlice, [], [
   updateSettings: (patch) => {
     const prev = get().settings;
     const next = { ...prev, ...patch };
-    set({ settings: next, settingsDirty: true, themeTokens: settingsToTheme(next) });
+    set({
+      settings: next,
+      settingsDirty: true,
+      themeTokens: settingsToTheme(next),
+    });
   },
 
   saveSettings: async (siteId) => {
