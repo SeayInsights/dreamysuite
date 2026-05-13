@@ -145,7 +145,7 @@ export function SiteRenderer({ blocks, ordered = false }: Props) {
   const containerStyle: React.CSSProperties = {
     position: "relative",
     ...(breakpoint === "desktop"
-      ? { minHeight: Math.max(maxExtent + 200, window.innerHeight || 800) }
+      ? { minHeight: Math.max(maxExtent + 200, 900) }
       : {}),
     ...(breakpoint !== "desktop" && gap > 0
       ? {

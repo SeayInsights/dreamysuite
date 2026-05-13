@@ -279,21 +279,6 @@ export function BreakpointFrame({ children, nav }: Props) {
     return `https://fonts.googleapis.com/css2?${fonts.map((f) => `family=${GFONTS_MAP[f]}`).join("&")}&display=swap`;
   }, [themeTokens.typography.headingFont, themeTokens.typography.bodyFont]);
 
-  useEffect(() => {
-    if (!googleFontsHref) return;
-    const id = "editor-gfonts";
-    let link = document.getElementById(id) as HTMLLinkElement | null;
-    if (link) {
-      link.href = googleFontsHref;
-    } else {
-      link = document.createElement("link");
-      link.id = id;
-      link.rel = "stylesheet";
-      link.href = googleFontsHref;
-      document.head.appendChild(link);
-    }
-  }, [googleFontsHref]);
-
   const safeDPR = isDesktop ? 1 : devicePixelRatio || 1;
   const normalizedWidth = WIDTHS[breakpoint] / safeDPR;
 
