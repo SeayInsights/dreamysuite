@@ -17,7 +17,14 @@ interface PopoverProps {
   children: ReactNode;
 }
 
-export function FloatingPopover({ open, top, left, onClose, toolbarRef, children }: PopoverProps) {
+export function FloatingPopover({
+  open,
+  top,
+  left,
+  onClose,
+  toolbarRef,
+  children,
+}: PopoverProps) {
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -39,7 +46,7 @@ export function FloatingPopover({ open, top, left, onClose, toolbarRef, children
     <div
       ref={ref}
       className={cn(
-        "fixed z-[9999] rounded-lg border border-border bg-popover p-3 shadow-lg",
+        "fixed z-[var(--z-popover)] rounded-lg border border-border bg-popover p-3 shadow-lg",
         "text-popover-foreground",
       )}
       style={{ top, left }}
@@ -90,7 +97,15 @@ export function PaddingIcon() {
         strokeWidth="1.2"
         strokeDasharray="2 1"
       />
-      <rect x="4" y="4" width="6" height="6" rx="0.75" fill="currentColor" opacity="0.3" />
+      <rect
+        x="4"
+        y="4"
+        width="6"
+        height="6"
+        rx="0.75"
+        fill="currentColor"
+        opacity="0.3"
+      />
     </svg>
   );
 }
@@ -118,10 +133,42 @@ export function AnimationIcon() {
 export function FormatIcon() {
   return (
     <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden>
-      <rect x="1" y="2" width="5" height="5" rx="1" fill="currentColor" opacity="0.8" />
-      <rect x="8" y="2" width="5" height="5" rx="1" fill="currentColor" opacity="0.4" />
-      <rect x="1" y="9" width="5" height="3" rx="0.75" fill="currentColor" opacity="0.3" />
-      <rect x="8" y="9" width="5" height="3" rx="0.75" fill="currentColor" opacity="0.2" />
+      <rect
+        x="1"
+        y="2"
+        width="5"
+        height="5"
+        rx="1"
+        fill="currentColor"
+        opacity="0.8"
+      />
+      <rect
+        x="8"
+        y="2"
+        width="5"
+        height="5"
+        rx="1"
+        fill="currentColor"
+        opacity="0.4"
+      />
+      <rect
+        x="1"
+        y="9"
+        width="5"
+        height="3"
+        rx="0.75"
+        fill="currentColor"
+        opacity="0.3"
+      />
+      <rect
+        x="8"
+        y="9"
+        width="5"
+        height="3"
+        rx="0.75"
+        fill="currentColor"
+        opacity="0.2"
+      />
     </svg>
   );
 }
@@ -129,8 +176,25 @@ export function FormatIcon() {
 export function ArrangeIcon() {
   return (
     <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden>
-      <rect x="1" y="1" width="8" height="8" rx="1" stroke="currentColor" strokeWidth="1.2" />
-      <rect x="5" y="5" width="8" height="8" rx="1" stroke="currentColor" strokeWidth="1.2" fill="var(--popover)" />
+      <rect
+        x="1"
+        y="1"
+        width="8"
+        height="8"
+        rx="1"
+        stroke="currentColor"
+        strokeWidth="1.2"
+      />
+      <rect
+        x="5"
+        y="5"
+        width="8"
+        height="8"
+        rx="1"
+        stroke="currentColor"
+        strokeWidth="1.2"
+        fill="var(--popover)"
+      />
     </svg>
   );
 }

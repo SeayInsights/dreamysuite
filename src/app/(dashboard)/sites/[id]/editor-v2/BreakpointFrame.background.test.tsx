@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   editorBgImageStyle,
+  getFrameScale,
   resolveEditorBgImageLayer,
 } from "./BreakpointFrame";
 
@@ -52,5 +53,18 @@ describe("BreakpointFrame editor background image placement", () => {
       backgroundSize: "100%",
       backgroundPosition: "50% 50%",
     });
+  });
+});
+
+describe("BreakpointFrame scale calculation", () => {
+  it("scales down from the measured canvas content box and never scales up", () => {
+    expect(getFrameScale(1280, 1280)).toBe(1);
+    expect(getFrameScale(1600, 1280)).toBe(1);
+    expect(getFrameScale(640, 1280)).toBe(0.5);
+  });
+
+  it("guards against invalid measured widths", () => {
+    expect(getFrameScale(-100, 1280)).toBe(0);
+    expect(getFrameScale(100, 0)).toBe(1);
   });
 });

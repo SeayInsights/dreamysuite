@@ -35,9 +35,9 @@ export interface SiteSettingRow {
   siteBorderColor: string | null;
   navBg: string | null;
   showNavBrand?: number | null;
-  navPosition: string | null;       // "fixed" | "scroll-away" | null
-  navShape: string | null;          // "bar" | "pill" | "floating" | null
-  navMaterial: string | null;       // "solid" | "glass" | "frosted" | null
+  navPosition: string | null; // "fixed" | "scroll-away" | null
+  navShape: string | null; // "bar" | "pill" | "floating" | null
+  navMaterial: string | null; // "solid" | "glass" | "frosted" | null
   navBrandColor: string | null;
   navLinkColor: string | null;
   navHighlightColor: string | null;
@@ -62,6 +62,9 @@ export interface SiteSettingRow {
   marginLeft: number | null;
   bgImageLayer: string | null;
   bgImageOpacity: number | null;
+  bgImageZoom: number | null;
+  bgImagePositionX: number | null;
+  bgImagePositionY: number | null;
   bgImageBleed: number | null;
   backgroundImage: string | null;
   siteMaxWidth: number | null;
@@ -118,4 +121,7 @@ export interface PageWithBlocks extends PageRow {
 // contentMap[pageSlug][lang] = parsed content object
 export type ContentMap = Map<string, Map<string, Record<string, unknown>>>;
 
-export type BlockTransMap = Record<string, Record<string, Record<string, string>>>;
+export type BlockTransMap = Record<
+  string,
+  Record<string, Record<string, string>>
+>;

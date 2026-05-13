@@ -822,7 +822,7 @@ function toggleMusic(){var a=document.getElementById('audio-player'),b=document.
   ${settings?.effectBg ? `<div id="effect-bg" style="position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;" aria-hidden="true"></div>` : ""}
   ${settings?.effectCursor ? `<div id="effect-cursor" style="position:fixed;inset:0;z-index:9999;pointer-events:none;overflow:hidden;" aria-hidden="true"></div>` : ""}
   ${settings?.effectDecoration ? `<div id="effect-decoration" style="position:fixed;inset:0;z-index:1;pointer-events:none;overflow:hidden;" aria-hidden="true"></div>` : ""}
-  ${escapedBgImageUrl ? `<div id="bg-overlay" style="position:fixed;inset:0;z-index:0;pointer-events:none;background-image:url('${escapedBgImageUrl}');background-size:cover;background-position:center;background-attachment:fixed;opacity:${settings?.bgImageOpacity ?? 1};display:${settings?.bgImageLayer === "overlay" ? "" : "none"};"></div>` : ""}
+  ${escapedBgImageUrl ? `<div id="bg-overlay" style="position:fixed;inset:0;z-index:0;pointer-events:none;background-image:url('${escapedBgImageUrl}');background-size:${settings?.bgImageZoom ?? 100}%;background-repeat:no-repeat;background-position:${settings?.bgImagePositionX ?? 50}% ${settings?.bgImagePositionY ?? 50}%;opacity:${settings?.bgImageOpacity ?? 1};display:${settings?.bgImageLayer === "overlay" ? "" : "none"};"></div>` : ""}
   ${(() => {
     if (!settings?.backgroundImage) return "";
     try {

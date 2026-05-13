@@ -2,8 +2,6 @@
 
 import { useEffect, useMemo, useRef } from "react";
 import { animate } from "motion/mini";
-import { X } from "lucide-react";
-
 import { cn } from "@/lib/utils";
 import { useEditorStore, type InspectorTab } from "@/app/stores/editorStore";
 import { duration, EASING } from "@/lib/animation/motion";
@@ -18,7 +16,11 @@ const ALL_TABS: { id: InspectorTab; label: string }[] = [
   { id: "advanced", label: "Advanced" },
 ];
 
-export function InspectorV2() {
+interface Props {
+  overlay?: boolean;
+}
+
+export function InspectorV2({ overlay = false }: Props) {
   const ref = useRef<HTMLDivElement>(null);
   const wasOpen = useRef(false);
   const { restoreFocus } = useLastFocus();
@@ -28,7 +30,6 @@ export function InspectorV2() {
       ref.current.style.transform = `translateX(${PANEL_WIDTH}px)`;
   }, []);
   const inspectorOpen = useEditorStore((s) => s.inspectorOpen);
-  const setInspectorOpen = useEditorStore((s) => s.setInspectorOpen);
   const settingsLoaded = useEditorStore((s) => s.settingsLoaded);
   const selectedBlockId = useEditorStore((s) => s.selectedBlockId);
   const tab = useEditorStore((s) => s.inspectorTab);
@@ -97,30 +98,32 @@ export function InspectorV2() {
       aria-hidden={!inspectorOpen}
       data-inspector
       onMouseDown={restoreFocus}
-      className="pointer-events-none absolute bottom-0 right-0 top-0 z-[150] w-80 border-l border-border bg-white shadow-lg"
-      style={{}}
+      className={cn(
+        "pointer-events-none h-full min-w-0 overflow-hidden bg-white",
+        overlay
+          ? "absolute bottom-0 right-0 top-0 z-[var(--z-modal)]"
+          : "relative z-[var(--z-chrome)] w-full",
+        inspectorOpen && "border-l border-border shadow-lg",
+      )}
+      style={
+        overlay
+          ? {
+              gridColumn: 4,
+              gridRow: 1,
+              width: "min(var(--editor-inspector-w), calc(100vw - 2rem))",
+            }
+          : { gridColumn: 4, gridRow: 1 }
+      }
     >
-      <div className="flex h-10 items-center justify-between border-b border-border px-3">
-        <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-          {selectedBlockId === null ? "Page Settings" : "Element Properties"}
-        </div>
-        <button
-          type="button"
-          aria-label="Close inspector"
-          onClick={() => setInspectorOpen(false)}
-          className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-        >
-          <X className="size-4" />
-        </button>
-      </div>
-
-      <div role="tabpanel" className="h-[calc(100%-2.5rem)]">
+      <div role="tabpanel" className="h-full">
         {!settingsLoaded ? (
           <div className="flex items-center justify-center p-8">
             <div className="h-5 w-5 animate-spin rounded-full border-2 border-muted-foreground border-t-foreground" />
           </div>
         ) : selectedBlockId === null ? (
-          <PageSettingsPanel />
+          <div className="overflow-y-auto h-full">
+            <PageSettingsPanel />
+          </div>
         ) : (
           <>
             <div className="flex border-b border-border">
@@ -143,7 +146,7 @@ export function InspectorV2() {
                 </button>
               ))}
             </div>
-            <div className="overflow-y-auto h-[calc(100%-4.5rem)]">
+            <div className="overflow-y-auto h-[calc(100%-2rem)]">
               {tab === "design" && selectedBlock ? (
                 <DesignTab
                   block={selectedBlock}

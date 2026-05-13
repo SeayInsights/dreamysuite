@@ -4,49 +4,67 @@
    Warm cream surfaces · Gold accents · Editorial typography
    ═══════════════════════════════════════════════════════════════════ */
 
-@import url('https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400;0,6..96,500;0,6..96,600;1,6..96,400;1,6..96,500&family=Figtree:wght@300;400;500;600;700&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400;0,6..96,500;0,6..96,600;1,6..96,400;1,6..96,500&family=Figtree:wght@300;400;500;600;700&display=swap");
 
 /* ── Design tokens ──────────────────────────────────────────────── */
 
 :root {
   /* Brand — warm amber gold */
-  --ds-accent:         #B8921A;
-  --ds-accent-hover:   #9A780E;
-  --ds-accent-light:   #FDF6E0;
-  --ds-accent-ring:    rgba(184, 146, 26, 0.18);
+  --ds-accent: #b8921a;
+  --ds-accent-hover: #9a780e;
+  --ds-accent-light: #fdf6e0;
+  --ds-accent-ring: rgba(184, 146, 26, 0.18);
 
   /* Surfaces */
-  --ds-bg:             #FDFBF7;
-  --ds-bg-subtle:      #F7F2EA;
-  --ds-bg-card:        #FFFFFF;
+  --ds-bg: #fdfbf7;
+  --ds-bg-subtle: #f7f2ea;
+  --ds-bg-card: #ffffff;
 
   /* Text */
-  --ds-text:           #1A1714;
-  --ds-muted:          #8B7F76;
-  --ds-light:          #B5A89E;
+  --ds-text: #1a1714;
+  --ds-muted: #8b7f76;
+  --ds-light: #b5a89e;
 
   /* Borders */
-  --ds-border:         #E5DDD3;
-  --ds-border-light:   #EDE8DF;
+  --ds-border: #e5ddd3;
+  --ds-border-light: #ede8df;
 
   /* Buttons */
-  --ds-btn:            #1C1710;
-  --ds-btn-hover:      #2C241A;
-  --ds-btn-text:       #FDFBF7;
+  --ds-btn: #1c1710;
+  --ds-btn-hover: #2c241a;
+  --ds-btn-text: #fdfbf7;
 
   /* Focus */
-  --ds-focus:          0 0 0 3px var(--ds-accent-ring);
+  --ds-focus: 0 0 0 3px var(--ds-accent-ring);
 
   /* Typography */
-  --ds-font-display:   'Bodoni Moda', Georgia, serif;
-  --ds-font-ui:        'Figtree', system-ui, -apple-system, sans-serif;
+  --ds-font-display: "Bodoni Moda", Georgia, serif;
+  --ds-font-ui: "Figtree", system-ui, -apple-system, sans-serif;
 
   /* Motion */
-  --ds-ease:           cubic-bezier(0.32, 0.72, 0, 1);
-  --ds-ease-out:       cubic-bezier(0.16, 1, 0.3, 1);
-  --ds-dur-fast:       150ms;
-  --ds-dur:            250ms;
-  --ds-dur-slow:       400ms;
+  --ds-ease: cubic-bezier(0.32, 0.72, 0, 1);
+  --ds-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ds-dur-fast: 150ms;
+  --ds-dur: 250ms;
+  --ds-dur-slow: 400ms;
+
+  /* Editor shell */
+  --editor-topbar-h: 48px;
+  --editor-rail-w: 48px;
+  --editor-tray-w: 288px;
+  --editor-inspector-w: 320px;
+
+  /* Editor stacking */
+  --z-canvas: 0;
+  --z-canvas-overlay: 10;
+  --z-block-handles: 20;
+  --z-selection: 25;
+  --z-chrome: 100;
+  --z-floating-toolbar: 200;
+  --z-popover: 300;
+  --z-overlay: 400;
+  --z-modal: 500;
+  --z-toast: 600;
 }
 
 /* ── Base ────────────────────────────────────────────────────────── */
@@ -62,7 +80,9 @@ body {
 /* ── Reduced motion ──────────────────────────────────────────────── */
 
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
+  *,
+  *::before,
+  *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
@@ -72,8 +92,14 @@ body {
 /* ── Animations ──────────────────────────────────────────────────── */
 
 @keyframes ds-fade-up {
-  from { opacity: 0; transform: translateY(10px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .ds-animate {
@@ -81,13 +107,33 @@ body {
 }
 
 /* Staggered children */
-.ds-stagger > *:nth-child(1)  { animation: ds-fade-up var(--ds-dur-slow) var(--ds-ease-out)  40ms both; }
-.ds-stagger > *:nth-child(2)  { animation: ds-fade-up var(--ds-dur-slow) var(--ds-ease-out)  80ms both; }
-.ds-stagger > *:nth-child(3)  { animation: ds-fade-up var(--ds-dur-slow) var(--ds-ease-out) 120ms both; }
-.ds-stagger > *:nth-child(4)  { animation: ds-fade-up var(--ds-dur-slow) var(--ds-ease-out) 160ms both; }
-.ds-stagger > *:nth-child(5)  { animation: ds-fade-up var(--ds-dur-slow) var(--ds-ease-out) 200ms both; }
-.ds-stagger > *:nth-child(6)  { animation: ds-fade-up var(--ds-dur-slow) var(--ds-ease-out) 240ms both; }
-.ds-stagger > *:nth-child(7)  { animation: ds-fade-up var(--ds-dur-slow) var(--ds-ease-out) 280ms both; }
-.ds-stagger > *:nth-child(8)  { animation: ds-fade-up var(--ds-dur-slow) var(--ds-ease-out) 320ms both; }
-.ds-stagger > *:nth-child(9)  { animation: ds-fade-up var(--ds-dur-slow) var(--ds-ease-out) 360ms both; }
-.ds-stagger > *:nth-child(10) { animation: ds-fade-up var(--ds-dur-slow) var(--ds-ease-out) 400ms both; }
+.ds-stagger > *:nth-child(1) {
+  animation: ds-fade-up var(--ds-dur-slow) var(--ds-ease-out) 40ms both;
+}
+.ds-stagger > *:nth-child(2) {
+  animation: ds-fade-up var(--ds-dur-slow) var(--ds-ease-out) 80ms both;
+}
+.ds-stagger > *:nth-child(3) {
+  animation: ds-fade-up var(--ds-dur-slow) var(--ds-ease-out) 120ms both;
+}
+.ds-stagger > *:nth-child(4) {
+  animation: ds-fade-up var(--ds-dur-slow) var(--ds-ease-out) 160ms both;
+}
+.ds-stagger > *:nth-child(5) {
+  animation: ds-fade-up var(--ds-dur-slow) var(--ds-ease-out) 200ms both;
+}
+.ds-stagger > *:nth-child(6) {
+  animation: ds-fade-up var(--ds-dur-slow) var(--ds-ease-out) 240ms both;
+}
+.ds-stagger > *:nth-child(7) {
+  animation: ds-fade-up var(--ds-dur-slow) var(--ds-ease-out) 280ms both;
+}
+.ds-stagger > *:nth-child(8) {
+  animation: ds-fade-up var(--ds-dur-slow) var(--ds-ease-out) 320ms both;
+}
+.ds-stagger > *:nth-child(9) {
+  animation: ds-fade-up var(--ds-dur-slow) var(--ds-ease-out) 360ms both;
+}
+.ds-stagger > *:nth-child(10) {
+  animation: ds-fade-up var(--ds-dur-slow) var(--ds-ease-out) 400ms both;
+}

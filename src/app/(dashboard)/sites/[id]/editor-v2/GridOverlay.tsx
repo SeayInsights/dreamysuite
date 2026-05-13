@@ -16,51 +16,51 @@ const COLUMNS = 12;
  * container, using `pointer-events-none` so it never intercepts clicks.
  */
 export function GridOverlay(): React.JSX.Element | null {
-	const [visible, setVisible] = useState(false);
+  const [visible, setVisible] = useState(false);
 
-	useEffect(() => {
-		function onKeyDown(e: KeyboardEvent) {
-			// Ignore when focus is in an input / contenteditable
-			const tag = (e.target as HTMLElement).tagName;
-			const editable = (e.target as HTMLElement).isContentEditable;
-			if (tag === "INPUT" || tag === "TEXTAREA" || editable) return;
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      // Ignore when focus is in an input / contenteditable
+      const tag = (e.target as HTMLElement).tagName;
+      const editable = (e.target as HTMLElement).isContentEditable;
+      if (tag === "INPUT" || tag === "TEXTAREA" || editable) return;
 
-			if (e.key === "g" || e.key === "G") {
-				setVisible(true);
-			}
-		}
+      if (e.key === "g" || e.key === "G") {
+        setVisible(true);
+      }
+    }
 
-		function onKeyUp(e: KeyboardEvent) {
-			if (e.key === "g" || e.key === "G") {
-				setVisible(false);
-			}
-		}
+    function onKeyUp(e: KeyboardEvent) {
+      if (e.key === "g" || e.key === "G") {
+        setVisible(false);
+      }
+    }
 
-		window.addEventListener("keydown", onKeyDown);
-		window.addEventListener("keyup", onKeyUp);
-		return () => {
-			window.removeEventListener("keydown", onKeyDown);
-			window.removeEventListener("keyup", onKeyUp);
-		};
-	}, []);
+    window.addEventListener("keydown", onKeyDown);
+    window.addEventListener("keyup", onKeyUp);
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+      window.removeEventListener("keyup", onKeyUp);
+    };
+  }, []);
 
-	if (!visible) return null;
+  if (!visible) return null;
 
-	// Render 11 interior column lines (skip 0% and 100% edges)
-	const lines = Array.from({ length: COLUMNS - 1 }, (_, i) => i + 1);
+  // Render 11 interior column lines (skip 0% and 100% edges)
+  const lines = Array.from({ length: COLUMNS - 1 }, (_, i) => i + 1);
 
-	return (
-		<div
-			aria-hidden
-			className="pointer-events-none absolute inset-0 z-10"
-		>
-			{lines.map((col) => (
-				<div
-					key={col}
-					className="absolute top-0 h-full w-px border-primary/20 bg-primary/20"
-					style={{ left: `${(col / COLUMNS) * 100}%` }}
-				/>
-			))}
-		</div>
-	);
+  return (
+    <div
+      aria-hidden
+      className="pointer-events-none absolute inset-0 z-[var(--z-canvas-overlay)]"
+    >
+      {lines.map((col) => (
+        <div
+          key={col}
+          className="absolute top-0 h-full w-px border-primary/20 bg-primary/20"
+          style={{ left: `${(col / COLUMNS) * 100}%` }}
+        />
+      ))}
+    </div>
+  );
 }

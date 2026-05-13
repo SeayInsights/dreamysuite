@@ -30,6 +30,7 @@ const WIDTHS: Record<Breakpoint, number> = {
   tablet: 768,
   mobile: 390,
 };
+export const FRAME_PADDING_PX = 16;
 
 const GFONTS_MAP: Record<string, string> = {
   "Playfair Display": "Playfair+Display:wght@400;600",
@@ -94,6 +95,14 @@ export function editorBgImageStyle({
     backgroundRepeat: "no-repeat",
     backgroundPosition: `${percentValue(bgImagePositionX, 50)}% ${percentValue(bgImagePositionY, 50)}%`,
   };
+}
+
+export function getFrameScale(
+  availableWidth: number,
+  canonicalWidth: number,
+): number {
+  if (canonicalWidth <= 0) return 1;
+  return Math.min(1, Math.max(0, availableWidth) / canonicalWidth);
 }
 
 function siteThemeVars(
@@ -326,7 +335,7 @@ export function BreakpointFrame({ children, nav }: Props) {
   }, [themeTokens.typography.headingFont, themeTokens.typography.bodyFont]);
 
   const canonicalWidth = WIDTHS[breakpoint];
-  const scaleFactor = Math.min(1, availableWidth / canonicalWidth);
+  const scaleFactor = getFrameScale(availableWidth, canonicalWidth);
 
   const rawMT = Number(settings.marginTop ?? 0) || 0;
   const rawMR = Number(settings.marginRight ?? 0) || 0;
@@ -362,12 +371,12 @@ export function BreakpointFrame({ children, nav }: Props) {
   return (
     <div
       ref={outerRef}
-      className="flex h-full w-full justify-center items-start overflow-hidden p-0"
+      className="box-border flex h-full w-full items-start justify-center overflow-hidden"
       style={{
         background: isDesktop
           ? "linear-gradient(135deg, #f8f7f5 0%, #ede9e3 100%)"
           : "rgb(var(--site-muted) / 0.4)",
-        paddingTop: scaleFactor < 1 ? "8px" : undefined,
+        padding: FRAME_PADDING_PX,
       }}
       onClick={handleDeselect}
     >
