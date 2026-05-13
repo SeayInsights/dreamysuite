@@ -10,18 +10,23 @@ Comprehensive state management for DreamySuite editor using Zustand with sliced 
 
 ```typescript
 useEditorStore = create()(
-  temporal(  // Zundo middleware for undo/redo
+  temporal(
+    // Zundo middleware for undo/redo
     (...a) => ({
-      ...createDocumentSlice(...a),      // Blocks, pages [TRACKED]
-      ...createEditorShellSlice(...a),   // UI state [NOT TRACKED]
-      ...createTransientSlice(...a),     // Drag/hover [NOT TRACKED]
-      ...createSettingsSlice(...a),      // Site settings [TRACKED]
-      ...createTranslationSlice(...a),   // i18n [NOT TRACKED]
-      ...createThemeSlice(...a),         // Theme tokens [NOT TRACKED]
+      ...createDocumentSlice(...a), // Blocks, pages [TRACKED]
+      ...createEditorShellSlice(...a), // UI state [NOT TRACKED]
+      ...createTransientSlice(...a), // Drag/hover [NOT TRACKED]
+      ...createSettingsSlice(...a), // Site settings [TRACKED]
+      ...createTranslationSlice(...a), // i18n [NOT TRACKED]
+      ...createThemeSlice(...a), // Theme tokens [NOT TRACKED]
     }),
     {
-      partialize: (state) => ({ blocks: state.blocks, settings: state.settings }),
-      equality: (past, current) => past.blocks === current.blocks && past.settings === current.settings,
+      partialize: (state) => ({
+        blocks: state.blocks,
+        settings: state.settings,
+      }),
+      equality: (past, current) =>
+        past.blocks === current.blocks && past.settings === current.settings,
     },
   ),
 );
@@ -30,21 +35,25 @@ useEditorStore = create()(
 ###Benefits
 
 **Centralized State:**
+
 - Single source of truth for editor
 - All state accessible from one store
 - Eliminates prop drilling
 
 **Sliced for Maintainability:**
+
 - Each slice handles one concern
 - Easy to find/modify state logic
 - Clear separation of responsibilities
 
 **Selective Undo/Redo:**
+
 - Only document + settings tracked by Zundo
 - UI state changes (panel open/close) don't create history entries
 - Undo rolls back content, not UI state
 
 **Page-Scoped History:**
+
 - Each page has independent undo/redo stack
 - Switching pages swaps history
 - No accidental cross-page undo
@@ -67,20 +76,20 @@ interface DocumentSlice {
   blocks: Block[];
   pages: Page[];
   currentPageId: string | null;
-  
+
   // Flags
-  isDirty: boolean;  // Unsaved changes
-  
+  isDirty: boolean; // Unsaved changes
+
   // Actions
   setBlocks: (blocks: Block[]) => void;
   addBlock: (block: Block) => void;
   updateBlock: (id: string, updates: Partial<Block>) => void;
   deleteBlock: (id: string) => void;
   reorderBlocks: (blockIds: string[]) => void;
-  
+
   setPages: (pages: Page[]) => void;
   setCurrentPageId: (id: string | null) => void;
-  
+
   markDirty: () => void;
   markClean: () => void;
 }
@@ -95,17 +104,18 @@ function BlockEditor() {
   // Subscribe to specific state (efficient)
   const blocks = useEditorStore((s) => s.blocks);
   const updateBlock = useEditorStore((s) => s.updateBlock);
-  
+
   // Update block (creates undo history entry)
   const handleChange = (id: string, newConfig: any) => {
     updateBlock(id, { config: newConfig });
   };
-  
+
   return <div>{/* ... */}</div>;
 }
 ```
 
 #### When to Use
+
 - ✅ Modifying blocks/pages
 - ✅ Reordering content
 - ✅ Managing document structure
@@ -125,26 +135,30 @@ function BlockEditor() {
 interface EditorShellSlice {
   // Selection
   selectedBlockId: string | null;
-  selectedSection: Section | null;
-  
+
   // View
-  breakpoint: Breakpoint;  // mobile, tablet, desktop
-  mode: EditorMode;        // edit, preview
-  
+  breakpoint: Breakpoint; // mobile, tablet, desktop
+  mode: EditorMode; // simple, pro
+
   // Panels
+  railCollapsed: boolean;
+  openTray: Section | null;
   inspectorOpen: boolean;
-  layersOpen: boolean;
-  // ... other panel states
-  
+
   // Actions
   selectBlock: (id: string | null) => void;
-  selectSection: (section: Section | null) => void;
   setBreakpoint: (bp: Breakpoint) => void;
   setMode: (mode: EditorMode) => void;
+  toggleRail: () => void;
+  setOpenTray: (tray: Section | null) => void;
   toggleInspector: () => void;
-  // ...
 }
 ```
+
+`EditorShell` consumes `railCollapsed`, `openTray`, and `inspectorOpen`
+directly as grid columns: `rail | tray | canvas | inspector`. Closed panels
+collapse their column to `0`, so the canvas column always reflects the real
+available editor width.
 
 #### Usage
 
@@ -154,7 +168,7 @@ import { useEditorStore } from "@/app/stores/editorStore";
 function BlockList() {
   const selectedBlockId = useEditorStore((s) => s.selectedBlockId);
   const selectBlock = useEditorStore((s) => s.selectBlock);
-  
+
   return (
     <div>
       {blocks.map((block) => (
@@ -172,6 +186,7 @@ function BlockList() {
 ```
 
 #### When to Use
+
 - ✅ Selecting blocks/sections
 - ✅ Toggling panels (inspector, layers)
 - ✅ Switching breakpoints
@@ -191,10 +206,10 @@ function BlockList() {
 interface TransientSlice {
   // Drag state
   dragState: DragState | null;
-  
+
   // Hover
   hoveredBlockId: string | null;
-  
+
   // Actions
   setDragState: (state: DragState | null) => void;
   setHoveredBlockId: (id: string | null) => void;
@@ -208,7 +223,7 @@ import { useEditorStore } from "@/app/stores/editorStore";
 
 function DraggableBlock({ blockId }: { blockId: string }) {
   const setDragState = useEditorStore((s) => s.setDragState);
-  
+
   const handleDragStart = (e: React.DragEvent) => {
     setDragState({
       blockId,
@@ -216,12 +231,13 @@ function DraggableBlock({ blockId }: { blockId: string }) {
       startY: e.clientY,
     });
   };
-  
+
   return <div draggable onDragStart={handleDragStart}>...</div>;
 }
 ```
 
 #### When to Use
+
 - ✅ Drag-and-drop state
 - ✅ Hover effects (when shared across components)
 - ✅ Temporary overlays
@@ -240,12 +256,12 @@ function DraggableBlock({ blockId }: { blockId: string }) {
 ```typescript
 interface SettingsSlice {
   settings: SiteSettings;
-  
+
   // Actions
   setSettings: (settings: Partial<SiteSettings>) => void;
   updateSetting: <K extends keyof SiteSettings>(
     key: K,
-    value: SiteSettings[K]
+    value: SiteSettings[K],
   ) => void;
 }
 ```
@@ -258,7 +274,7 @@ import { useEditorStore } from "@/app/stores/editorStore";
 function SettingsPanel() {
   const settings = useEditorStore((s) => s.settings);
   const updateSetting = useEditorStore((s) => s.updateSetting);
-  
+
   return (
     <input
       value={settings.eventName || ""}
@@ -269,6 +285,7 @@ function SettingsPanel() {
 ```
 
 #### When to Use
+
 - ✅ Modifying site settings
 - ✅ Changing event details
 - ✅ Updating privacy settings
@@ -288,14 +305,17 @@ function SettingsPanel() {
 interface TranslationSlice {
   activeLanguage: string | null;
   translations: Record<string, Record<string, string>>;
-  
+
   // Actions
   setActiveLanguage: (lang: string | null) => void;
-  setTranslations: (translations: Record<string, Record<string, string>>) => void;
+  setTranslations: (
+    translations: Record<string, Record<string, string>>,
+  ) => void;
 }
 ```
 
 #### When to Use
+
 - ✅ Switching active language
 - ✅ Managing translations
 - ✅ i18n UI state
@@ -313,7 +333,7 @@ interface TranslationSlice {
 ```typescript
 interface ThemeSlice {
   themeTokens: ThemeTokens;
-  
+
   // Actions
   setThemeTokens: (tokens: Partial<ThemeTokens>) => void;
   applyPresetTheme: (preset: string) => void;
@@ -321,6 +341,7 @@ interface ThemeSlice {
 ```
 
 #### When to Use
+
 - ✅ Applying theme presets
 - ✅ Customizing colors/typography
 - ✅ Live theme preview
@@ -365,6 +386,7 @@ interface ThemeSlice {
 ```
 
 ### Use Zustand When:
+
 ✅ State shared across 3+ components  
 ✅ State persisted across navigation  
 ✅ State needs undo/redo  
@@ -372,6 +394,7 @@ interface ThemeSlice {
 ✅ State drives global layout
 
 ### Use useState When:
+
 ✅ State local to component  
 ✅ State ephemeral (hover, focus)  
 ✅ State drives animations  
@@ -385,25 +408,29 @@ interface ThemeSlice {
 ### 1. Use Selectors (Selective Subscription)
 
 **❌ Bad (subscribes to entire store):**
+
 ```typescript
 const state = useEditorStore();
-const blocks = state.blocks;  // Re-renders on ANY store change
+const blocks = state.blocks; // Re-renders on ANY store change
 ```
 
 **✅ Good (subscribes to specific slice):**
+
 ```typescript
-const blocks = useEditorStore((s) => s.blocks);  // Re-renders only when blocks change
+const blocks = useEditorStore((s) => s.blocks); // Re-renders only when blocks change
 ```
 
 ### 2. Avoid Whole-Store Subscriptions
 
 **❌ Bad:**
+
 ```typescript
 const { blocks, selectedBlockId, breakpoint } = useEditorStore();
 // Re-renders when ANY of these change
 ```
 
 **✅ Good:**
+
 ```typescript
 const blocks = useEditorStore((s) => s.blocks);
 const selectedBlockId = useEditorStore((s) => s.selectedBlockId);
@@ -413,6 +440,7 @@ const selectedBlockId = useEditorStore((s) => s.selectedBlockId);
 ### 3. Use Equality Functions for Deep Comparisons
 
 **For complex objects:**
+
 ```typescript
 import { shallow } from "zustand/shallow";
 
@@ -423,6 +451,7 @@ const settings = useEditorStore((s) => s.settings, shallow);
 ### 4. Split Large Slices if Needed
 
 **If a slice grows too large:**
+
 - Consider splitting into sub-slices
 - Keep related state together
 - Avoid over-fragmentation
@@ -434,14 +463,17 @@ const settings = useEditorStore((s) => s.settings, shallow);
 ### Zundo Integration
 
 **Tracked State:**
+
 - `blocks` (document content)
 - `settings` (site configuration)
 
 **Not Tracked:**
+
 - UI state (editorShell, transient)
 - Derived state (theme, translations)
 
 **Why Selective Tracking?**
+
 - Undo should roll back content, not UI
 - Opening a panel shouldn't create undo entry
 - Keeps history focused on user edits
@@ -449,6 +481,7 @@ const settings = useEditorStore((s) => s.settings, shallow);
 ### Page-Scoped History
 
 **How it Works:**
+
 1. User edits Page A → history entry created
 2. User switches to Page B → Page A history saved
 3. User edits Page B → new history for Page B
@@ -456,6 +489,7 @@ const settings = useEditorStore((s) => s.settings, shallow);
 5. Undo on Page A → rolls back Page A changes only
 
 **Implementation:**
+
 ```typescript
 // pageHistoryCache stores past/future states per page
 const pageHistoryCache = new Map<string, PageHistory>();
@@ -467,7 +501,7 @@ useEditorStore.subscribe((state) => {
       pastStates: history.pastStates,
       futureStates: history.futureStates,
     });
-    
+
     // Restore incoming page history
     const incoming = pageHistoryCache.get(state.currentPageId);
     useEditorStore.temporal.getState().clear();
@@ -488,7 +522,7 @@ import { useEditorStore } from "./editorStore";
 
 test("addBlock adds block to store", () => {
   const { result } = renderHook(() => useEditorStore());
-  
+
   act(() => {
     result.current.addBlock({
       id: "block-1",
@@ -497,7 +531,7 @@ test("addBlock adds block to store", () => {
       sortOrder: 0,
     });
   });
-  
+
   expect(result.current.blocks).toHaveLength(1);
   expect(result.current.blocks[0].id).toBe("block-1");
 });
@@ -508,27 +542,27 @@ test("addBlock adds block to store", () => {
 ```typescript
 test("undo/redo works correctly", () => {
   const { result } = renderHook(() => useEditorStore());
-  
+
   // Make changes
   act(() => {
     result.current.addBlock({ id: "1", ... });
     result.current.addBlock({ id: "2", ... });
   });
-  
+
   expect(result.current.blocks).toHaveLength(2);
-  
+
   // Undo
   act(() => {
     useEditorStore.temporal.getState().undo();
   });
-  
+
   expect(result.current.blocks).toHaveLength(1);
-  
+
   // Redo
   act(() => {
     useEditorStore.temporal.getState().redo();
   });
-  
+
   expect(result.current.blocks).toHaveLength(2);
 });
 ```
@@ -540,6 +574,7 @@ test("undo/redo works correctly", () => {
 ### Pattern: Computed Values
 
 **Use selectors for derived state:**
+
 ```typescript
 const blockCount = useEditorStore((s) => s.blocks.length);
 const hasBlocks = useEditorStore((s) => s.blocks.length > 0);
@@ -548,6 +583,7 @@ const hasBlocks = useEditorStore((s) => s.blocks.length > 0);
 ### Pattern: Batched Updates
 
 **Multiple related updates:**
+
 ```typescript
 const updateMultiple = useEditorStore((s) => s.updateMultiple);
 
@@ -561,6 +597,7 @@ updateMultiple([
 ### Pattern: Optimistic Updates
 
 **Update UI immediately, sync later:**
+
 ```typescript
 const updateBlock = useEditorStore((s) => s.updateBlock);
 
@@ -588,16 +625,16 @@ Store actions often transform data before updating state. These patterns are cor
 ### Pattern: Update by ID
 
 **Immutable update of a single item:**
+
 ```typescript
 updateBlock: (id, updates) =>
   set((state) => ({
-    blocks: state.blocks.map((b) =>
-      b.id === id ? { ...b, ...updates } : b
-    ),
-  }))
+    blocks: state.blocks.map((b) => (b.id === id ? { ...b, ...updates } : b)),
+  }));
 ```
 
 **Why this pattern?**
+
 - Immutable: Creates new array/objects, doesn't mutate
 - Efficient: Only updates the matching item
 - Type-safe: TypeScript validates updates
@@ -606,28 +643,31 @@ updateBlock: (id, updates) =>
 ### Pattern: Remove by ID
 
 **Filter out a specific item:**
+
 ```typescript
 removeBlock: (id) =>
   set((state) => ({
     blocks: state.blocks.filter((b) => b.id !== id),
-  }))
+  }));
 ```
 
 ### Pattern: Insert at Index
 
 **Add item at specific position:**
+
 ```typescript
 insertBlock: (block, atIndex) =>
   set((state) => {
     const blocks = [...state.blocks];
     blocks.splice(atIndex, 0, block);
     return { blocks };
-  })
+  });
 ```
 
 ### Pattern: Reorder Items
 
 **Move item from one index to another:**
+
 ```typescript
 reorderBlocks: (fromIndex, toIndex) =>
   set((state) => {
@@ -635,18 +675,20 @@ reorderBlocks: (fromIndex, toIndex) =>
     const [moved] = blocks.splice(fromIndex, 1);
     blocks.splice(toIndex, 0, moved);
     return { blocks };
-  })
+  });
 ```
 
 ### Pattern: Filter + Sort
 
 **Chain transformations:**
+
 ```typescript
 const visible = blocks.filter((b) => b.isVisible !== 0);
 const sorted = visible.sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
 ```
 
 **Why inline?**
+
 - Context-specific (depends on current view state)
 - Simple and readable
 - Standard JavaScript array methods
@@ -655,31 +697,37 @@ const sorted = visible.sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
 ### Pattern: Transform with Side Effects
 
 **Update with additional operations:**
+
 ```typescript
 updateBlock: (id, updates) =>
   set((state) => {
     // Track pending operations
-    const ops = { ...state.pendingOps, updated: new Set(state.pendingOps.updated) };
+    const ops = {
+      ...state.pendingOps,
+      updated: new Set(state.pendingOps.updated),
+    };
     ops.updated.add(id);
-    
+
     // Apply transform
     const blocks = state.blocks.map((b) =>
-      b.id === id ? { ...b, ...updates } : b
+      b.id === id ? { ...b, ...updates } : b,
     );
-    
+
     return { blocks, isDirty: true, pendingOps: ops };
-  })
+  });
 ```
 
 ### When NOT to Abstract Transformations
 
 **Keep inline when:**
+
 - One-liner predicates: `filter((b) => b.isVisible !== 0)`
 - Standard patterns: `map((b, i) => ...)`
 - Context-specific logic: Depends on component/store state
 - Already readable: Adding abstraction adds indirection
 
 **Example of over-abstraction (don't do this):**
+
 ```typescript
 // ❌ Bad: Over-engineered
 const filterVisible = (items) => items.filter((item) => item.isVisible !== 0);
@@ -690,6 +738,7 @@ const visible = blocks.filter((b) => b.isVisible !== 0);
 ```
 
 **When to abstract:**
+
 - Complex multi-step transformations (use `/lib/migrations`)
 - Reused across 3+ files (consider utility function)
 - Business logic worth documenting (create named function)

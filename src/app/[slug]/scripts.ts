@@ -106,17 +106,66 @@ export function buildMessageListenerScript(): string {
         sc.style.marginRight = mw ? 'auto' : '';
       }
     }
-    if ('bgImageLayer' in delta || 'bgImageOpacity' in delta) {
+    function toBackgroundPercent(value, fallback) {
+      if (value == null || value === '') return fallback;
+      var numeric = Number(value);
+      return (Number.isFinite ? Number.isFinite(numeric) : isFinite(numeric)) ? numeric : fallback;
+    }
+    function hasBackgroundImage(surface) {
+      if (!surface) return false;
+      if (surface.style.backgroundImage && surface.style.backgroundImage !== 'none') return true;
+      try {
+        return getComputedStyle(surface).backgroundImage !== 'none';
+      } catch(e) {
+        return false;
+      }
+    }
+    function activeNonOverlayBackgroundSurface(layer, siteContent) {
+      if (layer === 'content' || layer === 'content-only' || layer === 'content_only') return siteContent || document.body;
+      if (layer === 'full-page' || layer === 'fullPage' || layer === 'page') return document.body;
+      if (siteContent && hasBackgroundImage(siteContent)) return siteContent;
+      return document.body;
+    }
+    function applyBgZoomPosition(surface, delta) {
+      if (!surface) return;
+      if ('bgImageZoom' in delta) {
+        surface.style.backgroundSize = toBackgroundPercent(delta.bgImageZoom, 100) + '%';
+        surface.style.backgroundRepeat = 'no-repeat';
+      }
+      if ('bgImagePositionX' in delta || 'bgImagePositionY' in delta) {
+        var px = delta.bgImagePositionX != null ? toBackgroundPercent(delta.bgImagePositionX, 50) : 50;
+        var py = delta.bgImagePositionY != null ? toBackgroundPercent(delta.bgImagePositionY, 50) : 50;
+        surface.style.backgroundPosition = px + '% ' + py + '%';
+        surface.style.backgroundRepeat = 'no-repeat';
+      }
+    }
+    if ('bgImageLayer' in delta || 'bgImageOpacity' in delta || 'bgImageZoom' in delta || 'bgImagePositionX' in delta || 'bgImagePositionY' in delta) {
       var bgOv = document.getElementById('bg-overlay');
+      var siteBgSurface = document.getElementById('site-content');
+      var layer = delta.bgImageLayer;
       if (bgOv) {
         if ('bgImageLayer' in delta) {
-          var isOverlay = delta.bgImageLayer === 'overlay';
+          var isOverlay = layer === 'overlay';
           bgOv.style.display = isOverlay ? '' : 'none';
-          document.body.style.backgroundImage = isOverlay ? '' : bgOv.style.backgroundImage;
         }
         if ('bgImageOpacity' in delta && delta.bgImageOpacity != null) {
           bgOv.style.opacity = String(delta.bgImageOpacity);
         }
+        applyBgZoomPosition(bgOv, delta);
+      }
+      var overlayActive = layer === 'overlay' || (layer == null && bgOv && bgOv.style.display !== 'none');
+      if (!overlayActive) {
+        var bgSurface = activeNonOverlayBackgroundSurface(layer, siteBgSurface);
+        if ('bgImageLayer' in delta && bgOv && bgSurface) {
+          bgSurface.style.backgroundImage = bgOv.style.backgroundImage;
+          bgSurface.style.backgroundSize = bgOv.style.backgroundSize || bgSurface.style.backgroundSize;
+          bgSurface.style.backgroundPosition = bgOv.style.backgroundPosition || bgSurface.style.backgroundPosition;
+          bgSurface.style.backgroundRepeat = bgOv.style.backgroundRepeat || 'no-repeat';
+          bgSurface.style.backgroundAttachment = 'fixed';
+          if (bgSurface === document.body && siteBgSurface) siteBgSurface.style.backgroundImage = '';
+          if (bgSurface === siteBgSurface) document.body.style.backgroundImage = '';
+        }
+        applyBgZoomPosition(bgSurface, delta);
       }
     }
     if ('backgroundImage' in delta) {
@@ -279,10 +328,18 @@ export function buildMessageListenerScript(): string {
 }
 
 export const VALID_PRESET_IDS = new Set([
-  "fade-in", "spring-in",
-  "fade-slide-up", "split-text", "mask-wipe", "parallax-monogram",
-  "ken-burns", "scroll-pinned-story", "sticky-date", "blur-in",
-  "envelope-unfold", "letter-cascade",
+  "fade-in",
+  "spring-in",
+  "fade-slide-up",
+  "split-text",
+  "mask-wipe",
+  "parallax-monogram",
+  "ken-burns",
+  "scroll-pinned-story",
+  "sticky-date",
+  "blur-in",
+  "envelope-unfold",
+  "letter-cascade",
 ]);
 
 export function buildBlockAnimationScript(usedPresets: Set<string>): string {
@@ -525,4 +582,4 @@ export function buildResponsiveScript(): string {
   update();
 })();
 </script>`;
-}
+}

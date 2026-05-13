@@ -34,17 +34,17 @@ export interface FloatingFormatToolbarProps {
 // ---------------------------------------------------------------------------
 
 const FONT_FAMILIES = [
-  { label: "System Sans",   value: "ui-sans-serif, system-ui, sans-serif" },
-  { label: "System Serif",  value: "ui-serif, Georgia, serif" },
-  { label: "Monospace",     value: "ui-monospace, 'Courier New', monospace" },
-  { label: "Inter",         value: "'Inter', sans-serif" },
-  { label: "Playfair",      value: "'Playfair Display', Georgia, serif" },
-  { label: "Cormorant",     value: "'Cormorant Garamond', Georgia, serif" },
-  { label: "Lora",          value: "'Lora', Georgia, serif" },
-  { label: "Montserrat",    value: "'Montserrat', sans-serif" },
-  { label: "Raleway",       value: "'Raleway', sans-serif" },
-  { label: "Nunito",        value: "'Nunito', sans-serif" },
-  { label: "Great Vibes",   value: "'Great Vibes', cursive" },
+  { label: "System Sans", value: "ui-sans-serif, system-ui, sans-serif" },
+  { label: "System Serif", value: "ui-serif, Georgia, serif" },
+  { label: "Monospace", value: "ui-monospace, 'Courier New', monospace" },
+  { label: "Inter", value: "'Inter', sans-serif" },
+  { label: "Playfair", value: "'Playfair Display', Georgia, serif" },
+  { label: "Cormorant", value: "'Cormorant Garamond', Georgia, serif" },
+  { label: "Lora", value: "'Lora', Georgia, serif" },
+  { label: "Montserrat", value: "'Montserrat', sans-serif" },
+  { label: "Raleway", value: "'Raleway', sans-serif" },
+  { label: "Nunito", value: "'Nunito', sans-serif" },
+  { label: "Great Vibes", value: "'Great Vibes', cursive" },
   { label: "Dancing Script", value: "'Dancing Script', cursive" },
   { label: "Libre Baskerville", value: "'Libre Baskerville', serif" },
 ];
@@ -60,7 +60,12 @@ interface ToolbarButtonProps {
   children: React.ReactNode;
 }
 
-function ToolbarButton({ label, active, onClick, children }: ToolbarButtonProps) {
+function ToolbarButton({
+  label,
+  active,
+  onClick,
+  children,
+}: ToolbarButtonProps) {
   return (
     <button
       type="button"
@@ -129,7 +134,9 @@ export function FloatingFormatToolbar({
           setSelectionColor(raw);
           if (colorRef.current) colorRef.current.value = raw;
         }
-      } catch { /* no selection */ }
+      } catch {
+        /* no selection */
+      }
     }
     readColor();
     document.addEventListener("selectionchange", readColor);
@@ -144,7 +151,9 @@ export function FloatingFormatToolbar({
       el,
       { opacity: [0, 1], scale: [0.95, 1] },
       { duration: duration("toolbarPop") / 1000, ease: EASING.enter },
-    ).finished.then(() => { if (toolbarRef.current) toolbarRef.current.style.opacity = "1"; });
+    ).finished.then(() => {
+      if (toolbarRef.current) toolbarRef.current.style.opacity = "1";
+    });
   }, []);
 
   // Close font menu on outside click
@@ -152,7 +161,10 @@ export function FloatingFormatToolbar({
     if (!fontMenuOpen) return;
     function onDown(e: MouseEvent) {
       const t = e.target as Node;
-      if (!fontMenuRef.current?.contains(t) && !fontBtnRef.current?.contains(t)) {
+      if (
+        !fontMenuRef.current?.contains(t) &&
+        !fontBtnRef.current?.contains(t)
+      ) {
         setFontMenuOpen(false);
       }
     }
@@ -167,10 +179,13 @@ export function FloatingFormatToolbar({
       aria-label="Text format toolbar"
       data-format-toolbar
       className={cn(
-        "fixed z-50 flex items-center gap-0.5 rounded-lg border border-border",
+        "fixed z-[var(--z-floating-toolbar)] flex items-center gap-0.5 rounded-lg border border-border",
         "bg-popover px-2 py-1.5 shadow-lg",
       )}
-      style={{ transform: `translate(${x}px, ${y}px)`, willChange: "transform" }}
+      style={{
+        transform: `translate(${x}px, ${y}px)`,
+        willChange: "transform",
+      }}
       // Prevent any mouse interaction from stealing focus from the editable
       onMouseDown={(e) => e.preventDefault()}
     >
@@ -196,48 +211,62 @@ export function FloatingFormatToolbar({
       >
         <span className="max-w-[64px] truncate">
           {activeFont
-            ? (FONT_FAMILIES.find((f) => f.value === activeFont)?.label ?? "Font")
+            ? (FONT_FAMILIES.find((f) => f.value === activeFont)?.label ??
+              "Font")
             : "Font"}
         </span>
-        <svg width="8" height="8" viewBox="0 0 8 8" fill="currentColor" aria-hidden>
-          <path d="M1 2.5l3 3 3-3" stroke="currentColor" strokeWidth="1.2" fill="none" strokeLinecap="round"/>
+        <svg
+          width="8"
+          height="8"
+          viewBox="0 0 8 8"
+          fill="currentColor"
+          aria-hidden
+        >
+          <path
+            d="M1 2.5l3 3 3-3"
+            stroke="currentColor"
+            strokeWidth="1.2"
+            fill="none"
+            strokeLinecap="round"
+          />
         </svg>
       </button>
 
-      {fontMenuOpen && typeof document !== "undefined" && createPortal(
-        <div
-          ref={fontMenuRef}
-          data-format-toolbar
-          className={cn(
-            "fixed z-[200] min-w-[160px] rounded-lg border border-border",
-            "bg-popover py-1 shadow-lg",
-          )}
-          style={{ top: fontMenuPos.top, left: fontMenuPos.left }}
-          onMouseDown={(e) => e.stopPropagation()}
-        >
-          {FONT_FAMILIES.map((f) => (
-            <button
-              key={f.value}
-              type="button"
-              onMouseDown={(e) => e.stopPropagation()}
-              onClick={() => {
-                setActiveFont(f.value);
-                setFontMenuOpen(false);
-                onFormat({ type: "fontName", value: f.value });
-              }}
-              className={cn(
-                "flex w-full items-center px-3 py-1.5 text-left text-xs",
-                "hover:bg-accent hover:text-accent-foreground",
-                activeFont === f.value && "text-primary font-medium",
-              )}
-            >
-              {f.label}
-            </button>
-          ))}
-        </div>,
-        document.body,
-      )}
-
+      {fontMenuOpen &&
+        typeof document !== "undefined" &&
+        createPortal(
+          <div
+            ref={fontMenuRef}
+            data-format-toolbar
+            className={cn(
+              "fixed z-[var(--z-popover)] min-w-[160px] rounded-lg border border-border",
+              "bg-popover py-1 shadow-lg",
+            )}
+            style={{ top: fontMenuPos.top, left: fontMenuPos.left }}
+            onMouseDown={(e) => e.stopPropagation()}
+          >
+            {FONT_FAMILIES.map((f) => (
+              <button
+                key={f.value}
+                type="button"
+                onMouseDown={(e) => e.stopPropagation()}
+                onClick={() => {
+                  setActiveFont(f.value);
+                  setFontMenuOpen(false);
+                  onFormat({ type: "fontName", value: f.value });
+                }}
+                className={cn(
+                  "flex w-full items-center px-3 py-1.5 text-left text-xs",
+                  "hover:bg-accent hover:text-accent-foreground",
+                  activeFont === f.value && "text-primary font-medium",
+                )}
+              >
+                {f.label}
+              </button>
+            ))}
+          </div>,
+          document.body,
+        )}
 
       <Divider />
 
@@ -266,17 +295,26 @@ export function FloatingFormatToolbar({
       <Divider />
 
       {/* Bold */}
-      <ToolbarButton label="Bold (Cmd+B)" onClick={() => onFormat({ type: "bold" })}>
+      <ToolbarButton
+        label="Bold (Cmd+B)"
+        onClick={() => onFormat({ type: "bold" })}
+      >
         <strong>B</strong>
       </ToolbarButton>
 
       {/* Italic */}
-      <ToolbarButton label="Italic (Cmd+I)" onClick={() => onFormat({ type: "italic" })}>
+      <ToolbarButton
+        label="Italic (Cmd+I)"
+        onClick={() => onFormat({ type: "italic" })}
+      >
         <em>I</em>
       </ToolbarButton>
 
       {/* Underline */}
-      <ToolbarButton label="Underline (Cmd+U)" onClick={() => onFormat({ type: "underline" })}>
+      <ToolbarButton
+        label="Underline (Cmd+U)"
+        onClick={() => onFormat({ type: "underline" })}
+      >
         <span className="underline">U</span>
       </ToolbarButton>
 
@@ -364,7 +402,9 @@ function TextEffectDropdown() {
   const menuRef = useRef<HTMLDivElement>(null);
   const [menuPos, setMenuPos] = useState({ top: 0, left: 0 });
 
-  const selected = settings.effectText ? getEffectById(settings.effectText) : null;
+  const selected = settings.effectText
+    ? getEffectById(settings.effectText)
+    : null;
 
   useEffect(() => {
     if (!open) return;
@@ -403,60 +443,75 @@ function TextEffectDropdown() {
         <span className="max-w-[48px] truncate">
           {selected ? selected.name : "Effect"}
         </span>
-        <svg width="8" height="8" viewBox="0 0 8 8" fill="currentColor" aria-hidden>
-          <path d="M1 2.5l3 3 3-3" stroke="currentColor" strokeWidth="1.2" fill="none" strokeLinecap="round"/>
+        <svg
+          width="8"
+          height="8"
+          viewBox="0 0 8 8"
+          fill="currentColor"
+          aria-hidden
+        >
+          <path
+            d="M1 2.5l3 3 3-3"
+            stroke="currentColor"
+            strokeWidth="1.2"
+            fill="none"
+            strokeLinecap="round"
+          />
         </svg>
       </button>
 
-      {open && typeof document !== "undefined" && createPortal(
-        <div
-          ref={menuRef}
-          data-format-toolbar
-          className={cn(
-            "fixed z-[200] min-w-[140px] rounded-lg border border-border",
-            "bg-popover py-1 shadow-lg",
-          )}
-          style={{ top: menuPos.top, left: menuPos.left }}
-          onMouseDown={(e) => e.stopPropagation()}
-        >
-          <button
-            type="button"
-            onMouseDown={(e) => e.stopPropagation()}
-            onClick={() => {
-              updateSettings({ effectText: null, effectPreset: null });
-              setOpen(false);
-            }}
+      {open &&
+        typeof document !== "undefined" &&
+        createPortal(
+          <div
+            ref={menuRef}
+            data-format-toolbar
             className={cn(
-              "flex w-full items-center px-3 py-1.5 text-left text-xs",
-              "hover:bg-accent hover:text-accent-foreground",
-              !settings.effectText && "text-primary font-medium",
+              "fixed z-[var(--z-popover)] min-w-[140px] rounded-lg border border-border",
+              "bg-popover py-1 shadow-lg",
             )}
+            style={{ top: menuPos.top, left: menuPos.left }}
+            onMouseDown={(e) => e.stopPropagation()}
           >
-            None
-          </button>
-          <div className="mx-2 my-0.5 h-px bg-border" />
-          {TEXT_EFFECTS.map((effect) => (
             <button
-              key={effect.id}
               type="button"
               onMouseDown={(e) => e.stopPropagation()}
               onClick={() => {
-                updateSettings({ effectText: effect.id, effectPreset: null });
+                updateSettings({ effectText: null, effectPreset: null });
                 setOpen(false);
               }}
-              title={effect.description}
               className={cn(
                 "flex w-full items-center px-3 py-1.5 text-left text-xs",
                 "hover:bg-accent hover:text-accent-foreground",
-                settings.effectText === effect.id && "text-primary font-medium",
+                !settings.effectText && "text-primary font-medium",
               )}
             >
-              {effect.name}
+              None
             </button>
-          ))}
-        </div>,
-        document.body,
-      )}
+            <div className="mx-2 my-0.5 h-px bg-border" />
+            {TEXT_EFFECTS.map((effect) => (
+              <button
+                key={effect.id}
+                type="button"
+                onMouseDown={(e) => e.stopPropagation()}
+                onClick={() => {
+                  updateSettings({ effectText: effect.id, effectPreset: null });
+                  setOpen(false);
+                }}
+                title={effect.description}
+                className={cn(
+                  "flex w-full items-center px-3 py-1.5 text-left text-xs",
+                  "hover:bg-accent hover:text-accent-foreground",
+                  settings.effectText === effect.id &&
+                    "text-primary font-medium",
+                )}
+              >
+                {effect.name}
+              </button>
+            ))}
+          </div>,
+          document.body,
+        )}
     </>
   );
 }
@@ -469,9 +524,23 @@ function AlignLeftIcon() {
   return (
     <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden>
       <rect x="1" y="2" width="12" height="1.5" rx="0.75" fill="currentColor" />
-      <rect x="1" y="5.5" width="8" height="1.5" rx="0.75" fill="currentColor" />
+      <rect
+        x="1"
+        y="5.5"
+        width="8"
+        height="1.5"
+        rx="0.75"
+        fill="currentColor"
+      />
       <rect x="1" y="9" width="12" height="1.5" rx="0.75" fill="currentColor" />
-      <rect x="1" y="12.5" width="8" height="1.5" rx="0.75" fill="currentColor" />
+      <rect
+        x="1"
+        y="12.5"
+        width="8"
+        height="1.5"
+        rx="0.75"
+        fill="currentColor"
+      />
     </svg>
   );
 }
@@ -480,9 +549,23 @@ function AlignCenterIcon() {
   return (
     <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden>
       <rect x="1" y="2" width="12" height="1.5" rx="0.75" fill="currentColor" />
-      <rect x="3" y="5.5" width="8" height="1.5" rx="0.75" fill="currentColor" />
+      <rect
+        x="3"
+        y="5.5"
+        width="8"
+        height="1.5"
+        rx="0.75"
+        fill="currentColor"
+      />
       <rect x="1" y="9" width="12" height="1.5" rx="0.75" fill="currentColor" />
-      <rect x="3" y="12.5" width="8" height="1.5" rx="0.75" fill="currentColor" />
+      <rect
+        x="3"
+        y="12.5"
+        width="8"
+        height="1.5"
+        rx="0.75"
+        fill="currentColor"
+      />
     </svg>
   );
 }
@@ -491,9 +574,23 @@ function AlignRightIcon() {
   return (
     <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden>
       <rect x="1" y="2" width="12" height="1.5" rx="0.75" fill="currentColor" />
-      <rect x="5" y="5.5" width="8" height="1.5" rx="0.75" fill="currentColor" />
+      <rect
+        x="5"
+        y="5.5"
+        width="8"
+        height="1.5"
+        rx="0.75"
+        fill="currentColor"
+      />
       <rect x="1" y="9" width="12" height="1.5" rx="0.75" fill="currentColor" />
-      <rect x="5" y="12.5" width="8" height="1.5" rx="0.75" fill="currentColor" />
+      <rect
+        x="5"
+        y="12.5"
+        width="8"
+        height="1.5"
+        rx="0.75"
+        fill="currentColor"
+      />
     </svg>
   );
 }

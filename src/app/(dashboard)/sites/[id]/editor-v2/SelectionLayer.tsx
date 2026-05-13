@@ -122,7 +122,7 @@ export function SelectionLayer({ contentDocument }: Props) {
 
   return (
     <div
-      className="pointer-events-none absolute inset-0 z-10 overflow-hidden"
+      className="pointer-events-none absolute inset-0 z-[var(--z-selection)] overflow-hidden"
       aria-hidden
     >
       {hoverVisible && (

@@ -14,7 +14,7 @@ import { type FormatCommand } from "./FloatingFormatToolbar";
 // ---------------------------------------------------------------------------
 
 const SWIPE_DISMISS_THRESHOLD = 60; // px downward drag to dismiss
-const SHEET_HEIGHT_APPROX = 190;    // estimated sheet height for auto-pan
+const SHEET_HEIGHT_APPROX = 190; // estimated sheet height for auto-pan
 
 const FONT_FAMILIES = [
   { label: "Sans", value: "ui-sans-serif, system-ui, sans-serif" },
@@ -108,12 +108,17 @@ function TextControls({
         className="h-11 min-w-[72px] flex-shrink-0 rounded-lg border border-border bg-background px-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
         defaultValue=""
         onChange={(e) => {
-          if (e.target.value) onFormat({ type: "fontName", value: e.target.value });
+          if (e.target.value)
+            onFormat({ type: "fontName", value: e.target.value });
         }}
       >
-        <option value="" disabled>Font</option>
+        <option value="" disabled>
+          Font
+        </option>
         {FONT_FAMILIES.map((f) => (
-          <option key={f.value} value={f.value}>{f.label}</option>
+          <option key={f.value} value={f.value}>
+            {f.label}
+          </option>
         ))}
       </select>
 
@@ -143,7 +148,10 @@ function TextControls({
       <SheetButton label="Italic" onAction={() => onFormat({ type: "italic" })}>
         <em>I</em>
       </SheetButton>
-      <SheetButton label="Underline" onAction={() => onFormat({ type: "underline" })}>
+      <SheetButton
+        label="Underline"
+        onAction={() => onFormat({ type: "underline" })}
+      >
         <span className="underline">U</span>
       </SheetButton>
 
@@ -151,7 +159,10 @@ function TextControls({
 
       {/* Color */}
       <div className="relative flex-shrink-0">
-        <SheetButton label="Text color" onAction={() => colorRef.current?.click()}>
+        <SheetButton
+          label="Text color"
+          onAction={() => colorRef.current?.click()}
+        >
           <span className="flex flex-col items-center leading-none">
             <span className="text-sm font-semibold">A</span>
             <span className="mt-0.5 h-1 w-5 rounded-sm bg-current" />
@@ -162,19 +173,30 @@ function TextControls({
           type="color"
           aria-label="Pick text color"
           className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
-          onChange={(e) => onFormat({ type: "foreColor", value: e.target.value })}
+          onChange={(e) =>
+            onFormat({ type: "foreColor", value: e.target.value })
+          }
         />
       </div>
 
       <SheetDivider />
 
-      <SheetButton label="Align left" onAction={() => onFormat({ type: "justifyLeft" })}>
+      <SheetButton
+        label="Align left"
+        onAction={() => onFormat({ type: "justifyLeft" })}
+      >
         <AlignLeftIcon />
       </SheetButton>
-      <SheetButton label="Align center" onAction={() => onFormat({ type: "justifyCenter" })}>
+      <SheetButton
+        label="Align center"
+        onAction={() => onFormat({ type: "justifyCenter" })}
+      >
         <AlignCenterIcon />
       </SheetButton>
-      <SheetButton label="Align right" onAction={() => onFormat({ type: "justifyRight" })}>
+      <SheetButton
+        label="Align right"
+        onAction={() => onFormat({ type: "justifyRight" })}
+      >
         <AlignRightIcon />
       </SheetButton>
 
@@ -212,7 +234,11 @@ function ImageControls({
         <span>Replace</span>
       </SheetButton>
       <SheetDivider />
-      <SheetButton label="Crop image" active={cropActive} onAction={onCropToggle}>
+      <SheetButton
+        label="Crop image"
+        active={cropActive}
+        onAction={onCropToggle}
+      >
         <Crop className="h-4 w-4" />
         <span>Crop</span>
       </SheetButton>
@@ -272,7 +298,10 @@ export function BottomSheetToolbar({
     const sheetClearance = SHEET_HEIGHT_APPROX + 16;
     const safeBottom = window.innerHeight - sheetClearance;
     if (blockRect.bottom > safeBottom) {
-      container.scrollBy({ top: blockRect.bottom - safeBottom + 8, behavior: "smooth" });
+      container.scrollBy({
+        top: blockRect.bottom - safeBottom + 8,
+        behavior: "smooth",
+      });
     }
   }, [blockRect, containerRef]);
 
@@ -285,7 +314,8 @@ export function BottomSheetToolbar({
       { y: ["100%", "0%"] },
       { duration: duration("inspectorSlide") / 1000, ease: EASING.enter },
     ).finished.then(() => {
-      if (sheetRef.current) sheetRef.current.style.transform = "translateY(0px)";
+      if (sheetRef.current)
+        sheetRef.current.style.transform = "translateY(0px)";
       setEntered(true);
     });
   }, []);
@@ -322,13 +352,17 @@ export function BottomSheetToolbar({
       role="toolbar"
       aria-label={mode === "text" ? "Text format toolbar" : "Image toolbar"}
       className={cn(
-        "fixed bottom-0 left-0 right-0 z-[65]",
+        "fixed bottom-0 left-0 right-0 z-[var(--z-floating-toolbar)]",
         "rounded-t-2xl border-t border-border bg-popover shadow-2xl",
       )}
-      style={entered ? {
-        transform: `translateY(${translateY}px)`,
-        transition: isAnimating ? TRANSITIONS.bottomSheet : "none",
-      } : undefined}
+      style={
+        entered
+          ? {
+              transform: `translateY(${translateY}px)`,
+              transition: isAnimating ? TRANSITIONS.bottomSheet : "none",
+            }
+          : undefined
+      }
       // Prevent any interaction here from stealing focus (desktop mouse events)
       onMouseDown={(e) => e.preventDefault()}
     >
@@ -375,9 +409,23 @@ function AlignLeftIcon() {
   return (
     <svg width="16" height="16" viewBox="0 0 14 14" fill="none" aria-hidden>
       <rect x="1" y="2" width="12" height="1.5" rx="0.75" fill="currentColor" />
-      <rect x="1" y="5.5" width="8" height="1.5" rx="0.75" fill="currentColor" />
+      <rect
+        x="1"
+        y="5.5"
+        width="8"
+        height="1.5"
+        rx="0.75"
+        fill="currentColor"
+      />
       <rect x="1" y="9" width="12" height="1.5" rx="0.75" fill="currentColor" />
-      <rect x="1" y="12.5" width="8" height="1.5" rx="0.75" fill="currentColor" />
+      <rect
+        x="1"
+        y="12.5"
+        width="8"
+        height="1.5"
+        rx="0.75"
+        fill="currentColor"
+      />
     </svg>
   );
 }
@@ -386,9 +434,23 @@ function AlignCenterIcon() {
   return (
     <svg width="16" height="16" viewBox="0 0 14 14" fill="none" aria-hidden>
       <rect x="1" y="2" width="12" height="1.5" rx="0.75" fill="currentColor" />
-      <rect x="3" y="5.5" width="8" height="1.5" rx="0.75" fill="currentColor" />
+      <rect
+        x="3"
+        y="5.5"
+        width="8"
+        height="1.5"
+        rx="0.75"
+        fill="currentColor"
+      />
       <rect x="1" y="9" width="12" height="1.5" rx="0.75" fill="currentColor" />
-      <rect x="3" y="12.5" width="8" height="1.5" rx="0.75" fill="currentColor" />
+      <rect
+        x="3"
+        y="12.5"
+        width="8"
+        height="1.5"
+        rx="0.75"
+        fill="currentColor"
+      />
     </svg>
   );
 }
@@ -397,9 +459,23 @@ function AlignRightIcon() {
   return (
     <svg width="16" height="16" viewBox="0 0 14 14" fill="none" aria-hidden>
       <rect x="1" y="2" width="12" height="1.5" rx="0.75" fill="currentColor" />
-      <rect x="5" y="5.5" width="8" height="1.5" rx="0.75" fill="currentColor" />
+      <rect
+        x="5"
+        y="5.5"
+        width="8"
+        height="1.5"
+        rx="0.75"
+        fill="currentColor"
+      />
       <rect x="1" y="9" width="12" height="1.5" rx="0.75" fill="currentColor" />
-      <rect x="5" y="12.5" width="8" height="1.5" rx="0.75" fill="currentColor" />
+      <rect
+        x="5"
+        y="12.5"
+        width="8"
+        height="1.5"
+        rx="0.75"
+        fill="currentColor"
+      />
     </svg>
   );
 }

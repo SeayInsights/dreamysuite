@@ -146,7 +146,7 @@ function FloatingMenu({
       role="menu"
       aria-label="Block context menu"
       className={cn(
-        "fixed z-[70] min-w-[180px] rounded-lg border border-border",
+        "fixed z-[var(--z-popover)] min-w-[180px] rounded-lg border border-border",
         "bg-popover p-1 shadow-lg text-popover-foreground",
       )}
       style={{ top: clampedY, left: clampedX }}

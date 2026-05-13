@@ -35,11 +35,27 @@ const MINIMAL: Record<BlockType, Record<string, unknown>> = {
   "story-timeline": { heading: "Our Story", events: [] },
   "guest-book": { heading: "Guest Book" },
   // New (Task 3)
-  faq: { heading: "FAQ", displayMode: "faq", cardStyle: "accordion", items: [] },
+  faq: {
+    heading: "FAQ",
+    displayMode: "faq",
+    cardStyle: "accordion",
+    items: [],
+  },
   schedule: { heading: "Schedule", displayMode: "timeline", events: [] },
-  "fun-facts": { heading: "Fun Facts", columns: "auto", cardStyle: "card", items: [] },
+  "fun-facts": {
+    heading: "Fun Facts",
+    columns: "auto",
+    cardStyle: "card",
+    items: [],
+  },
   travel: { heading: "Getting There", items: [] },
-  "content-card": { heading: "Content", displayMode: "general", columns: "auto", cardStyle: "card", items: [] },
+  "content-card": {
+    heading: "Content",
+    displayMode: "general",
+    columns: "auto",
+    cardStyle: "card",
+    items: [],
+  },
   registry: { heading: "Registry", displayMode: "grid", items: [] },
 };
 
@@ -63,7 +79,7 @@ const INVALID: Record<BlockType, Record<string, unknown>> = {
   "photo-split": { layout: "upside-down" },
   rsvp: { heading: 42 },
   // Consolidated
-  "media-video": { provider: "vimeo" },
+  "media-video": { provider: "unsupported-provider" },
   gallery: { layout: "masonry" },
   "info-card": { variant: "venue" },
   // New (Task 19)

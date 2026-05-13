@@ -45,9 +45,14 @@ Real bugs and regressions. Read before debugging or building. Update when a new 
 **What happened:** New lib module added but not exported from `src/lib/index.ts`. Downstream imports failed silently.
 **Rule:** Every new `src/lib/*.ts` must be exported from `src/lib/index.ts`. Verify before committing.
 
-### editor.tsx: every useState compounds the problem
-**What happened:** 600+ useState calls create fragmented state. Each new one makes debugging harder.
-**Rule:** No new useState in editor.tsx. All new state goes through `editorStore.ts`.
+### Editor state: all shared state goes through editorStore
+**What happened:** Historical editor.tsx had 600+ useState calls creating fragmented state. Editor is now decomposed across 112 files.
+**Rule:** All shared state goes through `editorStore.ts` (Zustand slices). Local component state is fine for UI-only concerns (hover, open/close).
+
+### Canvas scaling: always use canonical width, never getBoundingClientRect for percentages
+**What happened:** BreakpointFrame applies CSS `transform: scale()` when the canvas is narrower than 1280/768/390. `getBoundingClientRect()` returns scaled (visual) dimensions, not canonical dimensions. Drag/resize percentage calculations using scaled width produced wrong values.
+**Fix:** useDrag.ts now uses `containerRect.width / scaleFactor` for canonical width. Mouse deltas are divided by scaleFactor to convert screen pixels to canvas pixels.
+**Rule:** For percentage calculations in the editor canvas, always use canonical width (1280/768/390) or `getBoundingClientRect().width / scaleFactor`. Never use raw `getBoundingClientRect().width` for percentage math. Import `useCanvasScale()` from BreakpointFrame.tsx.
 
 ### Block positioning: wrapper owns desktop, section owns tablet/mobile — never both
 **What happened:** Both `getBlockStyle()` (wrapper div) and `blockSectionStyle()` (section element) applied `translate(ox, oy)` on desktop. Visual offset was 2× the stored value. Selection boxes appeared at half the correct position. Drag calculations were off because the wrapper was measured at 1× while content rendered at 2×.
@@ -122,3 +127,4 @@ Real bugs and regressions. Read before debugging or building. Update when a new 
 | 2026-04-30 | Focus exemption fragility (closest() pattern) | Bug triage (PR #207) |
 | 2026-04-30 | Updated: CSS namespace collision → fixed (PR #208), focus exemption → fixed (PR #209) | Editor isolation Phase 1 |
 | 2026-04-30 | Iframe isolation: ownerDocument rule, effects mouse forwarding | Editor isolation Phase 2 (PRs #214-#218) |
+| 2026-05-02 | Canvas scaling: canonical width for percentages, updated editor.tsx monolith gotcha | Cross-browser rendering fix (#248) |

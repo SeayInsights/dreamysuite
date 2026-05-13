@@ -97,7 +97,7 @@ export function InlinePhotoPanel({
       exit={{ opacity: 0, y: -4 }}
       transition={{ duration: 0.15, ease: "easeOut" }}
       data-image-editor-overlay
-      className="absolute z-30 w-56 rounded-lg border border-border bg-popover shadow-xl"
+      className="absolute z-[var(--z-popover)] w-56 rounded-lg border border-border bg-popover shadow-xl"
       style={style}
       onMouseDown={(e) => e.stopPropagation()}
       onClick={(e) => e.stopPropagation()}

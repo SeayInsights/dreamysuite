@@ -122,7 +122,7 @@ export function BlockEditPanel({ containerRef }: Props) {
       position: "fixed",
       top,
       left,
-      zIndex: 9998,
+      zIndex: "var(--z-popover)",
       width: toolbarWidth,
       maxHeight: `calc(100dvh - ${top + 32}px)`,
     };
@@ -132,7 +132,7 @@ export function BlockEditPanel({ containerRef }: Props) {
       top: "50%",
       left: "50%",
       transform: "translate(-50%, -50%)",
-      zIndex: 9998,
+      zIndex: "var(--z-popover)",
       width: 320,
       maxHeight: "80dvh",
     };

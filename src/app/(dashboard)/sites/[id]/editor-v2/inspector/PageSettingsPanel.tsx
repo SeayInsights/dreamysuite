@@ -7,6 +7,7 @@ import { DateTimeInput } from "./DateTimeInput";
 import { LayoutSection } from "./LayoutSection";
 import { VenueHotelSection } from "./VenueHotelSection";
 import { Accordion } from "@/components/ui/Accordion";
+import { StyleTab } from "./StyleTab";
 
 // ---------------------------------------------------------------------------
 // Page Settings Panel — Global site settings (no breakpoint cascading)
@@ -34,7 +35,8 @@ export function PageSettingsPanel() {
         <div className="min-w-0">
           <h3 className="text-sm font-semibold text-blue-900">Page Settings</h3>
           <p className="text-xs text-blue-700/80 leading-relaxed">
-            Global settings that apply to the entire site (no breakpoint cascading)
+            Global settings that apply to the entire site (no breakpoint
+            cascading)
           </p>
         </div>
       </div>
@@ -88,6 +90,18 @@ export function PageSettingsPanel() {
         defaultOpen={false}
       >
         <LayoutSection />
+      </Accordion>
+
+      {/* Style — Background Image */}
+      <Accordion
+        title={
+          <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            Style
+          </span>
+        }
+        defaultOpen={false}
+      >
+        <StyleTab />
       </Accordion>
 
       {/* Venue & Hotels */}

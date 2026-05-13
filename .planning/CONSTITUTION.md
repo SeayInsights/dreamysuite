@@ -42,6 +42,7 @@ Next.js 16 / Cloudflare Workers (opennextjs) / D1 (SQLite) / better-auth / R2 / 
 | Theme variable chain | `BreakpointFrame.tsx` → `siteThemeVars()` → inline styles | ✅ Active |
 | Focus management | `hooks/useLastFocus.ts` + `InspectorV2.onMouseDown` | ✅ Active |
 | Iframe canvas | `IframeCanvas.tsx` — portal, stylesheet clone, theme sync | ✅ Active |
+| Canvas scaling | `BreakpointFrame.tsx` → `useCanvasScale()` context, `ScaleContext` | ✅ Active |
 | Cross-iframe events | `BreakpointFrame.tsx` — keyboard/mouse forwarding to parent | ✅ Active |
 | Selection overlay | `SelectionLayer.tsx` — parent-frame overlay reading iframe rects | ✅ Active |
 | Cross-iframe hit-testing | `EditorOverlay.tsx` — native listeners, `ownerDocument.elementsFromPoint` | ✅ Active |
@@ -61,8 +62,8 @@ Centralize one domain of logic per cycle. Template: `src/lib/validation.ts`. Big
 ### 2. Server Actions are disabled
 Workers runtime doesn't support Next.js Server Actions. All mutations go through `src/app/api/` routes only.
 
-### 3. editor.tsx is deferred until Phase 3
-5400 lines, 600+ useState calls, 3 fragmented state layers. Do not refactor until all 12 `src/lib/` domains are complete. Touching it now compounds the problem.
+### 3. Editor is decomposed (112 files in editor-v2)
+The editor is split across 112 files (19,652 total lines). Largest files: useDrag.ts (774 lines), SettingsGuests.tsx (689 lines). Canvas.tsx (239 lines) is the core component. All new state goes through editorStore (Zustand slices).
 
 ### 4. D1 migrations are append-only
 Never squash or edit existing migrations — production D1 state would desync. Add new migrations only (next sequential number).
@@ -73,8 +74,11 @@ Editor uses iframe isolation (React portal into `<iframe srcDoc>`). Public `[slu
 ### 7. Iframe isolation — DOM API rule
 Site content renders inside an iframe via `IframeCanvas` (React portal). Editor chrome (inspector, toolbar, drag handles) renders in the parent document. When writing code that manipulates canvas DOM: use `el.ownerDocument` not `document`, `el.ownerDocument.defaultView` not `window`. Keyboard and mouse events are forwarded from iframe to parent in BreakpointFrame.
 
-### 6. All new state goes through editorStore — never new useState in editor.tsx
-Every new piece of editor state must go through `editorStore.ts` (Zustand). Adding useState to the monolith makes it worse.
+### 6. All new state goes through editorStore
+Every new piece of editor state must go through `editorStore.ts` (Zustand slices). No standalone useState for shared state.
+
+### 8. Canvas scaling — canonical width coordinate system
+BreakpointFrame applies CSS `transform: scale()` when the canvas container is narrower than canonical width (1280/768/390). All drag/resize math must use canonical width via `useCanvasScale()`, never `getBoundingClientRect().width`. Mouse deltas must be divided by scaleFactor to convert screen pixels to canvas pixels.
 
 ---
 

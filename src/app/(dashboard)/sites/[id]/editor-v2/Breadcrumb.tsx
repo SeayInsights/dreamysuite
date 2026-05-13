@@ -32,7 +32,7 @@ export function Breadcrumb() {
   return (
     <nav
       aria-label="Selection breadcrumb"
-      className="pointer-events-auto absolute bottom-3 left-3 z-10 flex items-center gap-1 rounded-md border border-border bg-white/95 px-2 py-1 text-xs shadow-sm backdrop-blur"
+      className="pointer-events-auto absolute bottom-3 left-3 z-[var(--z-canvas-overlay)] flex items-center gap-1 rounded-md border border-border bg-white/95 px-2 py-1 text-xs shadow-sm backdrop-blur"
     >
       {segments.map((seg, i) => {
         const isLast = i === segments.length - 1;

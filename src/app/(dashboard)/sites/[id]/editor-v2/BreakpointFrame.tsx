@@ -30,6 +30,7 @@ const WIDTHS: Record<Breakpoint, number> = {
   tablet: 768,
   mobile: 390,
 };
+export const FRAME_PADDING_PX = 16;
 
 const GFONTS_MAP: Record<string, string> = {
   "Playfair Display": "Playfair+Display:wght@400;600",
@@ -45,6 +46,63 @@ const SYSTEM_FONTS = new Set(["Georgia", "Inter"]);
 interface Props {
   children?: ReactNode;
   nav?: ReactNode;
+}
+
+export type EditorBgImageLayer = "overlay" | "full-page" | "content";
+
+function percentValue(
+  value: number | string | null | undefined,
+  fallback: number,
+): number {
+  if (value == null || value === "") return fallback;
+  const numeric = Number(value);
+  return Number.isFinite(numeric) ? numeric : fallback;
+}
+
+export function resolveEditorBgImageLayer(
+  bgImageLayer: string | null | undefined,
+  bgImageBleed: number | string | null | undefined,
+): EditorBgImageLayer {
+  const layer = bgImageLayer?.trim().toLowerCase();
+  if (layer === "overlay") return "overlay";
+  if (
+    layer === "content" ||
+    layer === "content-only" ||
+    layer === "content_only"
+  ) {
+    return "content";
+  }
+  if (layer === "full-page" || layer === "fullpage" || layer === "page") {
+    return "full-page";
+  }
+  return Number(bgImageBleed) === 0 ? "content" : "full-page";
+}
+
+export function editorBgImageStyle({
+  bgImage,
+  bgImageZoom,
+  bgImagePositionX,
+  bgImagePositionY,
+}: {
+  bgImage: string;
+  bgImageZoom?: number | string | null;
+  bgImagePositionX?: number | string | null;
+  bgImagePositionY?: number | string | null;
+}): React.CSSProperties {
+  return {
+    backgroundImage: `url('${bgImage}')`,
+    backgroundSize: `${percentValue(bgImageZoom, 100)}%`,
+    backgroundRepeat: "no-repeat",
+    backgroundPosition: `${percentValue(bgImagePositionX, 50)}% ${percentValue(bgImagePositionY, 50)}%`,
+  };
+}
+
+export function getFrameScale(
+  availableWidth: number,
+  canonicalWidth: number,
+): number {
+  if (canonicalWidth <= 0) return 1;
+  return Math.min(1, Math.max(0, availableWidth) / canonicalWidth);
 }
 
 function siteThemeVars(
@@ -84,8 +142,12 @@ export function BreakpointFrame({ children, nav }: Props) {
       marginLeft: s.settings.marginLeft,
       bgColor: s.settings.bgColor,
       bgImage: s.settings.bgImage,
+      bgImageLayer: s.settings.bgImageLayer,
       bgImageOpacity: s.settings.bgImageOpacity,
       bgImageBleed: s.settings.bgImageBleed,
+      bgImageZoom: s.settings.bgImageZoom,
+      bgImagePositionX: s.settings.bgImagePositionX,
+      bgImagePositionY: s.settings.bgImagePositionY,
     })),
   );
   const pageBgDisabled = !!settings.pageBgDisabled;
@@ -273,7 +335,7 @@ export function BreakpointFrame({ children, nav }: Props) {
   }, [themeTokens.typography.headingFont, themeTokens.typography.bodyFont]);
 
   const canonicalWidth = WIDTHS[breakpoint];
-  const scaleFactor = Math.min(1, availableWidth / canonicalWidth);
+  const scaleFactor = getFrameScale(availableWidth, canonicalWidth);
 
   const rawMT = Number(settings.marginTop ?? 0) || 0;
   const rawMR = Number(settings.marginRight ?? 0) || 0;
@@ -292,17 +354,29 @@ export function BreakpointFrame({ children, nav }: Props) {
   const bgImage = settings.bgImage as string | null;
   const bgImageOpacity = Number(settings.bgImageOpacity ?? 1);
   const bgImageBleed = settings.bgImageBleed !== 0; // default true (1)
+  const bgImageLayer = resolveEditorBgImageLayer(
+    settings.bgImageLayer,
+    settings.bgImageBleed,
+  );
+  const bgImageBaseStyle = bgImage
+    ? editorBgImageStyle({
+        bgImage,
+        bgImageZoom: settings.bgImageZoom,
+        bgImagePositionX: settings.bgImagePositionX,
+        bgImagePositionY: settings.bgImagePositionY,
+      })
+    : null;
   const effectBleed = settings.effectBleed !== 0; // default true (1)
 
   return (
     <div
       ref={outerRef}
-      className="flex h-full w-full justify-center items-start overflow-hidden p-0"
+      className="box-border flex h-full w-full items-start justify-center overflow-hidden"
       style={{
         background: isDesktop
           ? "linear-gradient(135deg, #f8f7f5 0%, #ede9e3 100%)"
           : "rgb(var(--site-muted) / 0.4)",
-        paddingTop: scaleFactor < 1 ? "8px" : undefined,
+        padding: FRAME_PADDING_PX,
       }}
       onClick={handleDeselect}
     >
@@ -311,7 +385,7 @@ export function BreakpointFrame({ children, nav }: Props) {
           style={{
             width: `${canonicalWidth * scaleFactor}px`,
             height: "100%",
-            overflow: "visible",
+            overflow: "hidden",
           }}
         >
           <div
@@ -353,28 +427,33 @@ export function BreakpointFrame({ children, nav }: Props) {
                   <BgEffect {...effectColors} />
                 </div>
               )}
-              {bgImage && !pageBgDisabled && (
-                <div
-                  className="pointer-events-none absolute overflow-hidden"
-                  style={{
-                    zIndex: 1,
-                    top: bgImageBleed ? 0 : mT,
-                    right: bgImageBleed ? 0 : mR,
-                    bottom: bgImageBleed ? 0 : mB,
-                    left: bgImageBleed ? 0 : mL,
-                    backgroundImage: `url('${bgImage}')`,
-                    backgroundSize: "cover",
-                    backgroundPosition: "center",
-                    opacity: bgImageOpacity,
-                  }}
-                />
-              )}
+              {bgImageBaseStyle &&
+                bgImageLayer !== "content" &&
+                !pageBgDisabled && (
+                  <div
+                    className="pointer-events-none absolute overflow-hidden"
+                    style={{
+                      zIndex: 1,
+                      top: bgImageBleed ? 0 : mT,
+                      right: bgImageBleed ? 0 : mR,
+                      bottom: bgImageBleed ? 0 : mB,
+                      left: bgImageBleed ? 0 : mL,
+                      ...bgImageBaseStyle,
+                      opacity: bgImageOpacity,
+                    }}
+                  />
+                )}
               <div
                 className="editor-canvas-scroll relative h-full overflow-x-hidden overflow-y-auto"
                 style={{ zIndex: 10 }}
               >
                 <div
                   style={{
+                    ...(bgImageBaseStyle &&
+                    bgImageLayer === "content" &&
+                    !pageBgDisabled
+                      ? bgImageBaseStyle
+                      : {}),
                     padding: `${isDesktop ? mT : mT + navHeight}px ${mR}px ${mB}px ${mL}px`,
                     overflow: "hidden",
                   }}
