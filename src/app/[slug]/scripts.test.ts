@@ -14,7 +14,7 @@ function makeElement(computedBackgroundImage = "none") {
     string,
     string | ((name: string, value?: string) => void)
   > = {
-    setProperty(name: string, value: string) {
+    setProperty(name: string, value = "") {
       style[name] = value;
     },
     removeProperty(name: string) {
