@@ -112,7 +112,7 @@ export function buildMessageListenerScript(): string {
       return (Number.isFinite ? Number.isFinite(numeric) : isFinite(numeric)) ? numeric : fallback;
     }
     function toBackgroundSize(value, fallback) {
-      return toBackgroundPercent(value, fallback) + '% 100%';
+      return 'auto ' + Math.max(100, toBackgroundPercent(value, fallback)) + '%';
     }
     function hasBackgroundImage(surface) {
       if (!surface) return false;
