@@ -37,10 +37,29 @@ export interface SettingsSlice {
   settings: MergedSettings;
   settingsLoaded: boolean;
   settingsDirty: boolean;
+  settingsPendingPatch: MergedSettingsPatch;
   loadSettings: (siteId: string) => Promise<void>;
   updateSettings: (patch: MergedSettingsPatch) => void;
   saveSettings: (siteId: string) => Promise<void>;
   markSettingsClean: () => void;
+}
+
+function hasPatch(patch: MergedSettingsPatch): boolean {
+  return Object.keys(patch).length > 0;
+}
+
+function remainingPendingPatch(
+  pending: MergedSettingsPatch,
+  sentPatch: MergedSettingsPatch,
+): MergedSettingsPatch {
+  const remaining = { ...pending };
+  for (const rawKey of Object.keys(sentPatch)) {
+    const key = rawKey as keyof MergedSettingsPatch;
+    if (Object.is(remaining[key], sentPatch[key])) {
+      delete remaining[key];
+    }
+  }
+  return remaining;
 }
 
 export const createSettingsSlice: StateCreator<
@@ -52,6 +71,7 @@ export const createSettingsSlice: StateCreator<
   settings: { ...MERGED_DEFAULTS },
   settingsLoaded: false,
   settingsDirty: false,
+  settingsPendingPatch: {},
 
   loadSettings: async (siteId) => {
     try {
@@ -69,6 +89,7 @@ export const createSettingsSlice: StateCreator<
         settings: merged,
         settingsLoaded: true,
         settingsDirty: false,
+        settingsPendingPatch: {},
         themeTokens: settingsToTheme(merged),
       });
     } catch (e) {
@@ -79,34 +100,45 @@ export const createSettingsSlice: StateCreator<
   updateSettings: (patch) => {
     const prev = get().settings;
     const next = { ...prev, ...patch };
-    set({
+    set((state) => ({
       settings: next,
       settingsDirty: true,
+      settingsPendingPatch: { ...state.settingsPendingPatch, ...patch },
       themeTokens: settingsToTheme(next),
-    });
+    }));
   },
 
   saveSettings: async (siteId) => {
     if (!get().settingsDirty) return;
-    const settings = get().settings;
+    const sentPatch = { ...get().settingsPendingPatch };
+    if (!hasPatch(sentPatch)) return;
     try {
       const res = await fetch(`/api/sites/${siteId}/settings`, {
         method: "PUT",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify(settings),
+        body: JSON.stringify(sentPatch),
       });
       if (!res.ok) {
         const text = await res.text().catch(() => "");
         console.error("[settings:save] PUT failed", res.status, text);
-        set({ settingsDirty: false });
         return;
       }
-      set({ settingsDirty: false });
+      const remaining = remainingPendingPatch(
+        get().settingsPendingPatch,
+        sentPatch,
+      );
+      set({
+        settingsPendingPatch: remaining,
+        settingsDirty: hasPatch(remaining),
+      });
+      if (hasPatch(remaining)) {
+        await get().saveSettings(siteId);
+      }
     } catch (e) {
       console.error("[settings:save] network error:", e);
-      set({ settingsDirty: false });
     }
   },
 
-  markSettingsClean: () => set({ settingsDirty: false }),
+  markSettingsClean: () =>
+    set({ settingsDirty: false, settingsPendingPatch: {} }),
 });
