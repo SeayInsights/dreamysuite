@@ -1,6 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useCallback } from "react";
+/* eslint-disable react-hooks/set-state-in-effect -- panel geometry is measured from the DOM after mount. */
+
+import { useEffect, useRef, useCallback, useState } from "react";
 import { createPortal } from "react-dom";
 import { useEditorStore } from "@/app/stores/editorStore";
 import { BlockContentPanel } from "../inspector/BlockContentPanel";
@@ -34,6 +36,9 @@ export function BlockEditPanel({ containerRef }: Props) {
   const inspectorOpen = useEditorStore((s) => s.inspectorOpen);
 
   const panelRef = useRef<HTMLDivElement>(null);
+  const [panelStyle, setPanelStyle] = useState<React.CSSProperties | null>(
+    null,
+  );
 
   // Close on Escape
   useEffect(() => {
@@ -67,67 +72,8 @@ export function BlockEditPanel({ containerRef }: Props) {
     };
   }, [editingPanelBlockId, handleOutsideClick]);
 
-  if (!editingPanelBlockId || !block || typeof document === "undefined") {
-    return null;
-  }
-
-  // Derive position using smart positioning algorithm:
-  // - Avoid viewport edges (top/bottom/left/right)
-  // - Avoid inspector overlap when open (assumes 320px width on right)
-  // - Fallback to centered position if no container ref
-  let panelStyle: React.CSSProperties;
-  // eslint-disable-next-line react-hooks/refs
-  const container = containerRef.current;
-  if (container) {
-    // eslint-disable-next-line react-hooks/refs
-    const rawBox = container.getBoundingClientRect();
-    const frame = container.ownerDocument?.defaultView?.frameElement;
-    const frameRect = frame
-      ? frame.getBoundingClientRect()
-      : { top: 0, left: 0 };
-    const box = {
-      top: rawBox.top + frameRect.top,
-      left: rawBox.left + frameRect.left,
-      width: rawBox.width,
-      height: rawBox.height,
-    };
-    const toolbarWidth = 320;
-    const inspectorWidth = 320;
-    const padding = 16;
-    const topbarHeight = 72;
-
-    // Calculate available space
-    const viewportWidth = window.innerWidth;
-    const viewportHeight = window.innerHeight;
-    const availableRight = inspectorOpen
-      ? viewportWidth - inspectorWidth
-      : viewportWidth;
-
-    // Try: above canvas, centered
-    let top = Math.max(box.top + topbarHeight, topbarHeight);
-    let left = Math.max(box.left + padding, padding);
-
-    // Clamp left to avoid inspector overlap
-    left = Math.min(left, availableRight - toolbarWidth - padding);
-
-    // Clamp top to avoid bottom overflow
-    const maxTop = viewportHeight - 400; // Reserve 400px minimum height
-    top = Math.min(top, maxTop);
-
-    // Ensure minimum padding from edges
-    left = Math.max(left, padding);
-    top = Math.max(top, topbarHeight);
-
-    panelStyle = {
-      position: "fixed",
-      top,
-      left,
-      zIndex: "var(--z-popover)",
-      width: toolbarWidth,
-      maxHeight: `calc(100dvh - ${top + 32}px)`,
-    };
-  } else {
-    panelStyle = {
+  const measurePanel = useCallback(() => {
+    const centeredStyle: React.CSSProperties = {
       position: "fixed",
       top: "50%",
       left: "50%",
@@ -136,6 +82,65 @@ export function BlockEditPanel({ containerRef }: Props) {
       width: 320,
       maxHeight: "80dvh",
     };
+
+    const container = containerRef.current;
+    if (!container) {
+      setPanelStyle(centeredStyle);
+      return;
+    }
+
+    const rawBox = container.getBoundingClientRect();
+    const frame = container.ownerDocument?.defaultView?.frameElement;
+    const frameRect = frame
+      ? frame.getBoundingClientRect()
+      : { top: 0, left: 0 };
+    const box = {
+      top: rawBox.top + frameRect.top,
+      left: rawBox.left + frameRect.left,
+    };
+    const toolbarWidth = 320;
+    const inspectorWidth = 320;
+    const padding = 16;
+    const topbarHeight = 72;
+    const availableRight = inspectorOpen
+      ? window.innerWidth - inspectorWidth
+      : window.innerWidth;
+
+    let top = Math.max(box.top + topbarHeight, topbarHeight);
+    let left = Math.max(box.left + padding, padding);
+
+    left = Math.min(left, availableRight - toolbarWidth - padding);
+    top = Math.min(top, window.innerHeight - 400);
+    left = Math.max(left, padding);
+    top = Math.max(top, topbarHeight);
+
+    setPanelStyle({
+      position: "fixed",
+      top,
+      left,
+      zIndex: "var(--z-popover)",
+      width: toolbarWidth,
+      maxHeight: `calc(100dvh - ${top + 32}px)`,
+    });
+  }, [containerRef, inspectorOpen]);
+
+  useEffect(() => {
+    if (!editingPanelBlockId) {
+      setPanelStyle(null);
+      return;
+    }
+    measurePanel();
+    window.addEventListener("resize", measurePanel);
+    return () => window.removeEventListener("resize", measurePanel);
+  }, [editingPanelBlockId, measurePanel]);
+
+  if (
+    !editingPanelBlockId ||
+    !block ||
+    !panelStyle ||
+    typeof document === "undefined"
+  ) {
+    return null;
   }
 
   const blockTypeLabel = block.type

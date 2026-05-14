@@ -11,6 +11,14 @@ import {
   type Rect,
 } from "../lib/boundsCalculator";
 import { useCanvasScale } from "../BreakpointFrame";
+import {
+  COL_PCT,
+  detectCollisions,
+  handleAutoScroll,
+  snapToGrid,
+  toCanonicalBounds,
+  toScaledDomRect,
+} from "./dragGeometry";
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 
@@ -50,80 +58,6 @@ interface DragSession {
 const DEBUG_DRAG = false;
 
 // ─── Snap helpers ─────────────────────────────────────────────────────────
-
-const COLUMNS = 12;
-const COL_PCT = 100 / COLUMNS; // 8.3333…%
-const SNAP_THRESHOLD_PX = 8;
-const GRID_SIZE_PX = 8; // Snap grid for move operations
-const AUTO_SCROLL_EDGE_DISTANCE_PX = 50; // Distance from viewport edge to trigger auto-scroll
-const AUTO_SCROLL_SPEED_PX = 5; // Scroll speed per frame
-
-function snapToGrid(
-  value: number,
-  gridSize: number,
-  threshold: number,
-): number {
-  const nearest = Math.round(value / gridSize) * gridSize;
-  if (Math.abs(value - nearest) <= threshold) return nearest;
-  return value;
-}
-
-function rectsOverlap(a: DOMRect, b: DOMRect): boolean {
-  return !(
-    a.right < b.left ||
-    a.left > b.right ||
-    a.bottom < b.top ||
-    a.top > b.bottom
-  );
-}
-
-function detectCollisions(
-  blockId: string,
-  newBounds: DOMRect,
-  allBlocks: Array<{
-    id: string;
-    type: string;
-    config: Record<string, unknown>;
-  }>,
-  container: HTMLElement,
-): string[] {
-  const collisions: string[] = [];
-  for (const block of allBlocks) {
-    if (block.id === blockId) continue;
-    const el = container.querySelector<HTMLElement>(
-      `[data-block-id="${block.id}"]`,
-    );
-    if (!el) continue;
-    const otherBounds = el.getBoundingClientRect();
-    if (rectsOverlap(newBounds, otherBounds)) {
-      collisions.push(block.id);
-    }
-  }
-  return collisions;
-}
-
-/**
- * Handle auto-scroll when pointer is near viewport edges during drag.
- * Implements FR-002 (auto-scroll near edges).
- */
-function handleAutoScroll(clientY: number, container: HTMLElement): void {
-  const scrollEl = container.closest(".editor-canvas-scroll") ?? container;
-  const rect = scrollEl.getBoundingClientRect();
-  const distanceFromTop = clientY - rect.top;
-  const distanceFromBottom = rect.bottom - clientY;
-
-  let scrollDelta = 0;
-
-  if (distanceFromTop < AUTO_SCROLL_EDGE_DISTANCE_PX) {
-    scrollDelta = -AUTO_SCROLL_SPEED_PX;
-  } else if (distanceFromBottom < AUTO_SCROLL_EDGE_DISTANCE_PX) {
-    scrollDelta = AUTO_SCROLL_SPEED_PX;
-  }
-
-  if (scrollDelta !== 0) {
-    scrollEl.scrollBy({ top: scrollDelta, behavior: "auto" });
-  }
-}
 
 // ─── Hook ──────────────────────────────────────────────────────────────────
 
@@ -333,13 +267,10 @@ export function useDrag(containerRef: React.RefObject<HTMLElement | null>): {
         // Get canvas bounds and constrain position (TR-001, TR-004).
         // getCanvasBounds returns screen-pixel dimensions; divide by scaleFactor
         // to get canonical canvas-pixel bounds that match elementRect.
-        const rawBounds = getCanvasBounds(container);
-        const bounds = {
-          minX: rawBounds.minX / scaleFactor,
-          minY: rawBounds.minY / scaleFactor,
-          maxX: rawBounds.maxX / scaleFactor,
-          maxY: rawBounds.maxY / scaleFactor,
-        };
+        const bounds = toCanonicalBounds(
+          getCanvasBounds(container),
+          scaleFactor,
+        );
         const constrained = constrainToBounds(elementRect, bounds);
 
         // Calculate constrained offset (difference from natural position)
@@ -349,26 +280,17 @@ export function useDrag(containerRef: React.RefObject<HTMLElement | null>): {
         // Apply grid snapping to constrained position
         const newConfig = {
           ...config,
-          blockOffsetX: snapToGrid(
-            constrainedOffsetX,
-            GRID_SIZE_PX,
-            SNAP_THRESHOLD_PX,
-          ),
-          blockOffsetY: snapToGrid(
-            constrainedOffsetY,
-            GRID_SIZE_PX,
-            SNAP_THRESHOLD_PX,
-          ),
+          blockOffsetX: snapToGrid(constrainedOffsetX),
+          blockOffsetY: snapToGrid(constrainedOffsetY),
         };
 
         // Detect collisions with constrained bounds.
         // constrained is in canvas pixels; scale back to screen pixels so
         // the rect aligns with getBoundingClientRect() of sibling elements.
-        const newBounds = new DOMRect(
-          containerRect.left + constrained.left * scaleFactor,
-          containerRect.top + constrained.top * scaleFactor,
-          constrained.width * scaleFactor,
-          constrained.height * scaleFactor,
+        const newBounds = toScaledDomRect(
+          containerRect,
+          constrained,
+          scaleFactor,
         );
         const collisions = detectCollisions(
           session.blockId,
@@ -401,13 +323,10 @@ export function useDrag(containerRef: React.RefObject<HTMLElement | null>): {
 
         // Get canvas bounds for resize constraints (TR-001, TR-004).
         // Scale to canonical canvas pixels so comparisons match session.*EdgePx.
-        const rawResizeBounds = getCanvasBounds(container);
-        const bounds = {
-          minX: rawResizeBounds.minX / scaleFactor,
-          minY: rawResizeBounds.minY / scaleFactor,
-          maxX: rawResizeBounds.maxX / scaleFactor,
-          maxY: rawResizeBounds.maxY / scaleFactor,
-        };
+        const bounds = toCanonicalBounds(
+          getCanvasBounds(container),
+          scaleFactor,
+        );
 
         if (DEBUG_DRAG) {
           console.log(
@@ -535,7 +454,7 @@ export function useDrag(containerRef: React.RefObject<HTMLElement | null>): {
       }
     },
 
-    [applyUpdate, blocks, containerRef, setInspectorTab],
+    [applyUpdate, blocks, containerRef, scaleFactor, setInspectorTab],
   );
 
   const onPointerUp = useCallback(() => {
@@ -687,6 +606,7 @@ export function useDrag(containerRef: React.RefObject<HTMLElement | null>): {
       onPointerUp,
       setDrag,
       setInspectorTab,
+      scaleFactor,
       temporalStore,
     ],
   );
@@ -803,6 +723,7 @@ export function useDrag(containerRef: React.RefObject<HTMLElement | null>): {
       onPointerUp,
       setDrag,
       setInspectorTab,
+      scaleFactor,
       temporalStore,
     ],
   );

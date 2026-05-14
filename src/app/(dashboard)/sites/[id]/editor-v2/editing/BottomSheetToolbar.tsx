@@ -7,7 +7,7 @@ import { ImageIcon, Crop, Wand2, Sparkles, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { duration, EASING } from "@/lib/animation/motion";
 import { TRANSITIONS } from "@/lib/animation/transitions";
-import { type FormatCommand } from "./FloatingFormatToolbar";
+import { type FormatCommand } from "./formatTypes";
 
 // ---------------------------------------------------------------------------
 // Constants

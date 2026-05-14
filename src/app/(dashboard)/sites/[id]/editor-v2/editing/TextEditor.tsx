@@ -45,7 +45,7 @@ export function TextEditor({
 
   useEditEventHandlers({ editState, editStateRef, commit, discard });
 
-  // FloatingFormatToolbar suppressed (E021) — text formatting now in inspector Content tab.
+  // Text formatting now lives in the inspector Content tab.
   // Inline editing (contentEditable, keyboard shortcuts, blur-commit) remains fully active.
   if (!editState) return <></>;
   return <></>;

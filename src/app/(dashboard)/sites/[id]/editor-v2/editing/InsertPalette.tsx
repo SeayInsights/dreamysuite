@@ -31,12 +31,6 @@ export function InsertPalette({ insertIndex, onClose, anchorRef }: Props) {
       )
     : allEntries;
 
-  // Reset active index when filter changes
-  // eslint-disable-next-line react-hooks/set-state-in-effect
-  useEffect(() => {
-    setActiveIndex(0);
-  }, [query]);
-
   // Focus input on mount
   useEffect(() => {
     inputRef.current?.focus();
@@ -177,7 +171,10 @@ export function InsertPalette({ insertIndex, onClose, anchorRef }: Props) {
           <input
             ref={inputRef}
             value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            onChange={(e) => {
+              setQuery(e.target.value);
+              setActiveIndex(0);
+            }}
             onKeyDown={onKeyDown}
             placeholder="Search blocks…"
             style={{

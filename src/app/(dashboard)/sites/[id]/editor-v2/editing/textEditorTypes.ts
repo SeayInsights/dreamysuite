@@ -5,7 +5,7 @@
  * No React dependency — safe to import anywhere.
  */
 
-import { type FormatCommand } from "./FloatingFormatToolbar";
+import { type FormatCommand } from "./formatTypes";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -40,9 +40,9 @@ export interface EditState {
 // Helpers
 // ---------------------------------------------------------------------------
 
-export function parseCfgFromBlock(
-  block: { config: Record<string, unknown> },
-): Record<string, unknown> {
+export function parseCfgFromBlock(block: {
+  config: Record<string, unknown>;
+}): Record<string, unknown> {
   return block.config;
 }
 
@@ -57,9 +57,10 @@ export function applyStyleKeyToCfg(
       next[field + "FontFamily"] = cmd.value;
       break;
     case "fontSize":
-      next[field + "Size"] = cmd.value.includes("px") || cmd.value.includes("rem")
-        ? cmd.value
-        : cmd.value + "px";
+      next[field + "Size"] =
+        cmd.value.includes("px") || cmd.value.includes("rem")
+          ? cmd.value
+          : cmd.value + "px";
       break;
     case "foreColor":
       next[field + "Color"] = cmd.value;
