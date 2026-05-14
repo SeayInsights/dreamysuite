@@ -172,7 +172,7 @@ export function StyleTab() {
               </div>
               <input
                 type="range"
-                min={50}
+                min={100}
                 max={200}
                 step={1}
                 value={localZoom}

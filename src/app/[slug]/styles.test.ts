@@ -22,7 +22,7 @@ describe("buildStyles background image zoom and position", () => {
     );
 
     expect(css).toContain(`background-image: url('${bgImage}')`);
-    expect(css).toContain("background-size: cover");
+    expect(css).toContain("background-size: auto 125%");
     expect(css).not.toContain("background-size: 125% 100%");
     expect(css).toContain("background-repeat: no-repeat");
     expect(css).toContain("background-position: 35% 65%");
@@ -42,13 +42,13 @@ describe("buildStyles background image zoom and position", () => {
 
     expect(css).toContain("#site-content");
     expect(css).toContain(`background-image: url('${bgImage}')`);
-    expect(css).toContain("background-size: cover");
+    expect(css).toContain("background-size: auto 100%");
     expect(css).not.toContain("background-size: 80% 100%");
     expect(css).toContain("background-repeat: no-repeat");
     expect(css).toContain("background-position: 20% 70%");
   });
 
-  it("keeps cover and center fallback when zoom and position are absent", () => {
+  it("keeps fill-safe zoom and center fallback when zoom and position are absent", () => {
     const { css } = buildStyles(
       styleSettings({
         bgImage,
@@ -57,7 +57,7 @@ describe("buildStyles background image zoom and position", () => {
       }),
     );
 
-    expect(css).toContain("background-size: cover");
+    expect(css).toContain("background-size: auto 100%");
     expect(css).toContain("background-position: center");
     expect(css).not.toContain("undefined%");
   });

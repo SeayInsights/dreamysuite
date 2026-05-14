@@ -47,7 +47,7 @@ export function buildStyles(settings: SiteSettingRow | null): BuiltStyles {
     const numeric = Number(value);
     return Number.isFinite(numeric) ? numeric : fallback;
   };
-  const bgImageSize = "cover";
+  const bgImageSize = `auto ${Math.max(100, numberOrDefault(settings?.bgImageZoom, 100))}%`;
   const bgImagePosition = hasBgImagePosition
     ? `${numberOrDefault(settings?.bgImagePositionX, 50)}% ${numberOrDefault(settings?.bgImagePositionY, 50)}%`
     : "center";

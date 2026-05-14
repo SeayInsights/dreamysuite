@@ -111,6 +111,9 @@ export function buildMessageListenerScript(): string {
       var numeric = Number(value);
       return (Number.isFinite ? Number.isFinite(numeric) : isFinite(numeric)) ? numeric : fallback;
     }
+    function toBackgroundSize(value, fallback) {
+      return 'auto ' + Math.max(100, toBackgroundPercent(value, fallback)) + '%';
+    }
     function hasBackgroundImage(surface) {
       if (!surface) return false;
       if (surface.style.backgroundImage && surface.style.backgroundImage !== 'none') return true;
@@ -129,7 +132,7 @@ export function buildMessageListenerScript(): string {
     function applyBgZoomPosition(surface, delta) {
       if (!surface) return;
       if ('bgImageZoom' in delta) {
-        surface.style.backgroundSize = 'cover';
+        surface.style.backgroundSize = toBackgroundSize(delta.bgImageZoom, 100);
         surface.style.backgroundRepeat = 'no-repeat';
       }
       if ('bgImagePositionX' in delta || 'bgImagePositionY' in delta) {
