@@ -535,7 +535,7 @@ export function useDrag(containerRef: React.RefObject<HTMLElement | null>): {
       }
     },
 
-    [applyUpdate, blocks, containerRef, setInspectorTab],
+    [applyUpdate, blocks, containerRef, scaleFactor, setInspectorTab],
   );
 
   const onPointerUp = useCallback(() => {
@@ -687,6 +687,7 @@ export function useDrag(containerRef: React.RefObject<HTMLElement | null>): {
       onPointerUp,
       setDrag,
       setInspectorTab,
+      scaleFactor,
       temporalStore,
     ],
   );
@@ -803,6 +804,7 @@ export function useDrag(containerRef: React.RefObject<HTMLElement | null>): {
       onPointerUp,
       setDrag,
       setInspectorTab,
+      scaleFactor,
       temporalStore,
     ],
   );

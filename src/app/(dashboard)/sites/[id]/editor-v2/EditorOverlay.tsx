@@ -189,7 +189,7 @@ export function EditorOverlay({
       el.removeEventListener("pointercancel", handlePointerUp);
       el.removeEventListener("mouseleave", handleMouseLeave);
     };
-  }, [containerRef, select, hover, clear, startMove]);
+  }, [containerRef, onContainerReady, select, hover, clear, startMove]);
 
   return (
     <div ref={containerRef} className="relative min-h-full w-full pb-8">

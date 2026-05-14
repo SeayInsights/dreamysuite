@@ -91,12 +91,18 @@ export function Canvas({ siteId }: Props) {
         const blocksPromises = pages.map(async (page) => {
           try {
             const res = await fetch(`/api/sites/${siteId}/pages/${page.id}`);
-            if (!res.ok) throw new Error(`Failed to load blocks for page ${page.id}`);
-            const { blocks: rawBlocks } = (await res.json()) as { blocks: unknown[] };
+            if (!res.ok)
+              throw new Error(`Failed to load blocks for page ${page.id}`);
+            const { blocks: rawBlocks } = (await res.json()) as {
+              blocks: unknown[];
+            };
             const parsed = (rawBlocks as Block[]).map((b) => ({
               ...b,
               config: parseCfg(b.config),
-              overrides: typeof b.overrides === "string" ? JSON.parse(b.overrides) : b.overrides,
+              overrides:
+                typeof b.overrides === "string"
+                  ? JSON.parse(b.overrides)
+                  : b.overrides,
             }));
             const { blocks: consolidated } = consolidateBlocks(parsed);
             return { pageId: page.id, blocks: consolidated as Block[], parsed };
@@ -158,6 +164,7 @@ export function Canvas({ siteId }: Props) {
 
   useEffect(() => {
     if (!currentPageId) return;
+    let cancelled = false;
 
     // Save previous page's blocks to cache before switching
     if (prevPageIdRef.current && prevPageIdRef.current !== currentPageId) {
@@ -167,17 +174,23 @@ export function Canvas({ siteId }: Props) {
     prevPageIdRef.current = currentPageId;
 
     // Check cache first (read from store to avoid dependency)
-    const cachedBlocks = useEditorStore.getState().pageBlocksCache[currentPageId];
+    const cachedBlocks =
+      useEditorStore.getState().pageBlocksCache[currentPageId];
     if (cachedBlocks) {
       // Instant navigation from cache
       setBlocks(cachedBlocks);
-      setBlocksLoading(false);
-      return;
+      queueMicrotask(() => {
+        if (!cancelled) setBlocksLoading(false);
+      });
+      return () => {
+        cancelled = true;
+      };
     }
 
     // Fallback: fetch if not in cache (shouldn't happen after initial load)
-    let cancelled = false;
-    setBlocksLoading(true);
+    queueMicrotask(() => {
+      if (!cancelled) setBlocksLoading(true);
+    });
 
     async function loadBlocks() {
       try {
