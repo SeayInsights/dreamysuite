@@ -80,6 +80,7 @@ function installListener(options?: {
   );
 
   return {
+    root,
     body,
     overlay,
     siteContent,
@@ -93,6 +94,24 @@ function installListener(options?: {
 }
 
 describe("buildMessageListenerScript background image live updates", () => {
+  it("updates public site CSS variable names for live theme changes", () => {
+    const { root, send } = installListener();
+
+    send({
+      accentColor: "#123456",
+      bodyColor: "#654321",
+      siteTextColor: "#abcdef",
+    });
+
+    expect(root.style["--site-accent"]).toBe("#123456");
+    expect(root.style["--body-color"]).toBe("#654321");
+    expect(root.style["--site-muted"]).toBe("#654321");
+    expect(root.style["--site-text"]).toBe("#abcdef");
+    expect(root.style["--text"]).toBe("#abcdef");
+    expect(root.style["--accent"]).toBeUndefined();
+    expect(root.style["--muted"]).toBeUndefined();
+  });
+
   it("preserves overlay zoom and position behavior", () => {
     const { overlay, send } = installListener({ overlayDisplay: "" });
 

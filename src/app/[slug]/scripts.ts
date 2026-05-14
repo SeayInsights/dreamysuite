@@ -47,7 +47,7 @@ export function buildMessageListenerScript(): string {
   function applySiteSettings(delta) {
     var root = document.documentElement;
     var map = {
-      accentColor: '--accent',
+      accentColor: '--site-accent',
       bgColor: '--bg',
       headingColor: '--heading-color',
       bodyColor: '--body-color',
@@ -64,7 +64,7 @@ export function buildMessageListenerScript(): string {
       if (map[k]) root.style.setProperty(map[k], String(delta[k]));
     });
     if ('siteTextColor' in delta) root.style.setProperty('--text', String(delta.siteTextColor || '#292524'));
-    if ('bodyColor' in delta) root.style.setProperty('--muted', String(delta.bodyColor || '#78716c'));
+    if ('bodyColor' in delta) root.style.setProperty('--site-muted', String(delta.bodyColor || '#78716c'));
     if ('headingFont' in delta) root.style.setProperty('--heading-font', String(delta.headingFont || 'Georgia, serif'));
     if ('bodyFont' in delta) root.style.setProperty('--body-font', String(delta.bodyFont || 'system-ui, sans-serif'));
     if ('marginTop' in delta || 'marginRight' in delta || 'marginBottom' in delta || 'marginLeft' in delta) {
