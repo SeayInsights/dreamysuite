@@ -37,7 +37,7 @@ describe("BreakpointFrame editor background image placement", () => {
       }),
     ).toMatchObject({
       backgroundImage: "url('https://cdn.example/bg.jpg')",
-      backgroundSize: "135% 100%",
+      backgroundSize: "cover",
       backgroundRepeat: "no-repeat",
       backgroundPosition: "25% 70%",
     });
@@ -50,9 +50,19 @@ describe("BreakpointFrame editor background image placement", () => {
         bgImagePositionY: "",
       }),
     ).toMatchObject({
-      backgroundSize: "100% 100%",
+      backgroundSize: "cover",
       backgroundPosition: "50% 50%",
     });
+  });
+
+  it("does not stretch image height independently from width", () => {
+    const style = editorBgImageStyle({
+      bgImage: "https://cdn.example/bg.jpg",
+      bgImageZoom: 160,
+    });
+
+    expect(style.backgroundSize).toBe("cover");
+    expect(style.backgroundSize).not.toContain("100% 100%");
   });
 });
 

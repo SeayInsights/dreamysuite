@@ -117,7 +117,7 @@ describe("buildMessageListenerScript background image live updates", () => {
 
     send({ bgImageZoom: 125, bgImagePositionX: 35, bgImagePositionY: 65 });
 
-    expect(overlay.style.backgroundSize).toBe("125% 100%");
+    expect(overlay.style.backgroundSize).toBe("cover");
     expect(overlay.style.backgroundPosition).toBe("35% 65%");
     expect(overlay.style.backgroundRepeat).toBe("no-repeat");
   });
@@ -130,7 +130,7 @@ describe("buildMessageListenerScript background image live updates", () => {
 
     send({ bgImageZoom: 90, bgImagePositionX: 20, bgImagePositionY: 70 });
 
-    expect(body.style.backgroundSize).toBe("90% 100%");
+    expect(body.style.backgroundSize).toBe("cover");
     expect(body.style.backgroundPosition).toBe("20% 70%");
     expect(body.style.backgroundRepeat).toBe("no-repeat");
   });
@@ -143,7 +143,7 @@ describe("buildMessageListenerScript background image live updates", () => {
 
     send({ bgImageZoom: 80, bgImagePositionX: 10, bgImagePositionY: 55 });
 
-    expect(siteContent.style.backgroundSize).toBe("80% 100%");
+    expect(siteContent.style.backgroundSize).toBe("cover");
     expect(siteContent.style.backgroundPosition).toBe("10% 55%");
     expect(siteContent.style.backgroundRepeat).toBe("no-repeat");
   });
@@ -156,9 +156,10 @@ describe("buildMessageListenerScript background image live updates", () => {
 
     send({ bgImageZoom: null, bgImagePositionX: null, bgImagePositionY: null });
 
-    expect(body.style.backgroundSize).toBe("100% 100%");
+    expect(body.style.backgroundSize).toBe("cover");
     expect(body.style.backgroundPosition).toBe("50% 50%");
     expect(body.style.backgroundSize).not.toContain("undefined");
+    expect(body.style.backgroundSize).not.toContain("100% 100%");
     expect(body.style.backgroundPosition).not.toContain("undefined");
   });
 });

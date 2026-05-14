@@ -80,7 +80,7 @@ export function resolveEditorBgImageLayer(
 
 export function editorBgImageStyle({
   bgImage,
-  bgImageZoom,
+  bgImageZoom: _bgImageZoom,
   bgImagePositionX,
   bgImagePositionY,
 }: {
@@ -91,7 +91,7 @@ export function editorBgImageStyle({
 }): React.CSSProperties {
   return {
     backgroundImage: `url('${bgImage}')`,
-    backgroundSize: `${percentValue(bgImageZoom, 100)}% 100%`,
+    backgroundSize: "cover",
     backgroundRepeat: "no-repeat",
     backgroundPosition: `${percentValue(bgImagePositionX, 50)}% ${percentValue(bgImagePositionY, 50)}%`,
   };
