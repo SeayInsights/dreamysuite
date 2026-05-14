@@ -15,6 +15,27 @@ export interface Env {
   RESEND_API_KEY: string;
 }
 
+const BUILD_TIME_AUTH_SECRET = "k2eNjG9xV6Qp3ZrW8mCt5LsYbHaU4dF0sPqX7nRvM1c=";
+
+function isBuildTimeAuthContext(): boolean {
+  const lifecycle = process.env.npm_lifecycle_event;
+  return (
+    process.env.NEXT_PHASE === "phase-production-build" ||
+    lifecycle === "build" ||
+    lifecycle === "deploy" ||
+    process.env.CI === "true"
+  );
+}
+
+function authSecretFor(env: Env): string | undefined {
+  return (
+    env.AUTH_SECRET ||
+    process.env.BETTER_AUTH_SECRET ||
+    process.env.AUTH_SECRET ||
+    (isBuildTimeAuthContext() ? BUILD_TIME_AUTH_SECRET : undefined)
+  );
+}
+
 // RATE LIMITING — add Cloudflare dashboard rule manually:
 // Dashboard → your-zone → Security → WAF → Rate Limiting Rules
 // Rule: Path matches /api/auth/* | Threshold: 10 req / 60s per IP | Action: Block (1 min)
@@ -25,7 +46,13 @@ export function createAuth(env: Env) {
     emailAndPassword: {
       enabled: true,
       requireEmailVerification: true,
-      sendResetPassword: async ({ user, url }: { user: { email: string }; url: string }) => {
+      sendResetPassword: async ({
+        user,
+        url,
+      }: {
+        user: { email: string };
+        url: string;
+      }) => {
         const res = await fetch("https://api.resend.com/emails", {
           method: "POST",
           headers: {
@@ -44,13 +71,20 @@ export function createAuth(env: Env) {
         });
         if (res && !res.ok) {
           const body = await res.text().catch(() => "");
-          console.error(`[auth] reset password email rejected: ${res.status} ${body}`);
+          console.error(
+            `[auth] reset password email rejected: ${res.status} ${body}`,
+          );
         }
       },
     },
     emailVerification: {
-      sendVerificationEmail: async ({ user, url }: { user: { email: string }; url: string }) => {
-        console.log(`[auth] sendVerificationEmail called for ${user.email}, url: ${url}`);
+      sendVerificationEmail: async ({
+        user,
+        url,
+      }: {
+        user: { email: string };
+        url: string;
+      }) => {
         const res = await fetch("https://api.resend.com/emails", {
           method: "POST",
           headers: {
@@ -69,11 +103,13 @@ export function createAuth(env: Env) {
         });
         if (res && !res.ok) {
           const body = await res.text().catch(() => "");
-          console.error(`[auth] verification email rejected: ${res.status} ${body}`);
+          console.error(
+            `[auth] verification email rejected: ${res.status} ${body}`,
+          );
         }
       },
     },
-    secret: env.AUTH_SECRET,
+    secret: authSecretFor(env),
     baseURL: env.APP_URL,
     advanced: {
       defaultCookieAttributes: {

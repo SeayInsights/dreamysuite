@@ -8,7 +8,11 @@ type PageContent = Record<string, unknown>;
 
 const MIGRATION_MAP: Record<
   string,
-  { contentKey: string; configKey: string; transform?: (items: unknown[]) => unknown[] }
+  {
+    contentKey: string;
+    configKey: string;
+    transform?: (items: unknown[]) => unknown[];
+  }
 > = {
   faq: {
     contentKey: "questions",
@@ -17,7 +21,11 @@ const MIGRATION_MAP: Record<
     transform: (items) =>
       items.map((raw) => {
         const item = raw as Record<string, unknown>;
-        return { id: crypto.randomUUID(), question: item.q ?? item.question ?? "", answer: item.a ?? item.answer ?? "" };
+        return {
+          id: crypto.randomUUID(),
+          question: item.q ?? item.question ?? "",
+          answer: item.a ?? item.answer ?? "",
+        };
       }),
   },
   schedule: {
@@ -44,16 +52,24 @@ const MIGRATION_MAP: Record<
     configKey: "items",
     // V1 tidbits are {title, body, icon} — title maps to question in v2
     transform: (items) =>
-      items.map((raw) => ({ id: crypto.randomUUID(), ...(raw as Record<string, unknown>) })),
+      items.map((raw) => ({
+        id: crypto.randomUUID(),
+        ...(raw as Record<string, unknown>),
+      })),
   },
   travel: {
     contentKey: "travelItems",
     configKey: "items",
     // V1 travelItems already use camelCase linkLabel/linkUrl
     transform: (items) =>
-      items.map((raw) => ({ id: crypto.randomUUID(), ...(raw as Record<string, unknown>) })),
+      items.map((raw) => ({
+        id: crypto.randomUUID(),
+        ...(raw as Record<string, unknown>),
+      })),
   },
 };
+
+const DEBUG_V1_MIGRATION = false;
 
 export function useV1Migration(siteId: string) {
   const migratedPages = useRef<Set<string>>(new Set());
@@ -92,7 +108,11 @@ export function useV1Migration(siteId: string) {
         const res = await fetch(`/api/sites/${siteId}/content`);
         if (!res.ok) return;
         const data = (await res.json()) as {
-          content: Array<{ pageSlug: string; lang: string; content: PageContent }>;
+          content: Array<{
+            pageSlug: string;
+            lang: string;
+            content: PageContent;
+          }>;
         };
 
         if (cancelled) return;
@@ -119,17 +139,30 @@ export function useV1Migration(siteId: string) {
 
           const items = mapping.transform
             ? mapping.transform(legacy)
-            : legacy.map((raw) => ({ id: crypto.randomUUID(), ...(raw as Record<string, unknown>) }));
+            : legacy.map((raw) => ({
+                id: crypto.randomUUID(),
+                ...(raw as Record<string, unknown>),
+              }));
 
           // _v2migrated persists to DB via normal block sync — prevents re-run on reload
-          const newConfig = { ...cfg, [mapping.configKey]: items, _v2migrated: true };
+          const newConfig = {
+            ...cfg,
+            [mapping.configKey]: items,
+            _v2migrated: true,
+          };
           updateBlock(block.id, { config: newConfig });
           migrated++;
-          console.log(`[V1 Migration] Copied ${legacy.length} ${mapping.contentKey} → ${block.type} block ${block.id}`);
+          if (DEBUG_V1_MIGRATION) {
+            console.log(
+              `[V1 Migration] Copied ${legacy.length} ${mapping.contentKey} to ${block.type} block ${block.id}`,
+            );
+          }
         }
 
-        if (migrated > 0) {
-          console.log(`[V1 Migration] Migrated ${migrated} block(s) on page "${page!.slug}"`);
+        if (DEBUG_V1_MIGRATION && migrated > 0) {
+          console.log(
+            `[V1 Migration] Migrated ${migrated} block(s) on page "${page!.slug}"`,
+          );
         }
       } catch (err) {
         console.warn("[V1 Migration] Failed to fetch legacy content:", err);
@@ -139,6 +172,8 @@ export function useV1Migration(siteId: string) {
     }
 
     migrate();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [siteId, currentPageId, blockCount]);
 }
