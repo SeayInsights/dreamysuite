@@ -29,11 +29,23 @@ interface ColorInputProps {
 	value: string;
 	onChange: (value: string) => void;
 	isInheriting?: boolean;
+	includeThemeBackgroundSwatch?: boolean;
 }
 
-export function ColorInput({ value, onChange, isInheriting }: ColorInputProps) {
+export function ColorInput({
+	value,
+	onChange,
+	isInheriting,
+	includeThemeBackgroundSwatch = true,
+}: ColorInputProps) {
 	const themeColors = useEditorStore((s) => s.themeTokens.colors);
-	const swatches = useMemo(() => themeSwatches(themeColors), [themeColors]);
+	const swatches = useMemo(
+		() =>
+			themeSwatches(themeColors, {
+				includeBackground: includeThemeBackgroundSwatch,
+			}),
+		[includeThemeBackgroundSwatch, themeColors],
+	);
 	const gradients = useMemo(() => themeGradients(themeColors), [themeColors]);
 
 	const isGradient = value.startsWith("linear-gradient") || value.startsWith("radial-gradient");
