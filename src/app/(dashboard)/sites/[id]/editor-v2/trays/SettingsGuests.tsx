@@ -14,6 +14,7 @@ import {
   buildGuestCsv,
   filterAndSortGuests,
   getGuestCategories,
+  hasActiveGuestFilters,
   parseCsv,
   type Guest,
 } from "./guests/model";
@@ -30,7 +31,7 @@ export function GuestsPanel({ onBack }: { onBack: () => void }) {
   const updateSettings = useEditorStore((s) => s.updateSettings);
 
   const [guests, setGuests] = useState<Guest[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(() => Boolean(siteId));
   const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState(BLANK_GUEST_FORM);
   const [saving, setSaving] = useState(false);
@@ -59,6 +60,8 @@ export function GuestsPanel({ onBack }: { onBack: () => void }) {
     skipped: number;
   } | null>(null);
   const [importing, setImporting] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   const categories = getGuestCategories(settings?.guestCategories);
 
@@ -85,18 +88,30 @@ export function GuestsPanel({ onBack }: { onBack: () => void }) {
   }
 
   useEffect(() => {
-    if (!siteId) return;
+    if (!siteId) {
+      return;
+    }
     fetch(`/api/sites/${siteId}/guests`)
       .then((r) => (r.ok ? r.json() : Promise.reject()))
       .then((d) => setGuests((d as { guests: Guest[] }).guests))
-      .catch(() => {})
+      .catch(() =>
+        setLoadError("Guests could not be loaded. Try refreshing this panel."),
+      )
       .finally(() => setLoading(false));
   }, [siteId]);
 
   async function deleteGuest(id: string) {
     if (!siteId) return;
-    await fetch(`/api/sites/${siteId}/guests/${id}`, { method: "DELETE" });
-    setGuests((prev) => prev.filter((g) => g.id !== id));
+    setActionError(null);
+    try {
+      const res = await fetch(`/api/sites/${siteId}/guests/${id}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) throw new Error("Delete failed");
+      setGuests((prev) => prev.filter((g) => g.id !== id));
+    } catch {
+      setActionError("That guest could not be deleted. Try again.");
+    }
   }
 
   async function patchGuest(
@@ -107,6 +122,7 @@ export function GuestsPanel({ onBack }: { onBack: () => void }) {
     if (!siteId) return;
     const prev = guests.find((g) => g.id === guestId);
     if (!prev) return;
+    setActionError(null);
     setGuests((gs) =>
       gs.map((g) => (g.id === guestId ? { ...g, [field]: value } : g)),
     );
@@ -116,10 +132,10 @@ export function GuestsPanel({ onBack }: { onBack: () => void }) {
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ [field]: value }),
       });
-      if (!res.ok)
-        setGuests((gs) => gs.map((g) => (g.id === guestId ? prev : g)));
+      if (!res.ok) throw new Error("Patch failed");
     } catch {
       setGuests((gs) => gs.map((g) => (g.id === guestId ? prev : g)));
+      setActionError("That guest update could not be saved. Try again.");
     }
     setEditing(null);
   }
@@ -128,17 +144,22 @@ export function GuestsPanel({ onBack }: { onBack: () => void }) {
     e.preventDefault();
     if (!siteId) return;
     setSaving(true);
+    setActionError(null);
     try {
       const res = await fetch(`/api/sites/${siteId}/guests`, {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify(form),
       });
-      if (!res.ok) return;
+      if (!res.ok) throw new Error("Create failed");
       const { guest } = (await res.json()) as { guest: Guest };
       setGuests((prev) => [guest, ...prev]);
       setShowModal(false);
       setForm(BLANK_GUEST_FORM);
+    } catch {
+      setActionError(
+        "That guest could not be added. Check the details and try again.",
+      );
     } finally {
       setSaving(false);
     }
@@ -277,6 +298,23 @@ export function GuestsPanel({ onBack }: { onBack: () => void }) {
     sortCol,
     sortDir,
   ]);
+  const filtersActive = hasActiveGuestFilters({
+    search,
+    category: filterCat,
+    rsvp: filterRsvp,
+    ceremony: filterCeremony,
+    invitationType: filterType,
+    sortCol,
+    sortDir,
+  });
+
+  function clearFilters() {
+    setSearch("");
+    setFilterCat("");
+    setFilterRsvp("");
+    setFilterCeremony("");
+    setFilterType("");
+  }
 
   function toggleSort(col: string) {
     if (col === "#") return;
@@ -308,23 +346,35 @@ export function GuestsPanel({ onBack }: { onBack: () => void }) {
     e.target.value = "";
     const reader = new FileReader();
     reader.onload = (ev) => {
-      const text = ev.target?.result as string;
-      const { headers, rows } = parseCsv(text);
-      const mapping: Record<string, string> = {};
-      headers.forEach((h) => {
-        const match = GUEST_FIELDS.find(
-          (f) => f.toLowerCase() === h.toLowerCase(),
+      try {
+        const text = ev.target?.result as string;
+        const { headers, rows } = parseCsv(text);
+        const mapping: Record<string, string> = {};
+        headers.forEach((h) => {
+          const match = GUEST_FIELDS.find(
+            (f) => f.toLowerCase() === h.toLowerCase(),
+          );
+          mapping[h] = match ?? "";
+        });
+        setImportModal({ headers, rows, mapping });
+        setActionError(null);
+      } catch {
+        setActionError(
+          "That CSV file could not be read. Check the file and try again.",
         );
-        mapping[h] = match ?? "";
-      });
-      setImportModal({ headers, rows, mapping });
+      }
     };
+    reader.onerror = () =>
+      setActionError(
+        "That CSV file could not be read. Check the file and try again.",
+      );
     reader.readAsText(file);
   }
 
   async function submitImport() {
     if (!importModal || !siteId) return;
     setImporting(true);
+    setActionError(null);
     try {
       const res = await fetch(`/api/sites/${siteId}/guests/import`, {
         method: "POST",
@@ -334,18 +384,21 @@ export function GuestsPanel({ onBack }: { onBack: () => void }) {
           mapping: importModal.mapping,
         }),
       });
-      if (!res.ok) return;
+      if (!res.ok) throw new Error("Import failed");
       const data = (await res.json()) as { imported: number; skipped: number };
       setImportResult(data);
       const r = await fetch(`/api/sites/${siteId}/guests`);
-      if (r.ok) {
-        const d = (await r.json()) as { guests: Guest[] };
-        setGuests(d.guests);
-      }
+      if (!r.ok) throw new Error("Guest refresh failed");
+      const d = (await r.json()) as { guests: Guest[] };
+      setGuests(d.guests);
       setTimeout(() => {
         setImportModal(null);
         setImportResult(null);
       }, 2500);
+    } catch {
+      setActionError(
+        "Guests could not be imported. Check the mapping and try again.",
+      );
     } finally {
       setImporting(false);
     }
@@ -421,6 +474,21 @@ export function GuestsPanel({ onBack }: { onBack: () => void }) {
           </b>
         </span>
       </div>
+      {(loadError || actionError) && (
+        <div className="flex items-center justify-between gap-3 border-b border-destructive/20 bg-destructive/10 px-4 py-2 text-xs text-destructive">
+          <span>{actionError ?? loadError}</span>
+          <button
+            type="button"
+            onClick={() => {
+              setActionError(null);
+              setLoadError(null);
+            }}
+            className="rounded px-1.5 py-0.5 hover:bg-destructive/10"
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
       <div className="flex flex-wrap items-center gap-2 border-b border-border px-4 py-2">
         <input
           placeholder="Search name…"
@@ -470,6 +538,15 @@ export function GuestsPanel({ onBack }: { onBack: () => void }) {
           <option value="printed">Printed</option>
           <option value="both">Both</option>
         </select>
+        {filtersActive && (
+          <button
+            type="button"
+            onClick={clearFilters}
+            className="rounded-md border border-border bg-muted/30 px-2 py-1 text-xs text-muted-foreground hover:bg-accent/30"
+          >
+            Clear filters
+          </button>
+        )}
       </div>
       <div className="flex-1 overflow-auto">
         {loading ? (
@@ -477,9 +554,21 @@ export function GuestsPanel({ onBack }: { onBack: () => void }) {
             Loading...
           </p>
         ) : guests.length === 0 ? (
-          <p className="mx-3 my-3 rounded-md border border-dashed border-border px-3 py-2 text-center text-xs text-muted-foreground">
-            No guests yet. Click Add to get started.
-          </p>
+          <div className="mx-3 my-3 rounded-md border border-dashed border-border px-3 py-3 text-center text-xs text-muted-foreground">
+            <p>No guests yet.</p>
+            <p>Click Add Guest or import a CSV to get started.</p>
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className="mx-3 my-3 flex flex-col items-center gap-2 rounded-md border border-dashed border-border px-3 py-3 text-center text-xs text-muted-foreground">
+            <p>No guests match these filters.</p>
+            <button
+              type="button"
+              onClick={clearFilters}
+              className="rounded-md border border-border px-2 py-1 text-xs text-foreground hover:bg-accent/30"
+            >
+              Reset filters
+            </button>
+          </div>
         ) : (
           <table className="w-full border-collapse text-xs">
             <thead>
