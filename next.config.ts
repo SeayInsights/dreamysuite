@@ -1,6 +1,9 @@
 import type { NextConfig } from "next";
+import path from "node:path";
+import { initOpenNextCloudflareForDev } from "@opennextjs/cloudflare";
 
 const nextConfig: NextConfig = {
+  outputFileTracingRoot: path.resolve("."),
   async headers() {
     return [
       {
@@ -9,7 +12,10 @@ const nextConfig: NextConfig = {
           { key: "X-Frame-Options", value: "SAMEORIGIN" },
           { key: "X-Content-Type-Options", value: "nosniff" },
           { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
-          { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains; preload" },
+          {
+            key: "Strict-Transport-Security",
+            value: "max-age=63072000; includeSubDomains; preload",
+          },
           {
             key: "Content-Security-Policy",
             value: [
@@ -27,26 +33,25 @@ const nextConfig: NextConfig = {
       },
     ];
   },
-	turbopack: {},
-	webpack: (config, { isServer }) => {
-		if (isServer) {
-			config.resolve.alias = {
-				...config.resolve.alias,
-				three: false,
-				"three/examples/jsm/environments/RoomEnvironment.js": false,
-				"three/src/math/MathUtils.js": false,
-				"@react-three/fiber": false,
-				"@react-three/drei": false,
-				"@react-three/postprocessing": false,
-			};
-		}
-		return config;
-	},
+  turbopack: {},
+  webpack: (config, { isServer }) => {
+    if (isServer) {
+      config.resolve.alias = {
+        ...config.resolve.alias,
+        three: false,
+        "three/examples/jsm/environments/RoomEnvironment.js": false,
+        "three/src/math/MathUtils.js": false,
+        "@react-three/fiber": false,
+        "@react-three/drei": false,
+        "@react-three/postprocessing": false,
+      };
+    }
+    return config;
+  },
 };
 
 export default nextConfig;
 
 // Enable calling `getCloudflareContext()` in `next dev`.
 // See https://opennext.js.org/cloudflare/bindings#local-access-to-bindings.
-import { initOpenNextCloudflareForDev } from "@opennextjs/cloudflare";
 initOpenNextCloudflareForDev();

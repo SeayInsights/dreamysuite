@@ -1,25 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
 
 // /api/sites/* sub-paths that must remain public (no session required).
-const PUBLIC_SITE_API_PATHS = [
-  /^\/api\/sites\/[^/]+\/guestbook(\/.*)?$/,
-];
+const PUBLIC_SITE_API_PATHS = [/^\/api\/sites\/[^/]+\/guestbook(\/.*)?$/];
 
-export function middleware(req: NextRequest) {
+export function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
-  // Only gate /api/sites/* routes
+  // Only gate /api/sites/* routes.
   if (!pathname.startsWith("/api/sites/")) {
     return NextResponse.next();
   }
 
-  // Allow explicitly public sub-paths before checking auth
+  // Allow explicitly public sub-paths before checking auth.
   if (PUBLIC_SITE_API_PATHS.some((re) => re.test(pathname))) {
     return NextResponse.next();
   }
 
-  // Check for better-auth session cookie
-  // better-auth sets a cookie named "better-auth.session_token" by default
   const sessionCookie =
     req.cookies.get("better-auth.session_token") ??
     req.cookies.get("__Secure-better-auth.session_token");
