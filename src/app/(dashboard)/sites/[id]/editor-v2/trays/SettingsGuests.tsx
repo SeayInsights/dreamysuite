@@ -5,129 +5,23 @@ import { createPortal } from "react-dom";
 import { Check, Plus, Trash2, X } from "lucide-react";
 
 import { useEditorStore } from "@/app/stores/editorStore";
-
-interface Guest {
-  id: string;
-  firstName: string;
-  lastName: string | null;
-  party: number | null;
-  rsvpStatus: "pending" | "yes" | "no";
-  notes: string | null;
-  email: string | null;
-  phone: string | null;
-  address: string | null;
-  invitedBy: string | null;
-  category: string | null;
-  invited: number;
-  ceremonyOrReception: string;
-  invitationType: string;
-  tableNumber: string | null;
-  giftDescription: string | null;
-  thankYouSent: number;
-  customResponses: string | null;
-}
-
-const COLS = [
-  ["#", "#", "#"],
-  ["firstName", "Name", "Tên"],
-  ["email", "Email", "Email"],
-  ["phone", "Phone", "Điện thoại"],
-  ["address", "Address", "Địa chỉ"],
-  ["category", "Category", "Nhóm"],
-  ["invitedBy", "Invited By", "Người mời"],
-  ["rsvpStatus", "RSVP", "Phản hồi"],
-  ["invited", "Invite?", "Mời?"],
-  ["invitationType", "Type", "Loại thiệp"],
-  ["ceremonyOrReception", "Ceremony", "Lễ"],
-  ["tableNumber", "Table", "Bàn"],
-  ["giftDescription", "Gift", "Quà tặng"],
-  ["thankYouSent", "Thank You", "Cảm ơn"],
-  ["notes", "Notes", "Ghi chú"],
-] as const;
-
-const BLANK = {
-  firstName: "",
-  lastName: "",
-  email: "",
-  phone: "",
-  category: "",
-  invitedBy: "",
-  ceremonyOrReception: "both",
-  invitationType: "digital",
-  tableNumber: "",
-};
+import {
+  BLANK_GUEST_FORM,
+  DROP_FIELDS,
+  GUEST_COLUMNS,
+  GUEST_FIELDS,
+  TEXT_FIELDS,
+  buildGuestCsv,
+  filterAndSortGuests,
+  getGuestCategories,
+  parseCsv,
+  type Guest,
+} from "./guests/model";
 
 const IN =
   "rounded-md border border-border bg-background px-2 py-1.5 text-sm outline-none focus:border-ring";
 const LB =
   "flex flex-col gap-0.5 text-[11px] font-medium uppercase tracking-wider text-muted-foreground";
-
-const TEXT_FIELDS = [
-  "firstName",
-  "lastName",
-  "email",
-  "phone",
-  "address",
-  "invitedBy",
-  "tableNumber",
-  "giftDescription",
-  "notes",
-] as const;
-
-const DROP_FIELDS: Record<string, string[]> = {
-  rsvpStatus: ["pending", "yes", "no"],
-  invitationType: ["digital", "printed", "both"],
-  ceremonyOrReception: ["ceremony", "reception", "both"],
-};
-
-const EXPORT_FIELDS = [
-  "firstName",
-  "lastName",
-  "email",
-  "phone",
-  "address",
-  "category",
-  "invitedBy",
-  "rsvpStatus",
-  "invitationType",
-  "ceremonyOrReception",
-  "tableNumber",
-  "giftDescription",
-  "notes",
-] as const;
-
-const GUEST_FIELDS = [
-  "firstName",
-  "lastName",
-  "email",
-  "phone",
-  "address",
-  "category",
-  "invitedBy",
-  "ceremonyOrReception",
-  "invitationType",
-  "tableNumber",
-  "notes",
-  "giftDescription",
-];
-
-const DEFAULT_CATS = ["Family", "Friends", "Coworkers", "Wedding Party"];
-
-function parseCsv(text: string) {
-  const lines = text.split(/\r?\n/).filter((l) => l.trim());
-  const headers = lines[0]
-    .split(",")
-    .map((h) => h.trim().replace(/^"|"$/g, ""));
-  const rows = lines.slice(1).map((line) => {
-    const vals = line.split(",").map((v) => v.trim().replace(/^"|"$/g, ""));
-    const row: Record<string, string> = {};
-    headers.forEach((h, i) => {
-      row[h] = vals[i] ?? "";
-    });
-    return row;
-  });
-  return { headers, rows };
-}
 
 export function GuestsPanel({ onBack }: { onBack: () => void }) {
   const siteId = useEditorStore((s) => s.siteId);
@@ -138,7 +32,7 @@ export function GuestsPanel({ onBack }: { onBack: () => void }) {
   const [guests, setGuests] = useState<Guest[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
-  const [form, setForm] = useState(BLANK);
+  const [form, setForm] = useState(BLANK_GUEST_FORM);
   const [saving, setSaving] = useState(false);
   const [editing, setEditing] = useState<{ id: string; field: string } | null>(
     null,
@@ -166,14 +60,7 @@ export function GuestsPanel({ onBack }: { onBack: () => void }) {
   } | null>(null);
   const [importing, setImporting] = useState(false);
 
-  const categories: string[] = (() => {
-    try {
-      const p = JSON.parse(settings?.guestCategories ?? "");
-      return Array.isArray(p) && p.length ? p : DEFAULT_CATS;
-    } catch {
-      return DEFAULT_CATS;
-    }
-  })();
+  const categories = getGuestCategories(settings?.guestCategories);
 
   function saveCats(cats: string[]) {
     updateSettings({ guestCategories: JSON.stringify(cats) });
@@ -251,7 +138,7 @@ export function GuestsPanel({ onBack }: { onBack: () => void }) {
       const { guest } = (await res.json()) as { guest: Guest };
       setGuests((prev) => [guest, ...prev]);
       setShowModal(false);
-      setForm(BLANK);
+      setForm(BLANK_GUEST_FORM);
     } finally {
       setSaving(false);
     }
@@ -272,17 +159,22 @@ export function GuestsPanel({ onBack }: { onBack: () => void }) {
     </span>
   );
 
-  const set = (k: keyof typeof BLANK) => (e: { target: { value: string } }) =>
-    setForm((p) => ({ ...p, [k]: e.target.value }));
+  const set =
+    (k: keyof typeof BLANK_GUEST_FORM) => (e: { target: { value: string } }) =>
+      setForm((p) => ({ ...p, [k]: e.target.value }));
 
-  const fld = (lbl: string, k: keyof typeof BLANK, t = "text") => (
+  const fld = (lbl: string, k: keyof typeof BLANK_GUEST_FORM, t = "text") => (
     <label className={LB}>
       {lbl}
       <input type={t} value={form[k]} onChange={set(k)} className={IN} />
     </label>
   );
 
-  const sel = (lbl: string, k: keyof typeof BLANK, opts: string[]) => (
+  const sel = (
+    lbl: string,
+    k: keyof typeof BLANK_GUEST_FORM,
+    opts: string[],
+  ) => (
     <label className={`${LB} flex-1`}>
       {lbl}
       <select value={form[k]} onChange={set(k)} className={IN}>
@@ -366,28 +258,15 @@ export function GuestsPanel({ onBack }: { onBack: () => void }) {
   }
 
   const filtered = useMemo(() => {
-    let list = guests;
-    if (search)
-      list = list.filter((g) =>
-        `${g.firstName} ${g.lastName ?? ""}`
-          .toLowerCase()
-          .includes(search.toLowerCase()),
-      );
-    if (filterCat) list = list.filter((g) => g.category === filterCat);
-    if (filterRsvp) list = list.filter((g) => g.rsvpStatus === filterRsvp);
-    if (filterCeremony)
-      list = list.filter((g) => g.ceremonyOrReception === filterCeremony);
-    if (filterType) list = list.filter((g) => g.invitationType === filterType);
-    if (sortCol) {
-      list = [...list].sort((a, b) => {
-        const av = (a as unknown as Record<string, unknown>)[sortCol] ?? "";
-        const bv = (b as unknown as Record<string, unknown>)[sortCol] ?? "";
-        return sortDir === "asc"
-          ? String(av).localeCompare(String(bv))
-          : String(bv).localeCompare(String(av));
-      });
-    }
-    return list;
+    return filterAndSortGuests(guests, {
+      search,
+      category: filterCat,
+      rsvp: filterRsvp,
+      ceremony: filterCeremony,
+      invitationType: filterType,
+      sortCol,
+      sortDir,
+    });
   }, [
     guests,
     search,
@@ -412,14 +291,7 @@ export function GuestsPanel({ onBack }: { onBack: () => void }) {
   }
 
   function exportCsv() {
-    const header = EXPORT_FIELDS.join(",");
-    const csvRows = guests.map((g) =>
-      EXPORT_FIELDS.map((f) => {
-        const v = String((g as unknown as Record<string, unknown>)[f] ?? "");
-        return v.includes(",") ? `"${v}"` : v;
-      }).join(","),
-    );
-    const blob = new Blob([[header, ...csvRows].join("\n")], {
+    const blob = new Blob([buildGuestCsv(guests)], {
       type: "text/csv",
     });
     const url = URL.createObjectURL(blob);
@@ -612,7 +484,7 @@ export function GuestsPanel({ onBack }: { onBack: () => void }) {
           <table className="w-full border-collapse text-xs">
             <thead>
               <tr className="border-b border-border bg-muted/30">
-                {COLS.map(([k, en, vi]) => (
+                {GUEST_COLUMNS.map(([k, en, vi]) => (
                   <th
                     key={k}
                     className={`whitespace-nowrap px-2 py-1.5 text-left font-medium text-muted-foreground${k !== "#" ? " cursor-pointer select-none hover:text-foreground" : ""}`}
