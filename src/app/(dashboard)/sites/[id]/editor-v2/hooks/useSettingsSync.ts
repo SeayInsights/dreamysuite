@@ -24,10 +24,13 @@ export function useSettingsSync(siteId: string) {
     transTimerRef.current = null;
     const state = useEditorStore.getState();
     if (state.settingsDirty) {
+      const settingsPatch = Object.keys(state.settingsPendingPatch).length
+        ? state.settingsPendingPatch
+        : state.settings;
       fetch(`/api/sites/${siteIdRef.current}/settings`, {
         method: "PUT",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify(state.settings),
+        body: JSON.stringify(settingsPatch),
         keepalive: true,
       });
     }

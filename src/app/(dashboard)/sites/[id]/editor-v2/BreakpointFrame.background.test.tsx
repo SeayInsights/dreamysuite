@@ -37,7 +37,7 @@ describe("BreakpointFrame editor background image placement", () => {
       }),
     ).toMatchObject({
       backgroundImage: "url('https://cdn.example/bg.jpg')",
-      backgroundSize: "135%",
+      backgroundSize: "135% 100%",
       backgroundRepeat: "no-repeat",
       backgroundPosition: "25% 70%",
     });
@@ -50,7 +50,7 @@ describe("BreakpointFrame editor background image placement", () => {
         bgImagePositionY: "",
       }),
     ).toMatchObject({
-      backgroundSize: "100%",
+      backgroundSize: "100% 100%",
       backgroundPosition: "50% 50%",
     });
   });
