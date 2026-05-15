@@ -31,6 +31,19 @@ yarn-error.log*
 .pnpm-debug.log*
 build.log
 
+# Local database dumps and backup exports (never commit)
+/prod-backup.sql
+/*backup*.sql
+/*dump*.sql
+/*.db
+/*.db.bak
+/*.sqlite
+/*.sqlite.bak
+/*.sqlite3
+/*.sqlite3.bak
+/*.db-wal
+/*.db-shm
+
 # Task summaries (session artifacts)
 TASK-*.md
 
