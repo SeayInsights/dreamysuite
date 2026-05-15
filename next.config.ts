@@ -1,6 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  outputFileTracingRoot: __dirname,
   async headers() {
     return [
       {
@@ -9,7 +10,10 @@ const nextConfig: NextConfig = {
           { key: "X-Frame-Options", value: "SAMEORIGIN" },
           { key: "X-Content-Type-Options", value: "nosniff" },
           { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
-          { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains; preload" },
+          {
+            key: "Strict-Transport-Security",
+            value: "max-age=63072000; includeSubDomains; preload",
+          },
           {
             key: "Content-Security-Policy",
             value: [
@@ -27,21 +31,21 @@ const nextConfig: NextConfig = {
       },
     ];
   },
-	turbopack: {},
-	webpack: (config, { isServer }) => {
-		if (isServer) {
-			config.resolve.alias = {
-				...config.resolve.alias,
-				three: false,
-				"three/examples/jsm/environments/RoomEnvironment.js": false,
-				"three/src/math/MathUtils.js": false,
-				"@react-three/fiber": false,
-				"@react-three/drei": false,
-				"@react-three/postprocessing": false,
-			};
-		}
-		return config;
-	},
+  turbopack: {},
+  webpack: (config, { isServer }) => {
+    if (isServer) {
+      config.resolve.alias = {
+        ...config.resolve.alias,
+        three: false,
+        "three/examples/jsm/environments/RoomEnvironment.js": false,
+        "three/src/math/MathUtils.js": false,
+        "@react-three/fiber": false,
+        "@react-three/drei": false,
+        "@react-three/postprocessing": false,
+      };
+    }
+    return config;
+  },
 };
 
 export default nextConfig;
