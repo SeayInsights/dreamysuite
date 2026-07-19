@@ -25,7 +25,13 @@ export function createAuth(env: Env) {
     emailAndPassword: {
       enabled: true,
       requireEmailVerification: true,
-      sendResetPassword: async ({ user, url }: { user: { email: string }; url: string }) => {
+      sendResetPassword: async ({
+        user,
+        url,
+      }: {
+        user: { email: string };
+        url: string;
+      }) => {
         const res = await fetch("https://api.resend.com/emails", {
           method: "POST",
           headers: {
@@ -44,13 +50,24 @@ export function createAuth(env: Env) {
         });
         if (res && !res.ok) {
           const body = await res.text().catch(() => "");
-          console.error(`[auth] reset password email rejected: ${res.status} ${body}`);
+          console.error(
+            `[auth] reset password email rejected: ${res.status} ${body}`,
+          );
         }
       },
     },
     emailVerification: {
-      sendVerificationEmail: async ({ user, url }: { user: { email: string }; url: string }) => {
-        console.log(`[auth] sendVerificationEmail called for ${user.email}, url: ${url}`);
+      sendVerificationEmail: async ({
+        user,
+        url,
+      }: {
+        user: { id: string; email: string };
+        url: string;
+      }) => {
+        // Do not log the recipient email (PII) or the verification URL (contains the token).
+        console.log(
+          `[auth] sendVerificationEmail dispatched for user ${user.id}`,
+        );
         const res = await fetch("https://api.resend.com/emails", {
           method: "POST",
           headers: {
@@ -69,7 +86,9 @@ export function createAuth(env: Env) {
         });
         if (res && !res.ok) {
           const body = await res.text().catch(() => "");
-          console.error(`[auth] verification email rejected: ${res.status} ${body}`);
+          console.error(
+            `[auth] verification email rejected: ${res.status} ${body}`,
+          );
         }
       },
     },
