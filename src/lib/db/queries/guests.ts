@@ -1,4 +1,4 @@
-import { DatabaseError, NotFoundError } from '../../errors';
+import { DatabaseError, NotFoundError } from "../../errors";
 
 // =============================================================================
 // TYPE DEFINITIONS — CONTACTS / GUESTS
@@ -36,8 +36,8 @@ export interface ContactRow {
   tags: string | null;
   status: string;
   metadata: string | Record<string, unknown>;
-  created_at: string;
-  updated_at: string;
+  created_at: number;
+  updated_at: number;
 }
 
 // =============================================================================
@@ -53,7 +53,7 @@ export interface ContactRow {
  */
 export async function getContactById(
   db: D1Database,
-  id: string
+  id: string,
 ): Promise<ContactRow | null> {
   return db
     .prepare("SELECT * FROM contact WHERE id = ?")
@@ -70,7 +70,7 @@ export async function getContactById(
  */
 export async function getContactsBySiteId(
   db: D1Database,
-  siteId: string
+  siteId: string,
 ): Promise<ContactRow[]> {
   const result = await db
     .prepare("SELECT * FROM contact WHERE site_id = ? ORDER BY created_at DESC")
@@ -89,18 +89,19 @@ export async function getContactsBySiteId(
  */
 export async function createContact(
   db: D1Database,
-  data: CreateContactInput
+  data: CreateContactInput,
 ): Promise<ContactRow> {
   const id = data.id || crypto.randomUUID();
-  const now = new Date().toISOString();
+  const now = Date.now();
 
-  const metadataStr = typeof data.metadata === 'string'
-    ? data.metadata
-    : JSON.stringify(data.metadata || {});
+  const metadataStr =
+    typeof data.metadata === "string"
+      ? data.metadata
+      : JSON.stringify(data.metadata || {});
 
   const contact = await db
     .prepare(
-      "INSERT INTO contact (id, site_id, name, email, phone, contact_type, tags, status, metadata, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING *"
+      "INSERT INTO contact (id, site_id, name, email, phone, contact_type, tags, status, metadata, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING *",
     )
     .bind(
       id,
@@ -108,19 +109,19 @@ export async function createContact(
       data.name,
       data.email || null,
       data.phone || null,
-      data.contact_type || 'guest',
+      data.contact_type || "guest",
       data.tags || null,
-      data.status || 'active',
+      data.status || "active",
       metadataStr,
       now,
-      now
+      now,
     )
     .first<ContactRow>();
 
   if (!contact) {
     throw new DatabaseError("Failed to create contact", {
-      operation: 'INSERT',
-      table: 'contact',
+      operation: "INSERT",
+      table: "contact",
       site_id: data.site_id,
     });
   }
@@ -139,9 +140,9 @@ export async function createContact(
 export async function updateContact(
   db: D1Database,
   id: string,
-  data: UpdateContactInput
+  data: UpdateContactInput,
 ): Promise<ContactRow> {
-  const now = new Date().toISOString();
+  const now = Date.now();
   const updates: string[] = [];
   const bindings: unknown[] = [];
 
@@ -171,9 +172,10 @@ export async function updateContact(
   }
   if (data.metadata !== undefined) {
     updates.push("metadata = ?");
-    const metadataStr = typeof data.metadata === 'string'
-      ? data.metadata
-      : JSON.stringify(data.metadata);
+    const metadataStr =
+      typeof data.metadata === "string"
+        ? data.metadata
+        : JSON.stringify(data.metadata);
     bindings.push(metadataStr);
   }
 
@@ -184,7 +186,7 @@ export async function updateContact(
 
   const contact = await db
     .prepare(
-      `UPDATE contact SET ${updates.join(", ")} WHERE id = ? RETURNING *`
+      `UPDATE contact SET ${updates.join(", ")} WHERE id = ? RETURNING *`,
     )
     .bind(...bindings)
     .first<ContactRow>();
@@ -202,9 +204,6 @@ export async function updateContact(
  * @param db - D1 database instance
  * @param id - Contact ID
  */
-export async function deleteContact(
-  db: D1Database,
-  id: string
-): Promise<void> {
+export async function deleteContact(db: D1Database, id: string): Promise<void> {
   await db.prepare("DELETE FROM contact WHERE id = ?").bind(id).run();
 }
