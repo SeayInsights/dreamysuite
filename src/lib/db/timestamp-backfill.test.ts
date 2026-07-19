@@ -12,7 +12,7 @@ import { DatabaseSync } from "node:sqlite";
 const migrationSql = readFileSync(
   fileURLToPath(
     new URL(
-      "../../../migrations/0048_normalize_contact_submission_timestamps.sql",
+      "../../../migrations/0049_normalize_contact_submission_timestamps.sql",
       import.meta.url,
     ),
   ),

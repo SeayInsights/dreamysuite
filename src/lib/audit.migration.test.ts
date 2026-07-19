@@ -38,7 +38,7 @@ describe("audit_log migrations produce a schema logAudit() can write", () => {
     } catch {
       /* expected: 0043 errors on the timestamp index against the 0035 table */
     }
-    db.exec(migration("0047_reconcile_audit_log.sql"));
+    db.exec(migration("0048_reconcile_audit_log.sql"));
 
     const cols = auditInsertColumns();
     expect(cols).toEqual(["id", "userId", "siteId", "action", "detail", "ip"]);
