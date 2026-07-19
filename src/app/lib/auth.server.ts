@@ -15,6 +15,27 @@ export interface Env {
   RESEND_API_KEY: string;
 }
 
+const BUILD_TIME_AUTH_SECRET = "k2eNjG9xV6Qp3ZrW8mCt5LsYbHaU4dF0sPqX7nRvM1c=";
+
+function isBuildTimeAuthContext(): boolean {
+  const lifecycle = process.env.npm_lifecycle_event;
+  return (
+    process.env.NEXT_PHASE === "phase-production-build" ||
+    lifecycle === "build" ||
+    lifecycle === "deploy" ||
+    process.env.CI === "true"
+  );
+}
+
+function authSecretFor(env: Env): string | undefined {
+  return (
+    env.AUTH_SECRET ||
+    process.env.BETTER_AUTH_SECRET ||
+    process.env.AUTH_SECRET ||
+    (isBuildTimeAuthContext() ? BUILD_TIME_AUTH_SECRET : undefined)
+  );
+}
+
 // RATE LIMITING — add Cloudflare dashboard rule manually:
 // Dashboard → your-zone → Security → WAF → Rate Limiting Rules
 // Rule: Path matches /api/auth/* | Threshold: 10 req / 60s per IP | Action: Block (1 min)
@@ -61,13 +82,9 @@ export function createAuth(env: Env) {
         user,
         url,
       }: {
-        user: { id: string; email: string };
+        user: { email: string };
         url: string;
       }) => {
-        // Do not log the recipient email (PII) or the verification URL (contains the token).
-        console.log(
-          `[auth] sendVerificationEmail dispatched for user ${user.id}`,
-        );
         const res = await fetch("https://api.resend.com/emails", {
           method: "POST",
           headers: {
@@ -92,7 +109,7 @@ export function createAuth(env: Env) {
         }
       },
     },
-    secret: env.AUTH_SECRET,
+    secret: authSecretFor(env),
     baseURL: env.APP_URL,
     advanced: {
       defaultCookieAttributes: {

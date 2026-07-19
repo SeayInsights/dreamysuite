@@ -1,5 +1,7 @@
 "use client";
 
+/* eslint-disable react-hooks/immutability -- effects intentionally synchronize the iframe document DOM. */
+
 import { createPortal } from "react-dom";
 import {
   useRef,
@@ -66,7 +68,8 @@ export function IframeCanvas({
 
   useEffect(() => {
     if (!iframeDoc) return;
-    iframeDoc.body.style.background = background ?? "";
+    const { body } = iframeDoc;
+    body.style.background = background ?? "";
   }, [iframeDoc, background]);
 
   useEffect(() => {

@@ -88,6 +88,7 @@ export function StyleTab() {
         <ColorInput
           value={settings.bgColor ?? "#ffffff"}
           onChange={(v) => updateSettings({ bgColor: v })}
+          includeThemeBackgroundSwatch={false}
         />
       </div>
 
@@ -172,7 +173,7 @@ export function StyleTab() {
               </div>
               <input
                 type="range"
-                min={50}
+                min={100}
                 max={200}
                 step={1}
                 value={localZoom}

@@ -48,8 +48,25 @@ function isDark(hex: string): boolean {
   return l < 45;
 }
 
-export function themeSwatches(colors: ThemeColors): string[] {
-  return [
+interface ThemeSwatchOptions {
+  includeBackground?: boolean;
+}
+
+function uniqueSwatches(colors: string[]): string[] {
+  const seen = new Set<string>();
+  return colors.filter((color) => {
+    const key = color.trim().toLowerCase();
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+export function themeSwatches(
+  colors: ThemeColors,
+  options: ThemeSwatchOptions = {},
+): string[] {
+  const swatches = [
     colors.background,
     "#ffffff",
     lighten(colors.primary, 40),
@@ -63,6 +80,9 @@ export function themeSwatches(colors: ThemeColors): string[] {
     darken(colors.secondary, 15),
     "#000000",
   ];
+  return uniqueSwatches(
+    options.includeBackground === false ? swatches.slice(1) : swatches,
+  );
 }
 
 export function themeGradients(

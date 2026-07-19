@@ -80,6 +80,7 @@ function installListener(options?: {
   );
 
   return {
+    root,
     body,
     overlay,
     siteContent,
@@ -93,12 +94,30 @@ function installListener(options?: {
 }
 
 describe("buildMessageListenerScript background image live updates", () => {
+  it("updates public site CSS variable names for live theme changes", () => {
+    const { root, send } = installListener();
+
+    send({
+      accentColor: "#123456",
+      bodyColor: "#654321",
+      siteTextColor: "#abcdef",
+    });
+
+    expect(root.style["--site-accent"]).toBe("#123456");
+    expect(root.style["--body-color"]).toBe("#654321");
+    expect(root.style["--site-muted"]).toBe("#654321");
+    expect(root.style["--site-text"]).toBe("#abcdef");
+    expect(root.style["--text"]).toBe("#abcdef");
+    expect(root.style["--accent"]).toBeUndefined();
+    expect(root.style["--muted"]).toBeUndefined();
+  });
+
   it("preserves overlay zoom and position behavior", () => {
     const { overlay, send } = installListener({ overlayDisplay: "" });
 
     send({ bgImageZoom: 125, bgImagePositionX: 35, bgImagePositionY: 65 });
 
-    expect(overlay.style.backgroundSize).toBe("125%");
+    expect(overlay.style.backgroundSize).toBe("auto 125%");
     expect(overlay.style.backgroundPosition).toBe("35% 65%");
     expect(overlay.style.backgroundRepeat).toBe("no-repeat");
   });
@@ -111,7 +130,7 @@ describe("buildMessageListenerScript background image live updates", () => {
 
     send({ bgImageZoom: 90, bgImagePositionX: 20, bgImagePositionY: 70 });
 
-    expect(body.style.backgroundSize).toBe("90%");
+    expect(body.style.backgroundSize).toBe("auto 100%");
     expect(body.style.backgroundPosition).toBe("20% 70%");
     expect(body.style.backgroundRepeat).toBe("no-repeat");
   });
@@ -124,7 +143,7 @@ describe("buildMessageListenerScript background image live updates", () => {
 
     send({ bgImageZoom: 80, bgImagePositionX: 10, bgImagePositionY: 55 });
 
-    expect(siteContent.style.backgroundSize).toBe("80%");
+    expect(siteContent.style.backgroundSize).toBe("auto 100%");
     expect(siteContent.style.backgroundPosition).toBe("10% 55%");
     expect(siteContent.style.backgroundRepeat).toBe("no-repeat");
   });
@@ -137,9 +156,10 @@ describe("buildMessageListenerScript background image live updates", () => {
 
     send({ bgImageZoom: null, bgImagePositionX: null, bgImagePositionY: null });
 
-    expect(body.style.backgroundSize).toBe("100%");
+    expect(body.style.backgroundSize).toBe("auto 100%");
     expect(body.style.backgroundPosition).toBe("50% 50%");
     expect(body.style.backgroundSize).not.toContain("undefined");
+    expect(body.style.backgroundSize).not.toContain("100% 100%");
     expect(body.style.backgroundPosition).not.toContain("undefined");
   });
 });

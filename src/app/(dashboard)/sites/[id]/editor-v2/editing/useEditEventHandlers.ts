@@ -13,7 +13,7 @@
 import { useCallback, useEffect } from "react";
 
 import { useEditorStore } from "@/app/stores/editorStore";
-import { type FormatCommand } from "./FloatingFormatToolbar";
+import { type FormatCommand } from "./formatTypes";
 import {
   type EditState,
   applyStyleKeyToCfg,

@@ -59,6 +59,10 @@ function percentValue(
   return Number.isFinite(numeric) ? numeric : fallback;
 }
 
+function bgImageSize(value: number | string | null | undefined): string {
+  return `auto ${Math.max(100, percentValue(value, 100))}%`;
+}
+
 export function resolveEditorBgImageLayer(
   bgImageLayer: string | null | undefined,
   bgImageBleed: number | string | null | undefined,
@@ -89,11 +93,13 @@ export function editorBgImageStyle({
   bgImagePositionX?: number | string | null;
   bgImagePositionY?: number | string | null;
 }): React.CSSProperties {
+  const x = percentValue(bgImagePositionX, 50);
+  const y = percentValue(bgImagePositionY, 50);
   return {
     backgroundImage: `url('${bgImage}')`,
-    backgroundSize: `${percentValue(bgImageZoom, 100)}%`,
+    backgroundSize: bgImageSize(bgImageZoom),
     backgroundRepeat: "no-repeat",
-    backgroundPosition: `${percentValue(bgImagePositionX, 50)}% ${percentValue(bgImagePositionY, 50)}%`,
+    backgroundPosition: `${x}% ${y}%`,
   };
 }
 
@@ -427,38 +433,39 @@ export function BreakpointFrame({ children, nav }: Props) {
                   <BgEffect {...effectColors} />
                 </div>
               )}
-              {bgImageBaseStyle &&
-                bgImageLayer !== "content" &&
-                !pageBgDisabled && (
-                  <div
-                    className="pointer-events-none absolute overflow-hidden"
-                    style={{
-                      zIndex: 1,
-                      top: bgImageBleed ? 0 : mT,
-                      right: bgImageBleed ? 0 : mR,
-                      bottom: bgImageBleed ? 0 : mB,
-                      left: bgImageBleed ? 0 : mL,
-                      ...bgImageBaseStyle,
-                      opacity: bgImageOpacity,
-                    }}
-                  />
-                )}
               <div
                 className="editor-canvas-scroll relative h-full overflow-x-hidden overflow-y-auto"
                 style={{ zIndex: 10 }}
               >
                 <div
                   style={{
-                    ...(bgImageBaseStyle &&
-                    bgImageLayer === "content" &&
-                    !pageBgDisabled
-                      ? bgImageBaseStyle
-                      : {}),
+                    position: "relative",
+                    minHeight: "100%",
                     padding: `${isDesktop ? mT : mT + navHeight}px ${mR}px ${mB}px ${mL}px`,
                     overflow: "hidden",
                   }}
                 >
-                  {children}
+                  {bgImageBaseStyle && !pageBgDisabled && (
+                    <div
+                      className="pointer-events-none absolute overflow-hidden"
+                      style={{
+                        zIndex: 0,
+                        top:
+                          bgImageLayer === "content" || !bgImageBleed ? mT : 0,
+                        right:
+                          bgImageLayer === "content" || !bgImageBleed ? mR : 0,
+                        bottom:
+                          bgImageLayer === "content" || !bgImageBleed ? mB : 0,
+                        left:
+                          bgImageLayer === "content" || !bgImageBleed ? mL : 0,
+                        ...bgImageBaseStyle,
+                        opacity: bgImageOpacity,
+                      }}
+                    />
+                  )}
+                  <div style={{ position: "relative", zIndex: 1 }}>
+                    {children}
+                  </div>
                 </div>
               </div>
               {DecorationEffect && frameReady && (

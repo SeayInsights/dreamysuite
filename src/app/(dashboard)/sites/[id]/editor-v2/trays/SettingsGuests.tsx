@@ -5,129 +5,24 @@ import { createPortal } from "react-dom";
 import { Check, Plus, Trash2, X } from "lucide-react";
 
 import { useEditorStore } from "@/app/stores/editorStore";
-
-interface Guest {
-  id: string;
-  firstName: string;
-  lastName: string | null;
-  party: number | null;
-  rsvpStatus: "pending" | "yes" | "no";
-  notes: string | null;
-  email: string | null;
-  phone: string | null;
-  address: string | null;
-  invitedBy: string | null;
-  category: string | null;
-  invited: number;
-  ceremonyOrReception: string;
-  invitationType: string;
-  tableNumber: string | null;
-  giftDescription: string | null;
-  thankYouSent: number;
-  customResponses: string | null;
-}
-
-const COLS = [
-  ["#", "#", "#"],
-  ["firstName", "Name", "Tên"],
-  ["email", "Email", "Email"],
-  ["phone", "Phone", "Điện thoại"],
-  ["address", "Address", "Địa chỉ"],
-  ["category", "Category", "Nhóm"],
-  ["invitedBy", "Invited By", "Người mời"],
-  ["rsvpStatus", "RSVP", "Phản hồi"],
-  ["invited", "Invite?", "Mời?"],
-  ["invitationType", "Type", "Loại thiệp"],
-  ["ceremonyOrReception", "Ceremony", "Lễ"],
-  ["tableNumber", "Table", "Bàn"],
-  ["giftDescription", "Gift", "Quà tặng"],
-  ["thankYouSent", "Thank You", "Cảm ơn"],
-  ["notes", "Notes", "Ghi chú"],
-] as const;
-
-const BLANK = {
-  firstName: "",
-  lastName: "",
-  email: "",
-  phone: "",
-  category: "",
-  invitedBy: "",
-  ceremonyOrReception: "both",
-  invitationType: "digital",
-  tableNumber: "",
-};
+import {
+  BLANK_GUEST_FORM,
+  DROP_FIELDS,
+  GUEST_COLUMNS,
+  GUEST_FIELDS,
+  TEXT_FIELDS,
+  buildGuestCsv,
+  filterAndSortGuests,
+  getGuestCategories,
+  hasActiveGuestFilters,
+  parseCsv,
+  type Guest,
+} from "./guests/model";
 
 const IN =
   "rounded-md border border-border bg-background px-2 py-1.5 text-sm outline-none focus:border-ring";
 const LB =
   "flex flex-col gap-0.5 text-[11px] font-medium uppercase tracking-wider text-muted-foreground";
-
-const TEXT_FIELDS = [
-  "firstName",
-  "lastName",
-  "email",
-  "phone",
-  "address",
-  "invitedBy",
-  "tableNumber",
-  "giftDescription",
-  "notes",
-] as const;
-
-const DROP_FIELDS: Record<string, string[]> = {
-  rsvpStatus: ["pending", "yes", "no"],
-  invitationType: ["digital", "printed", "both"],
-  ceremonyOrReception: ["ceremony", "reception", "both"],
-};
-
-const EXPORT_FIELDS = [
-  "firstName",
-  "lastName",
-  "email",
-  "phone",
-  "address",
-  "category",
-  "invitedBy",
-  "rsvpStatus",
-  "invitationType",
-  "ceremonyOrReception",
-  "tableNumber",
-  "giftDescription",
-  "notes",
-] as const;
-
-const GUEST_FIELDS = [
-  "firstName",
-  "lastName",
-  "email",
-  "phone",
-  "address",
-  "category",
-  "invitedBy",
-  "ceremonyOrReception",
-  "invitationType",
-  "tableNumber",
-  "notes",
-  "giftDescription",
-];
-
-const DEFAULT_CATS = ["Family", "Friends", "Coworkers", "Wedding Party"];
-
-function parseCsv(text: string) {
-  const lines = text.split(/\r?\n/).filter((l) => l.trim());
-  const headers = lines[0]
-    .split(",")
-    .map((h) => h.trim().replace(/^"|"$/g, ""));
-  const rows = lines.slice(1).map((line) => {
-    const vals = line.split(",").map((v) => v.trim().replace(/^"|"$/g, ""));
-    const row: Record<string, string> = {};
-    headers.forEach((h, i) => {
-      row[h] = vals[i] ?? "";
-    });
-    return row;
-  });
-  return { headers, rows };
-}
 
 export function GuestsPanel({ onBack }: { onBack: () => void }) {
   const siteId = useEditorStore((s) => s.siteId);
@@ -136,9 +31,9 @@ export function GuestsPanel({ onBack }: { onBack: () => void }) {
   const updateSettings = useEditorStore((s) => s.updateSettings);
 
   const [guests, setGuests] = useState<Guest[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(() => Boolean(siteId));
   const [showModal, setShowModal] = useState(false);
-  const [form, setForm] = useState(BLANK);
+  const [form, setForm] = useState(BLANK_GUEST_FORM);
   const [saving, setSaving] = useState(false);
   const [editing, setEditing] = useState<{ id: string; field: string } | null>(
     null,
@@ -165,15 +60,10 @@ export function GuestsPanel({ onBack }: { onBack: () => void }) {
     skipped: number;
   } | null>(null);
   const [importing, setImporting] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
 
-  const categories: string[] = (() => {
-    try {
-      const p = JSON.parse(settings?.guestCategories ?? "");
-      return Array.isArray(p) && p.length ? p : DEFAULT_CATS;
-    } catch {
-      return DEFAULT_CATS;
-    }
-  })();
+  const categories = getGuestCategories(settings?.guestCategories);
 
   function saveCats(cats: string[]) {
     updateSettings({ guestCategories: JSON.stringify(cats) });
@@ -198,18 +88,30 @@ export function GuestsPanel({ onBack }: { onBack: () => void }) {
   }
 
   useEffect(() => {
-    if (!siteId) return;
+    if (!siteId) {
+      return;
+    }
     fetch(`/api/sites/${siteId}/guests`)
       .then((r) => (r.ok ? r.json() : Promise.reject()))
       .then((d) => setGuests((d as { guests: Guest[] }).guests))
-      .catch(() => {})
+      .catch(() =>
+        setLoadError("Guests could not be loaded. Try refreshing this panel."),
+      )
       .finally(() => setLoading(false));
   }, [siteId]);
 
   async function deleteGuest(id: string) {
     if (!siteId) return;
-    await fetch(`/api/sites/${siteId}/guests/${id}`, { method: "DELETE" });
-    setGuests((prev) => prev.filter((g) => g.id !== id));
+    setActionError(null);
+    try {
+      const res = await fetch(`/api/sites/${siteId}/guests/${id}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) throw new Error("Delete failed");
+      setGuests((prev) => prev.filter((g) => g.id !== id));
+    } catch {
+      setActionError("That guest could not be deleted. Try again.");
+    }
   }
 
   async function patchGuest(
@@ -220,6 +122,7 @@ export function GuestsPanel({ onBack }: { onBack: () => void }) {
     if (!siteId) return;
     const prev = guests.find((g) => g.id === guestId);
     if (!prev) return;
+    setActionError(null);
     setGuests((gs) =>
       gs.map((g) => (g.id === guestId ? { ...g, [field]: value } : g)),
     );
@@ -229,10 +132,10 @@ export function GuestsPanel({ onBack }: { onBack: () => void }) {
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ [field]: value }),
       });
-      if (!res.ok)
-        setGuests((gs) => gs.map((g) => (g.id === guestId ? prev : g)));
+      if (!res.ok) throw new Error("Patch failed");
     } catch {
       setGuests((gs) => gs.map((g) => (g.id === guestId ? prev : g)));
+      setActionError("That guest update could not be saved. Try again.");
     }
     setEditing(null);
   }
@@ -241,17 +144,22 @@ export function GuestsPanel({ onBack }: { onBack: () => void }) {
     e.preventDefault();
     if (!siteId) return;
     setSaving(true);
+    setActionError(null);
     try {
       const res = await fetch(`/api/sites/${siteId}/guests`, {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify(form),
       });
-      if (!res.ok) return;
+      if (!res.ok) throw new Error("Create failed");
       const { guest } = (await res.json()) as { guest: Guest };
       setGuests((prev) => [guest, ...prev]);
       setShowModal(false);
-      setForm(BLANK);
+      setForm(BLANK_GUEST_FORM);
+    } catch {
+      setActionError(
+        "That guest could not be added. Check the details and try again.",
+      );
     } finally {
       setSaving(false);
     }
@@ -272,17 +180,22 @@ export function GuestsPanel({ onBack }: { onBack: () => void }) {
     </span>
   );
 
-  const set = (k: keyof typeof BLANK) => (e: { target: { value: string } }) =>
-    setForm((p) => ({ ...p, [k]: e.target.value }));
+  const set =
+    (k: keyof typeof BLANK_GUEST_FORM) => (e: { target: { value: string } }) =>
+      setForm((p) => ({ ...p, [k]: e.target.value }));
 
-  const fld = (lbl: string, k: keyof typeof BLANK, t = "text") => (
+  const fld = (lbl: string, k: keyof typeof BLANK_GUEST_FORM, t = "text") => (
     <label className={LB}>
       {lbl}
       <input type={t} value={form[k]} onChange={set(k)} className={IN} />
     </label>
   );
 
-  const sel = (lbl: string, k: keyof typeof BLANK, opts: string[]) => (
+  const sel = (
+    lbl: string,
+    k: keyof typeof BLANK_GUEST_FORM,
+    opts: string[],
+  ) => (
     <label className={`${LB} flex-1`}>
       {lbl}
       <select value={form[k]} onChange={set(k)} className={IN}>
@@ -366,28 +279,15 @@ export function GuestsPanel({ onBack }: { onBack: () => void }) {
   }
 
   const filtered = useMemo(() => {
-    let list = guests;
-    if (search)
-      list = list.filter((g) =>
-        `${g.firstName} ${g.lastName ?? ""}`
-          .toLowerCase()
-          .includes(search.toLowerCase()),
-      );
-    if (filterCat) list = list.filter((g) => g.category === filterCat);
-    if (filterRsvp) list = list.filter((g) => g.rsvpStatus === filterRsvp);
-    if (filterCeremony)
-      list = list.filter((g) => g.ceremonyOrReception === filterCeremony);
-    if (filterType) list = list.filter((g) => g.invitationType === filterType);
-    if (sortCol) {
-      list = [...list].sort((a, b) => {
-        const av = (a as unknown as Record<string, unknown>)[sortCol] ?? "";
-        const bv = (b as unknown as Record<string, unknown>)[sortCol] ?? "";
-        return sortDir === "asc"
-          ? String(av).localeCompare(String(bv))
-          : String(bv).localeCompare(String(av));
-      });
-    }
-    return list;
+    return filterAndSortGuests(guests, {
+      search,
+      category: filterCat,
+      rsvp: filterRsvp,
+      ceremony: filterCeremony,
+      invitationType: filterType,
+      sortCol,
+      sortDir,
+    });
   }, [
     guests,
     search,
@@ -398,6 +298,23 @@ export function GuestsPanel({ onBack }: { onBack: () => void }) {
     sortCol,
     sortDir,
   ]);
+  const filtersActive = hasActiveGuestFilters({
+    search,
+    category: filterCat,
+    rsvp: filterRsvp,
+    ceremony: filterCeremony,
+    invitationType: filterType,
+    sortCol,
+    sortDir,
+  });
+
+  function clearFilters() {
+    setSearch("");
+    setFilterCat("");
+    setFilterRsvp("");
+    setFilterCeremony("");
+    setFilterType("");
+  }
 
   function toggleSort(col: string) {
     if (col === "#") return;
@@ -412,14 +329,7 @@ export function GuestsPanel({ onBack }: { onBack: () => void }) {
   }
 
   function exportCsv() {
-    const header = EXPORT_FIELDS.join(",");
-    const csvRows = guests.map((g) =>
-      EXPORT_FIELDS.map((f) => {
-        const v = String((g as unknown as Record<string, unknown>)[f] ?? "");
-        return v.includes(",") ? `"${v}"` : v;
-      }).join(","),
-    );
-    const blob = new Blob([[header, ...csvRows].join("\n")], {
+    const blob = new Blob([buildGuestCsv(guests)], {
       type: "text/csv",
     });
     const url = URL.createObjectURL(blob);
@@ -436,23 +346,35 @@ export function GuestsPanel({ onBack }: { onBack: () => void }) {
     e.target.value = "";
     const reader = new FileReader();
     reader.onload = (ev) => {
-      const text = ev.target?.result as string;
-      const { headers, rows } = parseCsv(text);
-      const mapping: Record<string, string> = {};
-      headers.forEach((h) => {
-        const match = GUEST_FIELDS.find(
-          (f) => f.toLowerCase() === h.toLowerCase(),
+      try {
+        const text = ev.target?.result as string;
+        const { headers, rows } = parseCsv(text);
+        const mapping: Record<string, string> = {};
+        headers.forEach((h) => {
+          const match = GUEST_FIELDS.find(
+            (f) => f.toLowerCase() === h.toLowerCase(),
+          );
+          mapping[h] = match ?? "";
+        });
+        setImportModal({ headers, rows, mapping });
+        setActionError(null);
+      } catch {
+        setActionError(
+          "That CSV file could not be read. Check the file and try again.",
         );
-        mapping[h] = match ?? "";
-      });
-      setImportModal({ headers, rows, mapping });
+      }
     };
+    reader.onerror = () =>
+      setActionError(
+        "That CSV file could not be read. Check the file and try again.",
+      );
     reader.readAsText(file);
   }
 
   async function submitImport() {
     if (!importModal || !siteId) return;
     setImporting(true);
+    setActionError(null);
     try {
       const res = await fetch(`/api/sites/${siteId}/guests/import`, {
         method: "POST",
@@ -462,18 +384,21 @@ export function GuestsPanel({ onBack }: { onBack: () => void }) {
           mapping: importModal.mapping,
         }),
       });
-      if (!res.ok) return;
+      if (!res.ok) throw new Error("Import failed");
       const data = (await res.json()) as { imported: number; skipped: number };
       setImportResult(data);
       const r = await fetch(`/api/sites/${siteId}/guests`);
-      if (r.ok) {
-        const d = (await r.json()) as { guests: Guest[] };
-        setGuests(d.guests);
-      }
+      if (!r.ok) throw new Error("Guest refresh failed");
+      const d = (await r.json()) as { guests: Guest[] };
+      setGuests(d.guests);
       setTimeout(() => {
         setImportModal(null);
         setImportResult(null);
       }, 2500);
+    } catch {
+      setActionError(
+        "Guests could not be imported. Check the mapping and try again.",
+      );
     } finally {
       setImporting(false);
     }
@@ -549,6 +474,21 @@ export function GuestsPanel({ onBack }: { onBack: () => void }) {
           </b>
         </span>
       </div>
+      {(loadError || actionError) && (
+        <div className="flex items-center justify-between gap-3 border-b border-destructive/20 bg-destructive/10 px-4 py-2 text-xs text-destructive">
+          <span>{actionError ?? loadError}</span>
+          <button
+            type="button"
+            onClick={() => {
+              setActionError(null);
+              setLoadError(null);
+            }}
+            className="rounded px-1.5 py-0.5 hover:bg-destructive/10"
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
       <div className="flex flex-wrap items-center gap-2 border-b border-border px-4 py-2">
         <input
           placeholder="Search name…"
@@ -598,6 +538,15 @@ export function GuestsPanel({ onBack }: { onBack: () => void }) {
           <option value="printed">Printed</option>
           <option value="both">Both</option>
         </select>
+        {filtersActive && (
+          <button
+            type="button"
+            onClick={clearFilters}
+            className="rounded-md border border-border bg-muted/30 px-2 py-1 text-xs text-muted-foreground hover:bg-accent/30"
+          >
+            Clear filters
+          </button>
+        )}
       </div>
       <div className="flex-1 overflow-auto">
         {loading ? (
@@ -605,14 +554,26 @@ export function GuestsPanel({ onBack }: { onBack: () => void }) {
             Loading...
           </p>
         ) : guests.length === 0 ? (
-          <p className="mx-3 my-3 rounded-md border border-dashed border-border px-3 py-2 text-center text-xs text-muted-foreground">
-            No guests yet. Click Add to get started.
-          </p>
+          <div className="mx-3 my-3 rounded-md border border-dashed border-border px-3 py-3 text-center text-xs text-muted-foreground">
+            <p>No guests yet.</p>
+            <p>Click Add Guest or import a CSV to get started.</p>
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className="mx-3 my-3 flex flex-col items-center gap-2 rounded-md border border-dashed border-border px-3 py-3 text-center text-xs text-muted-foreground">
+            <p>No guests match these filters.</p>
+            <button
+              type="button"
+              onClick={clearFilters}
+              className="rounded-md border border-border px-2 py-1 text-xs text-foreground hover:bg-accent/30"
+            >
+              Reset filters
+            </button>
+          </div>
         ) : (
           <table className="w-full border-collapse text-xs">
             <thead>
               <tr className="border-b border-border bg-muted/30">
-                {COLS.map(([k, en, vi]) => (
+                {GUEST_COLUMNS.map(([k, en, vi]) => (
                   <th
                     key={k}
                     className={`whitespace-nowrap px-2 py-1.5 text-left font-medium text-muted-foreground${k !== "#" ? " cursor-pointer select-none hover:text-foreground" : ""}`}

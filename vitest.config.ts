@@ -1,12 +1,21 @@
+import path from "node:path";
 import { defineConfig } from "vitest/config";
-import path from "path";
 
 export default defineConfig({
+  resolve: {
+    alias: {
+      "@": path.resolve(__dirname, "src"),
+    },
+  },
   test: {
     environment: "node",
-    // Playwright e2e specs live under e2e/ and use @playwright/test, which
-    // collides with vitest's test runner if globbed in.
-    exclude: ["**/node_modules/**", "**/dist/**", "e2e/**"],
+    exclude: [
+      "node_modules/**",
+      "e2e/**",
+      ".next/**",
+      "playwright-report/**",
+      "test-results/**",
+    ],
     coverage: {
       provider: "v8",
       // Honest, enforced floor set just below current coverage (~31% lines) so
@@ -18,11 +27,6 @@ export default defineConfig({
         functions: 15,
         branches: 25,
       },
-    },
-  },
-  resolve: {
-    alias: {
-      "@": path.resolve(__dirname, "./src"),
     },
   },
 });
