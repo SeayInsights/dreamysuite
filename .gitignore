@@ -96,9 +96,10 @@ cloudflare-env.d.ts
 .design-audit/
 .audit/
 
-# Migrations (managed in Cloudflare D1 dashboard)
-/migrations/*
-!/migrations/0043_audit_log.sql
+# D1 schema migrations are version-controlled (source of truth for schema).
+# They are applied to Cloudflare D1 via the dashboard / wrangler, but the .sql
+# files must be committed so schema history is reviewable. Root-level *.sql
+# dumps/backups are still ignored above.
 
 # Dev scripts & seed data (except build-public-effects which CI needs)
 /scripts/*
