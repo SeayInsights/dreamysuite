@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { getEnv } from "@/lib/cloudflare";
 import { isRateLimited } from "@/lib/rateLimit";
 import { safeJsonParse } from "@/lib/validation";
+import { GoogleTextSearchResponse } from "@/lib/schemas/places";
 
 export async function GET(req: NextRequest) {
   const env = await getEnv();
@@ -12,12 +13,18 @@ export async function GET(req: NextRequest) {
 
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY;
   if (!apiKey) {
-    return Response.json({ error: "Google API key not configured" }, { status: 500 });
+    return Response.json(
+      { error: "Google API key not configured" },
+      { status: 500 },
+    );
   }
 
   const q = req.nextUrl.searchParams.get("q");
   if (!q) {
-    return Response.json({ error: "Missing query parameter: q" }, { status: 400 });
+    return Response.json(
+      { error: "Missing query parameter: q" },
+      { status: 400 },
+    );
   }
 
   try {
@@ -25,16 +32,23 @@ export async function GET(req: NextRequest) {
     const upstream = await fetch(url);
     const rawText = await upstream.text();
     if (!upstream.ok) {
-      return Response.json({ error: "Upstream Places API error" }, { status: 502 });
+      return Response.json(
+        { error: "Upstream Places API error" },
+        { status: 502 },
+      );
     }
 
-    const raw = safeJsonParse<{ results?: Array<{ name?: string; formatted_address?: string; place_id?: string; geometry?: { location?: { lat: number; lng: number } } }> }>(rawText, { results: [] });
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const results = (raw.results ?? []).slice(0, 5).map((r: any) => ({
+    const parsed = GoogleTextSearchResponse.safeParse(
+      safeJsonParse<unknown>(rawText, {}),
+    );
+    const rawResults = parsed.success ? parsed.data.results : [];
+    const results = rawResults.slice(0, 5).map((r) => ({
       place_id: r.place_id,
       name: r.name,
       formatted_address: r.formatted_address,
-      geometry: r.geometry ? { location: r.geometry.location } : undefined,
+      geometry: r.geometry?.location
+        ? { location: r.geometry.location }
+        : undefined,
     }));
 
     return Response.json({ results });
