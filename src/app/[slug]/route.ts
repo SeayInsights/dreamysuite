@@ -9,11 +9,13 @@ import { getEnv } from "@/lib/cloudflare";
 import { createAuth } from "@/app/lib/auth.server";
 import { safeBlockConfig } from "@/lib/validation";
 import { getEffectById } from "@/lib/effects/registry";
-import {
-  hashGuestPassword,
-  verifyGuestPassword,
-} from "@/lib/crypto/guestPassword";
+import { verifyGuestPassword } from "@/lib/crypto/guestPassword";
 import { getSiteTypeSettings } from "@/lib/schemas/site-type-settings";
+import {
+  guestCookieMatches,
+  guestPwCookieName,
+  guestUnlockToken,
+} from "@/lib/api/guest-gate";
 
 import {
   type SiteRow,
@@ -30,7 +32,7 @@ import { comingSoonHtml, notFoundHtml } from "./pages";
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: Promise<{ slug: string }> }
+  { params }: { params: Promise<{ slug: string }> },
 ) {
   const { slug } = await params;
   const env = await getEnv();
@@ -43,69 +45,125 @@ export async function GET(
     const session = await auth.api.getSession({ headers: req.headers });
     viewerUserId = session?.user?.id ?? null;
     viewerEmail = session?.user?.email ?? null;
-  } catch { /* Unauthenticated visitor */ }
+  } catch {
+    /* Unauthenticated visitor */
+  }
 
   let site: SiteRow | null = null;
   let isOwner = false;
 
   if (viewerUserId) {
-    site = await db.prepare("SELECT id, name, slug FROM site WHERE slug = ? AND userId = ?").bind(slug, viewerUserId).first<SiteRow>();
+    site = await db
+      .prepare("SELECT id, name, slug FROM site WHERE slug = ? AND userId = ?")
+      .bind(slug, viewerUserId)
+      .first<SiteRow>();
     if (site) isOwner = true;
   }
   if (!site && viewerEmail) {
-    const invited = await db.prepare("SELECT s.id, s.name, s.slug FROM site s JOIN site_invite i ON i.siteId = s.id WHERE s.slug = ? AND i.email = ?").bind(slug, viewerEmail.toLowerCase()).first<SiteRow>();
-    if (invited) { site = invited; isOwner = true; }
+    const invited = await db
+      .prepare(
+        "SELECT s.id, s.name, s.slug FROM site s JOIN site_invite i ON i.siteId = s.id WHERE s.slug = ? AND i.email = ?",
+      )
+      .bind(slug, viewerEmail.toLowerCase())
+      .first<SiteRow>();
+    if (invited) {
+      site = invited;
+      isOwner = true;
+    }
   }
   if (!site) {
-    site = await db.prepare("SELECT id, name, slug FROM site WHERE slug = ? AND status = 'published'").bind(slug).first<SiteRow>();
+    site = await db
+      .prepare(
+        "SELECT id, name, slug FROM site WHERE slug = ? AND status = 'published'",
+      )
+      .bind(slug)
+      .first<SiteRow>();
   }
   if (!site) {
-    return new Response(notFoundHtml(), { status: 404, headers: { "content-type": "text/html; charset=utf-8" } });
+    return new Response(notFoundHtml(), {
+      status: 404,
+      headers: { "content-type": "text/html; charset=utf-8" },
+    });
   }
 
   // Fetch settings: merge universal settings with type-specific settings
-  const universalSettings = await db.prepare("SELECT * FROM site_setting WHERE siteId = ?").bind(site.id).first<SiteSettingRow>();
+  const universalSettings = await db
+    .prepare("SELECT * FROM site_setting WHERE siteId = ?")
+    .bind(site.id)
+    .first<SiteSettingRow>();
   const typeSettings = await getSiteTypeSettings(db, site.id);
-  const settings = universalSettings && typeSettings
-    ? { ...universalSettings, ...typeSettings.settings }
-    : universalSettings;
+  const settings =
+    universalSettings && typeSettings
+      ? { ...universalSettings, ...typeSettings.settings }
+      : universalSettings;
 
   if (settings) {
-    const effectKeys = ["effectBg", "effectText", "effectCard", "effectTransition", "effectCursor", "effectDecoration", "effectNavStyle"] as const;
+    const effectKeys = [
+      "effectBg",
+      "effectText",
+      "effectCard",
+      "effectTransition",
+      "effectCursor",
+      "effectDecoration",
+      "effectNavStyle",
+    ] as const;
     for (const key of effectKeys) {
       const id = settings[key];
       if (!id) continue;
       const entry = getEffectById(id);
-      if (!entry || entry.disabled) (settings as unknown as Record<string, unknown>)[key] = null;
+      if (!entry || entry.disabled)
+        (settings as unknown as Record<string, unknown>)[key] = null;
     }
   }
 
   if (!isOwner && !settings?.isLive) {
-    return new Response(comingSoonHtml(site.name), { status: 200, headers: { "content-type": "text/html; charset=utf-8" } });
+    return new Response(comingSoonHtml(site.name), {
+      status: 200,
+      headers: { "content-type": "text/html; charset=utf-8" },
+    });
   }
 
   let passwordPages: string[] = [];
   if (settings?.passwordPages) {
-    try { passwordPages = JSON.parse(settings.passwordPages); } catch { /* ignore */ }
+    try {
+      passwordPages = JSON.parse(settings.passwordPages);
+    } catch {
+      /* ignore */
+    }
   }
   const hasPerPagePassword = passwordPages.length > 0;
 
   let pwUnlocked = false;
   if (!isOwner && settings?.guestPassword) {
-    const pw = req.cookies.get(`ds_pw_${slug}`)?.value ?? null;
-    if (pw && await verifyGuestPassword(pw, settings.guestPassword)) {
+    const pw = req.cookies.get(guestPwCookieName(slug))?.value ?? null;
+    if (guestCookieMatches(pw, settings.guestPassword)) {
       pwUnlocked = true;
     } else if (!hasPerPagePassword) {
       const accent = settings.accentColor ?? "#B8921A";
       const siteName = settings.eventName ?? site.name;
       const gateHtml = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/><title>${escHtml(siteName)}</title><style>*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}body{font-family:Georgia,serif;background:#faf8f5;color:#292524;display:flex;align-items:center;justify-content:center;min-height:100dvh;padding:1.5rem}.gate-wrap{text-align:center;max-width:360px;width:100%}h1{font-size:1.75rem;font-weight:normal;margin-bottom:.5rem}p{color:#78716c;margin-bottom:1.75rem;font-size:.9375rem}.gate-form{display:flex;flex-direction:column;gap:.875rem}.gate-input{width:100%;border:1px solid #e7e5e4;border-radius:6px;padding:.625rem .875rem;font-family:inherit;font-size:1rem;color:#292524;outline:none;transition:border-color .15s}.gate-input:focus{border-color:${escHtml(accent)}}.gate-btn{padding:.75rem 2rem;border:none;border-radius:6px;background:${escHtml(accent)};color:#fff;font-family:inherit;font-size:.9375rem;cursor:pointer;transition:opacity .15s}.gate-btn:hover{opacity:.88}</style></head><body><div class="gate-wrap"><h1>${escHtml(siteName)}</h1><p>This site is password protected. Please enter the password to continue.</p><form class="gate-form" method="post"><input class="gate-input" type="password" name="pw" placeholder="Enter password" aria-label="Site password" required/><button class="gate-btn" type="submit">Enter</button></form></div></body></html>`;
-      return new Response(gateHtml, { status: 401, headers: { "content-type": "text/html; charset=utf-8" } });
+      return new Response(gateHtml, {
+        status: 401,
+        headers: { "content-type": "text/html; charset=utf-8" },
+      });
     }
   }
-  const lockedPageIds = new Set(!isOwner && hasPerPagePassword && !pwUnlocked ? passwordPages : []);
+  const lockedPageIds = new Set(
+    !isOwner && hasPerPagePassword && !pwUnlocked ? passwordPages : [],
+  );
 
-  const pagesResult = await db.prepare("SELECT id, slug, isVisible, label FROM page WHERE siteId = ? AND isVisible = 1 ORDER BY sortOrder ASC").bind(site.id).all<PageRow>();
-  const blocksResult = await db.prepare("SELECT id, pageId, siteId, type, config FROM block WHERE siteId = ? AND isVisible = 1 ORDER BY sortOrder ASC").bind(site.id).all<BlockRow>();
+  const pagesResult = await db
+    .prepare(
+      "SELECT id, slug, isVisible, label FROM page WHERE siteId = ? AND isVisible = 1 ORDER BY sortOrder ASC",
+    )
+    .bind(site.id)
+    .all<PageRow>();
+  const blocksResult = await db
+    .prepare(
+      "SELECT id, pageId, siteId, type, config FROM block WHERE siteId = ? AND isVisible = 1 ORDER BY sortOrder ASC",
+    )
+    .bind(site.id)
+    .all<BlockRow>();
 
   const blocksByPage = new Map<string, ParsedBlock[]>();
   for (const block of blocksResult.results) {
@@ -119,58 +177,104 @@ export async function GET(
     blocks: blocksByPage.get(page.id) ?? [],
   }));
 
-  const contentResult = await db.prepare("SELECT pageSlug, lang, content FROM site_content WHERE siteId = ?").bind(site.id).all<{ pageSlug: string; lang: string; content: string }>();
+  const contentResult = await db
+    .prepare(
+      "SELECT pageSlug, lang, content FROM site_content WHERE siteId = ?",
+    )
+    .bind(site.id)
+    .all<{ pageSlug: string; lang: string; content: string }>();
   const contentMap: ContentMap = new Map();
   for (const row of contentResult.results) {
     if (!contentMap.has(row.pageSlug)) contentMap.set(row.pageSlug, new Map());
-    try { contentMap.get(row.pageSlug)!.set(row.lang, JSON.parse(row.content) as Record<string, unknown>); } catch { /* skip */ }
+    try {
+      contentMap
+        .get(row.pageSlug)!
+        .set(row.lang, JSON.parse(row.content) as Record<string, unknown>);
+    } catch {
+      /* skip */
+    }
   }
 
   // Block-level translations from the dedicated table
-  const btResult = await db.prepare("SELECT blockId, lang, field, value FROM block_translation WHERE siteId = ?").bind(site.id).all<{ blockId: string; lang: string; field: string; value: string }>();
-  const blockTransMap: Record<string, Record<string, Record<string, string>>> = {};
+  const btResult = await db
+    .prepare(
+      "SELECT blockId, lang, field, value FROM block_translation WHERE siteId = ?",
+    )
+    .bind(site.id)
+    .all<{ blockId: string; lang: string; field: string; value: string }>();
+  const blockTransMap: Record<
+    string,
+    Record<string, Record<string, string>>
+  > = {};
   for (const r of btResult.results) {
     if (!blockTransMap[r.blockId]) blockTransMap[r.blockId] = {};
-    if (!blockTransMap[r.blockId][r.lang]) blockTransMap[r.blockId][r.lang] = {};
+    if (!blockTransMap[r.blockId][r.lang])
+      blockTransMap[r.blockId][r.lang] = {};
     blockTransMap[r.blockId][r.lang][r.field] = r.value;
   }
 
   const activeLang = new URL(req.url).searchParams.get("_lang") ?? null;
-  return new Response(buildHtml(site, settings ?? null, pages, contentMap, blockTransMap, site.slug, activeLang, lockedPageIds), {
-    status: 200,
-    headers: {
-      "content-type": "text/html; charset=utf-8",
-      "cache-control": "public, max-age=300, stale-while-revalidate=600",
-      "content-security-policy": "default-src 'self'; script-src 'self' 'unsafe-inline' https://esm.sh https://cdnjs.cloudflare.com https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://cloudflareinsights.com; frame-src https:",
+  return new Response(
+    buildHtml(
+      site,
+      settings ?? null,
+      pages,
+      contentMap,
+      blockTransMap,
+      site.slug,
+      activeLang,
+      lockedPageIds,
+    ),
+    {
+      status: 200,
+      headers: {
+        "content-type": "text/html; charset=utf-8",
+        "cache-control": "public, max-age=300, stale-while-revalidate=600",
+        "content-security-policy":
+          "default-src 'self'; script-src 'self' 'unsafe-inline' https://esm.sh https://cdnjs.cloudflare.com https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://cloudflareinsights.com; frame-src https:",
+      },
     },
-  });
+  );
 }
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: Promise<{ slug: string }> }
+  { params }: { params: Promise<{ slug: string }> },
 ) {
   const { slug } = await params;
   const env = await getEnv();
   const db = env.DB;
 
-  const site = await db.prepare("SELECT id FROM site WHERE slug = ? AND status = 'published'").bind(slug).first<SiteRow>();
+  const site = await db
+    .prepare("SELECT id FROM site WHERE slug = ? AND status = 'published'")
+    .bind(slug)
+    .first<SiteRow>();
   if (!site) {
-    return new Response(notFoundHtml(), { status: 404, headers: { "content-type": "text/html; charset=utf-8" } });
+    return new Response(notFoundHtml(), {
+      status: 404,
+      headers: { "content-type": "text/html; charset=utf-8" },
+    });
   }
 
-  const settings = await db.prepare("SELECT guestPassword FROM site_setting WHERE siteId = ?").bind(site.id).first<{ guestPassword: string | null }>();
+  const settings = await db
+    .prepare("SELECT guestPassword FROM site_setting WHERE siteId = ?")
+    .bind(site.id)
+    .first<{ guestPassword: string | null }>();
   const formData = await req.formData();
   const pw = formData.get("pw") as string | null;
 
   const redirectUrl = new URL(`/${slug}`, req.url);
-  if (pw && settings?.guestPassword && await verifyGuestPassword(pw, settings.guestPassword)) {
-    const hashedPw = await hashGuestPassword(pw);
+  if (
+    pw &&
+    settings?.guestPassword &&
+    (await verifyGuestPassword(pw, settings.guestPassword))
+  ) {
+    const token = guestUnlockToken(settings.guestPassword);
     return new Response(null, {
       status: 303,
       headers: {
         Location: redirectUrl.toString(),
-        "Set-Cookie": `ds_pw_${slug}=${encodeURIComponent(hashedPw)}; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=86400`,
+        "Set-Cookie": `${guestPwCookieName(slug)}=${encodeURIComponent(token)}; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=86400`,
       },
     });
   }
