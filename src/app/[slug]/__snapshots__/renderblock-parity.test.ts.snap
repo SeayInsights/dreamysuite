@@ -1,0 +1,326 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`renderBlock output parity > renders '__unknown_type__' identically 1`] = `"<section class="block block-unknown"><p class="placeholder-text">This block (__unknown_type__) is not yet supported.</p></section>"`;
+
+exports[`renderBlock output parity > renders 'countdown' identically 1`] = `
+"
+    <section class="block block-countdown" aria-label="Countdown" data-block-id="blk-countdown" data-block-type="countdown">
+      <p class="countdown-label">Until we say I do</p>
+      <div class="countdown-units" data-cd-clock data-date="June 2026" data-block-id="blk-countdown">
+             <div class="countdown-unit"><span class="countdown-num" id="cd-days-blk-countdown">--</span><span class="countdown-unit-label">Days</span></div>
+             <div class="countdown-unit"><span class="countdown-num" id="cd-hours-blk-countdown">--</span><span class="countdown-unit-label">Hours</span></div>
+             <div class="countdown-unit"><span class="countdown-num" id="cd-mins-blk-countdown">--</span><span class="countdown-unit-label">Minutes</span></div>
+             <div class="countdown-unit"><span class="countdown-num" id="cd-secs-blk-countdown">--</span><span class="countdown-unit-label">Seconds</span></div>
+           </div>
+      <div class="rsvp-wrap" style="text-align:center;margin-top:2rem;display:none;">
+        <a href="#rsvp" class="rsvp-submit" style="background:#B8921A;color:#fff;text-decoration:none;display:inline-block">RSVP Now</a>
+      </div>
+    </section>"
+`;
+
+exports[`renderBlock output parity > renders 'couple' identically 1`] = `
+"
+        <section class="block block-home-hero" aria-label="Hero" data-block-id="blk-couple" data-block-type="couple">
+          <div class="hero-inner">
+            <p class="hero-eyebrow">We&#39;re getting married</p>
+            <h1 class="hero-title" data-lang-field="couple">Jane &amp; John</h1>
+            <p class="hero-date" data-lang-field="date">June 2026</p>
+            <p class="hero-location" data-lang-field="location">Napa, CA</p>
+            <div class="hero-divider" aria-hidden="true">&#10038;</div>
+          </div>
+        </section>"
+`;
+
+exports[`renderBlock output parity > renders 'faq' identically 1`] = `
+"
+    <section class="block block-faq" aria-label="Frequently asked questions" data-block-id="blk-faq" data-block-type="faq">
+      <h2 class="section-heading">Questions &amp; Answers</h2>
+      <div class="section-rule" aria-hidden="true"></div>
+      <p class="placeholder-text">Frequently asked questions will appear here once added in the Content tab.</p>
+    </section>"
+`;
+
+exports[`renderBlock output parity > renders 'fun-facts' identically 1`] = `
+"
+    <section class="block block-tidbits" aria-label="Fun facts" data-block-id="blk-fun-facts" data-block-type="fun-facts">
+      <h2 class="section-heading">Fun Facts</h2><div class="section-rule" aria-hidden="true"></div>
+      <p class="placeholder-text">Fun facts will appear here once added in the Content tab.</p>
+    </section>"
+`;
+
+exports[`renderBlock output parity > renders 'gallery' identically 1`] = `
+"
+        <section class="block block-gallery" aria-label="Photo gallery" data-block-id="blk-gallery" data-block-type="gallery">
+          <p class="placeholder-text">Images will appear here once added.</p>
+        </section>"
+`;
+
+exports[`renderBlock output parity > renders 'guest-book' identically 1`] = `
+"
+        <section class="block block-guest-book" aria-label="Guest Book" data-block-id="blk-guest-book" data-block-type="guest-book"
+          style="max-width:600px;margin:0 auto;">
+          <h2 class="section-heading">Guest Book</h2><div class="section-rule" aria-hidden="true"></div>
+          <form class="rsvp-form" id="gb-form-blk-guest-book" onsubmit="submitGuestBook(event,'s1','gb-form-blk-guest-book','gb-list-blk-guest-book')">
+            <div class="form-group">
+              <label class="form-label" for="gb-name-blk-guest-book">Your Name</label>
+              <input class="form-input" id="gb-name-blk-guest-book" name="name" type="text" placeholder="Your name" required />
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="gb-msg-blk-guest-book">Message</label>
+              <textarea class="form-input form-textarea" id="gb-msg-blk-guest-book" name="message" placeholder="Leave a message for the happy couple…" required></textarea>
+            </div>
+            <button class="rsvp-submit" type="submit" style="background:var(--site-accent)">Sign the book</button>
+          </form>
+          <div id="gb-list-blk-guest-book" style="margin-top:1.5rem;display:flex;flex-direction:column;gap:0.75rem;"></div>
+        </section>"
+`;
+
+exports[`renderBlock output parity > renders 'header' identically 1`] = `
+"
+        <section class="block block-header" data-block-id="blk-header" data-block-type="header">
+          <h2 class="section-heading">Section</h2>
+          <div class="section-rule" aria-hidden="true"></div>
+        </section>"
+`;
+
+exports[`renderBlock output parity > renders 'home-hero' identically 1`] = `
+"
+        <section class="block block-home-hero" aria-label="Hero" data-block-id="blk-home-hero" data-block-type="home-hero">
+          <div class="hero-inner">
+            <p class="hero-eyebrow">We&#39;re getting married</p>
+            <h1 class="hero-title" data-lang-field="couple">Jane &amp; John</h1>
+            <p class="hero-date" data-lang-field="date">June 2026</p>
+            <p class="hero-location" data-lang-field="location">Napa, CA</p>
+            <div class="hero-divider" aria-hidden="true">&#10038;</div>
+          </div>
+        </section>"
+`;
+
+exports[`renderBlock output parity > renders 'hotel-card' identically 1`] = `
+"
+        <section class="block block-hotel-card" aria-label="Hotel and accommodations" data-block-id="blk-hotel-card" data-block-type="hotel-card">
+          <h2 class="section-heading">Hotels &amp; Accommodations</h2>
+          <div class="section-rule" aria-hidden="true"></div>
+          <p class="placeholder-text">Hotel and accommodation details will appear here.</p>
+        </section>"
+`;
+
+exports[`renderBlock output parity > renders 'images' identically 1`] = `
+"
+        <section class="block block-images" aria-label="Photo gallery" data-block-id="blk-images" data-block-type="images">
+          <p class="placeholder-text">Photos will appear here once uploaded.</p>
+        </section>"
+`;
+
+exports[`renderBlock output parity > renders 'info-card' identically 1`] = `
+"
+        <section class="block block-info-card" aria-label="Registry" data-block-id="blk-info-card" data-block-type="info-card">
+          <h2 class="section-heading">Registry</h2>
+          <div class="section-rule" aria-hidden="true"></div>
+          <div class="info-card" style="text-align:center;">
+            
+            <p class="card-title">Registry</p>
+            
+            
+          </div>
+        </section>"
+`;
+
+exports[`renderBlock output parity > renders 'media-video' identically 1`] = `
+"
+        <section class="block block-media-video" aria-label="Video" data-block-id="blk-media-video" data-block-type="media-video" style="position:relative;">
+          <div class="media-placeholder" aria-label="Video placeholder">
+    <span class="media-placeholder-icon" aria-hidden="true">&#9654;</span>
+    <p>Video will appear here once added.</p>
+  </div>
+        </section>"
+`;
+
+exports[`renderBlock output parity > renders 'multi-text' identically 1`] = `
+"
+    <section class="block block-text" data-block-id="blk-multi-text" data-block-type="multi-text">
+      
+      <div class="text-body"><p class="placeholder-text">Text will appear here once added.</p></div>
+    </section>"
+`;
+
+exports[`renderBlock output parity > renders 'photo-split' identically 1`] = `
+"<section class="block block-photo-split" data-block-id="blk-photo-split" data-block-type="photo-split">
+        <div style="display:flex;gap:2rem;align-items:center;flex-wrap:wrap;"><div class="ps-content" style="flex:1;min-width:200px;"></div></div>
+      </section>"
+`;
+
+exports[`renderBlock output parity > renders 'registry-card' identically 1`] = `
+"
+        <section class="block block-registry-card" aria-label="Gift registry" data-block-id="blk-registry-card" data-block-type="registry-card">
+          <h2 class="section-heading">Registry</h2>
+          <div class="section-rule" aria-hidden="true"></div>
+          <p class="placeholder-text">Registry details will appear here once added.</p>
+        </section>"
+`;
+
+exports[`renderBlock output parity > renders 'rsvp' identically 1`] = `
+"
+        <section class="block block-rsvp" aria-label="RSVP" data-block-id="blk-rsvp" data-block-type="rsvp">
+          <h2 class="section-heading">RSVP</h2>
+          <div class="section-rule" aria-hidden="true"></div>
+          <form class="rsvp-form" id="rsvp-form-blk-rsvp" aria-label="RSVP form" onsubmit="submitRsvp(event,'test-slug','rsvp-form-blk-rsvp','rsvp-msg-blk-rsvp')">
+            <div class="form-group">
+              <label class="form-label" for="rsvp-fn-blk-rsvp">First Name</label>
+              <input class="form-input" id="rsvp-fn-blk-rsvp" name="firstName" type="text" placeholder="First name" autocomplete="given-name" required />
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="rsvp-ln-blk-rsvp">Last Name</label>
+              <input class="form-input" id="rsvp-ln-blk-rsvp" name="lastName" type="text" placeholder="Last name" autocomplete="family-name" required />
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="rsvp-email-blk-rsvp">Email <span style="font-size:0.8em;color:#9b8e85;font-weight:400;">(optional — for confirmation)</span></label>
+              <input class="form-input" id="rsvp-email-blk-rsvp" name="email" type="email" placeholder="your@email.com" autocomplete="email" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Will you attend?</label>
+              <div class="radio-group" role="radiogroup" aria-label="Attendance">
+                <label class="radio-label">
+                  <input type="radio" name="attending" value="yes" required /> Joyfully accepts
+                </label>
+                <label class="radio-label">
+                  <input type="radio" name="attending" value="no" /> Regretfully declines
+                </label>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="rsvp-notes-blk-rsvp">Notes or Dietary Restrictions</label>
+              <textarea class="form-input form-textarea" id="rsvp-notes-blk-rsvp" name="notes" placeholder="Optional"></textarea>
+            </div>
+            <button class="rsvp-submit" type="submit" style="background:var(--site-accent)">Send RSVP</button>
+          </form>
+          <div id="rsvp-msg-blk-rsvp" role="alert" aria-live="polite" style="display:none;margin-top:1.25rem;text-align:center;font-size:0.9375rem;padding:0.875rem 1rem;border-radius:6px;"></div>
+        </section>"
+`;
+
+exports[`renderBlock output parity > renders 'rsvp-form' identically 1`] = `
+"
+        <section class="block block-rsvp" aria-label="RSVP" data-block-id="blk-rsvp-form" data-block-type="rsvp-form">
+          <h2 class="section-heading">RSVP</h2>
+          <div class="section-rule" aria-hidden="true"></div>
+          
+          <form class="rsvp-form" id="rsvp-form-blk-rsvp-form" aria-label="RSVP form" onsubmit="submitRsvp(event,'test-slug','rsvp-form-blk-rsvp-form','rsvp-msg-blk-rsvp-form')">
+            <div class="form-group">
+              <label class="form-label" for="rsvp-fn-blk-rsvp-form">First Name</label>
+              <input class="form-input" id="rsvp-fn-blk-rsvp-form" name="firstName" type="text" placeholder="First name" autocomplete="given-name" required />
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="rsvp-ln-blk-rsvp-form">Last Name</label>
+              <input class="form-input" id="rsvp-ln-blk-rsvp-form" name="lastName" type="text" placeholder="Last name" autocomplete="family-name" required />
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="rsvp-email-blk-rsvp-form">Email <span style="font-size:0.8em;color:#9b8e85;font-weight:400;">(optional — for confirmation)</span></label>
+              <input class="form-input" id="rsvp-email-blk-rsvp-form" name="email" type="email" placeholder="your@email.com" autocomplete="email" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Will you attend?</label>
+              <div class="radio-group" role="radiogroup" aria-label="Attendance">
+                <label class="radio-label">
+                  <input type="radio" name="attending" value="yes" required /> Joyfully accepts
+                </label>
+                <label class="radio-label">
+                  <input type="radio" name="attending" value="no" /> Regretfully declines
+                </label>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="rsvp-notes-blk-rsvp-form">Notes or Dietary Restrictions</label>
+              <textarea class="form-input form-textarea" id="rsvp-notes-blk-rsvp-form" name="notes" placeholder="Optional"></textarea>
+            </div>
+            <button class="rsvp-submit" type="submit" style="background:var(--site-accent)">Send RSVP</button>
+          </form>
+          <div id="rsvp-msg-blk-rsvp-form" role="alert" aria-live="polite" style="display:none;margin-top:1.25rem;text-align:center;font-size:0.9375rem;padding:0.875rem 1rem;border-radius:6px;"></div>
+        </section>"
+`;
+
+exports[`renderBlock output parity > renders 'schedule' identically 1`] = `
+"
+    <section class="block block-schedule" aria-label="Schedule" data-block-id="blk-schedule" data-block-type="schedule">
+      <h2 class="section-heading">The Day</h2>
+      <div class="section-rule" aria-hidden="true"></div>
+      <p class="placeholder-text">The wedding day schedule will appear here once added in the Content tab.</p>
+    </section>"
+`;
+
+exports[`renderBlock output parity > renders 'spacer' identically 1`] = `"<div class="block-spacer" style="height:60px" aria-hidden="true"></div>"`;
+
+exports[`renderBlock output parity > renders 'story-timeline' identically 1`] = `
+"
+        <section class="block block-story-timeline" aria-label="Our Story" data-block-id="blk-story-timeline" data-block-type="story-timeline">
+          <h2 class="section-heading">Our Story</h2><div class="section-rule" aria-hidden="true"></div>
+          <p class="placeholder-text">Timeline events will appear here once added.</p>
+        </section>"
+`;
+
+exports[`renderBlock output parity > renders 'text' identically 1`] = `
+"
+        <section class="block block-text" data-block-id="blk-text" data-block-type="text">
+          
+          <div class="text-body">
+            <p class="placeholder-text">Story text will appear here once added.</p>
+          </div>
+        </section>"
+`;
+
+exports[`renderBlock output parity > renders 'tidbits' identically 1`] = `
+"
+    <section class="block block-tidbits" aria-label="Fun facts" data-block-id="blk-tidbits" data-block-type="tidbits">
+      <h2 class="section-heading">Fun Facts</h2><div class="section-rule" aria-hidden="true"></div>
+      <p class="placeholder-text">Fun facts will appear here once added in the Content tab.</p>
+    </section>"
+`;
+
+exports[`renderBlock output parity > renders 'travel' identically 1`] = `
+"
+    <section class="block block-travel" aria-label="Travel information" data-block-id="blk-travel" data-block-type="travel">
+      <h2 class="section-heading">Getting There</h2>
+      <div class="section-rule" aria-hidden="true"></div>
+      <p class="placeholder-text">Travel details will appear here once added in the Content tab.</p>
+    </section>"
+`;
+
+exports[`renderBlock output parity > renders 'travel-section' identically 1`] = `
+"
+    <section class="block block-travel" aria-label="Travel information" data-block-id="blk-travel-section" data-block-type="travel-section">
+      <h2 class="section-heading">Getting There</h2>
+      <div class="section-rule" aria-hidden="true"></div>
+      <p class="placeholder-text">Travel details will appear here once added in the Content tab.</p>
+    </section>"
+`;
+
+exports[`renderBlock output parity > renders 'venue-map' identically 1`] = `
+"
+        <section class="block block-venue-map" aria-label="Venue location" data-block-id="blk-venue-map" data-block-type="venue-map">
+          <h2 class="section-heading">Venue</h2>
+          <div class="section-rule" aria-hidden="true"></div>
+          
+          
+          <p class="placeholder-text">Venue address and map will appear here.</p>
+        </section>"
+`;
+
+exports[`renderBlock output parity > renders 'video' identically 1`] = `
+"
+        <section class="block block-video" aria-label="Video" data-block-id="blk-video" data-block-type="video" style="position:relative;">
+          <div class="media-placeholder" aria-label="Video placeholder">
+    <span class="media-placeholder-icon" aria-hidden="true">&#9654;</span>
+    <p>Video will appear here once added.</p>
+  </div>
+          
+        </section>"
+`;
+
+exports[`renderBlock output parity > renders 'youtube' identically 1`] = `
+"
+        <section class="block block-youtube" aria-label="YouTube video" data-block-id="blk-youtube" data-block-type="youtube">
+          <div class="media-placeholder" aria-label="YouTube Video placeholder">
+    <span class="media-placeholder-icon" aria-hidden="true">&#9654;</span>
+    <p>YouTube Video will appear here once added.</p>
+  </div>
+        </section>"
+`;
