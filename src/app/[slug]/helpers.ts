@@ -27,7 +27,9 @@ export function parseMusicSource(url: string): MusicSource | null {
       if (id) return { type: "youtube", id };
     }
     if (u.hostname.includes("spotify.com")) {
-      const match = u.pathname.match(/\/(track|album|playlist)\/([a-zA-Z0-9]+)/);
+      const match = u.pathname.match(
+        /\/(track|album|playlist)\/([a-zA-Z0-9]+)/,
+      );
       if (match) return { type: "spotify", kind: match[1], id: match[2] };
     }
     if (u.hostname.includes("soundcloud.com")) {
@@ -37,7 +39,9 @@ export function parseMusicSource(url: string): MusicSource | null {
     if (ext && ["mp3", "wav", "ogg", "m4a", "aac", "flac"].includes(ext)) {
       return { type: "audio" };
     }
-  } catch { /* invalid URL */ }
+  } catch {
+    /* invalid URL */
+  }
   return null;
 }
 
@@ -46,10 +50,42 @@ export function nl2br(text: string): string {
   return escHtml(text).replace(/\n/g, "<br>");
 }
 
+/**
+ * Sanitize an owner-provided URL before it is rendered into an href/src/CSS
+ * url(). Uses a positive scheme allowlist rather than a prefix denylist, which
+ * is bypassable via control characters (e.g. "java\tscript:" — browsers strip
+ * the tab and execute it, but a startsWith("javascript:") check misses it).
+ *
+ * Allowed: relative URLs (path/query/fragment) and http / https / mailto.
+ * Anything else (javascript:, data:, vbscript:, tel:, file:, …) returns "#".
+ */
 export function safeUrl(raw: string): string {
-  const trimmed = raw.trim().toLowerCase();
-  if (trimmed.startsWith("javascript:") || trimmed.startsWith("data:") || trimmed.startsWith("vbscript:")) return "#";
-  return raw;
+  if (!raw) return "#";
+  // Drop ASCII control chars (incl. tab/newline/CR) that browsers ignore but
+  // which can smuggle a disallowed scheme past a naive check.
+  const cleaned = raw.replace(/[\u0000-\u001F\u007F]/g, "").trim();
+  if (!cleaned) return "#";
+  // Relative URLs carry no scheme and are safe.
+  if (
+    cleaned.startsWith("/") ||
+    cleaned.startsWith("#") ||
+    cleaned.startsWith("?")
+  ) {
+    return cleaned;
+  }
+  try {
+    const url = new URL(cleaned, "https://relative.invalid");
+    if (
+      url.protocol === "http:" ||
+      url.protocol === "https:" ||
+      url.protocol === "mailto:"
+    ) {
+      return cleaned;
+    }
+  } catch {
+    /* unparseable → reject */
+  }
+  return "#";
 }
 
 export function placeholder(text: string): string {
