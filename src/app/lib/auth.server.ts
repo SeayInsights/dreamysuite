@@ -15,7 +15,12 @@ export interface Env {
   RESEND_API_KEY: string;
 }
 
-const BUILD_TIME_AUTH_SECRET = "k2eNjG9xV6Qp3ZrW8mCt5LsYbHaU4dF0sPqX7nRvM1c=";
+// Ephemeral placeholder used ONLY in build/CI auth context (see
+// isBuildTimeAuthContext). Generated per process so no secret is committed to
+// source. At runtime the AUTH_SECRET Worker binding takes precedence; if it is
+// ever absent, authSecretFor returns undefined and better-auth fails closed
+// rather than signing sessions with a known key.
+const BUILD_TIME_AUTH_SECRET = `build-${crypto.randomUUID()}-${crypto.randomUUID()}`;
 
 function isBuildTimeAuthContext(): boolean {
   const lifecycle = process.env.npm_lifecycle_event;
