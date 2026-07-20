@@ -417,3 +417,78 @@ describe("render unification — batch C (header, text)", () => {
     expect(normalizeHtml(actual)).toBe(normalizeHtml(expectedLegacy));
   });
 });
+
+describe("render unification — batch D (tidbits, fun-facts)", () => {
+  it("tidbits (populated, 2 cols) matches the legacy string output", () => {
+    const expectedLegacy = `
+    <section class="block block-tidbits" aria-label="Fun facts" data-block-id="tb1" data-block-type="tidbits">
+      <h2 class="section-heading">Fun Facts</h2><div class="section-rule" aria-hidden="true"></div>
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:1rem;">
+             <div style="background:#fff;border:1px solid var(--site-border);border-radius:12px;padding:1.25rem;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,0.05);color:var(--block-text,var(--text));">
+               <div style="font-size:2rem;margin-bottom:0.5rem;">🎉</div>
+               <strong style="display:block;margin-bottom:0.375rem;">Fun</strong>
+               <p style="color:var(--block-text,var(--site-muted));font-size:0.9375rem;margin:0;">A fact</p>
+             </div>
+           </div>
+    </section>`;
+    const actual = renderBlock(
+      makeBlock("tb1", "tidbits", {
+        columns: "2",
+        items: [{ icon: "🎉", title: "Fun", body: "A fact" }],
+      }),
+      settings,
+    );
+    expect(normalizeHtml(actual)).toBe(normalizeHtml(expectedLegacy));
+  });
+
+  it("tidbits (empty) renders the placeholder with title", () => {
+    const expectedLegacy = `
+    <section class="block block-tidbits" aria-label="Fun facts" data-block-id="tb2" data-block-type="tidbits">
+      <h2 class="section-heading">Fun Facts</h2><div class="section-rule" aria-hidden="true"></div>
+      <p class="placeholder-text">Fun facts will appear here once added in the Content tab.</p>
+    </section>`;
+    const actual = renderBlock(makeBlock("tb2", "tidbits", {}), settings);
+    expect(normalizeHtml(actual)).toBe(normalizeHtml(expectedLegacy));
+  });
+
+  it("fun-facts (populated, 3 cols) matches the legacy string output", () => {
+    const expectedLegacy = `
+    <section class="block block-tidbits" aria-label="Fun facts" data-block-id="ff1" data-block-type="fun-facts">
+      <h2 class="section-heading">Fun Facts</h2><div class="section-rule" aria-hidden="true"></div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;">
+             <div style="background:#fff;border:1px solid var(--site-border);border-radius:12px;padding:1.25rem;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,0.05);color:var(--block-text,var(--text));">
+               <div style="font-size:2rem;margin-bottom:0.5rem;">💍</div>
+               <strong style="display:block;margin-bottom:0.375rem;font-size:0.8rem;font-weight:500;color:var(--site-accent,var(--site-muted));">How met?</strong>
+               <p style="color:var(--block-text,var(--site-muted));font-size:0.9375rem;margin:0;">At a cafe</p>
+             </div>
+           </div>
+    </section>`;
+    const actual = renderBlock(
+      makeBlock("ff1", "fun-facts", {
+        columns: "3",
+        items: [{ icon: "💍", question: "How met?", body: "At a cafe" }],
+      }),
+      settings,
+    );
+    expect(normalizeHtml(actual)).toBe(normalizeHtml(expectedLegacy));
+  });
+
+  it("fun-facts (showTitle:false, body-only item) matches the legacy string output", () => {
+    const expectedLegacy = `
+    <section class="block block-tidbits" aria-label="Fun facts" data-block-id="ff2" data-block-type="fun-facts">
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:1rem;">
+             <div style="background:#fff;border:1px solid var(--site-border);border-radius:12px;padding:1.25rem;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,0.05);color:var(--block-text,var(--text));">
+               <p style="color:var(--block-text,var(--site-muted));font-size:0.9375rem;margin:0;">x</p>
+             </div>
+           </div>
+    </section>`;
+    const actual = renderBlock(
+      makeBlock("ff2", "fun-facts", {
+        showTitle: false,
+        items: [{ body: "x" }],
+      }),
+      settings,
+    );
+    expect(normalizeHtml(actual)).toBe(normalizeHtml(expectedLegacy));
+  });
+});
