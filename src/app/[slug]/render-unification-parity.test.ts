@@ -40,7 +40,10 @@ function normalizeHtml(html: string): string {
         return (name + val).replace(/=""$/, "");
       });
       toks.sort();
-      return `<${tag}${toks.length ? " " + toks.join(" ") : ""}${sc ? "/" : ""}>`;
+      // Drop the self-closing slash: `<br>`/`<br/>` and `<img ...>`/`<img .../>`
+      // are equivalent in HTML. React self-closes void elements; the string didn't.
+      void sc;
+      return `<${tag}${toks.length ? " " + toks.join(" ") : ""}>`;
     },
   );
   return (
@@ -328,6 +331,89 @@ describe("render unification — batch B (cards)", () => {
           </div>
         </section>`;
     const actual = renderBlock(makeBlock("ic2", "info-card", {}), settings);
+    expect(normalizeHtml(actual)).toBe(normalizeHtml(expectedLegacy));
+  });
+});
+
+describe("render unification — batch C (header, text)", () => {
+  it("header (styled title) matches the legacy string output", () => {
+    const expectedLegacy = `
+        <section class="block block-header" data-block-id="hd1" data-block-type="header">
+          <h2 class="section-heading" style="font-size:2rem;text-align:center;font-weight:700;font-style:italic;text-decoration:underline">Welcome</h2>
+          <div class="section-rule" aria-hidden="true"></div>
+        </section>`;
+    const actual = renderBlock(
+      makeBlock("hd1", "header", {
+        title: "Welcome",
+        titleSize: "2rem",
+        titleAlign: "center",
+        titleBold: true,
+        titleItalic: true,
+        titleUnderline: true,
+      }),
+      settings,
+    );
+    expect(normalizeHtml(actual)).toBe(normalizeHtml(expectedLegacy));
+  });
+
+  it("header (no style, default text) matches the legacy string output", () => {
+    const expectedLegacy = `
+        <section class="block block-header" data-block-id="hd2" data-block-type="header">
+          <h2 class="section-heading">Section</h2>
+          <div class="section-rule" aria-hidden="true"></div>
+        </section>`;
+    const actual = renderBlock(makeBlock("hd2", "header", {}), settings);
+    expect(normalizeHtml(actual)).toBe(normalizeHtml(expectedLegacy));
+  });
+
+  it("text (heading + multiline body) matches the legacy string output", () => {
+    const expectedLegacy = `
+        <section class="block block-text" data-block-id="tx1" data-block-type="text">
+          <h2 class="section-heading" style="font-size:1.5rem">Our Story</h2><div class="section-rule" aria-hidden="true"></div>
+          <div class="text-body">
+            <p>Line one<br>Line two</p>
+          </div>
+        </section>`;
+    const actual = renderBlock(
+      makeBlock("tx1", "text", {
+        heading: "Our Story",
+        headingSize: "1.5rem",
+        body: "Line one\nLine two",
+      }),
+      settings,
+    );
+    expect(normalizeHtml(actual)).toBe(normalizeHtml(expectedLegacy));
+  });
+
+  it("text (contentKey lang fields) matches the legacy string output", () => {
+    const expectedLegacy = `
+        <section class="block block-text" data-block-id="tx2" data-block-type="text">
+          <h2 class="section-heading" data-lang-field="story_heading">Chapter</h2><div class="section-rule" aria-hidden="true"></div>
+          <div class="text-body">
+            <p data-lang-field="story">Body text</p>
+          </div>
+        </section>`;
+    const actual = renderBlock(
+      makeBlock("tx2", "text", { contentKey: "story" }),
+      {
+        siteId: "s1",
+        accentColor: "#B8921A",
+        story: "Body text",
+        story_heading: "Chapter",
+      } as unknown as SiteSettingRow,
+      { story: "Body text", story_heading: "Chapter" },
+    );
+    expect(normalizeHtml(actual)).toBe(normalizeHtml(expectedLegacy));
+  });
+
+  it("text (empty) renders the placeholder", () => {
+    const expectedLegacy = `
+        <section class="block block-text" data-block-id="tx3" data-block-type="text">
+          <div class="text-body">
+            <p class="placeholder-text">Story text will appear here once added.</p>
+          </div>
+        </section>`;
+    const actual = renderBlock(makeBlock("tx3", "text", {}), settings);
     expect(normalizeHtml(actual)).toBe(normalizeHtml(expectedLegacy));
   });
 });

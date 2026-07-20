@@ -110,3 +110,24 @@ export function blockContainerStyle(cfg: Record<string, unknown>): {
 
   return { style: style as CSSProperties, data };
 }
+
+/**
+ * Per-field text style (font-size / align / bold / italic / underline) for a
+ * `<prefix>Size`/`<prefix>Align`/`<prefix>Bold`/… convention. Structured mirror
+ * of the inline style strings the text-style block renderers built. Key order
+ * matches the legacy join order so serialized output is equivalent.
+ */
+export function fieldTextStyle(
+  cfg: Record<string, unknown>,
+  prefix: string,
+): CSSProperties {
+  const style: Record<string, string | number> = {};
+  const size = cfg[`${prefix}Size`] as string | undefined;
+  const align = cfg[`${prefix}Align`] as string | undefined;
+  if (size) style.fontSize = size;
+  if (align) style.textAlign = align;
+  if (cfg[`${prefix}Bold`]) style.fontWeight = 700;
+  if (cfg[`${prefix}Italic`]) style.fontStyle = "italic";
+  if (cfg[`${prefix}Underline`]) style.textDecoration = "underline";
+  return style as CSSProperties;
+}
