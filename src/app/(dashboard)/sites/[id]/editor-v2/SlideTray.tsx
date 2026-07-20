@@ -93,6 +93,10 @@ export function SlideTray({ overlay = false }: Props) {
       if (ref.current?.contains(target)) return;
       if (target.closest("[data-tray-trigger]")) return;
       if (target.closest("[data-topbar]")) return;
+      // Full-screen tray content that portals to document.body (e.g. the Guests
+      // panel) lives outside `ref`; treat clicks inside it as inside the tray so
+      // interacting with it doesn't close the tray.
+      if (target.closest("[data-tray-portal]")) return;
       setOpenTray(null);
     };
     const t = window.setTimeout(() => {
