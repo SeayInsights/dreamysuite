@@ -918,3 +918,88 @@ describe("render unification — media 2 (images, gallery)", () => {
     expect(normalizeHtml(actual)).toBe(normalizeHtml(expectedLegacy));
   });
 });
+
+describe("render unification — media 3 (photo-split, story-timeline)", () => {
+  it("photo-split (left photo, multi-paragraph body) matches the legacy string output", () => {
+    const expectedLegacy = `<section class="block block-photo-split" data-block-id="ps1" data-block-type="photo-split">
+        <div style="display:flex;gap:2rem;align-items:center;flex-wrap:wrap;"><div class="ps-photo" style="flex-shrink:0;">
+             <img src="https://p.jpg" alt="Photo" loading="lazy"
+               style="width:auto;height:auto;max-width:100%;object-fit:cover;object-position:center;border-radius:8px;" />
+           </div><div class="ps-content" style="flex:1;min-width:200px;"><div class="ps-comp-text"><h3 style="margin:0 0 0.6rem">Us</h3><p style="margin:0;line-height:1.75">para1</p><p style="margin:0;line-height:1.75">para2</p></div></div></div>
+      </section>`;
+    const actual = renderBlock(
+      makeBlock("ps1", "photo-split", {
+        imageUrl: "https://p.jpg",
+        heading: "Us",
+        body: "para1\n\npara2",
+      }),
+      settings,
+    );
+    expect(normalizeHtml(actual)).toBe(normalizeHtml(expectedLegacy));
+  });
+
+  it("photo-split (right photo, offset margin, content first) matches the legacy string output", () => {
+    const expectedLegacy = `<section class="block block-photo-split" data-block-id="ps2" data-block-type="photo-split">
+        <div style="display:flex;gap:2rem;align-items:center;flex-wrap:wrap;"><div class="ps-content" style="flex:1;min-width:200px;"><div class="ps-comp-text"><h3 style="margin:0 0 0.6rem">H</h3></div></div><div class="ps-photo" style="flex-shrink:0;margin-right:15px;">
+             <img src="https://q.jpg" alt="Photo" loading="lazy"
+               style="width:auto;height:auto;max-width:100%;object-fit:cover;object-position:center;border-radius:8px;" />
+           </div></div>
+      </section>`;
+    const actual = renderBlock(
+      makeBlock("ps2", "photo-split", {
+        photo: { url: "https://q.jpg", offsetX: 15 },
+        photoSide: "right",
+        heading: "H",
+      }),
+      settings,
+    );
+    expect(normalizeHtml(actual)).toBe(normalizeHtml(expectedLegacy));
+  });
+
+  it("story-timeline (one event) matches the legacy string output", () => {
+    const expectedLegacy = `
+        <section class="block block-story-timeline" aria-label="Our Story" data-block-id="st1" data-block-type="story-timeline">
+          <h2 class="section-heading">Our Story</h2><div class="section-rule" aria-hidden="true"></div>
+          <div class="story-timeline" style="position:relative;max-width:600px;margin:0 auto;">
+                <div style="position:absolute;left:50%;top:0;bottom:0;width:2px;background:var(--site-border,#e0dbd4);transform:translateX(-50%);" aria-hidden="true"></div>
+                <div style="display:flex;justify-content:flex-start;margin-bottom:2rem;position:relative;">
+                    <div style="position:absolute;left:50%;top:0.75rem;width:12px;height:12px;background:var(--site-accent);border-radius:50%;transform:translateX(-50%);z-index:1;" aria-hidden="true"></div>
+                    <div style="width:44%;background:#fff;border:1px solid var(--site-border,#e0dbd4);border-radius:8px;padding:0.875rem 1rem;">
+                      <img src="https://s.jpg" alt="" loading="lazy" style="width:100%;border-radius:4px;margin-bottom:0.5rem;object-fit:cover;max-height:120px;" />
+                      <p style="font-size:0.75rem;color:var(--site-accent);font-weight:600;margin:0 0 0.25rem;text-transform:uppercase;letter-spacing:0.05em;">2020</p>
+                      <h4 style="margin:0 0 0.25rem;font-size:0.95rem;">Met</h4>
+                      <p style="margin:0;font-size:0.85rem;color:#6b6560;">At a party</p>
+                    </div>
+                  </div>
+              </div>
+        </section>`;
+    const actual = renderBlock(
+      makeBlock("st1", "story-timeline", {
+        heading: "Our Story",
+        events: [
+          {
+            date: "2020",
+            title: "Met",
+            description: "At a party",
+            imageUrl: "https://s.jpg",
+          },
+        ],
+      }),
+      settings,
+    );
+    expect(normalizeHtml(actual)).toBe(normalizeHtml(expectedLegacy));
+  });
+
+  it("story-timeline (empty) renders the placeholder", () => {
+    const expectedLegacy = `
+        <section class="block block-story-timeline" aria-label="Our Story" data-block-id="st2" data-block-type="story-timeline">
+          <h2 class="section-heading">Our Story</h2><div class="section-rule" aria-hidden="true"></div>
+          <p class="placeholder-text">Timeline events will appear here once added.</p>
+        </section>`;
+    const actual = renderBlock(
+      makeBlock("st2", "story-timeline", {}),
+      settings,
+    );
+    expect(normalizeHtml(actual)).toBe(normalizeHtml(expectedLegacy));
+  });
+});
