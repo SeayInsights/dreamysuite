@@ -271,16 +271,7 @@ exports[`renderBlock output parity > renders 'travel-section' identically 1`] = 
     </section>"
 `;
 
-exports[`renderBlock output parity > renders 'venue-map' identically 1`] = `
-"
-        <section class="block block-venue-map" aria-label="Venue location" data-block-id="blk-venue-map" data-block-type="venue-map">
-          <h2 class="section-heading">Venue</h2>
-          <div class="section-rule" aria-hidden="true"></div>
-          
-          
-          <p class="placeholder-text">Venue address and map will appear here.</p>
-        </section>"
-`;
+exports[`renderBlock output parity > renders 'venue-map' identically 1`] = `"<section class="block block-venue-map" aria-label="Venue location" data-block-id="blk-venue-map" data-block-type="venue-map"><h2 class="section-heading">Venue</h2><div class="section-rule" aria-hidden="true"></div><p class="placeholder-text">Venue address and map will appear here.</p></section>"`;
 
 exports[`renderBlock output parity > renders 'video' identically 1`] = `
 "
@@ -293,12 +284,4 @@ exports[`renderBlock output parity > renders 'video' identically 1`] = `
         </section>"
 `;
 
-exports[`renderBlock output parity > renders 'youtube' identically 1`] = `
-"
-        <section class="block block-youtube" aria-label="YouTube video" data-block-id="blk-youtube" data-block-type="youtube">
-          <div class="media-placeholder" aria-label="YouTube Video placeholder">
-    <span class="media-placeholder-icon" aria-hidden="true">&#9654;</span>
-    <p>YouTube Video will appear here once added.</p>
-  </div>
-        </section>"
-`;
+exports[`renderBlock output parity > renders 'youtube' identically 1`] = `"<section class="block block-youtube" aria-label="YouTube video" data-block-id="blk-youtube" data-block-type="youtube"><div class="media-placeholder" aria-label="YouTube Video placeholder"><span class="media-placeholder-icon" aria-hidden="true">▶</span><p>YouTube Video will appear here once added.</p></div></section>"`;

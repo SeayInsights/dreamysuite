@@ -10,7 +10,12 @@ import {
   placeholder,
   mediaPlaceholder,
 } from "./helpers";
-import { renderHomeHeroReact } from "./react-renderers";
+import {
+  renderHomeHeroReact,
+  renderSpacerReact,
+  renderYoutubeReact,
+  renderVenueMapReact,
+} from "./react-renderers";
 
 // ── Block renderers ───────────────────────────────────────────────────────────
 //
@@ -411,32 +416,6 @@ function renderVideo({ block, settings, cfg }: RenderContext): string {
         </section>`;
 }
 
-function renderYoutube({ block, cfg, bsAttr }: RenderContext): string {
-  const rawUrl = cfg.url as string | undefined;
-  const videoId =
-    (cfg.videoId as string | undefined) ??
-    (rawUrl
-      ? (rawUrl.match(/(?:youtu\.be\/|[?&]v=)([^&\s]+)/)?.[1] ?? "")
-      : "");
-  return `
-        <section class="block block-youtube"${bsAttr} aria-label="YouTube video" data-block-id="${escHtml(block.id)}" data-block-type="${escHtml(block.type)}">
-          ${
-            videoId
-              ? `<div class="video-wrap">
-                   <iframe
-                     src="https://www.youtube-nocookie.com/embed/${escHtml(videoId)}"
-                     title="YouTube video"
-                     frameborder="0"
-                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                     allowfullscreen
-                     class="youtube-iframe"
-                   ></iframe>
-                 </div>`
-              : mediaPlaceholder("YouTube Video")
-          }
-        </section>`;
-}
-
 function renderRegistryCard({
   block,
   cfg,
@@ -485,43 +464,6 @@ function renderHotelCard({
                    ${url ? `<a href="${escHtml(safeUrl(url))}" target="_blank" rel="noopener noreferrer" class="card-link" style="color:${escHtml(accent)}">Book Now</a>` : ""}
                  </div>`
               : placeholder("Hotel and accommodation details will appear here.")
-          }
-        </section>`;
-}
-
-function renderVenueMap({ block, cfg, bsAttr }: RenderContext): string {
-  const embedUrl =
-    (cfg.embedUrl as string | undefined) ?? (cfg.mapUrl as string | undefined);
-  const address = cfg.address as string | undefined;
-  const name =
-    (cfg.name as string | undefined) ?? (cfg.venueName as string | undefined);
-  const note = cfg.note as string | undefined;
-  const mapSrc = embedUrl
-    ? safeUrl(embedUrl)
-    : address
-      ? `https://maps.google.com/maps?q=${encodeURIComponent(address)}&output=embed`
-      : null;
-  return `
-        <section class="block block-venue-map"${bsAttr} aria-label="Venue location" data-block-id="${escHtml(block.id)}" data-block-type="${escHtml(block.type)}">
-          <h2 class="section-heading">Venue</h2>
-          <div class="section-rule" aria-hidden="true"></div>
-          ${name ? `<p class="venue-name">${escHtml(name)}</p>` : ""}
-          ${note ? `<p class="venue-note">${escHtml(note)}</p>` : ""}
-          ${
-            mapSrc
-              ? `<div class="map-wrap">
-                   <iframe
-                     src="${escHtml(mapSrc)}"
-                     title="${escHtml(address ?? "Venue location")}"
-                     frameborder="0"
-                     loading="lazy"
-                     referrerpolicy="no-referrer-when-downgrade"
-                     class="map-iframe"
-                     aria-label="Google Maps showing ${escHtml(address ?? "venue location")}"
-                   ></iframe>
-                 </div>
-                 <p class="venue-address">${escHtml(address!)}</p>`
-              : placeholder("Venue address and map will appear here.")
           }
         </section>`;
 }
@@ -724,11 +666,6 @@ function renderTravel({ block, cfg, bsAttr }: RenderContext): string {
             )
       }
     </section>`;
-}
-
-function renderSpacer({ cfg }: RenderContext): string {
-  const height = Math.max(0, Math.min(400, Number(cfg.height ?? 60)));
-  return `<div class="block-spacer" style="height:${height}px" aria-hidden="true"></div>`;
 }
 
 function renderPhotoSplit({ block, cfg, bsAttr }: RenderContext): string {
@@ -1268,15 +1205,15 @@ const BLOCK_RENDERERS: Record<string, BlockRenderer> = {
   rsvp: renderRsvp,
   images: renderImages,
   video: renderVideo,
-  youtube: renderYoutube,
+  youtube: renderYoutubeReact,
   "registry-card": renderRegistryCard,
   "hotel-card": renderHotelCard,
-  "venue-map": renderVenueMap,
+  "venue-map": renderVenueMapReact,
   tidbits: renderTidbits,
   "fun-facts": renderFunFacts,
   "travel-section": renderTravelSection,
   travel: renderTravel,
-  spacer: renderSpacer,
+  spacer: renderSpacerReact,
   "photo-split": renderPhotoSplit,
   "multi-text": renderMultiText,
   "media-video": renderMediaVideo,
