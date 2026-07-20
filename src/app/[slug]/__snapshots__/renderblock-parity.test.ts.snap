@@ -2,21 +2,7 @@
 
 exports[`renderBlock output parity > renders '__unknown_type__' identically 1`] = `"<section class="block block-unknown"><p class="placeholder-text">This block (__unknown_type__) is not yet supported.</p></section>"`;
 
-exports[`renderBlock output parity > renders 'countdown' identically 1`] = `
-"
-    <section class="block block-countdown" aria-label="Countdown" data-block-id="blk-countdown" data-block-type="countdown">
-      <p class="countdown-label">Until we say I do</p>
-      <div class="countdown-units" data-cd-clock data-date="June 2026" data-block-id="blk-countdown">
-             <div class="countdown-unit"><span class="countdown-num" id="cd-days-blk-countdown">--</span><span class="countdown-unit-label">Days</span></div>
-             <div class="countdown-unit"><span class="countdown-num" id="cd-hours-blk-countdown">--</span><span class="countdown-unit-label">Hours</span></div>
-             <div class="countdown-unit"><span class="countdown-num" id="cd-mins-blk-countdown">--</span><span class="countdown-unit-label">Minutes</span></div>
-             <div class="countdown-unit"><span class="countdown-num" id="cd-secs-blk-countdown">--</span><span class="countdown-unit-label">Seconds</span></div>
-           </div>
-      <div class="rsvp-wrap" style="text-align:center;margin-top:2rem;display:none;">
-        <a href="#rsvp" class="rsvp-submit" style="background:#B8921A;color:#fff;text-decoration:none;display:inline-block">RSVP Now</a>
-      </div>
-    </section>"
-`;
+exports[`renderBlock output parity > renders 'countdown' identically 1`] = `"<section class="block block-countdown" aria-label="Countdown" data-block-id="blk-countdown" data-block-type="countdown"><p class="countdown-label">Until we say I do</p><div class="countdown-units" data-cd-clock="" data-date="June 2026" data-block-id="blk-countdown"><div class="countdown-unit"><span class="countdown-num" id="cd-days-blk-countdown">--</span><span class="countdown-unit-label">Days</span></div><div class="countdown-unit"><span class="countdown-num" id="cd-hours-blk-countdown">--</span><span class="countdown-unit-label">Hours</span></div><div class="countdown-unit"><span class="countdown-num" id="cd-mins-blk-countdown">--</span><span class="countdown-unit-label">Minutes</span></div><div class="countdown-unit"><span class="countdown-num" id="cd-secs-blk-countdown">--</span><span class="countdown-unit-label">Seconds</span></div></div><div class="rsvp-wrap" style="text-align:center;margin-top:2rem;display:none"><a href="#rsvp" class="rsvp-submit" style="background:#B8921A;color:#fff;text-decoration:none;display:inline-block">RSVP Now</a></div></section>"`;
 
 exports[`renderBlock output parity > renders 'couple' identically 1`] = `"<section class="block block-home-hero" aria-label="Hero" data-block-id="blk-couple" data-block-type="couple"><div class="hero-inner"><p class="hero-eyebrow">We&#x27;re getting married</p><h1 class="hero-title" data-lang-field="couple">Jane &amp; John</h1><p class="hero-date" data-lang-field="date">June 2026</p><p class="hero-location" data-lang-field="location">Napa, CA</p><div class="hero-divider" aria-hidden="true">✶</div></div></section>"`;
 
@@ -66,15 +52,7 @@ exports[`renderBlock output parity > renders 'images' identically 1`] = `
 
 exports[`renderBlock output parity > renders 'info-card' identically 1`] = `"<section class="block block-info-card" aria-label="Registry" data-block-id="blk-info-card" data-block-type="info-card"><h2 class="section-heading">Registry</h2><div class="section-rule" aria-hidden="true"></div><div class="info-card" style="text-align:center"><p class="card-title">Registry</p></div></section>"`;
 
-exports[`renderBlock output parity > renders 'media-video' identically 1`] = `
-"
-        <section class="block block-media-video" aria-label="Video" data-block-id="blk-media-video" data-block-type="media-video" style="position:relative;">
-          <div class="media-placeholder" aria-label="Video placeholder">
-    <span class="media-placeholder-icon" aria-hidden="true">&#9654;</span>
-    <p>Video will appear here once added.</p>
-  </div>
-        </section>"
-`;
+exports[`renderBlock output parity > renders 'media-video' identically 1`] = `"<section class="block block-media-video" aria-label="Video" data-block-id="blk-media-video" data-block-type="media-video" style="position:relative"><div class="media-placeholder" aria-label="Video placeholder"><span class="media-placeholder-icon" aria-hidden="true">▶</span><p>Video will appear here once added.</p></div></section>"`;
 
 exports[`renderBlock output parity > renders 'multi-text' identically 1`] = `"<section class="block block-text" data-block-id="blk-multi-text" data-block-type="multi-text"><div class="text-body"><p class="placeholder-text">Text will appear here once added.</p></div></section>"`;
 
@@ -187,15 +165,6 @@ exports[`renderBlock output parity > renders 'travel-section' identically 1`] = 
 
 exports[`renderBlock output parity > renders 'venue-map' identically 1`] = `"<section class="block block-venue-map" aria-label="Venue location" data-block-id="blk-venue-map" data-block-type="venue-map"><h2 class="section-heading">Venue</h2><div class="section-rule" aria-hidden="true"></div><p class="placeholder-text">Venue address and map will appear here.</p></section>"`;
 
-exports[`renderBlock output parity > renders 'video' identically 1`] = `
-"
-        <section class="block block-video" aria-label="Video" data-block-id="blk-video" data-block-type="video" style="position:relative;">
-          <div class="media-placeholder" aria-label="Video placeholder">
-    <span class="media-placeholder-icon" aria-hidden="true">&#9654;</span>
-    <p>Video will appear here once added.</p>
-  </div>
-          
-        </section>"
-`;
+exports[`renderBlock output parity > renders 'video' identically 1`] = `"<section class="block block-video" aria-label="Video" data-block-id="blk-video" data-block-type="video" style="position:relative"><div class="media-placeholder" aria-label="Video placeholder"><span class="media-placeholder-icon" aria-hidden="true">▶</span><p>Video will appear here once added.</p></div></section>"`;
 
 exports[`renderBlock output parity > renders 'youtube' identically 1`] = `"<section class="block block-youtube" aria-label="YouTube video" data-block-id="blk-youtube" data-block-type="youtube"><div class="media-placeholder" aria-label="YouTube Video placeholder"><span class="media-placeholder-icon" aria-hidden="true">▶</span><p>YouTube Video will appear here once added.</p></div></section>"`;
