@@ -1,7 +1,7 @@
 import type { RenderContext } from "./renderers";
 import { renderReactToHtml } from "@/lib/blocks/reactToHtml";
 import { blockContainerStyle, fieldTextStyle } from "@/lib/blocks/container";
-import { safeUrl } from "./helpers";
+import { safeUrl, escHtml } from "./helpers";
 import { HomeHeroView } from "@/app/components/blocks/presentational/HomeHeroView";
 import { SpacerView } from "@/app/components/blocks/presentational/SpacerView";
 import { YoutubeView } from "@/app/components/blocks/presentational/YoutubeView";
@@ -12,6 +12,15 @@ import {
   FactsGridView,
   type FactsGridItem,
 } from "@/app/components/blocks/presentational/FactsGridView";
+import {
+  TimelineView,
+  FaqView,
+  TravelView,
+  type TimelineEvent,
+  type FaqItem,
+  type TravelItem,
+} from "@/app/components/blocks/presentational/listViews";
+import { TextModeView } from "@/app/components/blocks/presentational/TextModeView";
 import {
   RegistryCardView,
   HotelCardView,
@@ -138,6 +147,125 @@ export function renderFunFactsReact(ctx: RenderContext): string {
       cardStyle={String(cfg.cardStyle ?? "card")}
       labelVariant="fun-facts"
       items={items}
+      style={style}
+      data={data}
+    />,
+  );
+}
+
+export function renderMultiTextReact(ctx: RenderContext): string {
+  const { block, cfg, pageContent } = ctx;
+  const mode = String(cfg.mode ?? "text");
+  const rawTitle = String(cfg.title ?? "");
+  const { style, data } = blockContainerStyle(cfg);
+
+  if (mode === "schedule") {
+    const events = Array.isArray(pageContent?.events)
+      ? (pageContent.events as TimelineEvent[])
+      : [];
+    return renderReactToHtml(
+      <TimelineView
+        id={block.id}
+        type={block.type}
+        heading={rawTitle || "The Day"}
+        placeholderText="The schedule will appear here once added in the Content tab."
+        events={events}
+        style={style}
+        data={data}
+      />,
+    );
+  }
+
+  if (mode === "faq") {
+    const questions = Array.isArray(pageContent?.questions)
+      ? (pageContent.questions as FaqItem[])
+      : [];
+    return renderReactToHtml(
+      <FaqView
+        id={block.id}
+        type={block.type}
+        heading={rawTitle || "Questions & Answers"}
+        placeholderText="Q&A items will appear here once added in the Content tab."
+        questions={questions}
+        style={style}
+        data={data}
+      />,
+    );
+  }
+
+  if (mode === "tidbits") {
+    const raw = Array.isArray(pageContent?.tidbits)
+      ? (pageContent.tidbits as Array<{
+          icon?: string;
+          title?: string;
+          body?: string;
+        }>)
+      : [];
+    const items: FactsGridItem[] = raw.map((it) => ({
+      icon: it.icon,
+      label: it.title,
+      body: it.body,
+    }));
+    return renderReactToHtml(
+      <FactsGridView
+        id={block.id}
+        type={block.type}
+        showTitle={cfg.showTitle !== false}
+        columns={String(cfg.columns ?? "auto")}
+        cardStyle={String(cfg.cardStyle ?? "card")}
+        labelVariant="tidbits"
+        items={items}
+        titleOverride={rawTitle || undefined}
+        style={style}
+        data={data}
+      />,
+    );
+  }
+
+  if (mode === "travel") {
+    const travelItems = Array.isArray(pageContent?.travelItems)
+      ? (pageContent.travelItems as TravelItem[])
+      : [];
+    return renderReactToHtml(
+      <TravelView
+        id={block.id}
+        type={block.type}
+        heading={rawTitle || "Getting There"}
+        placeholderText="Travel details will appear here once added in the Content tab."
+        items={travelItems}
+        multilineBody={false}
+        style={style}
+        data={data}
+      />,
+    );
+  }
+
+  // Default: text mode. sectionTitle is escHtml-escaped to match the legacy
+  // fallback exactly (the h2 then escapes again — a faithful double-escape when
+  // the heading falls back to the title).
+  const contentKey = cfg.contentKey as string | undefined;
+  const sectionTitle = escHtml(rawTitle);
+  const textItemsArr = Array.isArray(cfg.textItems)
+    ? (cfg.textItems as Array<{ heading?: string; body?: string }>)
+    : null;
+  const singleHeading = contentKey
+    ? String(
+        pageContent?.[`${contentKey}_heading`] ?? cfg.heading ?? sectionTitle,
+      )
+    : String(cfg.heading ?? sectionTitle ?? "");
+  const singleBody = contentKey
+    ? String(pageContent?.[contentKey] ?? cfg.body ?? "")
+    : String(cfg.body ?? cfg.text ?? cfg.content ?? "");
+  const items = textItemsArr ?? [{ heading: singleHeading, body: singleBody }];
+  const langKey = !textItemsArr && contentKey ? contentKey : undefined;
+  return renderReactToHtml(
+    <TextModeView
+      id={block.id}
+      type={block.type}
+      items={items}
+      headingStyle={fieldTextStyle(cfg, "heading")}
+      bodyStyle={fieldTextStyle(cfg, "body")}
+      langKey={langKey}
       style={style}
       data={data}
     />,

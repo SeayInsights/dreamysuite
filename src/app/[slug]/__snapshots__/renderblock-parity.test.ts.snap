@@ -83,13 +83,7 @@ exports[`renderBlock output parity > renders 'media-video' identically 1`] = `
         </section>"
 `;
 
-exports[`renderBlock output parity > renders 'multi-text' identically 1`] = `
-"
-    <section class="block block-text" data-block-id="blk-multi-text" data-block-type="multi-text">
-      
-      <div class="text-body"><p class="placeholder-text">Text will appear here once added.</p></div>
-    </section>"
-`;
+exports[`renderBlock output parity > renders 'multi-text' identically 1`] = `"<section class="block block-text" data-block-id="blk-multi-text" data-block-type="multi-text"><div class="text-body"><p class="placeholder-text">Text will appear here once added.</p></div></section>"`;
 
 exports[`renderBlock output parity > renders 'photo-split' identically 1`] = `
 "<section class="block block-photo-split" data-block-id="blk-photo-split" data-block-type="photo-split">
