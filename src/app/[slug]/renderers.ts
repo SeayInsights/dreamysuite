@@ -28,6 +28,9 @@ import {
   renderGalleryReact,
   renderPhotoSplitReact,
   renderStoryTimelineReact,
+  renderRsvpReact,
+  renderRsvpFormReact,
+  renderGuestBookReact,
 } from "./react-renderers";
 
 // ── Block renderers ───────────────────────────────────────────────────────────
@@ -53,128 +56,6 @@ export interface RenderContext {
 
 type BlockRenderer = (ctx: RenderContext) => string;
 
-function renderRsvp({ block, cfg, bsAttr, siteSlug }: RenderContext): string {
-  const formTitle = (cfg.title as string | undefined) ?? "RSVP";
-  const slug = siteSlug ?? "";
-  const formId = `rsvp-form-${escHtml(block.id)}`;
-  const msgId = `rsvp-msg-${escHtml(block.id)}`;
-  return `
-        <section class="block block-rsvp"${bsAttr} aria-label="RSVP" data-block-id="${escHtml(block.id)}" data-block-type="${escHtml(block.type)}">
-          <h2 class="section-heading">${escHtml(formTitle)}</h2>
-          <div class="section-rule" aria-hidden="true"></div>
-          <form class="rsvp-form" id="${formId}" aria-label="RSVP form" onsubmit="submitRsvp(event,'${escHtml(slug)}','${formId}','${msgId}')">
-            <div class="form-group">
-              <label class="form-label" for="rsvp-fn-${escHtml(block.id)}">First Name</label>
-              <input class="form-input" id="rsvp-fn-${escHtml(block.id)}" name="firstName" type="text" placeholder="First name" autocomplete="given-name" required />
-            </div>
-            <div class="form-group">
-              <label class="form-label" for="rsvp-ln-${escHtml(block.id)}">Last Name</label>
-              <input class="form-input" id="rsvp-ln-${escHtml(block.id)}" name="lastName" type="text" placeholder="Last name" autocomplete="family-name" required />
-            </div>
-            <div class="form-group">
-              <label class="form-label" for="rsvp-email-${escHtml(block.id)}">Email <span style="font-size:0.8em;color:#9b8e85;font-weight:400;">(optional — for confirmation)</span></label>
-              <input class="form-input" id="rsvp-email-${escHtml(block.id)}" name="email" type="email" placeholder="your@email.com" autocomplete="email" />
-            </div>
-            <div class="form-group">
-              <label class="form-label">Will you attend?</label>
-              <div class="radio-group" role="radiogroup" aria-label="Attendance">
-                <label class="radio-label">
-                  <input type="radio" name="attending" value="yes" required /> Joyfully accepts
-                </label>
-                <label class="radio-label">
-                  <input type="radio" name="attending" value="no" /> Regretfully declines
-                </label>
-              </div>
-            </div>
-            <div class="form-group">
-              <label class="form-label" for="rsvp-notes-${escHtml(block.id)}">Notes or Dietary Restrictions</label>
-              <textarea class="form-input form-textarea" id="rsvp-notes-${escHtml(block.id)}" name="notes" placeholder="Optional"></textarea>
-            </div>
-            <button class="rsvp-submit" type="submit" style="background:var(--site-accent)">Send RSVP</button>
-          </form>
-          <div id="${msgId}" role="alert" aria-live="polite" style="display:none;margin-top:1.25rem;text-align:center;font-size:0.9375rem;padding:0.875rem 1rem;border-radius:6px;"></div>
-        </section>`;
-}
-
-function renderRsvpForm({
-  block,
-  cfg,
-  bsAttr,
-  siteSlug,
-}: RenderContext): string {
-  const formTitle =
-    (cfg.heading as string | undefined) ??
-    (cfg.title as string | undefined) ??
-    "RSVP";
-  const subheading = (cfg.subheading as string | undefined) ?? "";
-  const slug = siteSlug ?? "";
-  const formId = `rsvp-form-${escHtml(block.id)}`;
-  const msgId = `rsvp-msg-${escHtml(block.id)}`;
-  return `
-        <section class="block block-rsvp"${bsAttr} aria-label="RSVP" data-block-id="${escHtml(block.id)}" data-block-type="${escHtml(block.type)}">
-          <h2 class="section-heading">${escHtml(formTitle)}</h2>
-          <div class="section-rule" aria-hidden="true"></div>
-          ${subheading ? `<p style="text-align:center;color:var(--site-muted);margin-bottom:1.5rem;">${escHtml(subheading)}</p>` : ""}
-          <form class="rsvp-form" id="${formId}" aria-label="RSVP form" onsubmit="submitRsvp(event,'${escHtml(slug)}','${formId}','${msgId}')">
-            <div class="form-group">
-              <label class="form-label" for="rsvp-fn-${escHtml(block.id)}">First Name</label>
-              <input class="form-input" id="rsvp-fn-${escHtml(block.id)}" name="firstName" type="text" placeholder="First name" autocomplete="given-name" required />
-            </div>
-            <div class="form-group">
-              <label class="form-label" for="rsvp-ln-${escHtml(block.id)}">Last Name</label>
-              <input class="form-input" id="rsvp-ln-${escHtml(block.id)}" name="lastName" type="text" placeholder="Last name" autocomplete="family-name" required />
-            </div>
-            <div class="form-group">
-              <label class="form-label" for="rsvp-email-${escHtml(block.id)}">Email <span style="font-size:0.8em;color:#9b8e85;font-weight:400;">(optional — for confirmation)</span></label>
-              <input class="form-input" id="rsvp-email-${escHtml(block.id)}" name="email" type="email" placeholder="your@email.com" autocomplete="email" />
-            </div>
-            <div class="form-group">
-              <label class="form-label">Will you attend?</label>
-              <div class="radio-group" role="radiogroup" aria-label="Attendance">
-                <label class="radio-label">
-                  <input type="radio" name="attending" value="yes" required /> Joyfully accepts
-                </label>
-                <label class="radio-label">
-                  <input type="radio" name="attending" value="no" /> Regretfully declines
-                </label>
-              </div>
-            </div>
-            <div class="form-group">
-              <label class="form-label" for="rsvp-notes-${escHtml(block.id)}">Notes or Dietary Restrictions</label>
-              <textarea class="form-input form-textarea" id="rsvp-notes-${escHtml(block.id)}" name="notes" placeholder="Optional"></textarea>
-            </div>
-            <button class="rsvp-submit" type="submit" style="background:var(--site-accent)">Send RSVP</button>
-          </form>
-          <div id="${msgId}" role="alert" aria-live="polite" style="display:none;margin-top:1.25rem;text-align:center;font-size:0.9375rem;padding:0.875rem 1rem;border-radius:6px;"></div>
-        </section>`;
-}
-
-function renderGuestBook({ block, cfg, bsAttr }: RenderContext): string {
-  const heading = String(cfg.heading ?? "Guest Book");
-  const placeholderText = String(
-    cfg.placeholder ?? "Leave a message for the happy couple…",
-  );
-  const formId = `gb-form-${escHtml(block.id)}`;
-  const listId = `gb-list-${escHtml(block.id)}`;
-  return `
-        <section class="block block-guest-book"${bsAttr} aria-label="Guest Book" data-block-id="${escHtml(block.id)}" data-block-type="${escHtml(block.type)}"
-          style="max-width:600px;margin:0 auto;">
-          ${heading ? `<h2 class="section-heading">${escHtml(heading)}</h2><div class="section-rule" aria-hidden="true"></div>` : ""}
-          <form class="rsvp-form" id="${formId}" onsubmit="submitGuestBook(event,'${escHtml(block.siteId)}','${formId}','${listId}')">
-            <div class="form-group">
-              <label class="form-label" for="gb-name-${escHtml(block.id)}">Your Name</label>
-              <input class="form-input" id="gb-name-${escHtml(block.id)}" name="name" type="text" placeholder="Your name" required />
-            </div>
-            <div class="form-group">
-              <label class="form-label" for="gb-msg-${escHtml(block.id)}">Message</label>
-              <textarea class="form-input form-textarea" id="gb-msg-${escHtml(block.id)}" name="message" placeholder="${escHtml(placeholderText)}" required></textarea>
-            </div>
-            <button class="rsvp-submit" type="submit" style="background:var(--site-accent)">Sign the book</button>
-          </form>
-          <div id="${listId}" style="margin-top:1.5rem;display:flex;flex-direction:column;gap:0.75rem;"></div>
-        </section>`;
-}
-
 function renderUnknown({ block }: RenderContext): string {
   return `<section class="block block-unknown">${placeholder(`This block (${escHtml(block.type)}) is not yet supported.`)}</section>`;
 }
@@ -188,7 +69,7 @@ const BLOCK_RENDERERS: Record<string, BlockRenderer> = {
   countdown: renderCountdownReact,
   schedule: renderScheduleReact,
   faq: renderFaqReact,
-  rsvp: renderRsvp,
+  rsvp: renderRsvpReact,
   images: renderImagesReact,
   video: renderVideoReact,
   youtube: renderYoutubeReact,
@@ -205,9 +86,9 @@ const BLOCK_RENDERERS: Record<string, BlockRenderer> = {
   "media-video": renderMediaVideoReact,
   gallery: renderGalleryReact,
   "info-card": renderInfoCardReact,
-  "rsvp-form": renderRsvpForm,
+  "rsvp-form": renderRsvpFormReact,
   "story-timeline": renderStoryTimelineReact,
-  "guest-book": renderGuestBook,
+  "guest-book": renderGuestBookReact,
 };
 
 export function renderBlock(
