@@ -1094,3 +1094,63 @@ describe("render unification — forms (delegated wiring)", () => {
     expect(normalizeHtml(actual)).toBe(normalizeHtml(expectedNew));
   });
 });
+
+// Cross-checks for blockContainerStyle (the structured container contract that
+// replaced the inline bsAttr string). Exercised through home-hero, which applies
+// the container style to its <section>. Covers the paths the earlier styled case
+// did not: border, blockHeight, padding, and the blockHeight+padding combo.
+describe("render unification — container style contract", () => {
+  it("border", () => {
+    const actual = renderBlock(
+      makeBlock("cs1", "home-hero", { borderColor: "#ccc" }),
+      settings,
+    );
+    expect(actual).toContain('style="border:1px solid #ccc"');
+  });
+
+  it("hideBorder suppresses the border", () => {
+    const actual = renderBlock(
+      makeBlock("cs2", "home-hero", { borderColor: "#ccc", hideBorder: true }),
+      settings,
+    );
+    expect(actual).not.toContain("border:1px solid");
+  });
+
+  it("blockHeight (no padding) zeroes top/bottom for the flex layout", () => {
+    const actual = renderBlock(
+      makeBlock("cs3", "home-hero", { blockHeight: 300 }),
+      settings,
+    );
+    expect(actual).toContain(
+      'style="height:300px;padding-top:0;padding-bottom:0;display:flex;flex-direction:column;align-items:stretch"',
+    );
+    expect(actual).toContain('data-bh="300"');
+  });
+
+  it("padding object", () => {
+    const actual = renderBlock(
+      makeBlock("cs4", "home-hero", {
+        padding: { top: 10, right: 20, bottom: 30, left: 40 },
+      }),
+      settings,
+    );
+    expect(actual).toContain(
+      'style="padding:0;padding-top:10px;padding-right:20px;padding-bottom:30px;padding-left:40px"',
+    );
+  });
+
+  it("blockHeight + padding: the padding object's top/bottom win (regression guard)", () => {
+    const actual = renderBlock(
+      makeBlock("cs5", "home-hero", {
+        blockHeight: 300,
+        padding: { top: 10, right: 20, bottom: 30, left: 40 },
+      }),
+      settings,
+    );
+    // padding:0 comes before the longhands, so the custom top/bottom survive.
+    expect(actual).toContain(
+      'style="height:300px;display:flex;flex-direction:column;align-items:stretch;padding:0;padding-top:10px;padding-right:20px;padding-bottom:30px;padding-left:40px"',
+    );
+    expect(actual).toContain('data-bh="300"');
+  });
+});

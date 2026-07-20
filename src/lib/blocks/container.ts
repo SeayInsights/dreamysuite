@@ -81,22 +81,30 @@ export function blockContainerStyle(cfg: Record<string, unknown>): {
     typeof cfg.blockHeight === "number" && cfg.blockHeight > 0
       ? cfg.blockHeight
       : 0;
+  const pad = cfg.padding as Record<string, unknown> | null | undefined;
+  const hasPad = !!(pad && typeof pad === "object" && !Array.isArray(pad));
   if (bh) {
     style.height = `${bh}px`;
-    style.paddingTop = "0";
-    style.paddingBottom = "0";
+    // Zero top/bottom for the fixed-height flex layout — but only when there is
+    // no padding object. When both are set, the padding object wins (a padding:0
+    // reset + longhands below), so emitting these here would just be overwritten
+    // AND, as object keys, would reorder ahead of `padding:0` and get reset to 0.
+    if (!hasPad) {
+      style.paddingTop = "0";
+      style.paddingBottom = "0";
+    }
     style.display = "flex";
     style.flexDirection = "column";
     style.alignItems = "stretch";
   }
 
-  const pad = cfg.padding as Record<string, unknown> | null | undefined;
-  if (pad && typeof pad === "object" && !Array.isArray(pad)) {
+  if (hasPad) {
     style.padding = "0";
-    if (typeof pad.top === "number") style.paddingTop = `${pad.top}px`;
-    if (typeof pad.right === "number") style.paddingRight = `${pad.right}px`;
-    if (typeof pad.bottom === "number") style.paddingBottom = `${pad.bottom}px`;
-    if (typeof pad.left === "number") style.paddingLeft = `${pad.left}px`;
+    if (typeof pad!.top === "number") style.paddingTop = `${pad!.top}px`;
+    if (typeof pad!.right === "number") style.paddingRight = `${pad!.right}px`;
+    if (typeof pad!.bottom === "number")
+      style.paddingBottom = `${pad!.bottom}px`;
+    if (typeof pad!.left === "number") style.paddingLeft = `${pad!.left}px`;
   }
 
   if (bw) data["data-bw"] = String(bw);
