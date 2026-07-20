@@ -1003,3 +1003,94 @@ describe("render unification — media 3 (photo-split, story-timeline)", () => {
     expect(normalizeHtml(actual)).toBe(normalizeHtml(expectedLegacy));
   });
 });
+
+describe("render unification — forms (delegated wiring)", () => {
+  // Forms intentionally change: the inline onsubmit is replaced by data-* attrs;
+  // scripts.ts attaches the submit handler by delegation. Parity is against the
+  // intended new markup (same fields/ids), and we assert onsubmit is gone.
+  it("rsvp emits data-* wiring and the full form (no inline onsubmit)", () => {
+    const expectedNew = `
+        <section class="block block-rsvp" aria-label="RSVP" data-block-id="rv1" data-block-type="rsvp">
+          <h2 class="section-heading">RSVP</h2>
+          <div class="section-rule" aria-hidden="true"></div>
+          <form class="rsvp-form" id="rsvp-form-rv1" aria-label="RSVP form" data-rsvp-slug="test-slug" data-rsvp-msg="rsvp-msg-rv1">
+            <div class="form-group">
+              <label class="form-label" for="rsvp-fn-rv1">First Name</label>
+              <input class="form-input" id="rsvp-fn-rv1" name="firstName" type="text" placeholder="First name" autocomplete="given-name" required />
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="rsvp-ln-rv1">Last Name</label>
+              <input class="form-input" id="rsvp-ln-rv1" name="lastName" type="text" placeholder="Last name" autocomplete="family-name" required />
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="rsvp-email-rv1">Email <span style="font-size:0.8em;color:#9b8e85;font-weight:400;">(optional — for confirmation)</span></label>
+              <input class="form-input" id="rsvp-email-rv1" name="email" type="email" placeholder="your@email.com" autocomplete="email" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Will you attend?</label>
+              <div class="radio-group" role="radiogroup" aria-label="Attendance">
+                <label class="radio-label">
+                  <input type="radio" name="attending" value="yes" required /> Joyfully accepts</label>
+                <label class="radio-label">
+                  <input type="radio" name="attending" value="no" /> Regretfully declines</label>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="rsvp-notes-rv1">Notes or Dietary Restrictions</label>
+              <textarea class="form-input form-textarea" id="rsvp-notes-rv1" name="notes" placeholder="Optional"></textarea>
+            </div>
+            <button class="rsvp-submit" type="submit" style="background:var(--site-accent)">Send RSVP</button>
+          </form>
+          <div id="rsvp-msg-rv1" role="alert" aria-live="polite" style="display:none;margin-top:1.25rem;text-align:center;font-size:0.9375rem;padding:0.875rem 1rem;border-radius:6px;"></div>
+        </section>`;
+    const actual = renderBlock(
+      makeBlock("rv1", "rsvp", {}),
+      settings,
+      undefined,
+      "test-slug",
+    );
+    expect(actual).not.toContain("onsubmit");
+    expect(normalizeHtml(actual)).toBe(normalizeHtml(expectedNew));
+  });
+
+  it("rsvp-form adds subheading + heading title and the data-* wiring", () => {
+    const actual = renderBlock(
+      makeBlock("rf1", "rsvp-form", {
+        heading: "Join Us",
+        subheading: "Please reply",
+      }),
+      settings,
+      undefined,
+      "test-slug",
+    );
+    expect(actual).not.toContain("onsubmit");
+    expect(actual).toContain('<h2 class="section-heading">Join Us</h2>');
+    expect(actual).toContain("Please reply");
+    expect(actual).toContain('data-rsvp-slug="test-slug"');
+    expect(actual).toContain('data-rsvp-msg="rsvp-msg-rf1"');
+    expect(actual).toContain('name="firstName"');
+    expect(actual).toContain('name="attending"');
+  });
+
+  it("guest-book emits data-* wiring and the full form (no inline onsubmit)", () => {
+    const expectedNew = `
+        <section class="block block-guest-book" aria-label="Guest Book" data-block-id="gb1" data-block-type="guest-book" style="max-width:600px;margin:0 auto;">
+          <h2 class="section-heading">Guest Book</h2><div class="section-rule" aria-hidden="true"></div>
+          <form class="rsvp-form" id="gb-form-gb1" data-gb-site="s1" data-gb-list="gb-list-gb1">
+            <div class="form-group">
+              <label class="form-label" for="gb-name-gb1">Your Name</label>
+              <input class="form-input" id="gb-name-gb1" name="name" type="text" placeholder="Your name" required />
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="gb-msg-gb1">Message</label>
+              <textarea class="form-input form-textarea" id="gb-msg-gb1" name="message" placeholder="Leave a message for the happy couple…" required></textarea>
+            </div>
+            <button class="rsvp-submit" type="submit" style="background:var(--site-accent)">Sign the book</button>
+          </form>
+          <div id="gb-list-gb1" style="margin-top:1.5rem;display:flex;flex-direction:column;gap:0.75rem;"></div>
+        </section>`;
+    const actual = renderBlock(makeBlock("gb1", "guest-book", {}), settings);
+    expect(actual).not.toContain("onsubmit");
+    expect(normalizeHtml(actual)).toBe(normalizeHtml(expectedNew));
+  });
+});

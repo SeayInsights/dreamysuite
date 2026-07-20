@@ -12,25 +12,7 @@ exports[`renderBlock output parity > renders 'fun-facts' identically 1`] = `"<se
 
 exports[`renderBlock output parity > renders 'gallery' identically 1`] = `"<section class="block block-gallery" aria-label="Photo gallery" data-block-id="blk-gallery" data-block-type="gallery"><p class="placeholder-text">Images will appear here once added.</p></section>"`;
 
-exports[`renderBlock output parity > renders 'guest-book' identically 1`] = `
-"
-        <section class="block block-guest-book" aria-label="Guest Book" data-block-id="blk-guest-book" data-block-type="guest-book"
-          style="max-width:600px;margin:0 auto;">
-          <h2 class="section-heading">Guest Book</h2><div class="section-rule" aria-hidden="true"></div>
-          <form class="rsvp-form" id="gb-form-blk-guest-book" onsubmit="submitGuestBook(event,'s1','gb-form-blk-guest-book','gb-list-blk-guest-book')">
-            <div class="form-group">
-              <label class="form-label" for="gb-name-blk-guest-book">Your Name</label>
-              <input class="form-input" id="gb-name-blk-guest-book" name="name" type="text" placeholder="Your name" required />
-            </div>
-            <div class="form-group">
-              <label class="form-label" for="gb-msg-blk-guest-book">Message</label>
-              <textarea class="form-input form-textarea" id="gb-msg-blk-guest-book" name="message" placeholder="Leave a message for the happy couple…" required></textarea>
-            </div>
-            <button class="rsvp-submit" type="submit" style="background:var(--site-accent)">Sign the book</button>
-          </form>
-          <div id="gb-list-blk-guest-book" style="margin-top:1.5rem;display:flex;flex-direction:column;gap:0.75rem;"></div>
-        </section>"
-`;
+exports[`renderBlock output parity > renders 'guest-book' identically 1`] = `"<section class="block block-guest-book" aria-label="Guest Book" data-block-id="blk-guest-book" data-block-type="guest-book" style="max-width:600px;margin:0 auto"><h2 class="section-heading">Guest Book</h2><div class="section-rule" aria-hidden="true"></div><form class="rsvp-form" id="gb-form-blk-guest-book" data-gb-site="s1" data-gb-list="gb-list-blk-guest-book"><div class="form-group"><label class="form-label" for="gb-name-blk-guest-book">Your Name</label><input class="form-input" id="gb-name-blk-guest-book" type="text" placeholder="Your name" required="" name="name"/></div><div class="form-group"><label class="form-label" for="gb-msg-blk-guest-book">Message</label><textarea class="form-input form-textarea" id="gb-msg-blk-guest-book" name="message" placeholder="Leave a message for the happy couple…" required=""></textarea></div><button class="rsvp-submit" type="submit" style="background:var(--site-accent)">Sign the book</button></form><div id="gb-list-blk-guest-book" style="margin-top:1.5rem;display:flex;flex-direction:column;gap:0.75rem"></div></section>"`;
 
 exports[`renderBlock output parity > renders 'header' identically 1`] = `"<section class="block block-header" data-block-id="blk-header" data-block-type="header"><h2 class="section-heading">Section</h2><div class="section-rule" aria-hidden="true"></div></section>"`;
 
@@ -50,84 +32,9 @@ exports[`renderBlock output parity > renders 'photo-split' identically 1`] = `"<
 
 exports[`renderBlock output parity > renders 'registry-card' identically 1`] = `"<section class="block block-registry-card" aria-label="Gift registry" data-block-id="blk-registry-card" data-block-type="registry-card"><h2 class="section-heading">Registry</h2><div class="section-rule" aria-hidden="true"></div><p class="placeholder-text">Registry details will appear here once added.</p></section>"`;
 
-exports[`renderBlock output parity > renders 'rsvp' identically 1`] = `
-"
-        <section class="block block-rsvp" aria-label="RSVP" data-block-id="blk-rsvp" data-block-type="rsvp">
-          <h2 class="section-heading">RSVP</h2>
-          <div class="section-rule" aria-hidden="true"></div>
-          <form class="rsvp-form" id="rsvp-form-blk-rsvp" aria-label="RSVP form" onsubmit="submitRsvp(event,'test-slug','rsvp-form-blk-rsvp','rsvp-msg-blk-rsvp')">
-            <div class="form-group">
-              <label class="form-label" for="rsvp-fn-blk-rsvp">First Name</label>
-              <input class="form-input" id="rsvp-fn-blk-rsvp" name="firstName" type="text" placeholder="First name" autocomplete="given-name" required />
-            </div>
-            <div class="form-group">
-              <label class="form-label" for="rsvp-ln-blk-rsvp">Last Name</label>
-              <input class="form-input" id="rsvp-ln-blk-rsvp" name="lastName" type="text" placeholder="Last name" autocomplete="family-name" required />
-            </div>
-            <div class="form-group">
-              <label class="form-label" for="rsvp-email-blk-rsvp">Email <span style="font-size:0.8em;color:#9b8e85;font-weight:400;">(optional — for confirmation)</span></label>
-              <input class="form-input" id="rsvp-email-blk-rsvp" name="email" type="email" placeholder="your@email.com" autocomplete="email" />
-            </div>
-            <div class="form-group">
-              <label class="form-label">Will you attend?</label>
-              <div class="radio-group" role="radiogroup" aria-label="Attendance">
-                <label class="radio-label">
-                  <input type="radio" name="attending" value="yes" required /> Joyfully accepts
-                </label>
-                <label class="radio-label">
-                  <input type="radio" name="attending" value="no" /> Regretfully declines
-                </label>
-              </div>
-            </div>
-            <div class="form-group">
-              <label class="form-label" for="rsvp-notes-blk-rsvp">Notes or Dietary Restrictions</label>
-              <textarea class="form-input form-textarea" id="rsvp-notes-blk-rsvp" name="notes" placeholder="Optional"></textarea>
-            </div>
-            <button class="rsvp-submit" type="submit" style="background:var(--site-accent)">Send RSVP</button>
-          </form>
-          <div id="rsvp-msg-blk-rsvp" role="alert" aria-live="polite" style="display:none;margin-top:1.25rem;text-align:center;font-size:0.9375rem;padding:0.875rem 1rem;border-radius:6px;"></div>
-        </section>"
-`;
+exports[`renderBlock output parity > renders 'rsvp' identically 1`] = `"<section class="block block-rsvp" aria-label="RSVP" data-block-id="blk-rsvp" data-block-type="rsvp"><h2 class="section-heading">RSVP</h2><div class="section-rule" aria-hidden="true"></div><form class="rsvp-form" id="rsvp-form-blk-rsvp" aria-label="RSVP form" data-rsvp-slug="test-slug" data-rsvp-msg="rsvp-msg-blk-rsvp"><div class="form-group"><label class="form-label" for="rsvp-fn-blk-rsvp">First Name</label><input class="form-input" id="rsvp-fn-blk-rsvp" type="text" placeholder="First name" autoComplete="given-name" required="" name="firstName"/></div><div class="form-group"><label class="form-label" for="rsvp-ln-blk-rsvp">Last Name</label><input class="form-input" id="rsvp-ln-blk-rsvp" type="text" placeholder="Last name" autoComplete="family-name" required="" name="lastName"/></div><div class="form-group"><label class="form-label" for="rsvp-email-blk-rsvp">Email <span style="font-size:0.8em;color:#9b8e85;font-weight:400">(optional — for confirmation)</span></label><input class="form-input" id="rsvp-email-blk-rsvp" type="email" placeholder="your@email.com" autoComplete="email" name="email"/></div><div class="form-group"><label class="form-label">Will you attend?</label><div class="radio-group" role="radiogroup" aria-label="Attendance"><label class="radio-label"><input type="radio" required="" name="attending" value="yes"/> Joyfully accepts</label><label class="radio-label"><input type="radio" name="attending" value="no"/> Regretfully declines</label></div></div><div class="form-group"><label class="form-label" for="rsvp-notes-blk-rsvp">Notes or Dietary Restrictions</label><textarea class="form-input form-textarea" id="rsvp-notes-blk-rsvp" name="notes" placeholder="Optional"></textarea></div><button class="rsvp-submit" type="submit" style="background:var(--site-accent)">Send RSVP</button></form><div id="rsvp-msg-blk-rsvp" role="alert" aria-live="polite" style="display:none;margin-top:1.25rem;text-align:center;font-size:0.9375rem;padding:0.875rem 1rem;border-radius:6px"></div></section>"`;
 
-exports[`renderBlock output parity > renders 'rsvp-form' identically 1`] = `
-"
-        <section class="block block-rsvp" aria-label="RSVP" data-block-id="blk-rsvp-form" data-block-type="rsvp-form">
-          <h2 class="section-heading">RSVP</h2>
-          <div class="section-rule" aria-hidden="true"></div>
-          
-          <form class="rsvp-form" id="rsvp-form-blk-rsvp-form" aria-label="RSVP form" onsubmit="submitRsvp(event,'test-slug','rsvp-form-blk-rsvp-form','rsvp-msg-blk-rsvp-form')">
-            <div class="form-group">
-              <label class="form-label" for="rsvp-fn-blk-rsvp-form">First Name</label>
-              <input class="form-input" id="rsvp-fn-blk-rsvp-form" name="firstName" type="text" placeholder="First name" autocomplete="given-name" required />
-            </div>
-            <div class="form-group">
-              <label class="form-label" for="rsvp-ln-blk-rsvp-form">Last Name</label>
-              <input class="form-input" id="rsvp-ln-blk-rsvp-form" name="lastName" type="text" placeholder="Last name" autocomplete="family-name" required />
-            </div>
-            <div class="form-group">
-              <label class="form-label" for="rsvp-email-blk-rsvp-form">Email <span style="font-size:0.8em;color:#9b8e85;font-weight:400;">(optional — for confirmation)</span></label>
-              <input class="form-input" id="rsvp-email-blk-rsvp-form" name="email" type="email" placeholder="your@email.com" autocomplete="email" />
-            </div>
-            <div class="form-group">
-              <label class="form-label">Will you attend?</label>
-              <div class="radio-group" role="radiogroup" aria-label="Attendance">
-                <label class="radio-label">
-                  <input type="radio" name="attending" value="yes" required /> Joyfully accepts
-                </label>
-                <label class="radio-label">
-                  <input type="radio" name="attending" value="no" /> Regretfully declines
-                </label>
-              </div>
-            </div>
-            <div class="form-group">
-              <label class="form-label" for="rsvp-notes-blk-rsvp-form">Notes or Dietary Restrictions</label>
-              <textarea class="form-input form-textarea" id="rsvp-notes-blk-rsvp-form" name="notes" placeholder="Optional"></textarea>
-            </div>
-            <button class="rsvp-submit" type="submit" style="background:var(--site-accent)">Send RSVP</button>
-          </form>
-          <div id="rsvp-msg-blk-rsvp-form" role="alert" aria-live="polite" style="display:none;margin-top:1.25rem;text-align:center;font-size:0.9375rem;padding:0.875rem 1rem;border-radius:6px;"></div>
-        </section>"
-`;
+exports[`renderBlock output parity > renders 'rsvp-form' identically 1`] = `"<section class="block block-rsvp" aria-label="RSVP" data-block-id="blk-rsvp-form" data-block-type="rsvp-form"><h2 class="section-heading">RSVP</h2><div class="section-rule" aria-hidden="true"></div><form class="rsvp-form" id="rsvp-form-blk-rsvp-form" aria-label="RSVP form" data-rsvp-slug="test-slug" data-rsvp-msg="rsvp-msg-blk-rsvp-form"><div class="form-group"><label class="form-label" for="rsvp-fn-blk-rsvp-form">First Name</label><input class="form-input" id="rsvp-fn-blk-rsvp-form" type="text" placeholder="First name" autoComplete="given-name" required="" name="firstName"/></div><div class="form-group"><label class="form-label" for="rsvp-ln-blk-rsvp-form">Last Name</label><input class="form-input" id="rsvp-ln-blk-rsvp-form" type="text" placeholder="Last name" autoComplete="family-name" required="" name="lastName"/></div><div class="form-group"><label class="form-label" for="rsvp-email-blk-rsvp-form">Email <span style="font-size:0.8em;color:#9b8e85;font-weight:400">(optional — for confirmation)</span></label><input class="form-input" id="rsvp-email-blk-rsvp-form" type="email" placeholder="your@email.com" autoComplete="email" name="email"/></div><div class="form-group"><label class="form-label">Will you attend?</label><div class="radio-group" role="radiogroup" aria-label="Attendance"><label class="radio-label"><input type="radio" required="" name="attending" value="yes"/> Joyfully accepts</label><label class="radio-label"><input type="radio" name="attending" value="no"/> Regretfully declines</label></div></div><div class="form-group"><label class="form-label" for="rsvp-notes-blk-rsvp-form">Notes or Dietary Restrictions</label><textarea class="form-input form-textarea" id="rsvp-notes-blk-rsvp-form" name="notes" placeholder="Optional"></textarea></div><button class="rsvp-submit" type="submit" style="background:var(--site-accent)">Send RSVP</button></form><div id="rsvp-msg-blk-rsvp-form" role="alert" aria-live="polite" style="display:none;margin-top:1.25rem;text-align:center;font-size:0.9375rem;padding:0.875rem 1rem;border-radius:6px"></div></section>"`;
 
 exports[`renderBlock output parity > renders 'schedule' identically 1`] = `"<section class="block block-schedule" aria-label="Schedule" data-block-id="blk-schedule" data-block-type="schedule"><h2 class="section-heading">The Day</h2><div class="section-rule" aria-hidden="true"></div><p class="placeholder-text">The wedding day schedule will appear here once added in the Content tab.</p></section>"`;
 

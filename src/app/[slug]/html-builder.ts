@@ -962,6 +962,18 @@ function submitGuestBook(event, siteId, formId, listId) {
     alert('Network error. Please check your connection and try again.');
   });
 }
+// Delegated form submit wiring. React-SSR forms carry data-* attributes instead
+// of inline onsubmit handlers; submit bubbles to document, so this catches forms
+// added on initial load and after dreamysuite_pageChange re-renders alike.
+document.addEventListener('submit', function(e) {
+  var f = e.target;
+  if (!f || typeof f.matches !== 'function') return;
+  if (f.matches('form[data-rsvp-slug]')) {
+    submitRsvp(e, f.getAttribute('data-rsvp-slug'), f.id, f.getAttribute('data-rsvp-msg'));
+  } else if (f.matches('form[data-gb-site]')) {
+    submitGuestBook(e, f.getAttribute('data-gb-site'), f.id, f.getAttribute('data-gb-list'));
+  }
+});
   </script>
   ${
     settings?.effectBg

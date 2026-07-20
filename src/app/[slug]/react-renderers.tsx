@@ -38,6 +38,10 @@ import {
   type StoryTimelineEvent,
 } from "@/app/components/blocks/presentational/mediaSplitViews";
 import {
+  RsvpFormView,
+  GuestBookView,
+} from "@/app/components/blocks/presentational/formViews";
+import {
   RegistryCardView,
   HotelCardView,
   InfoCardView,
@@ -164,6 +168,63 @@ export function renderFunFactsReact(ctx: RenderContext): string {
       labelVariant="fun-facts"
       items={items}
       style={style}
+      data={data}
+    />,
+  );
+}
+
+export function renderRsvpReact(ctx: RenderContext): string {
+  const { block, cfg, siteSlug } = ctx;
+  const { style, data } = blockContainerStyle(cfg);
+  return renderReactToHtml(
+    <RsvpFormView
+      id={block.id}
+      type={block.type}
+      title={(cfg.title as string | undefined) ?? "RSVP"}
+      subheading=""
+      slug={siteSlug ?? ""}
+      style={style}
+      data={data}
+    />,
+  );
+}
+
+export function renderRsvpFormReact(ctx: RenderContext): string {
+  const { block, cfg, siteSlug } = ctx;
+  const title =
+    (cfg.heading as string | undefined) ??
+    (cfg.title as string | undefined) ??
+    "RSVP";
+  return renderReactToHtml(
+    <RsvpFormView
+      id={block.id}
+      type={block.type}
+      title={title}
+      subheading={(cfg.subheading as string | undefined) ?? ""}
+      slug={siteSlug ?? ""}
+      {...blockContainerStyle(cfg)}
+    />,
+  );
+}
+
+export function renderGuestBookReact(ctx: RenderContext): string {
+  const { block, cfg } = ctx;
+  const { style, data } = blockContainerStyle(cfg);
+  const sectionStyle: CSSProperties = {
+    ...style,
+    maxWidth: "600px",
+    margin: "0 auto",
+  };
+  return renderReactToHtml(
+    <GuestBookView
+      id={block.id}
+      type={block.type}
+      siteId={block.siteId}
+      heading={String(cfg.heading ?? "Guest Book")}
+      placeholderText={String(
+        cfg.placeholder ?? "Leave a message for the happy couple…",
+      )}
+      sectionStyle={sectionStyle}
       data={data}
     />,
   );
