@@ -20,14 +20,7 @@ exports[`renderBlock output parity > renders 'countdown' identically 1`] = `
 
 exports[`renderBlock output parity > renders 'couple' identically 1`] = `"<section class="block block-home-hero" aria-label="Hero" data-block-id="blk-couple" data-block-type="couple"><div class="hero-inner"><p class="hero-eyebrow">We&#x27;re getting married</p><h1 class="hero-title" data-lang-field="couple">Jane &amp; John</h1><p class="hero-date" data-lang-field="date">June 2026</p><p class="hero-location" data-lang-field="location">Napa, CA</p><div class="hero-divider" aria-hidden="true">✶</div></div></section>"`;
 
-exports[`renderBlock output parity > renders 'faq' identically 1`] = `
-"
-    <section class="block block-faq" aria-label="Frequently asked questions" data-block-id="blk-faq" data-block-type="faq">
-      <h2 class="section-heading">Questions &amp; Answers</h2>
-      <div class="section-rule" aria-hidden="true"></div>
-      <p class="placeholder-text">Frequently asked questions will appear here once added in the Content tab.</p>
-    </section>"
-`;
+exports[`renderBlock output parity > renders 'faq' identically 1`] = `"<section class="block block-faq" aria-label="Frequently asked questions" data-block-id="blk-faq" data-block-type="faq"><h2 class="section-heading">Questions &amp; Answers</h2><div class="section-rule" aria-hidden="true"></div><p class="placeholder-text">Frequently asked questions will appear here once added in the Content tab.</p></section>"`;
 
 exports[`renderBlock output parity > renders 'fun-facts' identically 1`] = `"<section class="block block-tidbits" aria-label="Fun facts" data-block-id="blk-fun-facts" data-block-type="fun-facts"><h2 class="section-heading">Fun Facts</h2><div class="section-rule" aria-hidden="true"></div><p class="placeholder-text">Fun facts will appear here once added in the Content tab.</p></section>"`;
 
@@ -172,14 +165,7 @@ exports[`renderBlock output parity > renders 'rsvp-form' identically 1`] = `
         </section>"
 `;
 
-exports[`renderBlock output parity > renders 'schedule' identically 1`] = `
-"
-    <section class="block block-schedule" aria-label="Schedule" data-block-id="blk-schedule" data-block-type="schedule">
-      <h2 class="section-heading">The Day</h2>
-      <div class="section-rule" aria-hidden="true"></div>
-      <p class="placeholder-text">The wedding day schedule will appear here once added in the Content tab.</p>
-    </section>"
-`;
+exports[`renderBlock output parity > renders 'schedule' identically 1`] = `"<section class="block block-schedule" aria-label="Schedule" data-block-id="blk-schedule" data-block-type="schedule"><h2 class="section-heading">The Day</h2><div class="section-rule" aria-hidden="true"></div><p class="placeholder-text">The wedding day schedule will appear here once added in the Content tab.</p></section>"`;
 
 exports[`renderBlock output parity > renders 'spacer' identically 1`] = `"<div class="block-spacer" style="height:60px" aria-hidden="true"></div>"`;
 
@@ -195,23 +181,9 @@ exports[`renderBlock output parity > renders 'text' identically 1`] = `"<section
 
 exports[`renderBlock output parity > renders 'tidbits' identically 1`] = `"<section class="block block-tidbits" aria-label="Fun facts" data-block-id="blk-tidbits" data-block-type="tidbits"><h2 class="section-heading">Fun Facts</h2><div class="section-rule" aria-hidden="true"></div><p class="placeholder-text">Fun facts will appear here once added in the Content tab.</p></section>"`;
 
-exports[`renderBlock output parity > renders 'travel' identically 1`] = `
-"
-    <section class="block block-travel" aria-label="Travel information" data-block-id="blk-travel" data-block-type="travel">
-      <h2 class="section-heading">Getting There</h2>
-      <div class="section-rule" aria-hidden="true"></div>
-      <p class="placeholder-text">Travel details will appear here once added in the Content tab.</p>
-    </section>"
-`;
+exports[`renderBlock output parity > renders 'travel' identically 1`] = `"<section class="block block-travel" aria-label="Travel information" data-block-id="blk-travel" data-block-type="travel"><h2 class="section-heading">Getting There</h2><div class="section-rule" aria-hidden="true"></div><p class="placeholder-text">Travel details will appear here once added in the Content tab.</p></section>"`;
 
-exports[`renderBlock output parity > renders 'travel-section' identically 1`] = `
-"
-    <section class="block block-travel" aria-label="Travel information" data-block-id="blk-travel-section" data-block-type="travel-section">
-      <h2 class="section-heading">Getting There</h2>
-      <div class="section-rule" aria-hidden="true"></div>
-      <p class="placeholder-text">Travel details will appear here once added in the Content tab.</p>
-    </section>"
-`;
+exports[`renderBlock output parity > renders 'travel-section' identically 1`] = `"<section class="block block-travel" aria-label="Travel information" data-block-id="blk-travel-section" data-block-type="travel-section"><h2 class="section-heading">Getting There</h2><div class="section-rule" aria-hidden="true"></div><p class="placeholder-text">Travel details will appear here once added in the Content tab.</p></section>"`;
 
 exports[`renderBlock output parity > renders 'venue-map' identically 1`] = `"<section class="block block-venue-map" aria-label="Venue location" data-block-id="blk-venue-map" data-block-type="venue-map"><h2 class="section-heading">Venue</h2><div class="section-rule" aria-hidden="true"></div><p class="placeholder-text">Venue address and map will appear here.</p></section>"`;
 

@@ -637,3 +637,101 @@ describe("render unification — multi-text (5 sub-modes)", () => {
     expect(normalizeHtml(actual)).toBe(normalizeHtml(expectedLegacy));
   });
 });
+
+describe("render unification — lists (schedule, faq, travel, travel-section)", () => {
+  it("schedule (cfg.events) matches the legacy string output", () => {
+    const expectedLegacy = `
+    <section class="block block-schedule" aria-label="Schedule" data-block-id="sc1" data-block-type="schedule">
+      <h2 class="section-heading">The Day</h2>
+      <div class="section-rule" aria-hidden="true"></div>
+      <ol class="timeline">
+               <li class="timeline-item">
+                 <span class="timeline-time">3pm</span>
+                 <div class="timeline-content">
+                   <strong>Reception</strong>
+                 </div>
+               </li>
+           </ol>
+    </section>`;
+    const actual = renderBlock(
+      makeBlock("sc1", "schedule", {
+        events: [{ time: "3pm", name: "Reception" }],
+      }),
+      settings,
+    );
+    expect(normalizeHtml(actual)).toBe(normalizeHtml(expectedLegacy));
+  });
+
+  it("schedule (empty) renders the placeholder", () => {
+    const expectedLegacy = `
+    <section class="block block-schedule" aria-label="Schedule" data-block-id="sc2" data-block-type="schedule">
+      <h2 class="section-heading">The Day</h2>
+      <div class="section-rule" aria-hidden="true"></div>
+      <p class="placeholder-text">The wedding day schedule will appear here once added in the Content tab.</p>
+    </section>`;
+    const actual = renderBlock(makeBlock("sc2", "schedule", {}), settings);
+    expect(normalizeHtml(actual)).toBe(normalizeHtml(expectedLegacy));
+  });
+
+  it("faq (cfg.items question/answer) matches the legacy string output", () => {
+    const expectedLegacy = `
+    <section class="block block-faq" aria-label="Frequently asked questions" data-block-id="fq1" data-block-type="faq">
+      <h2 class="section-heading">Questions &amp; Answers</h2>
+      <div class="section-rule" aria-hidden="true"></div>
+      <dl class="faq-list">
+               <dt class="faq-question">Q1</dt><dd class="faq-answer">A1</dd>
+           </dl>
+    </section>`;
+    const actual = renderBlock(
+      makeBlock("fq1", "faq", {
+        items: [{ question: "Q1", answer: "A1" }],
+      }),
+      settings,
+    );
+    expect(normalizeHtml(actual)).toBe(normalizeHtml(expectedLegacy));
+  });
+
+  it("travel-section (nl2br body + link) matches the legacy string output", () => {
+    const expectedLegacy = `
+    <section class="block block-travel" aria-label="Travel information" data-block-id="tv1" data-block-type="travel-section">
+      <h2 class="section-heading">Travel</h2>
+      <div class="section-rule" aria-hidden="true"></div>
+            <div style="margin-bottom:1.5rem;">
+              <h3 style="font-size:1.05rem;margin:0 0 0.4rem;">Air</h3>
+              <p style="margin:0 0 0.4rem;line-height:1.7;">line1<br>line2</p>
+              <a href="https://t.example.com" target="_blank" rel="noopener noreferrer" style="color:var(--site-accent)">Book</a>
+            </div>
+    </section>`;
+    const actual = renderBlock(
+      makeBlock("tv1", "travel-section", {
+        title: "Travel",
+        items: [
+          {
+            heading: "Air",
+            body: "line1\nline2",
+            linkLabel: "Book",
+            linkUrl: "https://t.example.com",
+          },
+        ],
+      }),
+      settings,
+    );
+    expect(normalizeHtml(actual)).toBe(normalizeHtml(expectedLegacy));
+  });
+
+  it("travel (cfg.items only, default title) matches the legacy string output", () => {
+    const expectedLegacy = `
+    <section class="block block-travel" aria-label="Travel information" data-block-id="tv2" data-block-type="travel">
+      <h2 class="section-heading">Getting There</h2>
+      <div class="section-rule" aria-hidden="true"></div>
+            <div style="margin-bottom:1.5rem;">
+              <h3 style="font-size:1.05rem;margin:0 0 0.4rem;">Car</h3>
+            </div>
+    </section>`;
+    const actual = renderBlock(
+      makeBlock("tv2", "travel", { items: [{ heading: "Car" }] }),
+      settings,
+    );
+    expect(normalizeHtml(actual)).toBe(normalizeHtml(expectedLegacy));
+  });
+});
