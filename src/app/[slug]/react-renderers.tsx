@@ -22,6 +22,11 @@ import {
 } from "@/app/components/blocks/presentational/listViews";
 import { TextModeView } from "@/app/components/blocks/presentational/TextModeView";
 import {
+  CountdownView,
+  VideoView,
+  MediaVideoView,
+} from "@/app/components/blocks/presentational/mediaViews";
+import {
   RegistryCardView,
   HotelCardView,
   InfoCardView,
@@ -147,6 +152,85 @@ export function renderFunFactsReact(ctx: RenderContext): string {
       cardStyle={String(cfg.cardStyle ?? "card")}
       labelVariant="fun-facts"
       items={items}
+      style={style}
+      data={data}
+    />,
+  );
+}
+
+export function renderCountdownReact(ctx: RenderContext): string {
+  const { block, settings, cfg, accent } = ctx;
+  const { style, data } = blockContainerStyle(cfg);
+  return renderReactToHtml(
+    <CountdownView
+      id={block.id}
+      type={block.type}
+      label={(cfg.label as string | undefined) ?? "Until we say I do"}
+      targetDate={settings?.eventDate ?? ""}
+      showRsvp={!!cfg.showRsvpButton}
+      rsvpText={String(cfg.rsvpButtonText ?? "RSVP Now")}
+      rsvpBg={String(cfg.rsvpButtonColor ?? accent)}
+      rsvpFg={String(cfg.rsvpButtonTextColor ?? "#fff")}
+      rsvpBorderColor={
+        cfg.rsvpButtonBorderColor
+          ? String(cfg.rsvpButtonBorderColor)
+          : undefined
+      }
+      style={style}
+      data={data}
+    />,
+  );
+}
+
+export function renderVideoReact(ctx: RenderContext): string {
+  const { block, settings, cfg } = ctx;
+  const cdXRaw = Number(cfg.countdownX ?? 0);
+  const cdYRaw = Number(cfg.countdownY ?? 120);
+  return renderReactToHtml(
+    <VideoView
+      id={block.id}
+      type={block.type}
+      vimeoId={cfg.vimeoId as string | undefined}
+      url={cfg.url as string | undefined}
+      height={(cfg.height as string | undefined) ?? "100dvh"}
+      showCountdown={!!cfg.showCountdown}
+      targetDate={settings?.eventDate ?? ""}
+      cdX={isFinite(cdXRaw) ? cdXRaw : 0}
+      cdY={isFinite(cdYRaw) ? cdYRaw : 120}
+    />,
+  );
+}
+
+export function renderMediaVideoReact(ctx: RenderContext): string {
+  const { block, cfg } = ctx;
+  const url = cfg.url as string | undefined;
+  const vimeoId = cfg.vimeoId as string | undefined;
+  const height = (cfg.height as string | undefined) ?? "100dvh";
+  const provider = cfg.provider as string | undefined;
+  const isYoutube =
+    provider === "youtube" ||
+    (provider !== "direct" &&
+      !!url &&
+      (url.includes("youtube.com") || url.includes("youtu.be")));
+  const resolvedVimeoId =
+    vimeoId ??
+    (provider === "vimeo" ||
+    (provider !== "direct" && url?.includes("vimeo.com"))
+      ? url?.match(/vimeo\.com\/(?:video\/)?(\d+)/)?.[1]
+      : undefined);
+  const ytId = url
+    ? (url.match(/(?:youtu\.be\/|[?&]v=)([^&\s]+)/)?.[1] ?? "")
+    : "";
+  const { style, data } = blockContainerStyle(cfg);
+  return renderReactToHtml(
+    <MediaVideoView
+      id={block.id}
+      type={block.type}
+      resolvedVimeoId={resolvedVimeoId}
+      isYoutube={isYoutube}
+      ytId={ytId}
+      url={url}
+      height={height}
       style={style}
       data={data}
     />,

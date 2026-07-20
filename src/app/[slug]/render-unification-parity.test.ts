@@ -735,3 +735,104 @@ describe("render unification — lists (schedule, faq, travel, travel-section)",
     expect(normalizeHtml(actual)).toBe(normalizeHtml(expectedLegacy));
   });
 });
+
+describe("render unification — media 1 (countdown, video, media-video)", () => {
+  it("countdown (with date, no rsvp button) matches the legacy string output", () => {
+    const expectedLegacy = `
+    <section class="block block-countdown" aria-label="Countdown" data-block-id="cd1" data-block-type="countdown">
+      <p class="countdown-label">Until we say I do</p>
+      <div class="countdown-units" data-cd-clock data-date="June 2026" data-block-id="cd1">
+             <div class="countdown-unit"><span class="countdown-num" id="cd-days-cd1">--</span><span class="countdown-unit-label">Days</span></div>
+             <div class="countdown-unit"><span class="countdown-num" id="cd-hours-cd1">--</span><span class="countdown-unit-label">Hours</span></div>
+             <div class="countdown-unit"><span class="countdown-num" id="cd-mins-cd1">--</span><span class="countdown-unit-label">Minutes</span></div>
+             <div class="countdown-unit"><span class="countdown-num" id="cd-secs-cd1">--</span><span class="countdown-unit-label">Seconds</span></div>
+           </div>
+      <div class="rsvp-wrap" style="text-align:center;margin-top:2rem;display:none;">
+        <a href="#rsvp" class="rsvp-submit" style="background:#B8921A;color:#fff;text-decoration:none;display:inline-block">RSVP Now</a>
+      </div>
+    </section>`;
+    const actual = renderBlock(makeBlock("cd1", "countdown", {}), settings);
+    expect(normalizeHtml(actual)).toBe(normalizeHtml(expectedLegacy));
+  });
+
+  it("video (vimeo) matches the legacy string output", () => {
+    const expectedLegacy = `
+        <section class="block block-video" aria-label="Video" data-block-id="vid1" data-block-type="video"
+          style="position:relative;width:100%;height:100dvh;overflow:hidden;background:#000;">
+          <iframe
+            src="https://player.vimeo.com/video/12345?autoplay=1&muted=1&loop=1&background=1"
+            style="position:absolute;top:50%;left:50%;width:177.78vh;min-width:100%;min-height:100%;height:56.25vw;transform:translate(-50%,-50%);border:0;"
+            allow="autoplay; fullscreen; picture-in-picture"
+            allowfullscreen
+            title="Wedding video"
+          ></iframe>
+        </section>`;
+    const actual = renderBlock(
+      makeBlock("vid1", "video", { vimeoId: "12345" }),
+      settings,
+    );
+    expect(normalizeHtml(actual)).toBe(normalizeHtml(expectedLegacy));
+  });
+
+  it("video (direct, empty) renders the media placeholder", () => {
+    const expectedLegacy = `
+        <section class="block block-video" aria-label="Video" data-block-id="vid2" data-block-type="video" style="position:relative;">
+          <div class="media-placeholder" aria-label="Video placeholder">
+    <span class="media-placeholder-icon" aria-hidden="true">&#9654;</span>
+    <p>Video will appear here once added.</p>
+  </div>
+        </section>`;
+    const actual = renderBlock(makeBlock("vid2", "video", {}), settings);
+    expect(normalizeHtml(actual)).toBe(normalizeHtml(expectedLegacy));
+  });
+
+  it("media-video (vimeo) matches the legacy string output", () => {
+    const expectedLegacy = `
+        <section class="block block-media-video" aria-label="Video" data-block-id="mv1" data-block-type="media-video"
+          style="position:relative;width:100%;height:100dvh;overflow:hidden;background:#000;">
+          <iframe
+            src="https://player.vimeo.com/video/999?autoplay=1&muted=1&loop=1&background=1"
+            style="position:absolute;top:50%;left:50%;width:177.78vh;min-width:100%;min-height:100%;height:56.25vw;transform:translate(-50%,-50%);border:0;"
+            allow="autoplay; fullscreen; picture-in-picture" allowfullscreen title="Video"
+          ></iframe>
+        </section>`;
+    const actual = renderBlock(
+      makeBlock("mv1", "media-video", { vimeoId: "999" }),
+      settings,
+    );
+    expect(normalizeHtml(actual)).toBe(normalizeHtml(expectedLegacy));
+  });
+
+  it("media-video (youtube) matches the legacy string output", () => {
+    const expectedLegacy = `
+        <section class="block block-media-video" aria-label="Video" data-block-id="mv2" data-block-type="media-video">
+          <div class="video-wrap">
+                 <iframe src="https://www.youtube-nocookie.com/embed/abc" title="YouTube video" frameborder="0"
+                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen class="youtube-iframe"></iframe>
+               </div>
+        </section>`;
+    const actual = renderBlock(
+      makeBlock("mv2", "media-video", {
+        url: "https://youtu.be/abc",
+        provider: "youtube",
+      }),
+      settings,
+    );
+    expect(normalizeHtml(actual)).toBe(normalizeHtml(expectedLegacy));
+  });
+
+  it("media-video (direct) matches the legacy string output", () => {
+    const expectedLegacy = `
+        <section class="block block-media-video" aria-label="Video" data-block-id="mv3" data-block-type="media-video" style="position:relative;height:100dvh">
+          <video src="https://cdn.example.com/v.mp4" autoplay muted loop playsinline style="width:100%;height:100%;object-fit:cover;"></video>
+        </section>`;
+    const actual = renderBlock(
+      makeBlock("mv3", "media-video", {
+        url: "https://cdn.example.com/v.mp4",
+        provider: "direct",
+      }),
+      settings,
+    );
+    expect(normalizeHtml(actual)).toBe(normalizeHtml(expectedLegacy));
+  });
+});

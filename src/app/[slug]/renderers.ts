@@ -3,13 +3,7 @@ import {
   type SiteSettingRow,
   type BlockTransMap,
 } from "./types";
-import {
-  escHtml,
-  nl2br,
-  safeUrl,
-  placeholder,
-  mediaPlaceholder,
-} from "./helpers";
+import { escHtml, nl2br, placeholder } from "./helpers";
 import {
   renderHomeHeroReact,
   renderSpacerReact,
@@ -27,6 +21,9 @@ import {
   renderFaqReact,
   renderTravelSectionReact,
   renderTravelReact,
+  renderCountdownReact,
+  renderVideoReact,
+  renderMediaVideoReact,
 } from "./react-renderers";
 
 // ── Block renderers ───────────────────────────────────────────────────────────
@@ -51,43 +48,6 @@ export interface RenderContext {
 }
 
 type BlockRenderer = (ctx: RenderContext) => string;
-
-function renderCountdown({
-  block,
-  settings,
-  cfg,
-  accent,
-  bsAttr,
-}: RenderContext): string {
-  const targetDate = settings?.eventDate ?? "";
-  const label = (cfg.label as string | undefined) ?? "Until we say I do";
-  const showRsvp = !!cfg.showRsvpButton;
-  const rsvpText = escHtml(String(cfg.rsvpButtonText ?? "RSVP Now"));
-  const rsvpBg = escHtml(String(cfg.rsvpButtonColor ?? accent));
-  const rsvpFg = escHtml(String(cfg.rsvpButtonTextColor ?? "#fff"));
-  const rsvpBorder = cfg.rsvpButtonBorderColor
-    ? `border:2px solid ${escHtml(String(cfg.rsvpButtonBorderColor))};`
-    : "";
-  return `
-    <section class="block block-countdown"${bsAttr} aria-label="Countdown" data-block-id="${escHtml(block.id)}" data-block-type="${escHtml(block.type)}">
-      <p class="countdown-label">${escHtml(label)}</p>
-      ${
-        targetDate
-          ? `<div class="countdown-units" data-cd-clock data-date="${escHtml(targetDate)}" data-block-id="${escHtml(block.id)}">
-             <div class="countdown-unit"><span class="countdown-num" id="cd-days-${escHtml(block.id)}">--</span><span class="countdown-unit-label">Days</span></div>
-             <div class="countdown-unit"><span class="countdown-num" id="cd-hours-${escHtml(block.id)}">--</span><span class="countdown-unit-label">Hours</span></div>
-             <div class="countdown-unit"><span class="countdown-num" id="cd-mins-${escHtml(block.id)}">--</span><span class="countdown-unit-label">Minutes</span></div>
-             <div class="countdown-unit"><span class="countdown-num" id="cd-secs-${escHtml(block.id)}">--</span><span class="countdown-unit-label">Seconds</span></div>
-           </div>`
-          : placeholder(
-              "Set an event date in Site Settings to show the countdown.",
-            )
-      }
-      <div class="rsvp-wrap" style="text-align:center;margin-top:2rem;${showRsvp ? "" : "display:none;"}">
-        <a href="#rsvp" class="rsvp-submit" style="background:${rsvpBg};color:${rsvpFg};${rsvpBorder}text-decoration:none;display:inline-block">${rsvpText}</a>
-      </div>
-    </section>`;
-}
 
 function renderRsvp({ block, cfg, bsAttr, siteSlug }: RenderContext): string {
   const formTitle = (cfg.title as string | undefined) ?? "RSVP";
@@ -222,50 +182,6 @@ function renderImages({ block, cfg, bsAttr }: RenderContext): string {
         </section>`;
 }
 
-function renderVideo({ block, settings, cfg }: RenderContext): string {
-  const url = cfg.url as string | undefined;
-  const vimeoId = cfg.vimeoId as string | undefined;
-  const height = (cfg.height as string | undefined) ?? "100dvh";
-  const showCountdown = !!cfg.showCountdown;
-  const cdXRaw = Number(cfg.countdownX ?? 0);
-  const cdX = isFinite(cdXRaw) ? cdXRaw : 0;
-  const cdYRaw = Number(cfg.countdownY ?? 120);
-  const cdY = isFinite(cdYRaw) ? cdYRaw : 120;
-  const targetDate = settings?.eventDate ?? "";
-
-  const overlayHtml =
-    showCountdown && targetDate
-      ? `<div class="video-cd-overlay" style="bottom:${cdY}px;transform:translateX(calc(-50% + ${cdX}px));" data-cd-clock data-date="${escHtml(targetDate)}" data-block-id="${escHtml(block.id)}-overlay">
-             <div class="countdown-units">
-               <div class="countdown-unit"><span class="countdown-num" id="cd-days-${escHtml(block.id)}-overlay">--</span><span class="countdown-unit-label">Days</span></div>
-               <div class="countdown-unit"><span class="countdown-num" id="cd-hours-${escHtml(block.id)}-overlay">--</span><span class="countdown-unit-label">Hours</span></div>
-               <div class="countdown-unit"><span class="countdown-num" id="cd-mins-${escHtml(block.id)}-overlay">--</span><span class="countdown-unit-label">Minutes</span></div>
-               <div class="countdown-unit"><span class="countdown-num" id="cd-secs-${escHtml(block.id)}-overlay">--</span><span class="countdown-unit-label">Seconds</span></div>
-             </div>
-           </div>`
-      : "";
-
-  if (vimeoId) {
-    return `
-        <section class="block block-video" aria-label="Video" data-block-id="${escHtml(block.id)}" data-block-type="${escHtml(block.type)}"
-          style="position:relative;width:100%;height:${escHtml(height)};overflow:hidden;background:#000;">
-          <iframe
-            src="https://player.vimeo.com/video/${escHtml(vimeoId)}?autoplay=1&muted=1&loop=1&background=1"
-            style="position:absolute;top:50%;left:50%;width:177.78vh;min-width:100%;min-height:100%;height:56.25vw;transform:translate(-50%,-50%);border:0;"
-            allow="autoplay; fullscreen; picture-in-picture"
-            allowfullscreen
-            title="Wedding video"
-          ></iframe>
-          ${overlayHtml}
-        </section>`;
-  }
-  return `
-        <section class="block block-video" aria-label="Video" data-block-id="${escHtml(block.id)}" data-block-type="${escHtml(block.type)}" style="position:relative;">
-          ${url ? `<video src="${escHtml(safeUrl(url))}" controls class="media-element" aria-label="Wedding video"></video>` : mediaPlaceholder("Video")}
-          ${overlayHtml}
-        </section>`;
-}
-
 function renderPhotoSplit({ block, cfg, bsAttr }: RenderContext): string {
   const photo = (cfg.photo as Record<string, unknown> | undefined) ?? {};
   const flatImageUrl = cfg.imageUrl as string | undefined;
@@ -340,60 +256,6 @@ function renderPhotoSplit({ block, cfg, bsAttr }: RenderContext): string {
   return `<section class="block block-photo-split"${bsAttr} data-block-id="${escHtml(block.id)}" data-block-type="${escHtml(block.type)}">
         <div style="display:flex;gap:2rem;align-items:center;flex-wrap:wrap;">${flex}</div>
       </section>`;
-}
-
-function renderMediaVideo({ block, cfg, bsAttr }: RenderContext): string {
-  const url = cfg.url as string | undefined;
-  const vimeoId = cfg.vimeoId as string | undefined;
-  const height = (cfg.height as string | undefined) ?? "100dvh";
-  const provider = cfg.provider as string | undefined;
-  const isYoutube =
-    provider === "youtube" ||
-    (provider !== "direct" &&
-      url &&
-      (url.includes("youtube.com") || url.includes("youtu.be")));
-  const resolvedVimeoId =
-    vimeoId ??
-    (provider === "vimeo" ||
-    (provider !== "direct" && url?.includes("vimeo.com"))
-      ? url?.match(/vimeo\.com\/(?:video\/)?(\d+)/)?.[1]
-      : undefined);
-
-  if (resolvedVimeoId) {
-    return `
-        <section class="block block-media-video"${bsAttr} aria-label="Video" data-block-id="${escHtml(block.id)}" data-block-type="${escHtml(block.type)}"
-          style="position:relative;width:100%;height:${escHtml(height)};overflow:hidden;background:#000;">
-          <iframe
-            src="https://player.vimeo.com/video/${escHtml(resolvedVimeoId)}?autoplay=1&muted=1&loop=1&background=1"
-            style="position:absolute;top:50%;left:50%;width:177.78vh;min-width:100%;min-height:100%;height:56.25vw;transform:translate(-50%,-50%);border:0;"
-            allow="autoplay; fullscreen; picture-in-picture" allowfullscreen title="Video"
-          ></iframe>
-        </section>`;
-  }
-
-  if (isYoutube && url) {
-    const ytMatch = url.match(/(?:youtu\.be\/|[?&]v=)([^&\s]+)/);
-    const ytId = ytMatch?.[1] ?? "";
-    return `
-        <section class="block block-media-video"${bsAttr} aria-label="Video" data-block-id="${escHtml(block.id)}" data-block-type="${escHtml(block.type)}">
-          ${
-            ytId
-              ? `<div class="video-wrap">
-                 <iframe src="https://www.youtube-nocookie.com/embed/${escHtml(ytId)}" title="YouTube video" frameborder="0"
-                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen class="youtube-iframe"></iframe>
-               </div>`
-              : placeholder("Invalid YouTube URL.")
-          }
-        </section>`;
-  }
-  return `
-        <section class="block block-media-video"${bsAttr} aria-label="Video" data-block-id="${escHtml(block.id)}" data-block-type="${escHtml(block.type)}" style="position:relative;${url ? `height:${escHtml(height)}` : ""}">
-          ${
-            url
-              ? `<video src="${escHtml(safeUrl(url))}" autoplay muted loop playsinline style="width:100%;height:100%;object-fit:cover;"></video>`
-              : mediaPlaceholder("Video")
-          }
-        </section>`;
 }
 
 function renderGallery({ block, cfg, bsAttr }: RenderContext): string {
@@ -556,12 +418,12 @@ const BLOCK_RENDERERS: Record<string, BlockRenderer> = {
   couple: renderHomeHeroReact,
   header: renderHeaderReact,
   text: renderTextReact,
-  countdown: renderCountdown,
+  countdown: renderCountdownReact,
   schedule: renderScheduleReact,
   faq: renderFaqReact,
   rsvp: renderRsvp,
   images: renderImages,
-  video: renderVideo,
+  video: renderVideoReact,
   youtube: renderYoutubeReact,
   "registry-card": renderRegistryCardReact,
   "hotel-card": renderHotelCardReact,
@@ -573,7 +435,7 @@ const BLOCK_RENDERERS: Record<string, BlockRenderer> = {
   spacer: renderSpacerReact,
   "photo-split": renderPhotoSplit,
   "multi-text": renderMultiTextReact,
-  "media-video": renderMediaVideo,
+  "media-video": renderMediaVideoReact,
   gallery: renderGallery,
   "info-card": renderInfoCardReact,
   "rsvp-form": renderRsvpForm,
