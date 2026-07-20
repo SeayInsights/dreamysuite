@@ -31,6 +31,19 @@ yarn-error.log*
 .pnpm-debug.log*
 build.log
 
+# Local database dumps and backup exports (never commit)
+/prod-backup.sql
+/*backup*.sql
+/*dump*.sql
+/*.db
+/*.db.bak
+/*.sqlite
+/*.sqlite.bak
+/*.sqlite3
+/*.sqlite3.bak
+/*.db-wal
+/*.db-shm
+
 # Task summaries (session artifacts)
 TASK-*.md
 
@@ -83,9 +96,10 @@ cloudflare-env.d.ts
 .design-audit/
 .audit/
 
-# Migrations (managed in Cloudflare D1 dashboard)
-/migrations/*
-!/migrations/0043_audit_log.sql
+# D1 schema migrations are version-controlled (source of truth for schema).
+# They are applied to Cloudflare D1 via the dashboard / wrangler, but the .sql
+# files must be committed so schema history is reviewable. Root-level *.sql
+# dumps/backups are still ignored above.
 
 # Dev scripts & seed data (except build-public-effects which CI needs)
 /scripts/*
@@ -96,11 +110,10 @@ cloudflare-env.d.ts
 # E2E tests (not needed for launch)
 /e2e
 
-# Unused config files
+# Test runner configs are version-controlled so CI can run the suite.
+# (vitest.config.ts / playwright.config.ts intentionally NOT ignored.)
 .dockerignore
 ARCHITECTURE.md
-playwright.config.ts
-vitest.config.ts
 
 # IDE settings
 .vscode/

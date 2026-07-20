@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 // /api/sites/* sub-paths that must remain public (no session required).
 const PUBLIC_SITE_API_PATHS = [/^\/api\/sites\/[^/]+\/guestbook(\/.*)?$/];
 
-export function middleware(req: NextRequest) {
+export function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
   // Only gate /api/sites/* routes.

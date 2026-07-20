@@ -73,7 +73,7 @@ interface ContentRow {
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: Promise<{ siteSlug: string }> }
+  { params }: { params: Promise<{ siteSlug: string }> },
 ) {
   const env = await getEnv();
   const { siteSlug } = await params;
@@ -81,36 +81,59 @@ export async function GET(
 
   // Find site by slug
   const site = await db
-    .prepare("SELECT id, name, slug, customDomain, eventType, previewColor, status FROM site WHERE slug = ? AND status = 'published'")
+    .prepare(
+      "SELECT id, name, slug, customDomain, eventType, previewColor, status FROM site WHERE slug = ? AND status = 'published'",
+    )
     .bind(siteSlug)
-    .first<Pick<SiteRow, 'id' | 'name' | 'slug' | 'customDomain' | 'eventType' | 'previewColor' | 'status'>>();
+    .first<
+      Pick<
+        SiteRow,
+        | "id"
+        | "name"
+        | "slug"
+        | "customDomain"
+        | "eventType"
+        | "previewColor"
+        | "status"
+      >
+    >();
 
   if (!site) {
-    return jsonResponse({ error: { code: "NOT_FOUND", message: "Site not found" } }, 404, false);
+    return jsonResponse(
+      { error: { code: "NOT_FOUND", message: "Site not found" } },
+      404,
+      false,
+    );
   }
 
   // Fetch settings: merge universal settings with type-specific settings (guestPassword excluded — server-only field)
   const universalSettings = await db
-    .prepare("SELECT siteId, eventName, eventDate, mainLanguage, timezone, navBg, navPosition, navBrandColor, navLinkColor, navHighlightColor, navItemsConfig, createdAt, updatedAt FROM site_setting WHERE siteId = ?")
+    .prepare(
+      "SELECT siteId, mainLanguage, navBg, navPosition, navBrandColor, navLinkColor, navHighlightColor, navItemsConfig, updatedAt FROM site_setting WHERE siteId = ?",
+    )
     .bind(site.id)
     .first();
 
   const typeSettings = await getSiteTypeSettings(db, site.id);
-  const settings = universalSettings && typeSettings
-    ? { ...universalSettings, ...(typeSettings?.settings ?? {}) }
-    : universalSettings;
+  const settings =
+    universalSettings && typeSettings
+      ? { ...universalSettings, ...(typeSettings?.settings ?? {}) }
+      : universalSettings;
 
   // Log the page view asynchronously (fire-and-forget) — Note: waitUntil not available in Next.js route handlers directly;
   // we use a non-blocking pattern here
-  db
-    .prepare("INSERT INTO page_view (siteId, pageSlug, viewedAt) VALUES (?, ?, ?)")
+  db.prepare(
+    "INSERT INTO page_view (siteId, pageSlug, viewedAt) VALUES (?, ?, ?)",
+  )
     .bind(site.id, "__home__", Date.now())
     .run()
     .catch((err) => console.error("[analytics] page_view insert failed:", err));
 
   // Fetch visible pages ordered by sortOrder
   const pagesResult = await db
-    .prepare("SELECT * FROM page WHERE siteId = ? AND isVisible = 1 ORDER BY sortOrder ASC")
+    .prepare(
+      "SELECT * FROM page WHERE siteId = ? AND isVisible = 1 ORDER BY sortOrder ASC",
+    )
     .bind(site.id)
     .all<PageRow>();
 
@@ -118,7 +141,9 @@ export async function GET(
 
   // Fetch all blocks for the site at once
   const blocksResult = await db
-    .prepare("SELECT * FROM block WHERE siteId = ? AND isVisible = 1 ORDER BY sortOrder ASC")
+    .prepare(
+      "SELECT * FROM block WHERE siteId = ? AND isVisible = 1 ORDER BY sortOrder ASC",
+    )
     .bind(site.id)
     .all<BlockRow>();
 
@@ -156,36 +181,40 @@ export async function GET(
     : [];
 
   const navConfig = {
-    background:     (s?.navBg       as string | undefined) ?? "white",
-    style:          (s?.navPosition as string | undefined) ?? "fixed",
-    brandColor:     (s?.navBrandColor     as string | undefined) ?? "#1C1917",
-    linkColor:      (s?.navLinkColor      as string | undefined) ?? "#6B6560",
+    background: (s?.navBg as string | undefined) ?? "white",
+    style: (s?.navPosition as string | undefined) ?? "fixed",
+    brandColor: (s?.navBrandColor as string | undefined) ?? "#1C1917",
+    linkColor: (s?.navLinkColor as string | undefined) ?? "#6B6560",
     highlightColor: (s?.navHighlightColor as string | undefined) ?? "#B8921A",
     items: navItems,
   };
 
-  return jsonResponse({
-    site: {
-      id: site.id,
-      name: site.name,
-      slug: site.slug,
-      customDomain: site.customDomain,
-      eventType: site.eventType,
-      previewColor: site.previewColor,
-      status: site.status,
+  return jsonResponse(
+    {
+      site: {
+        id: site.id,
+        name: site.name,
+        slug: site.slug,
+        customDomain: site.customDomain,
+        eventType: site.eventType,
+        previewColor: site.previewColor,
+        status: site.status,
+      },
+      pages: pagesWithBlocks,
+      settings: publicSettings,
+      content,
+      navConfig,
     },
-    pages: pagesWithBlocks,
-    settings: publicSettings,
-    content,
-    navConfig,
-  }, 200, true);
+    200,
+    true,
+  );
 }
 
 // ── RSVP submission ───────────────────────────────────────────────────────────
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: Promise<{ siteSlug: string }> }
+  { params }: { params: Promise<{ siteSlug: string }> },
 ) {
   const env = await getEnv();
 
@@ -210,11 +239,20 @@ export async function POST(
   if (contentType.includes("application/json")) {
     let body: Record<string, unknown>;
     try {
-      body = await req.json() as Record<string, unknown>;
+      body = (await req.json()) as Record<string, unknown>;
     } catch {
       return new Response(
-        JSON.stringify({ ok: false, error: { code: "BAD_REQUEST", message: "Invalid JSON body" } }),
-        { status: 400, headers: { "content-type": "application/json", "cache-control": "no-store" } }
+        JSON.stringify({
+          ok: false,
+          error: { code: "BAD_REQUEST", message: "Invalid JSON body" },
+        }),
+        {
+          status: 400,
+          headers: {
+            "content-type": "application/json",
+            "cache-control": "no-store",
+          },
+        },
       );
     }
     firstName = body.firstName as string | undefined;
@@ -222,7 +260,9 @@ export async function POST(
     attending = body.attending as string | undefined;
     notes = body.notes as string | undefined;
     guestEmail = (body.email as string) || undefined;
-    customResponses = body.customResponses as Record<string, unknown> | undefined;
+    customResponses = body.customResponses as
+      | Record<string, unknown>
+      | undefined;
   } else {
     // application/x-www-form-urlencoded or multipart/form-data
     let formData: FormData;
@@ -230,8 +270,17 @@ export async function POST(
       formData = await req.formData();
     } catch {
       return new Response(
-        JSON.stringify({ ok: false, error: { code: "BAD_REQUEST", message: "Could not parse form data" } }),
-        { status: 400, headers: { "content-type": "application/json", "cache-control": "no-store" } }
+        JSON.stringify({
+          ok: false,
+          error: { code: "BAD_REQUEST", message: "Could not parse form data" },
+        }),
+        {
+          status: 400,
+          headers: {
+            "content-type": "application/json",
+            "cache-control": "no-store",
+          },
+        },
       );
     }
     firstName = formData.get("firstName")?.toString();
@@ -244,26 +293,104 @@ export async function POST(
   // Validate required fields
   if (!firstName || !firstName.trim()) {
     return new Response(
-      JSON.stringify({ ok: false, error: { code: "VALIDATION_ERROR", message: "First name is required" } }),
-      { status: 400, headers: { "content-type": "application/json", "cache-control": "no-store" } }
+      JSON.stringify({
+        ok: false,
+        error: { code: "VALIDATION_ERROR", message: "First name is required" },
+      }),
+      {
+        status: 400,
+        headers: {
+          "content-type": "application/json",
+          "cache-control": "no-store",
+        },
+      },
     );
   }
   if (!lastName || !lastName.trim()) {
     return new Response(
-      JSON.stringify({ ok: false, error: { code: "VALIDATION_ERROR", message: "Last name is required" } }),
-      { status: 400, headers: { "content-type": "application/json", "cache-control": "no-store" } }
+      JSON.stringify({
+        ok: false,
+        error: { code: "VALIDATION_ERROR", message: "Last name is required" },
+      }),
+      {
+        status: 400,
+        headers: {
+          "content-type": "application/json",
+          "cache-control": "no-store",
+        },
+      },
     );
   }
   if (attending !== "yes" && attending !== "no") {
     return new Response(
-      JSON.stringify({ ok: false, error: { code: "VALIDATION_ERROR", message: "Attending must be yes or no" } }),
-      { status: 400, headers: { "content-type": "application/json", "cache-control": "no-store" } }
+      JSON.stringify({
+        ok: false,
+        error: {
+          code: "VALIDATION_ERROR",
+          message: "Attending must be yes or no",
+        },
+      }),
+      {
+        status: 400,
+        headers: {
+          "content-type": "application/json",
+          "cache-control": "no-store",
+        },
+      },
     );
   }
 
-  if (firstName.trim().length > 100) return new Response(JSON.stringify({ ok: false, error: { code: "BAD_REQUEST", message: "firstName must be 100 characters or less" } }), { status: 400, headers: { "content-type": "application/json", "cache-control": "no-store" } });
-  if ((lastName?.trim()?.length ?? 0) > 100) return new Response(JSON.stringify({ ok: false, error: { code: "BAD_REQUEST", message: "lastName must be 100 characters or less" } }), { status: 400, headers: { "content-type": "application/json", "cache-control": "no-store" } });
-  if ((notes?.trim()?.length ?? 0) > 2000) return new Response(JSON.stringify({ ok: false, error: { code: "BAD_REQUEST", message: "notes must be 2000 characters or less" } }), { status: 400, headers: { "content-type": "application/json", "cache-control": "no-store" } });
+  if (firstName.trim().length > 100)
+    return new Response(
+      JSON.stringify({
+        ok: false,
+        error: {
+          code: "BAD_REQUEST",
+          message: "firstName must be 100 characters or less",
+        },
+      }),
+      {
+        status: 400,
+        headers: {
+          "content-type": "application/json",
+          "cache-control": "no-store",
+        },
+      },
+    );
+  if ((lastName?.trim()?.length ?? 0) > 100)
+    return new Response(
+      JSON.stringify({
+        ok: false,
+        error: {
+          code: "BAD_REQUEST",
+          message: "lastName must be 100 characters or less",
+        },
+      }),
+      {
+        status: 400,
+        headers: {
+          "content-type": "application/json",
+          "cache-control": "no-store",
+        },
+      },
+    );
+  if ((notes?.trim()?.length ?? 0) > 2000)
+    return new Response(
+      JSON.stringify({
+        ok: false,
+        error: {
+          code: "BAD_REQUEST",
+          message: "notes must be 2000 characters or less",
+        },
+      }),
+      {
+        status: 400,
+        headers: {
+          "content-type": "application/json",
+          "cache-control": "no-store",
+        },
+      },
+    );
 
   const firstNameClean = firstName.trim();
   const lastNameClean = lastName.trim();
@@ -278,8 +405,17 @@ export async function POST(
 
   if (!site) {
     return new Response(
-      JSON.stringify({ ok: false, error: { code: "NOT_FOUND", message: "Site not found" } }),
-      { status: 404, headers: { "content-type": "application/json", "cache-control": "no-store" } }
+      JSON.stringify({
+        ok: false,
+        error: { code: "NOT_FOUND", message: "Site not found" },
+      }),
+      {
+        status: 404,
+        headers: {
+          "content-type": "application/json",
+          "cache-control": "no-store",
+        },
+      },
     );
   }
 
@@ -297,7 +433,9 @@ export async function POST(
 
   if (!existingContact) {
     existingContact = await db
-      .prepare("SELECT id FROM contact WHERE site_id = ? AND LOWER(name) = LOWER(?)")
+      .prepare(
+        "SELECT id FROM contact WHERE site_id = ? AND LOWER(name) = LOWER(?)",
+      )
       .bind(site.id, `${firstNameClean} ${lastNameClean}`)
       .first<{ id: string }>();
   }
@@ -307,7 +445,7 @@ export async function POST(
     contactId = existingContact.id;
     await db
       .prepare(
-        "UPDATE contact SET name = ?, email = ?, metadata = ?, updated_at = ? WHERE id = ?"
+        "UPDATE contact SET name = ?, email = ?, metadata = ?, updated_at = ? WHERE id = ?",
       )
       .bind(
         `${firstNameClean} ${lastNameClean}`,
@@ -315,10 +453,10 @@ export async function POST(
         JSON.stringify({
           rsvpStatus: attending === "yes" ? "attending" : "not-attending",
           customResponses: customResponses ?? {},
-          notes: notesClean
+          notes: notesClean,
         }),
         now,
-        contactId
+        contactId,
       )
       .run();
   } else {
@@ -326,22 +464,22 @@ export async function POST(
     contactId = crypto.randomUUID();
     await db
       .prepare(
-        "INSERT INTO contact (id, site_id, name, email, contact_type, metadata, status, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
+        "INSERT INTO contact (id, site_id, name, email, contact_type, metadata, status, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
       )
       .bind(
         contactId,
         site.id,
         `${firstNameClean} ${lastNameClean}`,
         emailClean,
-        'guest',
+        "guest",
         JSON.stringify({
           rsvpStatus: attending === "yes" ? "attending" : "not-attending",
           customResponses: customResponses ?? {},
-          notes: notesClean
+          notes: notesClean,
         }),
-        'active',
+        "active",
         now,
-        now
+        now,
       )
       .run();
   }
@@ -350,22 +488,22 @@ export async function POST(
   const submissionId = crypto.randomUUID();
   await db
     .prepare(
-      "INSERT INTO submission (id, site_id, contact_id, submission_type, data, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)"
+      "INSERT INTO submission (id, site_id, contact_id, submission_type, data, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
     )
     .bind(
       submissionId,
       site.id,
       contactId,
-      'rsvp',
+      "rsvp",
       JSON.stringify({
         attending: attending === "yes",
         firstName: firstNameClean,
         lastName: lastNameClean,
         notes: notesClean,
-        customResponses: customResponses ?? {}
+        customResponses: customResponses ?? {},
       }),
       now,
-      now
+      now,
     )
     .run();
 
@@ -374,19 +512,27 @@ export async function POST(
   if (resendKey) {
     const ownerInfo = await db
       .prepare(
-        `SELECT u.email AS ownerEmail, s.name AS siteName, ss.eventName, ss.eventDate
+        `SELECT u.email AS ownerEmail, s.name AS siteName
          FROM site s
          JOIN user u ON u.id = s.userId
-         LEFT JOIN site_setting ss ON ss.siteId = s.id
-         WHERE s.slug = ?`
+         WHERE s.slug = ?`,
       )
       .bind(siteSlug)
-      .first<{ ownerEmail: string; siteName: string; eventName: string | null; eventDate: string | null }>();
+      .first<{ ownerEmail: string; siteName: string }>();
 
     if (ownerInfo) {
-      const eventLabel = ownerInfo.eventName || ownerInfo.siteName;
+      // eventName moved from site_setting to site_type_settings in migration 0040.
+      const ownerTypeSettings = await getSiteTypeSettings(db, site.id);
+      const eventName =
+        (
+          ownerTypeSettings?.settings as
+            | { eventName?: string | null }
+            | undefined
+        )?.eventName ?? null;
+      const eventLabel = eventName || ownerInfo.siteName;
       const guestName = `${firstNameClean} ${lastNameClean}`;
-      const attendingLabel = attending === "yes" ? "will attend" : "cannot attend";
+      const attendingLabel =
+        attending === "yes" ? "will attend" : "cannot attend";
       const emailHeaders = {
         "Content-Type": "application/json",
         Authorization: `Bearer ${resendKey}`,
@@ -408,16 +554,20 @@ export async function POST(
 
         // Guest confirmation if email provided
         if (guestEmail) {
-          const confirmMsg = attending === "yes"
-            ? `We're so happy you'll be joining us for <strong>${escEmail(eventLabel)}</strong>!`
-            : `Thank you for letting us know. We're sorry you won't be able to make it to <strong>${escEmail(eventLabel)}</strong>.`;
+          const confirmMsg =
+            attending === "yes"
+              ? `We're so happy you'll be joining us for <strong>${escEmail(eventLabel)}</strong>!`
+              : `Thank you for letting us know. We're sorry you won't be able to make it to <strong>${escEmail(eventLabel)}</strong>.`;
           await fetch("https://api.resend.com/emails", {
             method: "POST",
             headers: emailHeaders,
             body: JSON.stringify({
               from: "DreamySuite <notifications@dreamysuite.com>",
               to: [guestEmail],
-              subject: attending === "yes" ? `See you there! — ${eventLabel}` : `RSVP confirmed — ${eventLabel}`,
+              subject:
+                attending === "yes"
+                  ? `See you there! — ${eventLabel}`
+                  : `RSVP confirmed — ${eventLabel}`,
               html: `<div style="font-family:Georgia,serif;max-width:520px;margin:0 auto;padding:2rem;color:#292524"><h2 style="font-weight:normal;margin:0 0 1rem">${escEmail(eventLabel)}</h2><p>Hi ${escEmail(firstNameClean)},</p><p>${confirmMsg}</p><hr style="border:none;border-top:1px solid #e7e5e4;margin:1.5rem 0"><p style="color:#a8a29e;font-size:0.8rem">Sent via DreamySuite</p></div>`,
             }),
           }).catch(() => undefined);
@@ -439,11 +589,14 @@ export async function POST(
         ? "Gracias por confirmar tu asistencia. Te esperamos."
         : "Thank you! We're so happy you'll be joining us."
       : lang === "es"
-      ? "Gracias por hacernos saber. Lamentamos que no puedas asistir."
-      : "Thank you for letting us know. We're sorry you won't be able to make it.";
+        ? "Gracias por hacernos saber. Lamentamos que no puedas asistir."
+        : "Thank you for letting us know. We're sorry you won't be able to make it.";
 
-  return new Response(
-    JSON.stringify({ ok: true, message }),
-    { status: 200, headers: { "content-type": "application/json", "cache-control": "no-store" } }
-  );
+  return new Response(JSON.stringify({ ok: true, message }), {
+    status: 200,
+    headers: {
+      "content-type": "application/json",
+      "cache-control": "no-store",
+    },
+  });
 }

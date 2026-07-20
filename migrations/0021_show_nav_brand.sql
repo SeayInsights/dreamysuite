@@ -1,0 +1,1 @@
+ALTER TABLE site_setting ADD COLUMN showNavBrand INTEGER DEFAULT 1;
