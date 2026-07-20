@@ -9,6 +9,10 @@ import { VenueMapView } from "@/app/components/blocks/presentational/VenueMapVie
 import { HeaderView } from "@/app/components/blocks/presentational/HeaderView";
 import { TextView } from "@/app/components/blocks/presentational/TextView";
 import {
+  FactsGridView,
+  type FactsGridItem,
+} from "@/app/components/blocks/presentational/FactsGridView";
+import {
   RegistryCardView,
   HotelCardView,
   InfoCardView,
@@ -66,6 +70,74 @@ export function renderHeaderReact(ctx: RenderContext): string {
       type={block.type}
       text={text}
       titleStyle={fieldTextStyle(cfg, "title")}
+      style={style}
+      data={data}
+    />,
+  );
+}
+
+export function renderTidbitsReact(ctx: RenderContext): string {
+  const { block, cfg, pageContent } = ctx;
+  const cfgItems = Array.isArray(cfg.items)
+    ? (cfg.items as Array<{ icon?: string; title?: string; body?: string }>)
+    : [];
+  const legacyItems = Array.isArray(pageContent?.tidbits)
+    ? (pageContent.tidbits as Array<{
+        icon?: string;
+        title?: string;
+        body?: string;
+      }>)
+    : [];
+  const raw = cfgItems.length > 0 ? cfgItems : legacyItems;
+  const items: FactsGridItem[] = raw.map((it) => ({
+    icon: it.icon,
+    label: it.title,
+    body: it.body,
+  }));
+  const { style, data } = blockContainerStyle(cfg);
+  return renderReactToHtml(
+    <FactsGridView
+      id={block.id}
+      type={block.type}
+      showTitle={cfg.showTitle !== false}
+      columns={String(cfg.columns ?? "auto")}
+      cardStyle={String(cfg.cardStyle ?? "card")}
+      labelVariant="tidbits"
+      items={items}
+      style={style}
+      data={data}
+    />,
+  );
+}
+
+export function renderFunFactsReact(ctx: RenderContext): string {
+  const { block, cfg, pageContent } = ctx;
+  const cfgItems = Array.isArray(cfg.items)
+    ? (cfg.items as Array<{ icon?: string; question?: string; body?: string }>)
+    : [];
+  const legacyItems = Array.isArray(pageContent?.tidbits)
+    ? (pageContent.tidbits as Array<{
+        icon?: string;
+        question?: string;
+        body?: string;
+      }>)
+    : [];
+  const raw = cfgItems.length > 0 ? cfgItems : legacyItems;
+  const items: FactsGridItem[] = raw.map((it) => ({
+    icon: it.icon,
+    label: it.question,
+    body: it.body,
+  }));
+  const { style, data } = blockContainerStyle(cfg);
+  return renderReactToHtml(
+    <FactsGridView
+      id={block.id}
+      type={block.type}
+      showTitle={cfg.showTitle !== false}
+      columns={String(cfg.columns ?? "auto")}
+      cardStyle={String(cfg.cardStyle ?? "card")}
+      labelVariant="fun-facts"
+      items={items}
       style={style}
       data={data}
     />,

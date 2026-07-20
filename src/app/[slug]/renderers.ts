@@ -20,6 +20,8 @@ import {
   renderInfoCardReact,
   renderHeaderReact,
   renderTextReact,
+  renderTidbitsReact,
+  renderFunFactsReact,
 } from "./react-renderers";
 
 // ── Block renderers ───────────────────────────────────────────────────────────
@@ -345,118 +347,6 @@ function renderVideo({ block, settings, cfg }: RenderContext): string {
           ${url ? `<video src="${escHtml(safeUrl(url))}" controls class="media-element" aria-label="Wedding video"></video>` : mediaPlaceholder("Video")}
           ${overlayHtml}
         </section>`;
-}
-
-function renderTidbits({
-  block,
-  cfg,
-  bsAttr,
-  pageContent,
-}: RenderContext): string {
-  const cfgItems = Array.isArray(cfg.items)
-    ? (cfg.items as Array<{ icon?: string; title?: string; body?: string }>)
-    : [];
-  const legacyItems = Array.isArray(pageContent?.tidbits)
-    ? (pageContent.tidbits as Array<{
-        icon?: string;
-        title?: string;
-        body?: string;
-      }>)
-    : [];
-  const items = cfgItems.length > 0 ? cfgItems : legacyItems;
-  const cols = String(cfg.columns ?? "auto");
-  const colsCss =
-    cols === "2"
-      ? "repeat(2,1fr)"
-      : cols === "3"
-        ? "repeat(3,1fr)"
-        : "repeat(auto-fill,minmax(200px,1fr))";
-  const cardStyle = String(cfg.cardStyle ?? "card");
-  const cardCss =
-    cardStyle === "flat"
-      ? "padding:1.25rem;text-align:center;color:var(--block-text,var(--site-text));"
-      : cardStyle === "bordered"
-        ? "border:1px solid var(--site-border);border-radius:12px;padding:1.25rem;text-align:center;color:var(--block-text,var(--site-text));"
-        : "background:#fff;border:1px solid var(--site-border);border-radius:12px;padding:1.25rem;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,0.05);color:var(--block-text,var(--text));";
-  return `
-    <section class="block block-tidbits"${bsAttr} aria-label="Fun facts" data-block-id="${escHtml(block.id)}" data-block-type="${escHtml(block.type)}">
-      ${cfg.showTitle !== false ? `<h2 class="section-heading">Fun Facts</h2><div class="section-rule" aria-hidden="true"></div>` : ""}
-      ${
-        items.length > 0
-          ? `<div style="display:grid;grid-template-columns:${colsCss};gap:1rem;">
-             ${items
-               .map(
-                 (it) => `<div style="${cardCss}">
-               ${it.icon ? `<div style="font-size:2rem;margin-bottom:0.5rem;">${escHtml(it.icon)}</div>` : ""}
-               ${it.title ? `<strong style="display:block;margin-bottom:0.375rem;">${escHtml(it.title)}</strong>` : ""}
-               ${it.body ? `<p style="color:var(--block-text,var(--site-muted));font-size:0.9375rem;margin:0;">${escHtml(it.body)}</p>` : ""}
-             </div>`,
-               )
-               .join("")}
-           </div>`
-          : placeholder(
-              "Fun facts will appear here once added in the Content tab.",
-            )
-      }
-    </section>`;
-}
-
-function renderFunFacts({
-  block,
-  cfg,
-  bsAttr,
-  pageContent,
-}: RenderContext): string {
-  const cfgItems = Array.isArray(cfg.items)
-    ? (cfg.items as Array<{
-        icon?: string;
-        question?: string;
-        body?: string;
-      }>)
-    : [];
-  const legacyItems = Array.isArray(pageContent?.tidbits)
-    ? (pageContent.tidbits as Array<{
-        icon?: string;
-        question?: string;
-        body?: string;
-      }>)
-    : [];
-  const items = cfgItems.length > 0 ? cfgItems : legacyItems;
-  const cols = String(cfg.columns ?? "auto");
-  const colsCss =
-    cols === "2"
-      ? "repeat(2,1fr)"
-      : cols === "3"
-        ? "repeat(3,1fr)"
-        : "repeat(auto-fill,minmax(200px,1fr))";
-  const cardStyle = String(cfg.cardStyle ?? "card");
-  const cardCss =
-    cardStyle === "flat"
-      ? "padding:1.25rem;text-align:center;color:var(--block-text,var(--site-text));"
-      : cardStyle === "bordered"
-        ? "border:1px solid var(--site-border);border-radius:12px;padding:1.25rem;text-align:center;color:var(--block-text,var(--site-text));"
-        : "background:#fff;border:1px solid var(--site-border);border-radius:12px;padding:1.25rem;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,0.05);color:var(--block-text,var(--text));";
-  return `
-    <section class="block block-tidbits"${bsAttr} aria-label="Fun facts" data-block-id="${escHtml(block.id)}" data-block-type="${escHtml(block.type)}">
-      ${cfg.showTitle !== false ? `<h2 class="section-heading">Fun Facts</h2><div class="section-rule" aria-hidden="true"></div>` : ""}
-      ${
-        items.length > 0
-          ? `<div style="display:grid;grid-template-columns:${colsCss};gap:1rem;">
-             ${items
-               .map(
-                 (it) => `<div style="${cardCss}">
-               ${it.icon ? `<div style="font-size:2rem;margin-bottom:0.5rem;">${escHtml(it.icon)}</div>` : ""}
-               ${it.question ? `<strong style="display:block;margin-bottom:0.375rem;font-size:0.8rem;font-weight:500;color:var(--site-accent,var(--site-muted));">${escHtml(it.question)}</strong>` : ""}
-               ${it.body ? `<p style="color:var(--block-text,var(--site-muted));font-size:0.9375rem;margin:0;">${escHtml(it.body)}</p>` : ""}
-             </div>`,
-               )
-               .join("")}
-           </div>`
-          : placeholder(
-              "Fun facts will appear here once added in the Content tab.",
-            )
-      }
-    </section>`;
 }
 
 function renderTravelSection({
@@ -1064,8 +954,8 @@ const BLOCK_RENDERERS: Record<string, BlockRenderer> = {
   "registry-card": renderRegistryCardReact,
   "hotel-card": renderHotelCardReact,
   "venue-map": renderVenueMapReact,
-  tidbits: renderTidbits,
-  "fun-facts": renderFunFacts,
+  tidbits: renderTidbitsReact,
+  "fun-facts": renderFunFactsReact,
   "travel-section": renderTravelSection,
   travel: renderTravel,
   spacer: renderSpacerReact,

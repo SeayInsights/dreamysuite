@@ -29,13 +29,7 @@ exports[`renderBlock output parity > renders 'faq' identically 1`] = `
     </section>"
 `;
 
-exports[`renderBlock output parity > renders 'fun-facts' identically 1`] = `
-"
-    <section class="block block-tidbits" aria-label="Fun facts" data-block-id="blk-fun-facts" data-block-type="fun-facts">
-      <h2 class="section-heading">Fun Facts</h2><div class="section-rule" aria-hidden="true"></div>
-      <p class="placeholder-text">Fun facts will appear here once added in the Content tab.</p>
-    </section>"
-`;
+exports[`renderBlock output parity > renders 'fun-facts' identically 1`] = `"<section class="block block-tidbits" aria-label="Fun facts" data-block-id="blk-fun-facts" data-block-type="fun-facts"><h2 class="section-heading">Fun Facts</h2><div class="section-rule" aria-hidden="true"></div><p class="placeholder-text">Fun facts will appear here once added in the Content tab.</p></section>"`;
 
 exports[`renderBlock output parity > renders 'gallery' identically 1`] = `
 "
@@ -205,13 +199,7 @@ exports[`renderBlock output parity > renders 'story-timeline' identically 1`] = 
 
 exports[`renderBlock output parity > renders 'text' identically 1`] = `"<section class="block block-text" data-block-id="blk-text" data-block-type="text"><div class="text-body"><p class="placeholder-text">Story text will appear here once added.</p></div></section>"`;
 
-exports[`renderBlock output parity > renders 'tidbits' identically 1`] = `
-"
-    <section class="block block-tidbits" aria-label="Fun facts" data-block-id="blk-tidbits" data-block-type="tidbits">
-      <h2 class="section-heading">Fun Facts</h2><div class="section-rule" aria-hidden="true"></div>
-      <p class="placeholder-text">Fun facts will appear here once added in the Content tab.</p>
-    </section>"
-`;
+exports[`renderBlock output parity > renders 'tidbits' identically 1`] = `"<section class="block block-tidbits" aria-label="Fun facts" data-block-id="blk-tidbits" data-block-type="tidbits"><h2 class="section-heading">Fun Facts</h2><div class="section-rule" aria-hidden="true"></div><p class="placeholder-text">Fun facts will appear here once added in the Content tab.</p></section>"`;
 
 exports[`renderBlock output parity > renders 'travel' identically 1`] = `
 "
