@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react";
 import type { RenderContext } from "./renderers";
 import { renderReactToHtml } from "@/lib/blocks/reactToHtml";
 import { blockContainerStyle, fieldTextStyle } from "@/lib/blocks/container";
@@ -26,6 +27,10 @@ import {
   VideoView,
   MediaVideoView,
 } from "@/app/components/blocks/presentational/mediaViews";
+import {
+  ImagesView,
+  GalleryView,
+} from "@/app/components/blocks/presentational/mediaGridViews";
 import {
   RegistryCardView,
   HotelCardView,
@@ -152,6 +157,63 @@ export function renderFunFactsReact(ctx: RenderContext): string {
       cardStyle={String(cfg.cardStyle ?? "card")}
       labelVariant="fun-facts"
       items={items}
+      style={style}
+      data={data}
+    />,
+  );
+}
+
+export function renderImagesReact(ctx: RenderContext): string {
+  const { block, cfg } = ctx;
+  const urls = cfg.urls as string[] | undefined;
+  const focusX = String(cfg.imageFocusX ?? "center");
+  const focusY = String(cfg.imageFocusY ?? "center");
+  const phRaw = Number(cfg.photoHeight);
+  const photoH = phRaw > 0 ? `${phRaw}px` : null;
+  const pwRaw = Number(cfg.photoWidth);
+  const photoW = pwRaw > 0 ? `${pwRaw}px` : null;
+  const photoR = String(cfg.photoRadius ?? "8px");
+  const photoBW = String(cfg.photoBorder ?? "0");
+  const photoBColor = String(cfg.photoBorderColor ?? "#e0dbd4");
+  const imgBaseStyle: CSSProperties = {
+    objectPosition: `${focusX} ${focusY}`,
+    borderRadius: photoR,
+    ...(photoBW !== "0" ? { border: `${photoBW} solid ${photoBColor}` } : {}),
+    ...(photoH ? { height: photoH } : {}),
+    ...(photoW ? { width: photoW } : {}),
+  };
+  const { style, data } = blockContainerStyle(cfg);
+  return renderReactToHtml(
+    <ImagesView
+      id={block.id}
+      type={block.type}
+      urls={urls}
+      imageSlot={cfg.imageSlot as string | undefined}
+      layout={String(cfg.layout ?? "grid-3")}
+      offsetX={Number(cfg.galleryOffsetX ?? 0)}
+      imgBaseStyle={imgBaseStyle}
+      style={style}
+      data={data}
+    />,
+  );
+}
+
+export function renderGalleryReact(ctx: RenderContext): string {
+  const { block, cfg } = ctx;
+  const urls = Array.isArray(cfg.urls) ? (cfg.urls as string[]) : [];
+  const imageSlot = cfg.imageUrl as string | undefined;
+  const images = imageSlot ? [imageSlot] : urls;
+  const { style, data } = blockContainerStyle(cfg);
+  return renderReactToHtml(
+    <GalleryView
+      id={block.id}
+      type={block.type}
+      layout={String(cfg.layout ?? "grid")}
+      imageUrl={cfg.imageUrl as string | undefined}
+      heading={String(cfg.heading ?? "")}
+      body={String(cfg.body ?? "")}
+      imageLayout={String(cfg.imageLayout ?? "left")}
+      images={images}
       style={style}
       data={data}
     />,
