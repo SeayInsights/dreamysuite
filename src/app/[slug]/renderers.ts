@@ -26,6 +26,8 @@ import {
   renderMediaVideoReact,
   renderImagesReact,
   renderGalleryReact,
+  renderPhotoSplitReact,
+  renderStoryTimelineReact,
 } from "./react-renderers";
 
 // ── Block renderers ───────────────────────────────────────────────────────────
@@ -94,82 +96,6 @@ function renderRsvp({ block, cfg, bsAttr, siteSlug }: RenderContext): string {
         </section>`;
 }
 
-function renderPhotoSplit({ block, cfg, bsAttr }: RenderContext): string {
-  const photo = (cfg.photo as Record<string, unknown> | undefined) ?? {};
-  const flatImageUrl = cfg.imageUrl as string | undefined;
-  const photoUrl = String(flatImageUrl ?? photo.url ?? "");
-  const photoSide = String(cfg.photoSide ?? cfg.layout ?? "left");
-  const cropVal = escHtml(String(photo.crop ?? "center"));
-  const wPx = photo.widthPx ? `${Number(photo.widthPx)}px` : "auto";
-  const hPx = photo.heightPx ? `${Number(photo.heightPx)}px` : "auto";
-  const offsetXRaw = Number(photo.offsetX ?? 0);
-  const marginDir = photoSide === "right" ? "right" : "left";
-  const photoContainerStyle = `flex-shrink:0;${offsetXRaw !== 0 ? `margin-${marginDir}:${offsetXRaw}px;` : ""}`;
-  const flatHeading = cfg.heading as string | undefined;
-  const flatBody =
-    (cfg.body as string | undefined) ?? (cfg.text as string | undefined);
-  const components =
-    (cfg.components as Array<Record<string, unknown>>) ??
-    (flatHeading || flatBody
-      ? [{ type: "text", heading: flatHeading ?? "", body: flatBody ?? "" }]
-      : []);
-
-  const imgEl = photoUrl
-    ? `<div class="ps-photo" style="${photoContainerStyle}">
-             <img src="${escHtml(photoUrl)}" alt="Photo" loading="lazy"
-               style="width:${wPx};height:${hPx};max-width:100%;object-fit:cover;object-position:${cropVal};border-radius:8px;" />
-           </div>`
-    : "";
-
-  const compsHtml = components
-    .map((c) => {
-      if (c.type === "text") {
-        const hSize = c.headingSize as string | undefined;
-        const hAlign = c.headingAlign as string | undefined;
-        const hStyleParts = [
-          "margin:0 0 0.6rem",
-          hSize ? `font-size:${escHtml(hSize)}` : "",
-          hAlign ? `text-align:${escHtml(hAlign)}` : "",
-          c.headingBold ? "font-weight:700" : "",
-          c.headingItalic ? "font-style:italic" : "",
-          c.headingUnderline ? "text-decoration:underline" : "",
-        ]
-          .filter(Boolean)
-          .join(";");
-        const bSize = c.bodySize as string | undefined;
-        const bAlign = c.bodyAlign as string | undefined;
-        const bStyleParts = [
-          "margin:0;line-height:1.75",
-          bSize ? `font-size:${escHtml(bSize)}` : "",
-          bAlign ? `text-align:${escHtml(bAlign)}` : "",
-          c.bodyBold ? "font-weight:700" : "",
-          c.bodyItalic ? "font-style:italic" : "",
-          c.bodyUnderline ? "text-decoration:underline" : "",
-        ]
-          .filter(Boolean)
-          .join(";");
-        const h = c.heading
-          ? `<h3 style="${hStyleParts}">${escHtml(String(c.heading))}</h3>`
-          : "";
-        const b = c.body
-          ? `<p style="${bStyleParts}">${escHtml(String(c.body)).replace(/\n\n/g, `</p><p style="${bStyleParts}">`).replace(/\n/g, "<br>")}</p>`
-          : "";
-        return `<div class="ps-comp-text">${h}${b}</div>`;
-      }
-      return "";
-    })
-    .join("");
-
-  const photoFirst = photoSide !== "right";
-  const flex = photoFirst
-    ? `${imgEl}<div class="ps-content" style="flex:1;min-width:200px;">${compsHtml}</div>`
-    : `<div class="ps-content" style="flex:1;min-width:200px;">${compsHtml}</div>${imgEl}`;
-
-  return `<section class="block block-photo-split"${bsAttr} data-block-id="${escHtml(block.id)}" data-block-type="${escHtml(block.type)}">
-        <div style="display:flex;gap:2rem;align-items:center;flex-wrap:wrap;">${flex}</div>
-      </section>`;
-}
-
 function renderRsvpForm({
   block,
   cfg,
@@ -220,43 +146,6 @@ function renderRsvpForm({
             <button class="rsvp-submit" type="submit" style="background:var(--site-accent)">Send RSVP</button>
           </form>
           <div id="${msgId}" role="alert" aria-live="polite" style="display:none;margin-top:1.25rem;text-align:center;font-size:0.9375rem;padding:0.875rem 1rem;border-radius:6px;"></div>
-        </section>`;
-}
-
-function renderStoryTimeline({ block, cfg, bsAttr }: RenderContext): string {
-  const heading = String(cfg.heading ?? "Our Story");
-  const events = Array.isArray(cfg.events)
-    ? (cfg.events as Array<{
-        date?: string;
-        title?: string;
-        description?: string;
-        imageUrl?: string;
-      }>)
-    : [];
-  return `
-        <section class="block block-story-timeline"${bsAttr} aria-label="Our Story" data-block-id="${escHtml(block.id)}" data-block-type="${escHtml(block.type)}">
-          ${heading ? `<h2 class="section-heading">${escHtml(heading)}</h2><div class="section-rule" aria-hidden="true"></div>` : ""}
-          ${
-            events.length > 0
-              ? `<div class="story-timeline" style="position:relative;max-width:600px;margin:0 auto;">
-                <div style="position:absolute;left:50%;top:0;bottom:0;width:2px;background:var(--site-border,#e0dbd4);transform:translateX(-50%);" aria-hidden="true"></div>
-                ${events
-                  .map((ev, i) => {
-                    const isLeft = i % 2 === 0;
-                    return `<div style="display:flex;justify-content:${isLeft ? "flex-start" : "flex-end"};margin-bottom:2rem;position:relative;">
-                    <div style="position:absolute;left:50%;top:0.75rem;width:12px;height:12px;background:var(--site-accent);border-radius:50%;transform:translateX(-50%);z-index:1;" aria-hidden="true"></div>
-                    <div style="width:44%;background:#fff;border:1px solid var(--site-border,#e0dbd4);border-radius:8px;padding:0.875rem 1rem;">
-                      ${ev.imageUrl ? `<img src="${escHtml(ev.imageUrl)}" alt="" loading="lazy" style="width:100%;border-radius:4px;margin-bottom:0.5rem;object-fit:cover;max-height:120px;" />` : ""}
-                      ${ev.date ? `<p style="font-size:0.75rem;color:var(--site-accent);font-weight:600;margin:0 0 0.25rem;text-transform:uppercase;letter-spacing:0.05em;">${escHtml(ev.date)}</p>` : ""}
-                      ${ev.title ? `<h4 style="margin:0 0 0.25rem;font-size:0.95rem;">${escHtml(ev.title)}</h4>` : ""}
-                      ${ev.description ? `<p style="margin:0;font-size:0.85rem;color:#6b6560;">${escHtml(ev.description)}</p>` : ""}
-                    </div>
-                  </div>`;
-                  })
-                  .join("")}
-              </div>`
-              : placeholder("Timeline events will appear here once added.")
-          }
         </section>`;
 }
 
@@ -311,13 +200,13 @@ const BLOCK_RENDERERS: Record<string, BlockRenderer> = {
   "travel-section": renderTravelSectionReact,
   travel: renderTravelReact,
   spacer: renderSpacerReact,
-  "photo-split": renderPhotoSplit,
+  "photo-split": renderPhotoSplitReact,
   "multi-text": renderMultiTextReact,
   "media-video": renderMediaVideoReact,
   gallery: renderGalleryReact,
   "info-card": renderInfoCardReact,
   "rsvp-form": renderRsvpForm,
-  "story-timeline": renderStoryTimeline,
+  "story-timeline": renderStoryTimelineReact,
   "guest-book": renderGuestBook,
 };
 

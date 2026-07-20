@@ -46,11 +46,7 @@ exports[`renderBlock output parity > renders 'media-video' identically 1`] = `"<
 
 exports[`renderBlock output parity > renders 'multi-text' identically 1`] = `"<section class="block block-text" data-block-id="blk-multi-text" data-block-type="multi-text"><div class="text-body"><p class="placeholder-text">Text will appear here once added.</p></div></section>"`;
 
-exports[`renderBlock output parity > renders 'photo-split' identically 1`] = `
-"<section class="block block-photo-split" data-block-id="blk-photo-split" data-block-type="photo-split">
-        <div style="display:flex;gap:2rem;align-items:center;flex-wrap:wrap;"><div class="ps-content" style="flex:1;min-width:200px;"></div></div>
-      </section>"
-`;
+exports[`renderBlock output parity > renders 'photo-split' identically 1`] = `"<section class="block block-photo-split" data-block-id="blk-photo-split" data-block-type="photo-split"><div style="display:flex;gap:2rem;align-items:center;flex-wrap:wrap"><div class="ps-content" style="flex:1;min-width:200px"></div></div></section>"`;
 
 exports[`renderBlock output parity > renders 'registry-card' identically 1`] = `"<section class="block block-registry-card" aria-label="Gift registry" data-block-id="blk-registry-card" data-block-type="registry-card"><h2 class="section-heading">Registry</h2><div class="section-rule" aria-hidden="true"></div><p class="placeholder-text">Registry details will appear here once added.</p></section>"`;
 
@@ -137,13 +133,7 @@ exports[`renderBlock output parity > renders 'schedule' identically 1`] = `"<sec
 
 exports[`renderBlock output parity > renders 'spacer' identically 1`] = `"<div class="block-spacer" style="height:60px" aria-hidden="true"></div>"`;
 
-exports[`renderBlock output parity > renders 'story-timeline' identically 1`] = `
-"
-        <section class="block block-story-timeline" aria-label="Our Story" data-block-id="blk-story-timeline" data-block-type="story-timeline">
-          <h2 class="section-heading">Our Story</h2><div class="section-rule" aria-hidden="true"></div>
-          <p class="placeholder-text">Timeline events will appear here once added.</p>
-        </section>"
-`;
+exports[`renderBlock output parity > renders 'story-timeline' identically 1`] = `"<section class="block block-story-timeline" aria-label="Our Story" data-block-id="blk-story-timeline" data-block-type="story-timeline"><h2 class="section-heading">Our Story</h2><div class="section-rule" aria-hidden="true"></div><p class="placeholder-text">Timeline events will appear here once added.</p></section>"`;
 
 exports[`renderBlock output parity > renders 'text' identically 1`] = `"<section class="block block-text" data-block-id="blk-text" data-block-type="text"><div class="text-body"><p class="placeholder-text">Story text will appear here once added.</p></div></section>"`;
 

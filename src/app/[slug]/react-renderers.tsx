@@ -32,6 +32,12 @@ import {
   GalleryView,
 } from "@/app/components/blocks/presentational/mediaGridViews";
 import {
+  PhotoSplitView,
+  StoryTimelineView,
+  type PsComponent,
+  type StoryTimelineEvent,
+} from "@/app/components/blocks/presentational/mediaSplitViews";
+import {
   RegistryCardView,
   HotelCardView,
   InfoCardView,
@@ -157,6 +163,109 @@ export function renderFunFactsReact(ctx: RenderContext): string {
       cardStyle={String(cfg.cardStyle ?? "card")}
       labelVariant="fun-facts"
       items={items}
+      style={style}
+      data={data}
+    />,
+  );
+}
+
+export function renderPhotoSplitReact(ctx: RenderContext): string {
+  const { block, cfg } = ctx;
+  const photo = (cfg.photo as Record<string, unknown> | undefined) ?? {};
+  const flatImageUrl = cfg.imageUrl as string | undefined;
+  const photoUrl = String(flatImageUrl ?? photo.url ?? "");
+  const photoSide = String(cfg.photoSide ?? cfg.layout ?? "left");
+  const cropVal = String(photo.crop ?? "center");
+  const wPx = photo.widthPx ? `${Number(photo.widthPx)}px` : "auto";
+  const hPx = photo.heightPx ? `${Number(photo.heightPx)}px` : "auto";
+  const offsetX = Number(photo.offsetX ?? 0);
+  const marginDir = photoSide === "right" ? "right" : "left";
+  const photoContainerStyle: CSSProperties = {
+    flexShrink: 0,
+    ...(offsetX !== 0
+      ? marginDir === "right"
+        ? { marginRight: `${offsetX}px` }
+        : { marginLeft: `${offsetX}px` }
+      : {}),
+  };
+  const imgStyle: CSSProperties = {
+    width: wPx,
+    height: hPx,
+    maxWidth: "100%",
+    objectFit: "cover",
+    objectPosition: cropVal,
+    borderRadius: "8px",
+  };
+  const flatHeading = cfg.heading as string | undefined;
+  const flatBody =
+    (cfg.body as string | undefined) ?? (cfg.text as string | undefined);
+  const rawComponents =
+    (cfg.components as Array<Record<string, unknown>>) ??
+    (flatHeading || flatBody
+      ? [{ type: "text", heading: flatHeading ?? "", body: flatBody ?? "" }]
+      : []);
+  const components: PsComponent[] = rawComponents.map((c) => {
+    if (c.type === "text") {
+      const hStyle: CSSProperties = {
+        margin: "0 0 0.6rem",
+        ...(c.headingSize ? { fontSize: String(c.headingSize) } : {}),
+        ...(c.headingAlign
+          ? { textAlign: c.headingAlign as CSSProperties["textAlign"] }
+          : {}),
+        ...(c.headingBold ? { fontWeight: 700 } : {}),
+        ...(c.headingItalic ? { fontStyle: "italic" } : {}),
+        ...(c.headingUnderline ? { textDecoration: "underline" } : {}),
+      };
+      const bStyle: CSSProperties = {
+        margin: "0",
+        lineHeight: "1.75",
+        ...(c.bodySize ? { fontSize: String(c.bodySize) } : {}),
+        ...(c.bodyAlign
+          ? { textAlign: c.bodyAlign as CSSProperties["textAlign"] }
+          : {}),
+        ...(c.bodyBold ? { fontWeight: 700 } : {}),
+        ...(c.bodyItalic ? { fontStyle: "italic" } : {}),
+        ...(c.bodyUnderline ? { textDecoration: "underline" } : {}),
+      };
+      return {
+        isText: true,
+        heading: c.heading ? String(c.heading) : "",
+        body: c.body ? String(c.body) : "",
+        hStyle,
+        bStyle,
+      };
+    }
+    return { isText: false };
+  });
+  const { style, data } = blockContainerStyle(cfg);
+  return renderReactToHtml(
+    <PhotoSplitView
+      id={block.id}
+      type={block.type}
+      photoUrl={photoUrl}
+      photoContainerStyle={photoContainerStyle}
+      imgStyle={imgStyle}
+      photoFirst={photoSide !== "right"}
+      components={components}
+      style={style}
+      data={data}
+    />,
+  );
+}
+
+export function renderStoryTimelineReact(ctx: RenderContext): string {
+  const { block, cfg } = ctx;
+  const heading = String(cfg.heading ?? "Our Story");
+  const events = Array.isArray(cfg.events)
+    ? (cfg.events as StoryTimelineEvent[])
+    : [];
+  const { style, data } = blockContainerStyle(cfg);
+  return renderReactToHtml(
+    <StoryTimelineView
+      id={block.id}
+      type={block.type}
+      heading={heading}
+      events={events}
       style={style}
       data={data}
     />,
