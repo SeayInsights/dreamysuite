@@ -10,6 +10,7 @@ import {
   placeholder,
   mediaPlaceholder,
 } from "./helpers";
+import { renderHomeHeroReact } from "./react-renderers";
 
 // ── Block renderers ───────────────────────────────────────────────────────────
 //
@@ -33,35 +34,6 @@ export interface RenderContext {
 }
 
 type BlockRenderer = (ctx: RenderContext) => string;
-
-function renderHomeHero({
-  block,
-  settings,
-  bsAttr,
-  cnt,
-}: RenderContext): string {
-  const title = cnt(
-    "couple",
-    "coupleNames",
-    settings?.eventName ?? "Our Special Day",
-  );
-  const date = cnt("date", "dateText", settings?.eventDate ?? "");
-  const location = cnt(
-    "location",
-    "locationText",
-    settings?.eventLocation ?? "",
-  );
-  return `
-        <section class="block block-home-hero"${bsAttr} aria-label="Hero" data-block-id="${escHtml(block.id)}" data-block-type="${escHtml(block.type)}">
-          <div class="hero-inner">
-            <p class="hero-eyebrow">We&#39;re getting married</p>
-            <h1 class="hero-title" data-lang-field="couple">${escHtml(title)}</h1>
-            ${date ? `<p class="hero-date" data-lang-field="date">${escHtml(date)}</p>` : ""}
-            ${location ? `<p class="hero-location" data-lang-field="location">${escHtml(location)}</p>` : ""}
-            <div class="hero-divider" aria-hidden="true">&#10038;</div>
-          </div>
-        </section>`;
-}
 
 function renderHeader({ block, cfg, bsAttr, cnt }: RenderContext): string {
   const text = cnt(
@@ -1286,8 +1258,8 @@ function renderUnknown({ block }: RenderContext): string {
 
 /** Registry: block type → renderer. */
 const BLOCK_RENDERERS: Record<string, BlockRenderer> = {
-  "home-hero": renderHomeHero,
-  couple: renderHomeHero,
+  "home-hero": renderHomeHeroReact,
+  couple: renderHomeHeroReact,
   header: renderHeader,
   text: renderText,
   countdown: renderCountdown,
