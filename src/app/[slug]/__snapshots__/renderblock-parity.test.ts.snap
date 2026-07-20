@@ -64,13 +64,7 @@ exports[`renderBlock output parity > renders 'guest-book' identically 1`] = `
         </section>"
 `;
 
-exports[`renderBlock output parity > renders 'header' identically 1`] = `
-"
-        <section class="block block-header" data-block-id="blk-header" data-block-type="header">
-          <h2 class="section-heading">Section</h2>
-          <div class="section-rule" aria-hidden="true"></div>
-        </section>"
-`;
+exports[`renderBlock output parity > renders 'header' identically 1`] = `"<section class="block block-header" data-block-id="blk-header" data-block-type="header"><h2 class="section-heading">Section</h2><div class="section-rule" aria-hidden="true"></div></section>"`;
 
 exports[`renderBlock output parity > renders 'home-hero' identically 1`] = `"<section class="block block-home-hero" aria-label="Hero" data-block-id="blk-home-hero" data-block-type="home-hero"><div class="hero-inner"><p class="hero-eyebrow">We&#x27;re getting married</p><h1 class="hero-title" data-lang-field="couple">Jane &amp; John</h1><p class="hero-date" data-lang-field="date">June 2026</p><p class="hero-location" data-lang-field="location">Napa, CA</p><div class="hero-divider" aria-hidden="true">✶</div></div></section>"`;
 
@@ -209,15 +203,7 @@ exports[`renderBlock output parity > renders 'story-timeline' identically 1`] = 
         </section>"
 `;
 
-exports[`renderBlock output parity > renders 'text' identically 1`] = `
-"
-        <section class="block block-text" data-block-id="blk-text" data-block-type="text">
-          
-          <div class="text-body">
-            <p class="placeholder-text">Story text will appear here once added.</p>
-          </div>
-        </section>"
-`;
+exports[`renderBlock output parity > renders 'text' identically 1`] = `"<section class="block block-text" data-block-id="blk-text" data-block-type="text"><div class="text-body"><p class="placeholder-text">Story text will appear here once added.</p></div></section>"`;
 
 exports[`renderBlock output parity > renders 'tidbits' identically 1`] = `
 "

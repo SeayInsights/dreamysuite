@@ -18,6 +18,8 @@ import {
   renderRegistryCardReact,
   renderHotelCardReact,
   renderInfoCardReact,
+  renderHeaderReact,
+  renderTextReact,
 } from "./react-renderers";
 
 // ── Block renderers ───────────────────────────────────────────────────────────
@@ -42,80 +44,6 @@ export interface RenderContext {
 }
 
 type BlockRenderer = (ctx: RenderContext) => string;
-
-function renderHeader({ block, cfg, bsAttr, cnt }: RenderContext): string {
-  const text = cnt(
-    "title",
-    "title",
-    cnt("heading", "heading", cnt("text", "text", "Section")),
-  );
-  const tSize = cfg.titleSize as string | undefined;
-  const tAlign = cfg.titleAlign as string | undefined;
-  const tBold = !!cfg.titleBold;
-  const tItalic = !!cfg.titleItalic;
-  const tUnder = !!cfg.titleUnderline;
-  const titleStyle = [
-    tSize ? `font-size:${escHtml(tSize)}` : "",
-    tAlign ? `text-align:${escHtml(tAlign)}` : "",
-    tBold ? "font-weight:700" : "",
-    tItalic ? "font-style:italic" : "",
-    tUnder ? "text-decoration:underline" : "",
-  ]
-    .filter(Boolean)
-    .join(";");
-  return `
-        <section class="block block-header"${bsAttr} data-block-id="${escHtml(block.id)}" data-block-type="${escHtml(block.type)}">
-          <h2 class="section-heading"${titleStyle ? ` style="${titleStyle}"` : ""}>${escHtml(text)}</h2>
-          <div class="section-rule" aria-hidden="true"></div>
-        </section>`;
-}
-
-function renderText({
-  block,
-  cfg,
-  bsAttr,
-  pageContent,
-}: RenderContext): string {
-  // contentKey lets a text block pull from the content tab by key
-  const contentKey = cfg.contentKey as string | undefined;
-  const heading = contentKey
-    ? String(pageContent?.[`${contentKey}_heading`] ?? cfg.heading ?? "")
-    : String(cfg.heading ?? "");
-  const body = contentKey
-    ? String(pageContent?.[contentKey] ?? cfg.body ?? "")
-    : String(cfg.body ?? cfg.text ?? cfg.content ?? "");
-  // Heading style
-  const hSize = cfg.headingSize as string | undefined;
-  const hAlign = cfg.headingAlign as string | undefined;
-  const hStyle = [
-    hSize ? `font-size:${escHtml(hSize)}` : "",
-    hAlign ? `text-align:${escHtml(hAlign)}` : "",
-    cfg.headingBold ? "font-weight:700" : "",
-    cfg.headingItalic ? "font-style:italic" : "",
-    cfg.headingUnderline ? "text-decoration:underline" : "",
-  ]
-    .filter(Boolean)
-    .join(";");
-  // Body style
-  const bSize = cfg.bodySize as string | undefined;
-  const bAlign = cfg.bodyAlign as string | undefined;
-  const bStyle = [
-    bSize ? `font-size:${escHtml(bSize)}` : "",
-    bAlign ? `text-align:${escHtml(bAlign)}` : "",
-    cfg.bodyBold ? "font-weight:700" : "",
-    cfg.bodyItalic ? "font-style:italic" : "",
-    cfg.bodyUnderline ? "text-decoration:underline" : "",
-  ]
-    .filter(Boolean)
-    .join(";");
-  return `
-        <section class="block block-text"${bsAttr} data-block-id="${escHtml(block.id)}" data-block-type="${escHtml(block.type)}">
-          ${heading ? `<h2 class="section-heading"${hStyle ? ` style="${hStyle}"` : ""}${contentKey ? ` data-lang-field="${escHtml(contentKey)}_heading"` : ""}>${escHtml(heading)}</h2><div class="section-rule" aria-hidden="true"></div>` : ""}
-          <div class="text-body"${bStyle ? ` style="${bStyle}"` : ""}>
-            ${body ? `<p${contentKey ? ` data-lang-field="${escHtml(contentKey)}"` : ""}>${nl2br(body)}</p>` : placeholder("Story text will appear here once added.")}
-          </div>
-        </section>`;
-}
 
 function renderCountdown({
   block,
@@ -1124,8 +1052,8 @@ function renderUnknown({ block }: RenderContext): string {
 const BLOCK_RENDERERS: Record<string, BlockRenderer> = {
   "home-hero": renderHomeHeroReact,
   couple: renderHomeHeroReact,
-  header: renderHeader,
-  text: renderText,
+  header: renderHeaderReact,
+  text: renderTextReact,
   countdown: renderCountdown,
   schedule: renderSchedule,
   faq: renderFaq,

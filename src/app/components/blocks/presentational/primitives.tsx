@@ -1,8 +1,20 @@
+import { Fragment } from "react";
+
 /**
  * Shared presentational primitives for published (React-SSR) block views.
  * These mirror the string helpers in `[slug]/helpers.ts` (placeholder,
- * mediaPlaceholder) so migrated blocks emit byte-equivalent markup.
+ * mediaPlaceholder, nl2br) so migrated blocks emit byte-equivalent markup.
  */
+
+/** Mirror of helpers.nl2br(): render text with newlines as <br> line breaks. */
+export function Multiline({ text }: { text: string }) {
+  return text.split("\n").map((line, i) => (
+    <Fragment key={i}>
+      {i > 0 ? <br /> : null}
+      {line}
+    </Fragment>
+  ));
+}
 
 /** Mirror of helpers.placeholder(). */
 export function Placeholder({ text }: { text: string }) {

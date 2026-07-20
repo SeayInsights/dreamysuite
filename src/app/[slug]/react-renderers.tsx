@@ -1,11 +1,13 @@
 import type { RenderContext } from "./renderers";
 import { renderReactToHtml } from "@/lib/blocks/reactToHtml";
-import { blockContainerStyle } from "@/lib/blocks/container";
+import { blockContainerStyle, fieldTextStyle } from "@/lib/blocks/container";
 import { safeUrl } from "./helpers";
 import { HomeHeroView } from "@/app/components/blocks/presentational/HomeHeroView";
 import { SpacerView } from "@/app/components/blocks/presentational/SpacerView";
 import { YoutubeView } from "@/app/components/blocks/presentational/YoutubeView";
 import { VenueMapView } from "@/app/components/blocks/presentational/VenueMapView";
+import { HeaderView } from "@/app/components/blocks/presentational/HeaderView";
+import { TextView } from "@/app/components/blocks/presentational/TextView";
 import {
   RegistryCardView,
   HotelCardView,
@@ -48,6 +50,51 @@ export function renderHomeHeroReact(ctx: RenderContext): string {
 export function renderSpacerReact(ctx: RenderContext): string {
   const height = Math.max(0, Math.min(400, Number(ctx.cfg.height ?? 60)));
   return renderReactToHtml(<SpacerView height={height} />);
+}
+
+export function renderHeaderReact(ctx: RenderContext): string {
+  const { block, cfg, cnt } = ctx;
+  const text = cnt(
+    "title",
+    "title",
+    cnt("heading", "heading", cnt("text", "text", "Section")),
+  );
+  const { style, data } = blockContainerStyle(cfg);
+  return renderReactToHtml(
+    <HeaderView
+      id={block.id}
+      type={block.type}
+      text={text}
+      titleStyle={fieldTextStyle(cfg, "title")}
+      style={style}
+      data={data}
+    />,
+  );
+}
+
+export function renderTextReact(ctx: RenderContext): string {
+  const { block, cfg, pageContent } = ctx;
+  const contentKey = cfg.contentKey as string | undefined;
+  const heading = contentKey
+    ? String(pageContent?.[`${contentKey}_heading`] ?? cfg.heading ?? "")
+    : String(cfg.heading ?? "");
+  const body = contentKey
+    ? String(pageContent?.[contentKey] ?? cfg.body ?? "")
+    : String(cfg.body ?? cfg.text ?? cfg.content ?? "");
+  const { style, data } = blockContainerStyle(cfg);
+  return renderReactToHtml(
+    <TextView
+      id={block.id}
+      type={block.type}
+      heading={heading}
+      body={body}
+      contentKey={contentKey}
+      headingStyle={fieldTextStyle(cfg, "heading")}
+      bodyStyle={fieldTextStyle(cfg, "body")}
+      style={style}
+      data={data}
+    />,
+  );
 }
 
 export function renderYoutubeReact(ctx: RenderContext): string {
