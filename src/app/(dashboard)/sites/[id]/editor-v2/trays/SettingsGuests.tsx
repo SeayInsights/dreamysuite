@@ -407,7 +407,10 @@ export function GuestsPanel({ onBack }: { onBack: () => void }) {
   const siteName = settings?.eventName ?? "Site";
 
   return createPortal(
-    <div className="fixed inset-0 z-[var(--z-modal)] flex flex-col bg-background text-foreground">
+    <div
+      data-tray-portal
+      className="fixed inset-0 z-[var(--z-modal)] flex flex-col bg-background text-foreground"
+    >
       <div className="flex h-12 shrink-0 items-center gap-3 border-b border-border px-4">
         <button
           type="button"
