@@ -153,6 +153,97 @@ export function renderFunFactsReact(ctx: RenderContext): string {
   );
 }
 
+export function renderScheduleReact(ctx: RenderContext): string {
+  const { block, cfg, pageContent } = ctx;
+  const cfgEvents = Array.isArray(cfg.events)
+    ? (cfg.events as TimelineEvent[])
+    : [];
+  const legacyEvents = Array.isArray(pageContent?.events)
+    ? (pageContent.events as TimelineEvent[])
+    : [];
+  const events = cfgEvents.length > 0 ? cfgEvents : legacyEvents;
+  const { style, data } = blockContainerStyle(cfg);
+  return renderReactToHtml(
+    <TimelineView
+      id={block.id}
+      type={block.type}
+      heading="The Day"
+      placeholderText="The wedding day schedule will appear here once added in the Content tab."
+      events={events}
+      style={style}
+      data={data}
+    />,
+  );
+}
+
+export function renderFaqReact(ctx: RenderContext): string {
+  const { block, cfg, pageContent } = ctx;
+  const cfgItems = Array.isArray(cfg.items)
+    ? (cfg.items as Array<{ question?: string; answer?: string }>)
+    : [];
+  const legacyItems = Array.isArray(pageContent?.questions)
+    ? (pageContent.questions as FaqItem[])
+    : [];
+  const questions: FaqItem[] =
+    cfgItems.length > 0
+      ? cfgItems.map((i) => ({ q: i.question, a: i.answer }))
+      : legacyItems;
+  const { style, data } = blockContainerStyle(cfg);
+  return renderReactToHtml(
+    <FaqView
+      id={block.id}
+      type={block.type}
+      heading="Questions & Answers"
+      placeholderText="Frequently asked questions will appear here once added in the Content tab."
+      questions={questions}
+      style={style}
+      data={data}
+    />,
+  );
+}
+
+export function renderTravelSectionReact(ctx: RenderContext): string {
+  const { block, cfg, pageContent } = ctx;
+  const title = (cfg.title as string | undefined) ?? "Getting There";
+  const cfgItems = Array.isArray(cfg.items) ? (cfg.items as TravelItem[]) : [];
+  const legacyItems = Array.isArray(pageContent?.travelItems)
+    ? (pageContent.travelItems as TravelItem[])
+    : [];
+  const items = cfgItems.length > 0 ? cfgItems : legacyItems;
+  const { style, data } = blockContainerStyle(cfg);
+  return renderReactToHtml(
+    <TravelView
+      id={block.id}
+      type={block.type}
+      heading={title}
+      placeholderText="Travel details will appear here once added in the Content tab."
+      items={items}
+      multilineBody
+      style={style}
+      data={data}
+    />,
+  );
+}
+
+export function renderTravelReact(ctx: RenderContext): string {
+  const { block, cfg } = ctx;
+  const title = (cfg.title as string | undefined) ?? "Getting There";
+  const items = Array.isArray(cfg.items) ? (cfg.items as TravelItem[]) : [];
+  const { style, data } = blockContainerStyle(cfg);
+  return renderReactToHtml(
+    <TravelView
+      id={block.id}
+      type={block.type}
+      heading={title}
+      placeholderText="Travel details will appear here once added in the Content tab."
+      items={items}
+      multilineBody
+      style={style}
+      data={data}
+    />,
+  );
+}
+
 export function renderMultiTextReact(ctx: RenderContext): string {
   const { block, cfg, pageContent } = ctx;
   const mode = String(cfg.mode ?? "text");
