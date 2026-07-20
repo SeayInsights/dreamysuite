@@ -6,6 +6,11 @@ import { HomeHeroView } from "@/app/components/blocks/presentational/HomeHeroVie
 import { SpacerView } from "@/app/components/blocks/presentational/SpacerView";
 import { YoutubeView } from "@/app/components/blocks/presentational/YoutubeView";
 import { VenueMapView } from "@/app/components/blocks/presentational/VenueMapView";
+import {
+  RegistryCardView,
+  HotelCardView,
+  InfoCardView,
+} from "@/app/components/blocks/presentational/cards";
 
 /**
  * React-SSR block renderers. Each function resolves inputs from the shared
@@ -87,6 +92,74 @@ export function renderVenueMapReact(ctx: RenderContext): string {
       note={note}
       address={address}
       mapSrc={mapSrc}
+      style={style}
+      data={data}
+    />,
+  );
+}
+
+export function renderRegistryCardReact(ctx: RenderContext): string {
+  const { block, cfg, accent } = ctx;
+  const url = cfg.url as string | undefined;
+  const { style, data } = blockContainerStyle(cfg);
+  return renderReactToHtml(
+    <RegistryCardView
+      id={block.id}
+      type={block.type}
+      name={cfg.name as string | undefined}
+      note={cfg.note as string | undefined}
+      href={url ? safeUrl(url) : undefined}
+      accent={accent}
+      style={style}
+      data={data}
+    />,
+  );
+}
+
+export function renderHotelCardReact(ctx: RenderContext): string {
+  const { block, cfg, accent } = ctx;
+  const url = cfg.url as string | undefined;
+  const { style, data } = blockContainerStyle(cfg);
+  return renderReactToHtml(
+    <HotelCardView
+      id={block.id}
+      type={block.type}
+      name={cfg.name as string | undefined}
+      address={cfg.address as string | undefined}
+      note={cfg.note as string | undefined}
+      href={url ? safeUrl(url) : undefined}
+      accent={accent}
+      style={style}
+      data={data}
+    />,
+  );
+}
+
+export function renderInfoCardReact(ctx: RenderContext): string {
+  const { block, cfg, accent } = ctx;
+  const variant = String(cfg.variant ?? "registry");
+  const isHotel = variant === "hotel";
+  const name = String(
+    cfg.name ?? cfg.title ?? (isHotel ? "Hotel" : "Registry"),
+  );
+  const url = cfg.url as string | undefined;
+  const { style, data } = blockContainerStyle(cfg);
+  return renderReactToHtml(
+    <InfoCardView
+      id={block.id}
+      type={block.type}
+      // Real "&" -> React escapes to &amp; (matches the legacy raw-inserted h2).
+      headingDisplay={isHotel ? "Hotels & Accommodations" : "Registry"}
+      // Literal "&amp;" -> React escapes to &amp;amp;, reproducing the legacy
+      // escHtml(headingLabel) double-escape. Faithful, not a new bug.
+      ariaLabel={isHotel ? "Hotels &amp; Accommodations" : "Registry"}
+      name={name}
+      address={cfg.address as string | undefined}
+      href={url ? safeUrl(url) : undefined}
+      imageUrl={cfg.imageUrl as string | undefined}
+      imgMaxWidth={isHotel ? "200px" : "120px"}
+      linkLabel={isHotel ? "Book Now" : "View Registry"}
+      accent={accent}
       style={style}
       data={data}
     />,
