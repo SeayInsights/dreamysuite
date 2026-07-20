@@ -7,7 +7,7 @@
  */
 
 import { test, expect } from '@playwright/test';
-import { STORAGE_STATE } from './auth.setup';
+import { STORAGE_STATE } from './auth-state';
 import { waitForHydration, waitForSave } from './helpers/navigation';
 
 test.use({ storageState: STORAGE_STATE });
