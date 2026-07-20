@@ -492,3 +492,148 @@ describe("render unification — batch D (tidbits, fun-facts)", () => {
     expect(normalizeHtml(actual)).toBe(normalizeHtml(expectedLegacy));
   });
 });
+
+describe("render unification — multi-text (5 sub-modes)", () => {
+  it("schedule mode matches the legacy string output", () => {
+    const expectedLegacy = `
+  <section class="block block-schedule" aria-label="Schedule" data-block-id="mt1" data-block-type="multi-text">
+    <h2 class="section-heading">Our Day</h2>
+    <div class="section-rule" aria-hidden="true"></div>
+    <ol class="timeline">
+             <li class="timeline-item">
+               <span class="timeline-time">2pm</span>
+               <div class="timeline-content">
+                 <strong>Ceremony</strong>
+                 <p style="font-size:0.85em;color:var(--site-muted);margin:0.2rem 0 0;">June 1</p>
+                 <p style="font-size:0.85em;color:var(--site-muted);margin:0.2rem 0 0;">📍 Chapel</p>
+                 <p>Come early</p>
+               </div>
+             </li>
+         </ol>
+  </section>`;
+    const actual = renderBlock(
+      makeBlock("mt1", "multi-text", { mode: "schedule", title: "Our Day" }),
+      settings,
+      {
+        events: [
+          {
+            time: "2pm",
+            name: "Ceremony",
+            date: "June 1",
+            location: "Chapel",
+            description: "Come early",
+          },
+        ],
+      },
+    );
+    expect(normalizeHtml(actual)).toBe(normalizeHtml(expectedLegacy));
+  });
+
+  it("faq mode matches the legacy string output", () => {
+    const expectedLegacy = `
+  <section class="block block-faq" aria-label="Frequently asked questions" data-block-id="mt2" data-block-type="multi-text">
+    <h2 class="section-heading">Questions &amp; Answers</h2>
+    <div class="section-rule" aria-hidden="true"></div>
+    <dl class="faq-list">
+           <dt class="faq-question">When?</dt><dd class="faq-answer">June</dd>
+         </dl>
+  </section>`;
+    const actual = renderBlock(
+      makeBlock("mt2", "multi-text", { mode: "faq" }),
+      settings,
+      {
+        questions: [{ q: "When?", a: "June" }],
+      },
+    );
+    expect(normalizeHtml(actual)).toBe(normalizeHtml(expectedLegacy));
+  });
+
+  it("tidbits mode (title override) matches the legacy string output", () => {
+    const expectedLegacy = `
+  <section class="block block-tidbits" aria-label="Fun facts" data-block-id="mt3" data-block-type="multi-text">
+    <h2 class="section-heading">Facts</h2><div class="section-rule" aria-hidden="true"></div>
+    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:1rem;">
+           <div style="background:#fff;border:1px solid var(--site-border);border-radius:12px;padding:1.25rem;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,0.05);color:var(--block-text,var(--text));">
+             <div style="font-size:2rem;margin-bottom:0.5rem;">🌟</div>
+             <strong style="display:block;margin-bottom:0.375rem;">Note</strong>
+             <p style="color:var(--block-text,var(--site-muted));font-size:0.9375rem;margin:0;">Text</p>
+           </div>
+         </div>
+  </section>`;
+    const actual = renderBlock(
+      makeBlock("mt3", "multi-text", {
+        mode: "tidbits",
+        title: "Facts",
+        columns: "2",
+      }),
+      settings,
+      { tidbits: [{ icon: "🌟", title: "Note", body: "Text" }] },
+    );
+    expect(normalizeHtml(actual)).toBe(normalizeHtml(expectedLegacy));
+  });
+
+  it("travel mode matches the legacy string output", () => {
+    const expectedLegacy = `
+  <section class="block block-travel" aria-label="Travel information" data-block-id="mt4" data-block-type="multi-text">
+    <h2 class="section-heading">Getting There</h2>
+    <div class="section-rule" aria-hidden="true"></div>
+          <div style="margin-bottom:1.5rem;">
+            <h3 style="font-size:1.05rem;margin:0 0 0.4rem;">Flights</h3>
+            <p style="margin:0 0 0.4rem;line-height:1.7;">Fly to X</p>
+            <a href="https://book.example.com" target="_blank" rel="noopener noreferrer" style="color:var(--site-accent)">Book</a>
+          </div>
+  </section>`;
+    const actual = renderBlock(
+      makeBlock("mt4", "multi-text", { mode: "travel" }),
+      settings,
+      {
+        travelItems: [
+          {
+            heading: "Flights",
+            body: "Fly to X",
+            linkLabel: "Book",
+            linkUrl: "https://book.example.com",
+          },
+        ],
+      },
+    );
+    expect(normalizeHtml(actual)).toBe(normalizeHtml(expectedLegacy));
+  });
+
+  it("text mode (single heading/body, multiline) matches the legacy string output", () => {
+    const expectedLegacy = `
+    <section class="block block-text" data-block-id="mt5" data-block-type="multi-text">
+      <h2 class="section-heading" style="font-size:2rem">Title</h2><div class="section-rule" aria-hidden="true"></div>
+      <div class="text-body"><p>a<br>b</p></div>
+    </section>`;
+    const actual = renderBlock(
+      makeBlock("mt5", "multi-text", {
+        heading: "Title",
+        headingSize: "2rem",
+        body: "a\nb",
+      }),
+      settings,
+    );
+    expect(normalizeHtml(actual)).toBe(normalizeHtml(expectedLegacy));
+  });
+
+  it("text mode (textItems array) matches the legacy string output", () => {
+    const expectedLegacy = `
+    <section class="block block-text" data-block-id="mt6" data-block-type="multi-text">
+      <h2 class="section-heading">H1</h2><div class="section-rule" aria-hidden="true"></div>
+      <div class="text-body"><p>B1</p></div>
+      <h2 class="section-heading">H2</h2>
+      <div class="text-body" style="margin-top:1.5rem"><p>B2</p></div>
+    </section>`;
+    const actual = renderBlock(
+      makeBlock("mt6", "multi-text", {
+        textItems: [
+          { heading: "H1", body: "B1" },
+          { heading: "H2", body: "B2" },
+        ],
+      }),
+      settings,
+    );
+    expect(normalizeHtml(actual)).toBe(normalizeHtml(expectedLegacy));
+  });
+});

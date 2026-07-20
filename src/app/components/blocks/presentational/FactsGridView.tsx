@@ -22,6 +22,8 @@ export interface FactsGridViewProps {
   cardStyle: string; // "flat" | "bordered" | "card"
   labelVariant: "tidbits" | "fun-facts";
   items: FactsGridItem[];
+  /** When set, used as the heading instead of "Fun Facts" (multi-text tidbits mode). */
+  titleOverride?: string;
   style?: CSSProperties;
   data?: Record<string, string>;
 }
@@ -88,6 +90,7 @@ export function FactsGridView({
   cardStyle,
   labelVariant,
   items,
+  titleOverride,
   style,
   data,
 }: FactsGridViewProps) {
@@ -95,6 +98,11 @@ export function FactsGridView({
   const cardCss = cardCssFor(cardStyle);
   const labelStyle =
     labelVariant === "fun-facts" ? FUNFACTS_LABEL_STYLE : TIDBITS_LABEL_STYLE;
+  const heading = titleOverride
+    ? titleOverride
+    : showTitle
+      ? "Fun Facts"
+      : null;
   return (
     <section
       className="block block-tidbits"
@@ -104,9 +112,9 @@ export function FactsGridView({
       data-block-id={id}
       data-block-type={type}
     >
-      {showTitle ? (
+      {heading !== null ? (
         <>
-          <h2 className="section-heading">Fun Facts</h2>
+          <h2 className="section-heading">{heading}</h2>
           <div className="section-rule" aria-hidden="true"></div>
         </>
       ) : null}
