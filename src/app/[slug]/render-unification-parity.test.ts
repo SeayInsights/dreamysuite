@@ -836,3 +836,85 @@ describe("render unification — media 1 (countdown, video, media-video)", () =>
     expect(normalizeHtml(actual)).toBe(normalizeHtml(expectedLegacy));
   });
 });
+
+describe("render unification — media 2 (images, gallery)", () => {
+  it("images (grid-2) matches the legacy string output", () => {
+    const expectedLegacy = `
+        <section class="block block-images" aria-label="Photo gallery" data-block-id="im1" data-block-type="images">
+          <div class="image-grid" style="display:grid;grid-template-columns:repeat(2,1fr);gap:0.75rem;">
+                   <img src="https://a.jpg" alt="Wedding photo 1" loading="lazy" width="800" height="600" class="gallery-img" style="object-position:center center;border-radius:12px" /><img src="https://b.jpg" alt="Wedding photo 2" loading="lazy" width="800" height="600" class="gallery-img" style="object-position:center center;border-radius:12px" />
+                 </div>
+        </section>`;
+    const actual = renderBlock(
+      makeBlock("im1", "images", {
+        layout: "grid-2",
+        urls: ["https://a.jpg", "https://b.jpg"],
+        photoRadius: "12px",
+      }),
+      settings,
+    );
+    expect(normalizeHtml(actual)).toBe(normalizeHtml(expectedLegacy));
+  });
+
+  it("images (masonry, per-image extra style) matches the legacy string output", () => {
+    const expectedLegacy = `
+        <section class="block block-images" aria-label="Photo gallery" data-block-id="im3" data-block-type="images">
+          <div class="image-grid" style="columns:2;column-gap:0.75rem">
+                   <img src="https://a.jpg" alt="Wedding photo 1" loading="lazy" width="800" height="600" class="gallery-img" style="object-position:center center;border-radius:8px;break-inside:avoid;aspect-ratio:auto" />
+                 </div>
+        </section>`;
+    const actual = renderBlock(
+      makeBlock("im3", "images", {
+        layout: "masonry",
+        urls: ["https://a.jpg"],
+      }),
+      settings,
+    );
+    expect(normalizeHtml(actual)).toBe(normalizeHtml(expectedLegacy));
+  });
+
+  it("images (empty, named slot) renders the placeholder", () => {
+    const expectedLegacy = `
+        <section class="block block-images" aria-label="Photo gallery" data-block-id="im2" data-block-type="images">
+          <p class="placeholder-text">Photos for &quot;gallery1&quot; will appear here.</p>
+        </section>`;
+    const actual = renderBlock(
+      makeBlock("im2", "images", { imageSlot: "gallery1" }),
+      settings,
+    );
+    expect(normalizeHtml(actual)).toBe(normalizeHtml(expectedLegacy));
+  });
+
+  it("gallery (grid, 2 images) matches the legacy string output", () => {
+    const expectedLegacy = `
+        <section class="block block-gallery" aria-label="Photo gallery" data-block-id="gl1" data-block-type="gallery">
+          <div class="image-grid" style="display:grid;gap:0.5rem;grid-template-columns:1fr 1fr;">
+                 <img src="https://x.jpg" alt="Gallery photo 1" loading="lazy" style="width:100%;border-radius:8px;object-fit:cover;" /><img src="https://y.jpg" alt="Gallery photo 2" loading="lazy" style="width:100%;border-radius:8px;object-fit:cover;" />
+               </div>
+        </section>`;
+    const actual = renderBlock(
+      makeBlock("gl1", "gallery", {
+        urls: ["https://x.jpg", "https://y.jpg"],
+      }),
+      settings,
+    );
+    expect(normalizeHtml(actual)).toBe(normalizeHtml(expectedLegacy));
+  });
+
+  it("gallery (split mode) matches the legacy string output", () => {
+    const expectedLegacy = `
+        <section class="block block-gallery" data-block-id="gl2" data-block-type="gallery">
+          <div style="display:flex;gap:1.5rem;align-items:center;flex-wrap:wrap;"><div style="flex:1;"><img src="https://s.jpg" alt="" loading="lazy" style="width:100%;border-radius:8px;object-fit:cover;" /></div><div style="flex:1;"><h3>Us</h3><p>hi</p></div></div>
+        </section>`;
+    const actual = renderBlock(
+      makeBlock("gl2", "gallery", {
+        layout: "split",
+        imageUrl: "https://s.jpg",
+        heading: "Us",
+        body: "hi",
+      }),
+      settings,
+    );
+    expect(normalizeHtml(actual)).toBe(normalizeHtml(expectedLegacy));
+  });
+});

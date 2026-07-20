@@ -3,7 +3,7 @@ import {
   type SiteSettingRow,
   type BlockTransMap,
 } from "./types";
-import { escHtml, nl2br, placeholder } from "./helpers";
+import { escHtml, placeholder } from "./helpers";
 import {
   renderHomeHeroReact,
   renderSpacerReact,
@@ -24,6 +24,8 @@ import {
   renderCountdownReact,
   renderVideoReact,
   renderMediaVideoReact,
+  renderImagesReact,
+  renderGalleryReact,
 } from "./react-renderers";
 
 // ── Block renderers ───────────────────────────────────────────────────────────
@@ -89,96 +91,6 @@ function renderRsvp({ block, cfg, bsAttr, siteSlug }: RenderContext): string {
             <button class="rsvp-submit" type="submit" style="background:var(--site-accent)">Send RSVP</button>
           </form>
           <div id="${msgId}" role="alert" aria-live="polite" style="display:none;margin-top:1.25rem;text-align:center;font-size:0.9375rem;padding:0.875rem 1rem;border-radius:6px;"></div>
-        </section>`;
-}
-
-function renderImages({ block, cfg, bsAttr }: RenderContext): string {
-  const urls = cfg.urls as string[] | undefined;
-  const imageSlot = cfg.imageSlot as string | undefined;
-  const focusX = escHtml(String(cfg.imageFocusX ?? "center"));
-  const focusY = escHtml(String(cfg.imageFocusY ?? "center"));
-  const objPos = `${focusX} ${focusY}`;
-  const phRaw = Number(cfg.photoHeight);
-  const photoH = phRaw > 0 ? `${phRaw}px` : null;
-  const pwRaw = Number(cfg.photoWidth);
-  const photoW = pwRaw > 0 ? `${pwRaw}px` : null;
-  const photoR = escHtml(String(cfg.photoRadius ?? "8px"));
-  const photoBW = String(cfg.photoBorder ?? "0");
-  const photoBColor = escHtml(String(cfg.photoBorderColor ?? "#e0dbd4"));
-  const imgStyle = [
-    `object-position:${objPos}`,
-    `border-radius:${photoR}`,
-    photoBW !== "0" ? `border:${escHtml(photoBW)} solid ${photoBColor}` : "",
-    photoH ? `height:${photoH}` : "",
-    photoW ? `width:${photoW}` : "",
-  ]
-    .filter(Boolean)
-    .join(";");
-  const offsetXRaw = Number(cfg.galleryOffsetX ?? 0);
-  const layout = String(cfg.layout ?? "grid-3");
-  const wrapperStyleParts: string[] = [];
-  if (offsetXRaw !== 0)
-    wrapperStyleParts.push(`transform:translateX(${offsetXRaw}px)`);
-  switch (layout) {
-    case "grid-2":
-      wrapperStyleParts.push(
-        "display:grid",
-        "grid-template-columns:repeat(2,1fr)",
-        "gap:0.75rem",
-      );
-      break;
-    case "masonry":
-      wrapperStyleParts.push("columns:2", "column-gap:0.75rem");
-      break;
-    case "filmstrip":
-      wrapperStyleParts.push(
-        "display:flex",
-        "overflow-x:auto",
-        "gap:0.75rem",
-        "scroll-snap-type:x mandatory",
-        "-webkit-overflow-scrolling:touch",
-        "padding-bottom:0.5rem",
-      );
-      break;
-    case "full-bleed":
-      wrapperStyleParts.push(
-        "display:grid",
-        "grid-template-columns:1fr",
-        "gap:0.5rem",
-      );
-      break;
-    case "featured-grid":
-      wrapperStyleParts.push(
-        "display:grid",
-        "grid-template-columns:2fr 1fr",
-        "gap:0.75rem",
-      );
-      break;
-    // grid-3: rely on .image-grid CSS default
-  }
-  const wrapperStyle = wrapperStyleParts.join(";");
-  const getImgExtraStyle = (idx: number): string => {
-    if (layout === "masonry") return ";break-inside:avoid;aspect-ratio:auto";
-    if (layout === "filmstrip")
-      return ";height:220px;width:auto;max-width:none;flex-shrink:0;scroll-snap-align:start";
-    if (layout === "featured-grid" && idx === 0 && (urls?.length ?? 0) > 1)
-      return ";grid-row:span 2;height:100%";
-    if (layout === "full-bleed") return ";width:100%;height:auto";
-    return "";
-  };
-  return `
-        <section class="block block-images"${bsAttr} aria-label="Photo gallery" data-block-id="${escHtml(block.id)}" data-block-type="${escHtml(block.type)}">
-          ${
-            urls && urls.length > 0
-              ? `<div class="image-grid"${wrapperStyle ? ` style="${wrapperStyle}"` : ""}>
-                   ${urls.map((u, i) => `<img src="${escHtml(u)}" alt="Wedding photo ${i + 1}" loading="lazy" width="800" height="600" class="gallery-img" style="${imgStyle}${getImgExtraStyle(i)}" />`).join("")}
-                 </div>`
-              : placeholder(
-                  imageSlot
-                    ? `Photos for "${escHtml(imageSlot)}" will appear here.`
-                    : "Photos will appear here once uploaded.",
-                )
-          }
         </section>`;
 }
 
@@ -256,40 +168,6 @@ function renderPhotoSplit({ block, cfg, bsAttr }: RenderContext): string {
   return `<section class="block block-photo-split"${bsAttr} data-block-id="${escHtml(block.id)}" data-block-type="${escHtml(block.type)}">
         <div style="display:flex;gap:2rem;align-items:center;flex-wrap:wrap;">${flex}</div>
       </section>`;
-}
-
-function renderGallery({ block, cfg, bsAttr }: RenderContext): string {
-  const layout = String(cfg.layout ?? "grid");
-
-  if (layout === "split") {
-    const imageUrl = cfg.imageUrl as string | undefined;
-    const heading = String(cfg.heading ?? "");
-    const body = String(cfg.body ?? "");
-    const imageLayout = String(cfg.imageLayout ?? "left");
-    const isRight = imageLayout === "right";
-    const imgEl = imageUrl
-      ? `<div style="flex:1;"><img src="${escHtml(imageUrl)}" alt="" loading="lazy" style="width:100%;border-radius:8px;object-fit:cover;" /></div>`
-      : `<div style="flex:1;background:#f5f0eb;border-radius:8px;height:200px;display:flex;align-items:center;justify-content:center;color:#9b8e85;">Photo</div>`;
-    const textEl = `<div style="flex:1;">${heading ? `<h3>${escHtml(heading)}</h3>` : ""}${body ? `<p>${nl2br(body)}</p>` : placeholder("Content will appear here.")}</div>`;
-    return `
-        <section class="block block-gallery"${bsAttr} data-block-id="${escHtml(block.id)}" data-block-type="${escHtml(block.type)}">
-          <div style="display:flex;gap:1.5rem;align-items:center;flex-wrap:wrap;${isRight ? "flex-direction:row-reverse;" : ""}">${imgEl}${textEl}</div>
-        </section>`;
-  }
-
-  const urls = Array.isArray(cfg.urls) ? (cfg.urls as string[]) : [];
-  const imageSlot = cfg.imageUrl as string | undefined;
-  const images = imageSlot ? [imageSlot] : urls;
-  return `
-        <section class="block block-gallery"${bsAttr} aria-label="Photo gallery" data-block-id="${escHtml(block.id)}" data-block-type="${escHtml(block.type)}">
-          ${
-            images.length > 0
-              ? `<div class="image-grid" style="display:grid;gap:0.5rem;grid-template-columns:${images.length > 1 ? "1fr 1fr" : "1fr"};">
-                 ${images.map((u, i) => `<img src="${escHtml(u)}" alt="Gallery photo ${i + 1}" loading="lazy" style="width:100%;border-radius:8px;object-fit:cover;" />`).join("")}
-               </div>`
-              : placeholder("Images will appear here once added.")
-          }
-        </section>`;
 }
 
 function renderRsvpForm({
@@ -422,7 +300,7 @@ const BLOCK_RENDERERS: Record<string, BlockRenderer> = {
   schedule: renderScheduleReact,
   faq: renderFaqReact,
   rsvp: renderRsvp,
-  images: renderImages,
+  images: renderImagesReact,
   video: renderVideoReact,
   youtube: renderYoutubeReact,
   "registry-card": renderRegistryCardReact,
@@ -436,7 +314,7 @@ const BLOCK_RENDERERS: Record<string, BlockRenderer> = {
   "photo-split": renderPhotoSplit,
   "multi-text": renderMultiTextReact,
   "media-video": renderMediaVideoReact,
-  gallery: renderGallery,
+  gallery: renderGalleryReact,
   "info-card": renderInfoCardReact,
   "rsvp-form": renderRsvpForm,
   "story-timeline": renderStoryTimeline,

@@ -10,12 +10,7 @@ exports[`renderBlock output parity > renders 'faq' identically 1`] = `"<section 
 
 exports[`renderBlock output parity > renders 'fun-facts' identically 1`] = `"<section class="block block-tidbits" aria-label="Fun facts" data-block-id="blk-fun-facts" data-block-type="fun-facts"><h2 class="section-heading">Fun Facts</h2><div class="section-rule" aria-hidden="true"></div><p class="placeholder-text">Fun facts will appear here once added in the Content tab.</p></section>"`;
 
-exports[`renderBlock output parity > renders 'gallery' identically 1`] = `
-"
-        <section class="block block-gallery" aria-label="Photo gallery" data-block-id="blk-gallery" data-block-type="gallery">
-          <p class="placeholder-text">Images will appear here once added.</p>
-        </section>"
-`;
+exports[`renderBlock output parity > renders 'gallery' identically 1`] = `"<section class="block block-gallery" aria-label="Photo gallery" data-block-id="blk-gallery" data-block-type="gallery"><p class="placeholder-text">Images will appear here once added.</p></section>"`;
 
 exports[`renderBlock output parity > renders 'guest-book' identically 1`] = `
 "
@@ -43,12 +38,7 @@ exports[`renderBlock output parity > renders 'home-hero' identically 1`] = `"<se
 
 exports[`renderBlock output parity > renders 'hotel-card' identically 1`] = `"<section class="block block-hotel-card" aria-label="Hotel and accommodations" data-block-id="blk-hotel-card" data-block-type="hotel-card"><h2 class="section-heading">Hotels &amp; Accommodations</h2><div class="section-rule" aria-hidden="true"></div><p class="placeholder-text">Hotel and accommodation details will appear here.</p></section>"`;
 
-exports[`renderBlock output parity > renders 'images' identically 1`] = `
-"
-        <section class="block block-images" aria-label="Photo gallery" data-block-id="blk-images" data-block-type="images">
-          <p class="placeholder-text">Photos will appear here once uploaded.</p>
-        </section>"
-`;
+exports[`renderBlock output parity > renders 'images' identically 1`] = `"<section class="block block-images" aria-label="Photo gallery" data-block-id="blk-images" data-block-type="images"><p class="placeholder-text">Photos will appear here once uploaded.</p></section>"`;
 
 exports[`renderBlock output parity > renders 'info-card' identically 1`] = `"<section class="block block-info-card" aria-label="Registry" data-block-id="blk-info-card" data-block-type="info-card"><h2 class="section-heading">Registry</h2><div class="section-rule" aria-hidden="true"></div><div class="info-card" style="text-align:center"><p class="card-title">Registry</p></div></section>"`;
 
