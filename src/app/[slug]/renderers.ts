@@ -15,6 +15,9 @@ import {
   renderSpacerReact,
   renderYoutubeReact,
   renderVenueMapReact,
+  renderRegistryCardReact,
+  renderHotelCardReact,
+  renderInfoCardReact,
 } from "./react-renderers";
 
 // ── Block renderers ───────────────────────────────────────────────────────────
@@ -413,58 +416,6 @@ function renderVideo({ block, settings, cfg }: RenderContext): string {
         <section class="block block-video" aria-label="Video" data-block-id="${escHtml(block.id)}" data-block-type="${escHtml(block.type)}" style="position:relative;">
           ${url ? `<video src="${escHtml(safeUrl(url))}" controls class="media-element" aria-label="Wedding video"></video>` : mediaPlaceholder("Video")}
           ${overlayHtml}
-        </section>`;
-}
-
-function renderRegistryCard({
-  block,
-  cfg,
-  accent,
-  bsAttr,
-}: RenderContext): string {
-  const name = cfg.name as string | undefined;
-  const url = cfg.url as string | undefined;
-  const note = cfg.note as string | undefined;
-  return `
-        <section class="block block-registry-card"${bsAttr} aria-label="Gift registry" data-block-id="${escHtml(block.id)}" data-block-type="${escHtml(block.type)}">
-          <h2 class="section-heading">Registry</h2>
-          <div class="section-rule" aria-hidden="true"></div>
-          ${
-            name || url
-              ? `<div class="info-card">
-                   ${name ? `<p class="card-title">${escHtml(name)}</p>` : ""}
-                   ${note ? `<p class="card-note">${escHtml(note)}</p>` : ""}
-                   ${url ? `<a href="${escHtml(safeUrl(url))}" target="_blank" rel="noopener noreferrer" class="card-link" style="color:${escHtml(accent)}">View Registry</a>` : ""}
-                 </div>`
-              : placeholder("Registry details will appear here once added.")
-          }
-        </section>`;
-}
-
-function renderHotelCard({
-  block,
-  cfg,
-  accent,
-  bsAttr,
-}: RenderContext): string {
-  const name = cfg.name as string | undefined;
-  const address = cfg.address as string | undefined;
-  const url = cfg.url as string | undefined;
-  const note = cfg.note as string | undefined;
-  return `
-        <section class="block block-hotel-card"${bsAttr} aria-label="Hotel and accommodations" data-block-id="${escHtml(block.id)}" data-block-type="${escHtml(block.type)}">
-          <h2 class="section-heading">Hotels &amp; Accommodations</h2>
-          <div class="section-rule" aria-hidden="true"></div>
-          ${
-            name || address
-              ? `<div class="info-card">
-                   ${name ? `<p class="card-title">${escHtml(name)}</p>` : ""}
-                   ${address ? `<p class="card-note">${escHtml(address)}</p>` : ""}
-                   ${note ? `<p class="card-note">${escHtml(note)}</p>` : ""}
-                   ${url ? `<a href="${escHtml(safeUrl(url))}" target="_blank" rel="noopener noreferrer" class="card-link" style="color:${escHtml(accent)}">Book Now</a>` : ""}
-                 </div>`
-              : placeholder("Hotel and accommodation details will appear here.")
-          }
         </section>`;
 }
 
@@ -1049,30 +1000,6 @@ function renderGallery({ block, cfg, bsAttr }: RenderContext): string {
         </section>`;
 }
 
-function renderInfoCard({ block, cfg, accent, bsAttr }: RenderContext): string {
-  const variant = String(cfg.variant ?? "registry");
-  const name = String(
-    cfg.name ?? cfg.title ?? (variant === "hotel" ? "Hotel" : "Registry"),
-  );
-  const address = cfg.address as string | undefined;
-  const url = cfg.url as string | undefined;
-  const imageUrl = cfg.imageUrl as string | undefined;
-  const headingLabel =
-    variant === "hotel" ? "Hotels &amp; Accommodations" : "Registry";
-  const linkLabel = variant === "hotel" ? "Book Now" : "View Registry";
-  return `
-        <section class="block block-info-card"${bsAttr} aria-label="${escHtml(headingLabel)}" data-block-id="${escHtml(block.id)}" data-block-type="${escHtml(block.type)}">
-          <h2 class="section-heading">${headingLabel}</h2>
-          <div class="section-rule" aria-hidden="true"></div>
-          <div class="info-card" style="text-align:center;">
-            ${imageUrl ? `<img src="${escHtml(imageUrl)}" alt="${escHtml(name)}" loading="lazy" style="max-width:${variant === "hotel" ? "200px" : "120px"};border-radius:8px;margin-bottom:0.75rem;" />` : ""}
-            <p class="card-title">${escHtml(name)}</p>
-            ${address ? `<p class="card-note">${escHtml(address)}</p>` : ""}
-            ${url ? `<a href="${escHtml(safeUrl(url))}" target="_blank" rel="noopener noreferrer" class="card-link" style="color:${escHtml(accent)}">${linkLabel}</a>` : ""}
-          </div>
-        </section>`;
-}
-
 function renderRsvpForm({
   block,
   cfg,
@@ -1206,8 +1133,8 @@ const BLOCK_RENDERERS: Record<string, BlockRenderer> = {
   images: renderImages,
   video: renderVideo,
   youtube: renderYoutubeReact,
-  "registry-card": renderRegistryCard,
-  "hotel-card": renderHotelCard,
+  "registry-card": renderRegistryCardReact,
+  "hotel-card": renderHotelCardReact,
   "venue-map": renderVenueMapReact,
   tidbits: renderTidbits,
   "fun-facts": renderFunFacts,
@@ -1218,7 +1145,7 @@ const BLOCK_RENDERERS: Record<string, BlockRenderer> = {
   "multi-text": renderMultiText,
   "media-video": renderMediaVideo,
   gallery: renderGallery,
-  "info-card": renderInfoCard,
+  "info-card": renderInfoCardReact,
   "rsvp-form": renderRsvpForm,
   "story-timeline": renderStoryTimeline,
   "guest-book": renderGuestBook,

@@ -43,18 +43,23 @@ function normalizeHtml(html: string): string {
       return `<${tag}${toks.length ? " " + toks.join(" ") : ""}${sc ? "/" : ""}>`;
     },
   );
-  return attrSorted
-    .replace(/>\s+</g, "><")
-    .replace(/&#(\d+);/g, (_m, n: string) => String.fromCodePoint(Number(n)))
-    .replace(/&#x([0-9a-f]+);/gi, (_m, h: string) =>
-      String.fromCodePoint(parseInt(h, 16)),
-    )
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;|&apos;/g, "'")
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    .replace(/&amp;/g, "&")
-    .trim();
+  return (
+    attrSorted
+      .replace(/>\s+</g, "><")
+      // React drops trailing semicolons in style values (`x:y;` -> `x:y`); the
+      // hand-written string kept them. Strip a trailing `;` before a closing quote.
+      .replace(/;"/g, '"')
+      .replace(/&#(\d+);/g, (_m, n: string) => String.fromCodePoint(Number(n)))
+      .replace(/&#x([0-9a-f]+);/gi, (_m, h: string) =>
+        String.fromCodePoint(parseInt(h, 16)),
+      )
+      .replace(/&quot;/g, '"')
+      .replace(/&#39;|&apos;/g, "'")
+      .replace(/&lt;/g, "<")
+      .replace(/&gt;/g, ">")
+      .replace(/&amp;/g, "&")
+      .trim()
+  );
 }
 
 const settings = {
@@ -226,6 +231,103 @@ describe("render unification — batch A (spacer, youtube, venue-map)", () => {
           <p class="placeholder-text">Venue address and map will appear here.</p>
         </section>`;
     const actual = renderBlock(makeBlock("vm2", "venue-map", {}), settings);
+    expect(normalizeHtml(actual)).toBe(normalizeHtml(expectedLegacy));
+  });
+});
+
+describe("render unification — batch B (cards)", () => {
+  it("registry-card (populated) matches the legacy string output", () => {
+    const expectedLegacy = `
+        <section class="block block-registry-card" aria-label="Gift registry" data-block-id="rc1" data-block-type="registry-card">
+          <h2 class="section-heading">Registry</h2>
+          <div class="section-rule" aria-hidden="true"></div>
+          <div class="info-card">
+                   <p class="card-title">Our Registry</p>
+                   <p class="card-note">Thanks!</p>
+                   <a href="https://registry.example.com" target="_blank" rel="noopener noreferrer" class="card-link" style="color:#B8921A">View Registry</a>
+                 </div>
+        </section>`;
+    const actual = renderBlock(
+      makeBlock("rc1", "registry-card", {
+        name: "Our Registry",
+        url: "https://registry.example.com",
+        note: "Thanks!",
+      }),
+      settings,
+    );
+    expect(normalizeHtml(actual)).toBe(normalizeHtml(expectedLegacy));
+  });
+
+  it("registry-card (empty) renders the placeholder", () => {
+    const expectedLegacy = `
+        <section class="block block-registry-card" aria-label="Gift registry" data-block-id="rc2" data-block-type="registry-card">
+          <h2 class="section-heading">Registry</h2>
+          <div class="section-rule" aria-hidden="true"></div>
+          <p class="placeholder-text">Registry details will appear here once added.</p>
+        </section>`;
+    const actual = renderBlock(makeBlock("rc2", "registry-card", {}), settings);
+    expect(normalizeHtml(actual)).toBe(normalizeHtml(expectedLegacy));
+  });
+
+  it("hotel-card (populated) matches the legacy string output", () => {
+    const expectedLegacy = `
+        <section class="block block-hotel-card" aria-label="Hotel and accommodations" data-block-id="hc1" data-block-type="hotel-card">
+          <h2 class="section-heading">Hotels &amp; Accommodations</h2>
+          <div class="section-rule" aria-hidden="true"></div>
+          <div class="info-card">
+                   <p class="card-title">Grand Hotel</p>
+                   <p class="card-note">1 Main St</p>
+                   <p class="card-note">Block rate</p>
+                   <a href="https://hotel.example.com" target="_blank" rel="noopener noreferrer" class="card-link" style="color:#B8921A">Book Now</a>
+                 </div>
+        </section>`;
+    const actual = renderBlock(
+      makeBlock("hc1", "hotel-card", {
+        name: "Grand Hotel",
+        address: "1 Main St",
+        url: "https://hotel.example.com",
+        note: "Block rate",
+      }),
+      settings,
+    );
+    expect(normalizeHtml(actual)).toBe(normalizeHtml(expectedLegacy));
+  });
+
+  it("info-card (hotel variant, with image) matches the legacy string output", () => {
+    const expectedLegacy = `
+        <section class="block block-info-card" aria-label="Hotels &amp;amp; Accommodations" data-block-id="ic1" data-block-type="info-card">
+          <h2 class="section-heading">Hotels &amp; Accommodations</h2>
+          <div class="section-rule" aria-hidden="true"></div>
+          <div class="info-card" style="text-align:center;">
+            <img src="https://img.example.com/i.jpg" alt="Seaside Inn" loading="lazy" style="max-width:200px;border-radius:8px;margin-bottom:0.75rem;" />
+            <p class="card-title">Seaside Inn</p>
+            <p class="card-note">2 Beach Rd</p>
+            <a href="https://inn.example.com" target="_blank" rel="noopener noreferrer" class="card-link" style="color:#B8921A">Book Now</a>
+          </div>
+        </section>`;
+    const actual = renderBlock(
+      makeBlock("ic1", "info-card", {
+        variant: "hotel",
+        name: "Seaside Inn",
+        address: "2 Beach Rd",
+        url: "https://inn.example.com",
+        imageUrl: "https://img.example.com/i.jpg",
+      }),
+      settings,
+    );
+    expect(normalizeHtml(actual)).toBe(normalizeHtml(expectedLegacy));
+  });
+
+  it("info-card (registry variant, defaults) matches the legacy string output", () => {
+    const expectedLegacy = `
+        <section class="block block-info-card" aria-label="Registry" data-block-id="ic2" data-block-type="info-card">
+          <h2 class="section-heading">Registry</h2>
+          <div class="section-rule" aria-hidden="true"></div>
+          <div class="info-card" style="text-align:center;">
+            <p class="card-title">Registry</p>
+          </div>
+        </section>`;
+    const actual = renderBlock(makeBlock("ic2", "info-card", {}), settings);
     expect(normalizeHtml(actual)).toBe(normalizeHtml(expectedLegacy));
   });
 });
