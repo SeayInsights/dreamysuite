@@ -3,6 +3,7 @@ import { getEnv } from "@/lib/cloudflare";
 import { safeBlockConfig, safeJsonParse } from "@/lib/validation";
 import { isRateLimited } from "@/lib/rateLimit";
 import { getSiteTypeSettings } from "@/lib/schemas/site-type-settings";
+import { isGuestUnlocked, guestPwCookieName } from "@/lib/api/guest-gate";
 
 function escEmail(s: string): string {
   return s
@@ -102,6 +103,23 @@ export async function GET(
     return jsonResponse(
       { error: { code: "NOT_FOUND", message: "Site not found" } },
       404,
+      false,
+    );
+  }
+
+  // Enforce the guest-password gate before returning any content — the SSR
+  // [slug] route gates the HTML page, and this JSON API must gate equivalently
+  // (previously it returned all pages/blocks/content for a locked site).
+  const pwCookie = req.cookies.get(guestPwCookieName(siteSlug))?.value ?? null;
+  if (!(await isGuestUnlocked(db, site.id, pwCookie))) {
+    return jsonResponse(
+      {
+        error: {
+          code: "PASSWORD_REQUIRED",
+          message: "This site is password protected.",
+        },
+      },
+      401,
       false,
     );
   }
