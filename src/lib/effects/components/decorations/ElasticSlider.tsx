@@ -1,8 +1,7 @@
-// @ts-nocheck
 "use client";
 
 import { animate, motion, useMotionValue, useMotionValueEvent, useTransform } from 'motion/react';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type ReactNode, type PointerEvent } from 'react';
 
 const elasticSliderStyles = `
 .slider-container {
@@ -62,7 +61,7 @@ const elasticSliderStyles = `
 
 const MAX_OVERFLOW = 50;
 
-function decay(value, max) {
+function decay(value: number, max: number) {
   if (max === 0) return 0;
   const entry = value / max;
   const sigmoid = 2 * (1 / (1 + Math.exp(-entry)) - 0.5);
@@ -86,9 +85,19 @@ function VolumeUpIcon() {
   );
 }
 
-function Slider({ defaultValue, startingValue, maxValue, isStepped, stepSize, leftIcon, rightIcon }) {
+interface SliderProps {
+  defaultValue: number;
+  startingValue: number;
+  maxValue: number;
+  isStepped: boolean;
+  stepSize: number;
+  leftIcon: ReactNode;
+  rightIcon: ReactNode;
+}
+
+function Slider({ defaultValue, startingValue, maxValue, isStepped, stepSize, leftIcon, rightIcon }: SliderProps) {
   const [value, setValue] = useState(defaultValue);
-  const sliderRef = useRef(null);
+  const sliderRef = useRef<HTMLDivElement>(null);
   const [region, setRegion] = useState('middle');
   const clientX = useMotionValue(0);
   const overflow = useMotionValue(0);
@@ -107,7 +116,7 @@ function Slider({ defaultValue, startingValue, maxValue, isStepped, stepSize, le
     }
   });
 
-  const handlePointerMove = e => {
+  const handlePointerMove = (e: PointerEvent<HTMLDivElement>) => {
     if (e.buttons > 0 && sliderRef.current) {
       const { left, width } = sliderRef.current.getBoundingClientRect();
       let newValue = startingValue + ((e.clientX - left) / width) * (maxValue - startingValue);
@@ -118,7 +127,7 @@ function Slider({ defaultValue, startingValue, maxValue, isStepped, stepSize, le
     }
   };
 
-  const handlePointerDown = e => {
+  const handlePointerDown = (e: PointerEvent<HTMLDivElement>) => {
     handlePointerMove(e);
     e.currentTarget.setPointerCapture(e.pointerId);
   };

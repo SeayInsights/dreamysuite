@@ -1,7 +1,13 @@
-// @ts-nocheck
 "use client";
 
 import { useRef } from 'react';
+import type React from 'react';
+
+interface SpotlightCardProps {
+  children?: React.ReactNode;
+  className?: string;
+  spotlightColor?: string;
+}
 
 const spotlightCardStyles = `
 .card-spotlight { position:relative; border-radius:1.5rem; border:1px solid #222; background-color:#111; padding:2rem; overflow:hidden; --mouse-x:50%; --mouse-y:50%; --spotlight-color:rgba(255,255,255,0.05); }
@@ -9,16 +15,16 @@ const spotlightCardStyles = `
 .card-spotlight:hover::before,.card-spotlight:focus-within::before { opacity:0.6; }
 `;
 
-const SpotlightCard = ({ children, className = '', spotlightColor = 'rgba(255, 255, 255, 0.25)' }) => {
-  const divRef = useRef(null);
+const SpotlightCard = ({ children, className = '', spotlightColor = 'rgba(255, 255, 255, 0.25)' }: SpotlightCardProps) => {
+  const divRef = useRef<HTMLDivElement>(null);
 
-  const handleMouseMove = e => {
-    const rect = divRef.current.getBoundingClientRect();
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = divRef.current!.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
-    divRef.current.style.setProperty('--mouse-x', `${x}px`);
-    divRef.current.style.setProperty('--mouse-y', `${y}px`);
-    divRef.current.style.setProperty('--spotlight-color', spotlightColor);
+    divRef.current!.style.setProperty('--mouse-x', `${x}px`);
+    divRef.current!.style.setProperty('--mouse-y', `${y}px`);
+    divRef.current!.style.setProperty('--spotlight-color', spotlightColor);
   };
 
   return (

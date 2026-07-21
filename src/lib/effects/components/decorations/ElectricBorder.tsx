@@ -1,4 +1,3 @@
-// @ts-nocheck
 "use client";
 
 const _inject_ElectricBorder_Styles = () => {
@@ -74,7 +73,17 @@ const _inject_ElectricBorder_Styles = () => {
 };
 if (typeof document !== 'undefined') _inject_ElectricBorder_Styles();
 import { useEffect, useRef, useCallback } from 'react';
+import type { CSSProperties, ReactNode } from 'react';
 
+interface ElectricBorderProps {
+  children?: ReactNode;
+  color?: string;
+  speed?: number;
+  chaos?: number;
+  borderRadius?: number;
+  className?: string;
+  style?: CSSProperties;
+}
 
 const ElectricBorder = ({
   children,
@@ -84,20 +93,20 @@ const ElectricBorder = ({
   borderRadius = 24,
   className,
   style
-}) => {
-  const canvasRef = useRef(null);
-  const containerRef = useRef(null);
-  const animationRef = useRef(null);
+}: ElectricBorderProps) => {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const animationRef = useRef<number | null>(null);
   const timeRef = useRef(0);
   const lastFrameTimeRef = useRef(0);
 
   // Noise functions
-  const random = useCallback(x => {
+  const random = useCallback((x: number) => {
     return (Math.sin(x * 12.9898) * 43758.5453) % 1;
   }, []);
 
   const noise2D = useCallback(
-    (x, y) => {
+    (x: number, y: number) => {
       const i = Math.floor(x);
       const j = Math.floor(y);
       const fx = x - i;
@@ -117,7 +126,17 @@ const ElectricBorder = ({
   );
 
   const octavedNoise = useCallback(
-    (x, octaves, lacunarity, gain, baseAmplitude, baseFrequency, time, seed, baseFlatness) => {
+    (
+      x: number,
+      octaves: number,
+      lacunarity: number,
+      gain: number,
+      baseAmplitude: number,
+      baseFrequency: number,
+      time: number,
+      seed: number,
+      baseFlatness: number
+    ) => {
       let y = 0;
       let amplitude = baseAmplitude;
       let frequency = baseFrequency;
@@ -137,7 +156,15 @@ const ElectricBorder = ({
     [noise2D]
   );
 
-  const getCornerPoint = useCallback((centerX, centerY, radius, startAngle, arcLength, progress) => {
+  const getCornerPoint = useCallback(
+    (
+      centerX: number,
+      centerY: number,
+      radius: number,
+      startAngle: number,
+      arcLength: number,
+      progress: number
+    ) => {
     const angle = startAngle + progress * arcLength;
     return {
       x: centerX + radius * Math.cos(angle),
@@ -146,7 +173,7 @@ const ElectricBorder = ({
   }, []);
 
   const getRoundedRectPoint = useCallback(
-    (t, left, top, width, height, radius) => {
+    (t: number, left: number, top: number, width: number, height: number, radius: number) => {
       const straightWidth = width - 2 * radius;
       const straightHeight = height - 2 * radius;
       const cornerArc = (Math.PI * radius) / 2;
@@ -247,7 +274,7 @@ const ElectricBorder = ({
 
     let { width, height } = updateSize();
 
-    const drawElectricBorder = currentTime => {
+    const drawElectricBorder = (currentTime: number) => {
       if (!canvas || !ctx) return;
 
       const deltaTime = (currentTime - lastFrameTimeRef.current) / 1000;

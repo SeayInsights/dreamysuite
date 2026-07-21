@@ -1,12 +1,45 @@
-// @ts-nocheck
 "use client";
 
 import { useEffect, useRef, useState } from 'react';
-import { Canvas, extend, useFrame } from '@react-three/fiber';
+import { Canvas, extend, useFrame, type ThreeElement } from '@react-three/fiber';
 import { useGLTF, useTexture, Environment, Lightformer } from '@react-three/drei';
-import { BallCollider, CuboidCollider, Physics, RigidBody, useRopeJoint, useSphericalJoint } from '@react-three/rapier';
+import { BallCollider, CuboidCollider, Physics, RigidBody, useRopeJoint, useSphericalJoint, type RapierRigidBody } from '@react-three/rapier';
 import { MeshLineGeometry, MeshLineMaterial } from 'meshline';
 import * as THREE from 'three';
+
+declare module '@react-three/fiber' {
+  interface ThreeElements {
+    meshLineGeometry: ThreeElement<typeof MeshLineGeometry>;
+    meshLineMaterial: Omit<ThreeElement<typeof MeshLineMaterial>, 'useMap' | 'args'> & {
+      useMap?: number | boolean;
+      args?: ConstructorParameters<typeof MeshLineMaterial>;
+    };
+  }
+}
+
+type CardGLTF = {
+  nodes: Record<string, THREE.Mesh>;
+  materials: Record<string, THREE.MeshStandardMaterial>;
+};
+
+type LerpedRigidBody = RapierRigidBody & { lerped: THREE.Vector3 };
+
+interface BandProps {
+  maxSpeed?: number;
+  minSpeed?: number;
+  isMobile?: boolean;
+  cardGLB: string;
+  lanyard: string;
+}
+
+interface LanyardProps {
+  position?: [number, number, number];
+  gravity?: [number, number, number];
+  fov?: number;
+  transparent?: boolean;
+  cardGLB?: string;
+  lanyardTexture?: string;
+}
 
 const lanyardStyles = `
 .lanyard-wrapper {
@@ -24,18 +57,18 @@ const lanyardStyles = `
 
 extend({ MeshLineGeometry, MeshLineMaterial });
 
-function Band({ maxSpeed = 50, minSpeed = 0, isMobile = false, cardGLB, lanyard }) {
-  const band = useRef(), fixed = useRef(), j1 = useRef(), j2 = useRef(), j3 = useRef(), card = useRef();
+function Band({ maxSpeed = 50, minSpeed = 0, isMobile = false, cardGLB, lanyard }: BandProps) {
+  const band = useRef<THREE.Mesh<MeshLineGeometry>>(null), fixed = useRef<LerpedRigidBody>(null!), j1 = useRef<LerpedRigidBody>(null!), j2 = useRef<LerpedRigidBody>(null!), j3 = useRef<LerpedRigidBody>(null!), card = useRef<LerpedRigidBody>(null!);
   const vec = new THREE.Vector3(), ang = new THREE.Vector3(), rot = new THREE.Vector3(), dir = new THREE.Vector3();
-  const segmentProps = { type: 'dynamic', canSleep: true, colliders: false, angularDamping: 4, linearDamping: 4 };
-  const { nodes, materials } = useGLTF(cardGLB);
+  const segmentProps = { type: 'dynamic', canSleep: true, colliders: false, angularDamping: 4, linearDamping: 4 } as const;
+  const { nodes, materials } = useGLTF(cardGLB) as unknown as CardGLTF;
   const texture = useTexture(lanyard);
   const [curve] = useState(
     () => new THREE.CatmullRomCurve3([
       new THREE.Vector3(), new THREE.Vector3(), new THREE.Vector3(), new THREE.Vector3()
     ])
   );
-  const [dragged, drag] = useState(false);
+  const [dragged, drag] = useState<THREE.Vector3 | false>(false);
   const [hovered, hover] = useState(false);
 
   useRopeJoint(fixed, j1, [[0, 0, 0], [0, 0, 0], 1]);
@@ -68,10 +101,10 @@ function Band({ maxSpeed = 50, minSpeed = 0, isMobile = false, cardGLB, lanyard 
       curve.points[1].copy(j2.current.lerped);
       curve.points[2].copy(j1.current.lerped);
       curve.points[3].copy(fixed.current.translation());
-      band.current.geometry.setPoints(curve.getPoints(isMobile ? 16 : 32));
+      band.current!.geometry.setPoints(curve.getPoints(isMobile ? 16 : 32));
       ang.copy(card.current.angvel());
       rot.copy(card.current.rotation());
-      card.current.setAngvel({ x: ang.x, y: ang.y - rot.y * 0.25, z: ang.z });
+      (card.current as unknown as { setAngvel(vel: THREE.Vector3Like): void }).setAngvel({ x: ang.x, y: ang.y - rot.y * 0.25, z: ang.z });
     }
   });
 
@@ -92,9 +125,9 @@ function Band({ maxSpeed = 50, minSpeed = 0, isMobile = false, cardGLB, lanyard 
             position={[0, -1.2, -0.05]}
             onPointerOver={() => hover(true)}
             onPointerOut={() => hover(false)}
-            onPointerUp={e => (e.target.releasePointerCapture(e.pointerId), drag(false))}
+            onPointerUp={e => ((e.target as Element).releasePointerCapture(e.pointerId), drag(false))}
             onPointerDown={e => (
-              e.target.setPointerCapture(e.pointerId),
+              (e.target as Element).setPointerCapture(e.pointerId),
               drag(new THREE.Vector3().copy(e.point).sub(vec.copy(card.current.translation())))
             )}
           >
@@ -136,7 +169,7 @@ export default function Lanyard({
   transparent = true,
   cardGLB,
   lanyardTexture
-}) {
+}: LanyardProps) {
   const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth < 768);
 
   useEffect(() => {
