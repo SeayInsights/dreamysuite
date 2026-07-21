@@ -1,8 +1,24 @@
-// @ts-nocheck
 "use client";
 
+import type { ReactNode } from 'react';
 import { useRef, useState } from 'react';
 import { motion, useMotionValue, useSpring } from 'motion/react';
+
+interface TiltedCardProps {
+  imageSrc: string;
+  altText?: string;
+  captionText?: string;
+  containerHeight?: string | number;
+  containerWidth?: string | number;
+  imageHeight?: string | number;
+  imageWidth?: string | number;
+  scaleOnHover?: number;
+  rotateAmplitude?: number;
+  showMobileWarning?: boolean;
+  showTooltip?: boolean;
+  overlayContent?: ReactNode;
+  displayOverlayContent?: boolean;
+}
 
 const tiltedCardStyles = `
 .tilted-card-figure { position:relative; width:100%; height:100%; perspective:800px; display:flex; flex-direction:column; align-items:center; justify-content:center; }
@@ -30,10 +46,10 @@ export default function TiltedCard({
   showTooltip = true,
   overlayContent = null,
   displayOverlayContent = false
-}) {
-  const ref = useRef(null);
-  const x = useMotionValue();
-  const y = useMotionValue();
+}: TiltedCardProps) {
+  const ref = useRef<HTMLElement>(null);
+  const x = useMotionValue(undefined as unknown as number);
+  const y = useMotionValue(undefined as unknown as number);
   const rotateX = useSpring(useMotionValue(0), springValues);
   const rotateY = useSpring(useMotionValue(0), springValues);
   const scale = useSpring(1, springValues);
@@ -41,7 +57,7 @@ export default function TiltedCard({
   const rotateFigcaption = useSpring(0, { stiffness: 350, damping: 30, mass: 1 });
   const [lastY, setLastY] = useState(0);
 
-  function handleMouse(e) {
+  function handleMouse(e: React.MouseEvent<HTMLElement>) {
     if (!ref.current) return;
     const rect = ref.current.getBoundingClientRect();
     const offsetX = e.clientX - rect.left - rect.width / 2;

@@ -1,7 +1,29 @@
-// @ts-nocheck
 "use client";
 
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type MouseEvent } from 'react';
+
+type Gsap = typeof import('gsap')['gsap'];
+
+interface MasonryItem {
+  id: string | number;
+  img: string;
+  url: string;
+  height: number;
+}
+
+type GridItem = MasonryItem & { x: number; y: number; w: number; h: number };
+
+interface MasonryProps {
+  items: MasonryItem[];
+  ease?: string;
+  duration?: number;
+  stagger?: number;
+  animateFrom?: string;
+  scaleOnHover?: boolean;
+  hoverScale?: number;
+  blurToFocus?: boolean;
+  colorShiftOnHover?: boolean;
+}
 
 const masonryStyles = `
 .masonry-list { position:relative; width:100%; height:100%; }
@@ -9,9 +31,9 @@ const masonryStyles = `
 .masonry-item-img { position:relative; background-size:cover; background-position:center center; width:100%; height:100%; text-transform:uppercase; font-size:10px; line-height:10px; border-radius:10px; box-shadow:0px 10px 50px -10px rgba(0,0,0,0.2); }
 `;
 
-const useMedia = (queries, values, defaultValue) => {
+const useMedia = <T,>(queries: string[], values: T[], defaultValue: T): T => {
   const get = () => values[queries.findIndex(q => matchMedia(q).matches)] ?? defaultValue;
-  const [value, setValue] = useState(get);
+  const [value, setValue] = useState<T>(get);
   useEffect(() => {
     const handler = () => setValue(get);
     queries.forEach(q => matchMedia(q).addEventListener('change', handler));
@@ -21,7 +43,7 @@ const useMedia = (queries, values, defaultValue) => {
 };
 
 const useMeasure = () => {
-  const ref = useRef(null);
+  const ref = useRef<HTMLDivElement>(null);
   const [size, setSize] = useState({ width: 0, height: 0 });
   useLayoutEffect(() => {
     if (!ref.current) return;
@@ -29,30 +51,30 @@ const useMeasure = () => {
     ro.observe(ref.current);
     return () => ro.disconnect();
   }, []);
-  return [ref, size];
+  return [ref, size] as const;
 };
 
-const preloadImages = async urls => {
-  await Promise.all(urls.map(src => new Promise(resolve => { const img = new Image(); img.src = src; img.onload = img.onerror = () => resolve(); })));
+const preloadImages = async (urls: string[]) => {
+  await Promise.all(urls.map((src: string) => new Promise<void>(resolve => { const img = new Image(); img.src = src; img.onload = img.onerror = () => resolve(); })));
 };
 
 const Masonry = ({
   items, ease = 'power3.out', duration = 0.6, stagger = 0.05, animateFrom = 'bottom',
   scaleOnHover = true, hoverScale = 0.95, blurToFocus = true, colorShiftOnHover = false
-}) => {
+}: MasonryProps) => {
   const columns = useMedia(
     ['(min-width:1500px)','(min-width:1000px)','(min-width:600px)','(min-width:400px)'],
     [5, 4, 3, 2], 1
   );
   const [containerRef, { width }] = useMeasure();
   const [imagesReady, setImagesReady] = useState(false);
-  const gsapRef = useRef(null);
+  const gsapRef = useRef<Gsap | null>(null);
 
   useEffect(() => {
     import('gsap').then(mod => { gsapRef.current = mod.gsap; });
   }, []);
 
-  const getInitialPosition = item => {
+  const getInitialPosition = (item: GridItem) => {
     const containerRect = containerRef.current?.getBoundingClientRect();
     if (!containerRect) return { x: item.x, y: item.y };
     let direction = animateFrom;
@@ -100,14 +122,14 @@ const Masonry = ({
     hasMounted.current = true;
   }, [grid, imagesReady, stagger, animateFrom, blurToFocus, duration, ease]);
 
-  const handleMouseEnter = (e, item) => {
+  const handleMouseEnter = (e: MouseEvent<HTMLDivElement>, item: GridItem) => {
     const gsap = gsapRef.current;
     if (!gsap) return;
     if (scaleOnHover) gsap.to(`[data-key="${item.id}"]`, { scale: hoverScale, duration: 0.3, ease: 'power2.out' });
     if (colorShiftOnHover) { const overlay = e.currentTarget.querySelector('.color-overlay'); if (overlay) gsap.to(overlay, { opacity: 0.3, duration: 0.3 }); }
   };
 
-  const handleMouseLeave = (e, item) => {
+  const handleMouseLeave = (e: MouseEvent<HTMLDivElement>, item: GridItem) => {
     const gsap = gsapRef.current;
     if (!gsap) return;
     if (scaleOnHover) gsap.to(`[data-key="${item.id}"]`, { scale: 1, duration: 0.3, ease: 'power2.out' });

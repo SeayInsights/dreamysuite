@@ -1,8 +1,19 @@
-// @ts-nocheck
 "use client";
 
 import { motion, useMotionValue, useTransform } from 'motion/react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, type ReactNode } from 'react';
+
+interface CardRotateProps {
+  children?: ReactNode;
+  onSendToBack: () => void;
+  sensitivity: number;
+  disableDrag?: boolean;
+}
+
+interface DragInfo {
+  offset: { x: number; y: number };
+  velocity: { x: number; y: number };
+}
 
 const stackStyles = `
 .stack-container { position:relative; width:100%; height:100%; perspective:600px; }
@@ -13,13 +24,13 @@ const stackStyles = `
 .card-image { width:100%; height:100%; object-fit:cover; pointer-events:none; }
 `;
 
-function CardRotate({ children, onSendToBack, sensitivity, disableDrag = false }) {
+function CardRotate({ children, onSendToBack, sensitivity, disableDrag = false }: CardRotateProps) {
   const x = useMotionValue(0);
   const y = useMotionValue(0);
   const rotateX = useTransform(y, [-100, 100], [60, -60]);
   const rotateY = useTransform(x, [-100, 100], [-60, 60]);
 
-  function handleDragEnd(_, info) {
+  function handleDragEnd(_: MouseEvent | TouchEvent | PointerEvent, info: DragInfo) {
     if (Math.abs(info.offset.x) > sensitivity || Math.abs(info.offset.y) > sensitivity) {
       onSendToBack();
     } else {
@@ -92,7 +103,7 @@ export default function Stack({
     if (cards.length) setStack(cards.map((content, index) => ({ id: index + 1, content })));
   }, [cards]);
 
-  const sendToBack = id => {
+  const sendToBack = (id: number) => {
     setStack(prev => {
       const newStack = [...prev];
       const index = newStack.findIndex(card => card.id === id);

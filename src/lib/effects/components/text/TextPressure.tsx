@@ -1,24 +1,23 @@
-// @ts-nocheck
 "use client";
 
 // Component ported from https://codepen.io/JuanFuentes/full/rgXKGQ
 
 import { useEffect, useRef, useState, useMemo, useCallback } from 'react';
 
-const dist = (a, b) => {
+const dist = (a: { x: number; y: number }, b: { x: number; y: number }) => {
   const dx = b.x - a.x;
   const dy = b.y - a.y;
   return Math.sqrt(dx * dx + dy * dy);
 };
 
-const getAttr = (distance, maxDist, minVal, maxVal) => {
+const getAttr = (distance: number, maxDist: number, minVal: number, maxVal: number) => {
   const val = maxVal - Math.abs((maxVal * distance) / maxDist);
   return Math.max(minVal, val + minVal);
 };
 
-const debounce = (func, delay) => {
-  let timeoutId;
-  return (...args) => {
+const debounce = (func: (...args: unknown[]) => void, delay: number) => {
+  let timeoutId: ReturnType<typeof setTimeout>;
+  return (...args: unknown[]) => {
     clearTimeout(timeoutId);
     timeoutId = setTimeout(() => {
       func.apply(this, args);
@@ -46,9 +45,9 @@ const TextPressure = ({
 
   minFontSize = 24
 }) => {
-  const containerRef = useRef(null);
-  const titleRef = useRef(null);
-  const spansRef = useRef([]);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const titleRef = useRef<HTMLDivElement>(null);
+  const spansRef = useRef<(HTMLSpanElement | null)[]>([]);
 
   const mouseRef = useRef({ x: 0, y: 0 });
   const cursorRef = useRef({ x: 0, y: 0 });
@@ -60,11 +59,11 @@ const TextPressure = ({
   const chars = text.split('');
 
   useEffect(() => {
-    const handleMouseMove = e => {
+    const handleMouseMove = (e: MouseEvent) => {
       cursorRef.current.x = e.clientX;
       cursorRef.current.y = e.clientY;
     };
-    const handleTouchMove = e => {
+    const handleTouchMove = (e: TouchEvent) => {
       const t = e.touches[0];
       cursorRef.current.x = t.clientX;
       cursorRef.current.y = t.clientY;
@@ -119,7 +118,7 @@ const TextPressure = ({
   }, [setSize]);
 
   useEffect(() => {
-    let rafId;
+    let rafId: number;
     const animate = () => {
       mouseRef.current.x += (cursorRef.current.x - mouseRef.current.x) / 15;
       mouseRef.current.y += (cursorRef.current.y - mouseRef.current.y) / 15;
@@ -150,7 +149,7 @@ const TextPressure = ({
             span.style.fontVariationSettings = newFontVariationSettings;
           }
           if (alpha && span.style.opacity !== alphaVal) {
-            span.style.opacity = alphaVal;
+            span.style.opacity = alphaVal as string;
           }
         });
       }
@@ -232,7 +231,7 @@ const TextPressure = ({
         {chars.map((char, i) => (
           <span
             key={i}
-            ref={el => (spansRef.current[i] = el)}
+            ref={el => { spansRef.current[i] = el; }}
             data-char={char}
             style={{
               display: 'inline-block',

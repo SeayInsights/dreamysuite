@@ -1,4 +1,3 @@
-// @ts-nocheck
 "use client";
 
 const _inject_PixelTrail_Styles = () => {
@@ -22,8 +21,10 @@ const _inject_PixelTrail_Styles = () => {
 };
 if (typeof document !== 'undefined') _inject_PixelTrail_Styles();
  
+import type * as React from 'react';
 import { useMemo } from 'react';
 import { Canvas, useThree } from '@react-three/fiber';
+import type { GLProps } from '@react-three/fiber';
 import { shaderMaterial, useTrailTexture } from '@react-three/drei';
 import * as THREE from 'three';
 
@@ -86,7 +87,16 @@ const DotMaterial = shaderMaterial(
   `
 );
 
-function Scene({ gridSize, trailSize, maxAge, interpolate, easingFunction, pixelColor }) {
+interface SceneProps {
+  gridSize: number;
+  trailSize: number;
+  maxAge: number;
+  interpolate: number;
+  easingFunction: (x: number) => number;
+  pixelColor: string;
+}
+
+function Scene({ gridSize, trailSize, maxAge, interpolate, easingFunction, pixelColor }: SceneProps) {
   const size = useThree(s => s.size);
   const viewport = useThree(s => s.viewport);
 
@@ -123,6 +133,19 @@ function Scene({ gridSize, trailSize, maxAge, interpolate, easingFunction, pixel
   );
 }
 
+interface PixelTrailProps {
+  gridSize?: number;
+  trailSize?: number;
+  maxAge?: number;
+  interpolate?: number;
+  easingFunction?: (x: number) => number;
+  canvasProps?: Partial<React.ComponentProps<typeof Canvas>>;
+  glProps?: GLProps;
+  gooeyFilter?: { id: string; strength: number };
+  color?: string;
+  className?: string;
+}
+
 export default function PixelTrail({
   gridSize = 40,
   trailSize = 0.1,
@@ -138,7 +161,7 @@ export default function PixelTrail({
   gooeyFilter,
   color = '#ffffff',
   className = ''
-}) {
+}: PixelTrailProps) {
   return (
     <>
       {gooeyFilter && <GooeyFilter id={gooeyFilter.id} strength={gooeyFilter.strength} />}
