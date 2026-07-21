@@ -1,17 +1,79 @@
-// @ts-nocheck
 /* eslint-disable react-hooks/rules-of-hooks */
  
 "use client";
 
-import { Suspense, useRef, useLayoutEffect, useEffect, useMemo } from 'react';
+import { Suspense, useRef, useLayoutEffect, useEffect, useMemo, type ComponentRef, type ComponentProps } from 'react';
 import Image from 'next/image';
 import { Canvas, useFrame, useLoader, useThree, invalidate } from '@react-three/fiber';
 import { OrbitControls, useGLTF, useFBX, useProgress, Html, Environment, ContactShadows } from '@react-three/drei';
-import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader';
+import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader.js';
 import * as THREE from 'three';
 
+type MeshLike = THREE.Mesh<THREE.BufferGeometry, THREE.Material>;
+type EnvPreset = NonNullable<ComponentProps<typeof Environment>['preset']>;
+
+interface LoaderProps {
+  placeholderSrc?: string;
+}
+
+interface DesktopControlsProps {
+  pivot: THREE.Vector3;
+  min: number;
+  max: number;
+  zoomEnabled: boolean;
+}
+
+interface ModelInnerProps {
+  url: string;
+  xOff: number;
+  yOff: number;
+  pivot: THREE.Vector3;
+  initYaw: number;
+  initPitch: number;
+  minZoom: number;
+  maxZoom: number;
+  enableMouseParallax: boolean;
+  enableManualRotation: boolean;
+  enableHoverRotation: boolean;
+  enableManualZoom: boolean;
+  autoFrame: boolean;
+  fadeIn: boolean;
+  autoRotate: boolean;
+  autoRotateSpeed: number;
+  onLoaded?: () => void;
+}
+
+interface ModelViewerProps {
+  url: string;
+  width?: number | string;
+  height?: number | string;
+  modelXOffset?: number;
+  modelYOffset?: number;
+  defaultRotationX?: number;
+  defaultRotationY?: number;
+  defaultZoom?: number;
+  minZoomDistance?: number;
+  maxZoomDistance?: number;
+  enableMouseParallax?: boolean;
+  enableManualRotation?: boolean;
+  enableHoverRotation?: boolean;
+  enableManualZoom?: boolean;
+  ambientIntensity?: number;
+  keyLightIntensity?: number;
+  fillLightIntensity?: number;
+  rimLightIntensity?: number;
+  environmentPreset?: EnvPreset | 'none';
+  autoFrame?: boolean;
+  placeholderSrc?: string;
+  showScreenshotButton?: boolean;
+  fadeIn?: boolean;
+  autoRotate?: boolean;
+  autoRotateSpeed?: number;
+  onModelLoaded?: () => void;
+}
+
 const isTouch = typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
-const deg2rad = d => (d * Math.PI) / 180;
+const deg2rad = (d: number) => (d * Math.PI) / 180;
 const DECIDE = 8;
 const ROTATE_SPEED = 0.005;
 const INERTIA = 0.925;
@@ -20,7 +82,7 @@ const PARALLAX_EASE = 0.12;
 const HOVER_MAG = deg2rad(6);
 const HOVER_EASE = 0.15;
 
-const Loader = ({ placeholderSrc }) => {
+const Loader = ({ placeholderSrc }: LoaderProps) => {
   const { progress, active } = useProgress();
   if (!active && placeholderSrc) return null;
   return (
@@ -34,8 +96,8 @@ const Loader = ({ placeholderSrc }) => {
   );
 };
 
-const DesktopControls = ({ pivot, min, max, zoomEnabled }) => {
-  const ref = useRef(null);
+const DesktopControls = ({ pivot, min, max, zoomEnabled }: DesktopControlsProps) => {
+  const ref = useRef<ComponentRef<typeof OrbitControls>>(null);
   useFrame(() => ref.current?.target.copy(pivot));
   return (
     <OrbitControls
@@ -68,9 +130,9 @@ const ModelInner = ({
   autoRotate,
   autoRotateSpeed,
   onLoaded
-}) => {
-  const outer = useRef(null);
-  const inner = useRef(null);
+}: ModelInnerProps) => {
+  const outer = useRef<THREE.Group>(null);
+  const inner = useRef<THREE.Group>(null);
   const { camera, gl } = useThree();
 
   const vel = useRef({ x: 0, y: 0 });
@@ -79,7 +141,7 @@ const ModelInner = ({
   const tHov = useRef({ x: 0, y: 0 });
   const cHov = useRef({ x: 0, y: 0 });
 
-  const ext = useMemo(() => url.split('.').pop().toLowerCase(), [url]);
+  const ext = useMemo(() => url.split('.').pop()!.toLowerCase(), [url]);
   const content = useMemo(() => {
     if (ext === 'glb' || ext === 'gltf') return useGLTF(url).scene.clone();
     if (ext === 'fbx') return useFBX(url).clone();
@@ -91,25 +153,25 @@ const ModelInner = ({
   const pivotW = useRef(new THREE.Vector3());
   useLayoutEffect(() => {
     if (!content) return;
-    const g = inner.current;
+    const g = inner.current!;
     g.updateWorldMatrix(true, true);
     const sphere = new THREE.Box3().setFromObject(g).getBoundingSphere(new THREE.Sphere());
     const s = 1 / (sphere.radius * 2);
     g.position.set(-sphere.center.x, -sphere.center.y, -sphere.center.z);
     g.scale.setScalar(s);
-    g.traverse(o => {
-      if (o.isMesh) {
+    g.traverse((o: THREE.Object3D) => {
+      if ((o as MeshLike).isMesh) {
         o.castShadow = true;
         o.receiveShadow = true;
-        if (fadeIn) { o.material.transparent = true; o.material.opacity = 0; }
+        if (fadeIn) { (o as MeshLike).material.transparent = true; (o as MeshLike).material.opacity = 0; }
       }
     });
     g.getWorldPosition(pivotW.current);
     pivot.copy(pivotW.current);
-    outer.current.rotation.set(initPitch, initYaw, 0);
+    outer.current!.rotation.set(initPitch, initYaw, 0);
 
-    if (autoFrame && camera.isPerspectiveCamera) {
-      const persp = camera;
+    if (autoFrame && (camera as THREE.PerspectiveCamera).isPerspectiveCamera) {
+      const persp = camera as THREE.PerspectiveCamera;
       const fitR = sphere.radius * s;
       const d = (fitR * 1.2) / Math.sin((persp.fov * Math.PI) / 180 / 2);
       persp.position.set(pivotW.current.x, pivotW.current.y, pivotW.current.z + d);
@@ -123,7 +185,7 @@ const ModelInner = ({
       const id = setInterval(() => {
         t += 0.05;
         const v = Math.min(t, 1);
-        g.traverse(o => { if (o.isMesh) o.material.opacity = v; });
+        g.traverse((o: THREE.Object3D) => { if ((o as MeshLike).isMesh) (o as MeshLike).material.opacity = v; });
         invalidate();
         if (v === 1) { clearInterval(id); onLoaded?.(); }
       }, 16);
@@ -136,17 +198,17 @@ const ModelInner = ({
     const el = gl.domElement;
     let drag = false;
     let lx = 0, ly = 0;
-    const down = e => {
+    const down = (e: PointerEvent) => {
       if (e.pointerType !== 'mouse' && e.pointerType !== 'pen') return;
       drag = true; lx = e.clientX; ly = e.clientY;
       window.addEventListener('pointerup', up);
     };
-    const move = e => {
+    const move = (e: PointerEvent) => {
       if (!drag) return;
       const dx = e.clientX - lx, dy = e.clientY - ly;
       lx = e.clientX; ly = e.clientY;
-      outer.current.rotation.y += dx * ROTATE_SPEED;
-      outer.current.rotation.x += dy * ROTATE_SPEED;
+      outer.current!.rotation.y += dx * ROTATE_SPEED;
+      outer.current!.rotation.x += dy * ROTATE_SPEED;
       vel.current = { x: dx * ROTATE_SPEED, y: dy * ROTATE_SPEED };
       invalidate();
     };
@@ -159,11 +221,11 @@ const ModelInner = ({
   useEffect(() => {
     if (!isTouch) return;
     const el = gl.domElement;
-    const pts = new Map();
+    const pts = new Map<number, { x: number; y: number }>();
     let mode = 'idle';
     let sx = 0, sy = 0, lx = 0, ly = 0, startDist = 0, startZ = 0;
 
-    const down = e => {
+    const down = (e: PointerEvent) => {
       if (e.pointerType !== 'touch') return;
       pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
       if (pts.size === 1) { mode = 'decide'; sx = lx = e.clientX; sy = ly = e.clientY; }
@@ -177,7 +239,7 @@ const ModelInner = ({
       invalidate();
     };
 
-    const move = e => {
+    const move = (e: PointerEvent) => {
       const p = pts.get(e.pointerId);
       if (!p) return;
       p.x = e.clientX; p.y = e.clientY;
@@ -195,8 +257,8 @@ const ModelInner = ({
         e.preventDefault();
         const dx = e.clientX - lx, dy = e.clientY - ly;
         lx = e.clientX; ly = e.clientY;
-        outer.current.rotation.y += dx * ROTATE_SPEED;
-        outer.current.rotation.x += dy * ROTATE_SPEED;
+        outer.current!.rotation.y += dx * ROTATE_SPEED;
+        outer.current!.rotation.x += dy * ROTATE_SPEED;
         vel.current = { x: dx * ROTATE_SPEED, y: dy * ROTATE_SPEED };
         invalidate();
       } else if (mode === 'pinch' && pts.size === 2) {
@@ -209,7 +271,7 @@ const ModelInner = ({
       }
     };
 
-    const up = e => {
+    const up = (e: PointerEvent) => {
       pts.delete(e.pointerId);
       if (mode === 'rotate' && pts.size === 0) mode = 'idle';
       if (mode === 'pinch' && pts.size < 2) mode = 'idle';
@@ -229,7 +291,7 @@ const ModelInner = ({
 
   useEffect(() => {
     if (isTouch) return;
-    const mm = e => {
+    const mm = (e: PointerEvent) => {
       if (e.pointerType !== 'mouse') return;
       const nx = (e.clientX / window.innerWidth) * 2 - 1;
       const ny = (e.clientY / window.innerHeight) * 2 - 1;
@@ -252,15 +314,15 @@ const ModelInner = ({
     const ndc = pivotW.current.clone().project(camera);
     ndc.x += xOff + cPar.current.x;
     ndc.y += yOff + cPar.current.y;
-    outer.current.position.copy(ndc.unproject(camera));
+    outer.current!.position.copy(ndc.unproject(camera));
 
-    outer.current.rotation.x += cHov.current.x - phx;
-    outer.current.rotation.y += cHov.current.y - phy;
+    outer.current!.rotation.x += cHov.current.x - phx;
+    outer.current!.rotation.y += cHov.current.y - phy;
 
-    if (autoRotate) { outer.current.rotation.y += autoRotateSpeed * dt; need = true; }
+    if (autoRotate) { outer.current!.rotation.y += autoRotateSpeed * dt; need = true; }
 
-    outer.current.rotation.y += vel.current.x;
-    outer.current.rotation.x += vel.current.y;
+    outer.current!.rotation.y += vel.current.x;
+    outer.current!.rotation.x += vel.current.y;
     vel.current.x *= INERTIA;
     vel.current.y *= INERTIA;
     if (Math.abs(vel.current.x) > 1e-4 || Math.abs(vel.current.y) > 1e-4) need = true;
@@ -312,13 +374,13 @@ const ModelViewer = ({
   autoRotate = false,
   autoRotateSpeed = 0.35,
   onModelLoaded
-}) => {
+}: ModelViewerProps) => {
   useEffect(() => void useGLTF.preload(url), [url]);
   const pivot = useRef(new THREE.Vector3()).current;
-  const contactRef = useRef(null);
-  const rendererRef = useRef(null);
-  const sceneRef = useRef(null);
-  const cameraRef = useRef(null);
+  const contactRef = useRef<THREE.Group>(null);
+  const rendererRef = useRef<THREE.WebGLRenderer>(null);
+  const sceneRef = useRef<THREE.Scene>(null);
+  const cameraRef = useRef<THREE.Camera>(null);
 
   const initYaw = deg2rad(defaultRotationX);
   const initPitch = deg2rad(defaultRotationY);
@@ -328,9 +390,9 @@ const ModelViewer = ({
     const g = rendererRef.current, s = sceneRef.current, c = cameraRef.current;
     if (!g || !s || !c) return;
     g.shadowMap.enabled = false;
-    const tmp = [];
-    s.traverse(o => {
-      if (o.isLight && 'castShadow' in o) { tmp.push({ l: o, cast: o.castShadow }); o.castShadow = false; }
+    const tmp: Array<{ l: THREE.Object3D; cast: boolean }> = [];
+    s.traverse((o: THREE.Object3D) => {
+      if ((o as THREE.Light).isLight && 'castShadow' in o) { tmp.push({ l: o, cast: o.castShadow }); o.castShadow = false; }
     });
     if (contactRef.current) contactRef.current.visible = false;
     g.render(s, c);

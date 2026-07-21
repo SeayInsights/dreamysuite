@@ -1,4 +1,3 @@
-// @ts-nocheck
 "use client";
 
 const _inject_MagicRings_Styles = () => {
@@ -80,6 +79,53 @@ void main() {
 }
 `;
 
+interface MagicRingsProps {
+  color?: string;
+  colorTwo?: string;
+  speed?: number;
+  ringCount?: number;
+  attenuation?: number;
+  lineThickness?: number;
+  baseRadius?: number;
+  radiusStep?: number;
+  scaleRate?: number;
+  opacity?: number;
+  blur?: number;
+  noiseAmount?: number;
+  rotation?: number;
+  ringGap?: number;
+  fadeIn?: number;
+  fadeOut?: number;
+  followMouse?: boolean;
+  mouseInfluence?: number;
+  hoverScale?: number;
+  parallax?: number;
+  clickBurst?: boolean;
+}
+
+interface MagicRingsUniforms {
+  color: string;
+  colorTwo: string;
+  speed: number;
+  ringCount: number;
+  attenuation: number;
+  lineThickness: number;
+  baseRadius: number;
+  radiusStep: number;
+  scaleRate: number;
+  opacity: number;
+  noiseAmount: number;
+  rotation: number;
+  ringGap: number;
+  fadeIn: number;
+  fadeOut: number;
+  followMouse: boolean;
+  mouseInfluence: number;
+  hoverScale: number;
+  parallax: number;
+  clickBurst: boolean;
+}
+
 export default function MagicRings({
   color = '#fc42ff',
   colorTwo = '#42fcff',
@@ -102,9 +148,9 @@ export default function MagicRings({
   hoverScale = 1.2,
   parallax = 0.05,
   clickBurst = false,
-}) {
-  const mountRef = useRef(null);
-  const propsRef = useRef(null);
+}: MagicRingsProps) {
+  const mountRef = useRef<HTMLDivElement>(null);
+  const propsRef = useRef<MagicRingsUniforms>(null);
   const mouseRef = useRef([0, 0]);
   const smoothMouseRef = useRef([0, 0]);
   const hoverAmountRef = useRef(0);
@@ -122,7 +168,7 @@ export default function MagicRings({
     const mount = mountRef.current;
     if (!mount) return;
 
-    let renderer;
+    let renderer: THREE.WebGLRenderer;
     try {
       renderer = new THREE.WebGLRenderer({ alpha: true });
     } catch {
@@ -184,7 +230,7 @@ export default function MagicRings({
     const ro = new ResizeObserver(resize);
     ro.observe(mount);
 
-    const onMouseMove = (e) => {
+    const onMouseMove = (e: MouseEvent) => {
       const rect = mount.getBoundingClientRect();
       mouseRef.current[0] = (e.clientX - rect.left) / rect.width - 0.5;
       mouseRef.current[1] = -((e.clientY - rect.top) / rect.height - 0.5);
@@ -202,10 +248,10 @@ export default function MagicRings({
     mount.addEventListener('mouseleave', onMouseLeave);
     mount.addEventListener('click', onClick);
 
-    let frameId;
-    const animate = (t) => {
+    let frameId: number;
+    const animate = (t: number) => {
       frameId = requestAnimationFrame(animate);
-      const p = propsRef.current;
+      const p = propsRef.current!;
 
       smoothMouseRef.current[0] += (mouseRef.current[0] - smoothMouseRef.current[0]) * 0.08;
       smoothMouseRef.current[1] += (mouseRef.current[1] - smoothMouseRef.current[1]) * 0.08;

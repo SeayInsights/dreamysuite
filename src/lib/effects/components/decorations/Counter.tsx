@@ -1,8 +1,7 @@
-// @ts-nocheck
 "use client";
 
-import { motion, useSpring, useTransform } from 'motion/react';
-import { useEffect } from 'react';
+import { motion, useSpring, useTransform, type MotionValue } from 'motion/react';
+import { useEffect, type CSSProperties } from 'react';
 
 const counterStyles = `
 .counter-container { position: relative; display: inline-block; }
@@ -19,7 +18,13 @@ const counterStyles = `
 .bottom-gradient { position: absolute; bottom: 0; width: 100%; }
 `;
 
-function Number({ mv, number, height }) {
+interface NumberProps {
+  mv: MotionValue<number>;
+  number: number;
+  height: number;
+}
+
+function Number({ mv, number, height }: NumberProps) {
   const y = useTransform(mv, latest => {
     const placeValue = latest % 10;
     const offset = (10 + number - placeValue) % 10;
@@ -34,20 +39,27 @@ function Number({ mv, number, height }) {
   );
 }
 
-function normalizeNearInteger(num) {
+function normalizeNearInteger(num: number) {
   const nearest = Math.round(num);
   const tolerance = 1e-9 * Math.max(1, Math.abs(num));
   return Math.abs(num - nearest) < tolerance ? nearest : num;
 }
 
-function getValueRoundedToPlace(value, place) {
+function getValueRoundedToPlace(value: number, place: number) {
   const scaled = value / place;
   return Math.floor(normalizeNearInteger(scaled));
 }
 
-function Digit({ place, value, height, digitStyle }) {
+interface DigitProps {
+  place: number | string;
+  value: number;
+  height: number;
+  digitStyle?: CSSProperties;
+}
+
+function Digit({ place, value, height, digitStyle }: DigitProps) {
   const isDecimal = place === '.';
-  const valueRoundedToPlace = isDecimal ? 0 : getValueRoundedToPlace(value, place);
+  const valueRoundedToPlace = isDecimal ? 0 : getValueRoundedToPlace(value, place as number);
   const animatedValue = useSpring(valueRoundedToPlace);
 
   useEffect(() => {
@@ -71,6 +83,26 @@ function Digit({ place, value, height, digitStyle }) {
   );
 }
 
+interface CounterProps {
+  value?: number | null;
+  fontSize?: number;
+  padding?: number;
+  places?: (number | string)[];
+  gap?: number;
+  borderRadius?: number;
+  horizontalPadding?: number;
+  textColor?: string;
+  fontWeight?: CSSProperties['fontWeight'];
+  containerStyle?: CSSProperties;
+  counterStyle?: CSSProperties;
+  digitStyle?: CSSProperties;
+  gradientHeight?: number;
+  gradientFrom?: string;
+  gradientTo?: string;
+  topGradientStyle?: CSSProperties;
+  bottomGradientStyle?: CSSProperties;
+}
+
 export default function Counter({
   value,
   fontSize = 100,
@@ -89,7 +121,7 @@ export default function Counter({
   gradientTo = 'transparent',
   topGradientStyle,
   bottomGradientStyle
-}) {
+}: CounterProps) {
   if (value == null) return null;
   const resolvedPlaces = places ?? [...value.toString()].map((ch, i, a) => {
     if (ch === '.') return '.';
@@ -103,7 +135,7 @@ export default function Counter({
   });
 
   const height = fontSize + padding;
-  const defaultCounterStyle = {
+  const defaultCounterStyle: CSSProperties = {
     fontSize,
     gap,
     borderRadius,

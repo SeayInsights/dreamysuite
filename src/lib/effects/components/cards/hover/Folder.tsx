@@ -1,4 +1,3 @@
-// @ts-nocheck
 "use client";
 
 import { useState } from 'react';
@@ -26,9 +25,9 @@ const folderStyles = `
 .folder__front { position:absolute; z-index:3; width:100%; height:100%; background:var(--folder-color); border-radius:5px 10px 10px 10px; transform-origin:bottom; transition:all 0.3s ease-in-out; }
 `;
 
-const darkenColor = (hex, percent) => {
+const darkenColor = (hex: string, percent: number) => {
   let color = hex.startsWith('#') ? hex.slice(1) : hex;
-  if (color.length === 3) color = color.split('').map(c => c + c).join('');
+  if (color.length === 3) color = color.split('').map((c: string) => c + c).join('');
   const num = parseInt(color, 16);
   const r = Math.max(0, Math.min(255, Math.floor(((num >> 16) & 0xff) * (1 - percent))));
   const g = Math.max(0, Math.min(255, Math.floor(((num >> 8) & 0xff) * (1 - percent))));
@@ -36,7 +35,14 @@ const darkenColor = (hex, percent) => {
   return '#' + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1).toUpperCase();
 };
 
-const Folder = ({ color = '#5227FF', size = 1, items = [], className = '' }) => {
+interface FolderProps {
+  color?: string;
+  size?: number;
+  items?: React.ReactNode[];
+  className?: string;
+}
+
+const Folder = ({ color = '#5227FF', size = 1, items = [], className = '' }: FolderProps) => {
   const maxItems = 3;
   const papers = items.slice(0, maxItems);
   while (papers.length < maxItems) papers.push(null);
@@ -53,7 +59,7 @@ const Folder = ({ color = '#5227FF', size = 1, items = [], className = '' }) => 
     if (open) setPaperOffsets(Array.from({ length: maxItems }, () => ({ x: 0, y: 0 })));
   };
 
-  const handlePaperMouseMove = (e, index) => {
+  const handlePaperMouseMove = (e: React.MouseEvent<HTMLDivElement>, index: number) => {
     if (!open) return;
     const rect = e.currentTarget.getBoundingClientRect();
     const offsetX = (e.clientX - rect.left - rect.width / 2) * 0.15;
@@ -61,7 +67,7 @@ const Folder = ({ color = '#5227FF', size = 1, items = [], className = '' }) => 
     setPaperOffsets(prev => { const n = [...prev]; n[index] = { x: offsetX, y: offsetY }; return n; });
   };
 
-  const handlePaperMouseLeave = (e, index) => {
+  const handlePaperMouseLeave = (e: React.MouseEvent<HTMLDivElement>, index: number) => {
     setPaperOffsets(prev => { const n = [...prev]; n[index] = { x: 0, y: 0 }; return n; });
   };
 
@@ -69,13 +75,13 @@ const Folder = ({ color = '#5227FF', size = 1, items = [], className = '' }) => 
     <>
       <style>{folderStyles}</style>
       <div style={{ transform: `scale(${size})` }} className={className}>
-        <div className={`folder ${open ? 'open' : ''}`} style={{ '--folder-color': color, '--folder-back-color': folderBackColor, '--paper-1': paper1, '--paper-2': paper2, '--paper-3': '#ffffff' }} onClick={handleClick}>
+        <div className={`folder ${open ? 'open' : ''}`} style={{ '--folder-color': color, '--folder-back-color': folderBackColor, '--paper-1': paper1, '--paper-2': paper2, '--paper-3': '#ffffff' } as React.CSSProperties} onClick={handleClick}>
           <div className="folder__back">
             {papers.map((item, i) => (
               <div key={i} className={`folder-paper paper-${i+1}`}
                 onMouseMove={e => handlePaperMouseMove(e, i)}
                 onMouseLeave={e => handlePaperMouseLeave(e, i)}
-                style={open ? { '--magnet-x': `${paperOffsets[i]?.x || 0}px`, '--magnet-y': `${paperOffsets[i]?.y || 0}px` } : {}}>
+                style={open ? { '--magnet-x': `${paperOffsets[i]?.x || 0}px`, '--magnet-y': `${paperOffsets[i]?.y || 0}px` } as React.CSSProperties : {}}>
                 {item}
               </div>
             ))}

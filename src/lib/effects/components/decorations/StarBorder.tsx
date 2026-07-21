@@ -1,5 +1,5 @@
-// @ts-nocheck
 "use client";
+import type { CSSProperties, ElementType, ReactNode } from "react";
 
 const _inject_StarBorder_Styles = () => {
   if (typeof document === 'undefined') return;
@@ -77,6 +77,17 @@ const _inject_StarBorder_Styles = () => {
 if (typeof document !== 'undefined') _inject_StarBorder_Styles();
 
 
+interface StarBorderProps {
+  as?: ElementType<any, any>;
+  className?: string;
+  color?: string;
+  speed?: string;
+  thickness?: number;
+  children?: ReactNode;
+  style?: CSSProperties;
+  [key: string]: unknown;
+}
+
 const StarBorder = ({
   as: Component = 'button',
   className = '',
@@ -85,7 +96,7 @@ const StarBorder = ({
   thickness = 1,
   children,
   ...rest
-}) => {
+}: StarBorderProps) => {
   return (
     <Component
       className={`star-border-container ${className}`}

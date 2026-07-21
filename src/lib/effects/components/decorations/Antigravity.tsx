@@ -1,9 +1,26 @@
-// @ts-nocheck
 "use client";
- 
+
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { useMemo, useRef } from 'react';
 import * as THREE from 'three';
+
+interface AntigravityProps {
+  count?: number;
+  magnetRadius?: number;
+  ringRadius?: number;
+  waveSpeed?: number;
+  waveAmplitude?: number;
+  particleSize?: number;
+  lerpSpeed?: number;
+  color?: string;
+  autoAnimate?: boolean;
+  particleVariance?: number;
+  rotationSpeed?: number;
+  depthFactor?: number;
+  pulseSpeed?: number;
+  particleShape?: string;
+  fieldStrength?: number;
+}
 
 const AntigravityInner = ({
   count = 300,
@@ -21,8 +38,8 @@ const AntigravityInner = ({
   pulseSpeed = 3,
   particleShape = 'capsule',
   fieldStrength = 10
-}) => {
-  const meshRef = useRef(null);
+}: AntigravityProps) => {
+  const meshRef = useRef<THREE.InstancedMesh>(null);
   const { viewport } = useThree();
   const dummy = useMemo(() => new THREE.Object3D(), []);
 
@@ -170,7 +187,7 @@ const AntigravityInner = ({
   );
 };
 
-const Antigravity = props => {
+const Antigravity = (props: AntigravityProps) => {
   return (
     <Canvas camera={{ position: [0, 0, 50], fov: 35 }}>
       <AntigravityInner {...props} />

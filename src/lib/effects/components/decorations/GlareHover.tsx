@@ -1,5 +1,5 @@
-// @ts-nocheck
 "use client";
+import type { ReactNode, CSSProperties } from 'react';
 
 const _inject_GlareHover_Styles = () => {
   if (typeof document === 'undefined') return;
@@ -66,6 +66,24 @@ const _inject_GlareHover_Styles = () => {
 if (typeof document !== 'undefined') _inject_GlareHover_Styles();
 
 
+interface GlareHoverProps {
+  width?: string;
+  height?: string;
+  background?: string;
+  borderRadius?: string;
+  borderColor?: string;
+  children?: ReactNode;
+  color?: string;
+  glareColor?: string;
+  glareOpacity?: number;
+  glareAngle?: number;
+  glareSize?: number;
+  transitionDuration?: number;
+  playOnce?: boolean;
+  className?: string;
+  style?: CSSProperties;
+}
+
 const GlareHover = ({
   width = '100%',
   height = '100%',
@@ -82,7 +100,7 @@ const GlareHover = ({
   playOnce = false,
   className = '',
   style = {}
-}) => {
+}: GlareHoverProps) => {
   const resolvedGlareColor = glareColor ?? color ?? '#ffffff';
   const hex = resolvedGlareColor.replace('#', '');
   let rgba = resolvedGlareColor;

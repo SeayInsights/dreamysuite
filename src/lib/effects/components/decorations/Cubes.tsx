@@ -1,4 +1,3 @@
-// @ts-nocheck
 "use client";
 
 const _inject_Cubes_Styles = () => {
@@ -94,6 +93,23 @@ if (typeof document !== 'undefined') _inject_Cubes_Styles();
 import { useCallback, useEffect, useRef } from 'react';
 
 
+interface CubesProps {
+  gridSize?: number;
+  cubeSize?: number;
+  maxAngle?: number;
+  radius?: number;
+  easing?: string;
+  duration?: { enter: number; leave: number };
+  cellGap?: number | { col?: number; row?: number };
+  borderStyle?: string;
+  faceColor?: string;
+  shadow?: boolean | string;
+  autoAnimate?: boolean;
+  rippleOnClick?: boolean;
+  rippleColor?: string;
+  rippleSpeed?: number;
+}
+
 const Cubes = ({
   gridSize = 10,
   cubeSize,
@@ -109,15 +125,15 @@ const Cubes = ({
   rippleOnClick = true,
   rippleColor = '#fff',
   rippleSpeed = 2
-}) => {
-  const sceneRef = useRef(null);
-  const rafRef = useRef(null);
-  const idleTimerRef = useRef(null);
+}: CubesProps) => {
+  const sceneRef = useRef<HTMLDivElement>(null);
+  const rafRef = useRef<number | null>(null);
+  const idleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const userActiveRef = useRef(false);
   const simPosRef = useRef({ x: 0, y: 0 });
   const simTargetRef = useRef({ x: 0, y: 0 });
-  const simRAFRef = useRef(null);
-  const gsapRef = useRef(null);
+  const simRAFRef = useRef<number | null>(null);
+  const gsapRef = useRef<typeof import('gsap').gsap | null>(null);
 
   useEffect(() => {
     import('gsap').then(mod => { gsapRef.current = mod.gsap; });
@@ -130,11 +146,11 @@ const Cubes = ({
   const leaveDur = duration.leave;
 
   const tiltAt = useCallback(
-    (rowCenter, colCenter) => {
+    (rowCenter: number, colCenter: number) => {
       if (!sceneRef.current) return;
-      sceneRef.current.querySelectorAll('.cube').forEach(cube => {
-        const r = +cube.dataset.row;
-        const c = +cube.dataset.col;
+      sceneRef.current.querySelectorAll<HTMLElement>('.cube').forEach(cube => {
+        const r = +cube.dataset.row!;
+        const c = +cube.dataset.col!;
         const dist = Math.hypot(r - rowCenter, c - colCenter);
         if (dist <= radius) {
           const pct = 1 - dist / radius;
@@ -161,11 +177,11 @@ const Cubes = ({
   );
 
   const onPointerMove = useCallback(
-    e => {
+    (e: PointerEvent) => {
       userActiveRef.current = true;
       if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
 
-      const rect = sceneRef.current.getBoundingClientRect();
+      const rect = sceneRef.current!.getBoundingClientRect();
       const cellW = rect.width / gridSize;
       const cellH = rect.height / gridSize;
       const colCenter = (e.clientX - rect.left) / cellW;
@@ -194,12 +210,12 @@ const Cubes = ({
   }, [leaveDur]);
 
   const onTouchMove = useCallback(
-    e => {
+    (e: TouchEvent) => {
       e.preventDefault();
       userActiveRef.current = true;
       if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
 
-      const rect = sceneRef.current.getBoundingClientRect();
+      const rect = sceneRef.current!.getBoundingClientRect();
       const cellW = rect.width / gridSize;
       const cellH = rect.height / gridSize;
 
@@ -227,7 +243,7 @@ const Cubes = ({
   }, [resetAll]);
 
   const onClick = useCallback(
-    e => {
+    (e: MouseEvent & { touches?: TouchList }) => {
       if (!rippleOnClick || !sceneRef.current) return;
       const rect = sceneRef.current.getBoundingClientRect();
       const cellW = rect.width / gridSize;
@@ -236,8 +252,8 @@ const Cubes = ({
       const clientX = e.clientX || (e.touches && e.touches[0].clientX);
       const clientY = e.clientY || (e.touches && e.touches[0].clientY);
 
-      const colHit = Math.floor((clientX - rect.left) / cellW);
-      const rowHit = Math.floor((clientY - rect.top) / cellH);
+      const colHit = Math.floor((clientX! - rect.left) / cellW);
+      const rowHit = Math.floor((clientY! - rect.top) / cellH);
 
       const baseRingDelay = 0.15;
       const baseAnimDur = 0.3;
@@ -247,10 +263,10 @@ const Cubes = ({
       const animDuration = baseAnimDur / rippleSpeed;
       const holdTime = baseHold / rippleSpeed;
 
-      const rings = {};
-      sceneRef.current.querySelectorAll('.cube').forEach(cube => {
-        const r = +cube.dataset.row;
-        const c = +cube.dataset.col;
+      const rings: Record<number, HTMLElement[]> = {};
+      sceneRef.current.querySelectorAll<HTMLElement>('.cube').forEach(cube => {
+        const r = +cube.dataset.row!;
+        const c = +cube.dataset.col!;
         const dist = Math.hypot(r - rowHit, c - colHit);
         const ring = Math.round(dist);
         if (!rings[ring]) rings[ring] = [];

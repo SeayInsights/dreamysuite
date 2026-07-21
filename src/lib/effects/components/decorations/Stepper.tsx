@@ -1,4 +1,3 @@
-// @ts-nocheck
 "use client";
 
 import React, { useState, Children, useRef, useLayoutEffect } from 'react';
@@ -72,6 +71,23 @@ const stepperStyles = `
 .check-icon { height: 1rem; width: 1rem; color: #fff; }
 `;
 
+interface StepperProps extends React.HTMLAttributes<HTMLDivElement> {
+  children?: React.ReactNode;
+  initialStep?: number;
+  onStepChange?: (step: number) => void;
+  onFinalStepCompleted?: () => void;
+  stepCircleContainerClassName?: string;
+  stepContainerClassName?: string;
+  contentClassName?: string;
+  footerClassName?: string;
+  backButtonProps?: React.ButtonHTMLAttributes<HTMLButtonElement>;
+  nextButtonProps?: React.ButtonHTMLAttributes<HTMLButtonElement>;
+  backButtonText?: string;
+  nextButtonText?: string;
+  disableStepIndicators?: boolean;
+  renderStepIndicator?: (props: { step: number; currentStep: number; onStepClick: (clicked: number) => void }) => React.ReactNode;
+}
+
 export default function Stepper({
   children,
   initialStep = 1,
@@ -88,7 +104,7 @@ export default function Stepper({
   disableStepIndicators = false,
   renderStepIndicator,
   ...rest
-}) {
+}: StepperProps) {
   const [currentStep, setCurrentStep] = useState(initialStep);
   const [direction, setDirection] = useState(0);
   const stepsArray = Children.toArray(children);
@@ -96,7 +112,7 @@ export default function Stepper({
   const isCompleted = currentStep > totalSteps;
   const isLastStep = currentStep === totalSteps;
 
-  const updateStep = newStep => {
+  const updateStep = (newStep: number) => {
     setCurrentStep(newStep);
     if (newStep > totalSteps) onFinalStepCompleted();
     else onStepChange(newStep);
@@ -170,7 +186,7 @@ export default function Stepper({
   );
 }
 
-function StepContentWrapper({ isCompleted, currentStep, direction, children, className }) {
+function StepContentWrapper({ isCompleted, currentStep, direction, children, className }: { isCompleted: boolean; currentStep: number; direction: number; children: React.ReactNode; className: string; }) {
   const [parentHeight, setParentHeight] = useState(0);
   return (
     <motion.div
@@ -190,8 +206,8 @@ function StepContentWrapper({ isCompleted, currentStep, direction, children, cla
   );
 }
 
-function SlideTransition({ children, direction, onHeightReady }) {
-  const containerRef = useRef(null);
+function SlideTransition({ children, direction, onHeightReady }: { children: React.ReactNode; direction: number; onHeightReady: (height: number) => void; }) {
+  const containerRef = useRef<HTMLDivElement>(null);
   useLayoutEffect(() => {
     if (containerRef.current) onHeightReady(containerRef.current.offsetHeight);
   }, [children, onHeightReady]);
@@ -213,16 +229,16 @@ function SlideTransition({ children, direction, onHeightReady }) {
 }
 
 const stepVariants = {
-  enter: dir => ({ x: dir >= 0 ? '-100%' : '100%', opacity: 0 }),
+  enter: (dir: number) => ({ x: dir >= 0 ? '-100%' : '100%', opacity: 0 }),
   center: { x: '0%', opacity: 1 },
-  exit: dir => ({ x: dir >= 0 ? '50%' : '-50%', opacity: 0 })
+  exit: (dir: number) => ({ x: dir >= 0 ? '50%' : '-50%', opacity: 0 })
 };
 
-export function Step({ children }) {
+export function Step({ children }: { children?: React.ReactNode }) {
   return <div className="step-default">{children}</div>;
 }
 
-function StepIndicator({ step, currentStep, onClickStep, disableStepIndicators }) {
+function StepIndicator({ step, currentStep, onClickStep, disableStepIndicators }: { step: number; currentStep: number; onClickStep: (clicked: number) => void; disableStepIndicators: boolean; }) {
   const status = currentStep === step ? 'active' : currentStep < step ? 'inactive' : 'complete';
   const handleClick = () => { if (step !== currentStep && !disableStepIndicators) onClickStep(step); };
 
@@ -255,7 +271,7 @@ function StepIndicator({ step, currentStep, onClickStep, disableStepIndicators }
   );
 }
 
-function StepConnector({ isComplete }) {
+function StepConnector({ isComplete }: { isComplete: boolean }) {
   const lineVariants = {
     incomplete: { width: 0, backgroundColor: 'transparent' },
     complete: { width: '100%', backgroundColor: '#5227FF' }
@@ -273,7 +289,7 @@ function StepConnector({ isComplete }) {
   );
 }
 
-function CheckIcon(props) {
+function CheckIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
     <svg {...props} fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
       <motion.path

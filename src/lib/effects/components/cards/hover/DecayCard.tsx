@@ -1,4 +1,3 @@
-// @ts-nocheck
 "use client";
 
 import { useEffect, useRef } from 'react';
@@ -10,12 +9,24 @@ const decayCardStyles = `
 .dc-card-text::first-line { font-size:4rem; }
 `;
 
+interface DecayCardProps {
+  width?: number;
+  height?: number;
+  image?: string;
+  baseFrequency?: number;
+  numOctaves?: number;
+  seed?: number;
+  maxDisplacement?: number;
+  movementBound?: number;
+  children?: React.ReactNode;
+}
+
 const DecayCard = ({
   width = 300, height = 400,
   image = 'https://picsum.photos/300/400?grayscale',
   baseFrequency = 0.015, numOctaves = 5, seed = 4,
   maxDisplacement = 400, movementBound = 50, children
-}) => {
+}: DecayCardProps) => {
   const svgRef = useRef(null);
   const displacementMapRef = useRef(null);
   const cursor = useRef({ x: window.innerWidth / 2, y: window.innerHeight / 2 });
@@ -31,12 +42,12 @@ const DecayCard = ({
       const { gsap } = await import('gsap');
       if (cancelled) return;
 
-      const lerp = (a, b, n) => (1 - n) * a + n * b;
-      const map = (x, a, b, c, d) => ((x - a) * (d - c)) / (b - a) + c;
-      const distance = (x1, x2, y1, y2) => Math.hypot(x1 - x2, y1 - y2);
+      const lerp = (a: number, b: number, n: number) => (1 - n) * a + n * b;
+      const map = (x: number, a: number, b: number, c: number, d: number) => ((x - a) * (d - c)) / (b - a) + c;
+      const distance = (x1: number, x2: number, y1: number, y2: number) => Math.hypot(x1 - x2, y1 - y2);
 
       const handleResize = () => { winsize.current = { width: window.innerWidth, height: window.innerHeight }; };
-      const handleMouseMove = ev => { cursor.current = { x: ev.clientX, y: ev.clientY }; };
+      const handleMouseMove = (ev: MouseEvent) => { cursor.current = { x: ev.clientX, y: ev.clientY }; };
 
       window.addEventListener('resize', handleResize);
       window.addEventListener('mousemove', handleMouseMove);

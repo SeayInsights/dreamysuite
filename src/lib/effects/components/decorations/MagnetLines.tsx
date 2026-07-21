@@ -1,4 +1,3 @@
-// @ts-nocheck
 "use client";
 
 const _inject_MagnetLines_Styles = () => {
@@ -30,6 +29,7 @@ const _inject_MagnetLines_Styles = () => {
 };
 if (typeof document !== 'undefined') _inject_MagnetLines_Styles();
 import { useRef, useEffect } from 'react';
+import type { CSSProperties } from 'react';
 
 
 export default function MagnetLines({
@@ -43,7 +43,7 @@ export default function MagnetLines({
   className = '',
   style = {}
 }) {
-  const containerRef = useRef(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -51,7 +51,7 @@ export default function MagnetLines({
 
     const items = container.querySelectorAll('span');
 
-    const onPointerMove = pointer => {
+    const onPointerMove = (pointer: { x: number; y: number }) => {
       items.forEach(item => {
         const rect = item.getBoundingClientRect();
         const centerX = rect.x + rect.width / 2;
@@ -88,7 +88,7 @@ export default function MagnetLines({
         backgroundColor: lineColor,
         width: lineWidth,
         height: lineHeight
-      }}
+      } as CSSProperties}
     />
   ));
 
