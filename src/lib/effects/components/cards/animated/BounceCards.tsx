@@ -1,7 +1,8 @@
-// @ts-nocheck
 "use client";
 
 import { useEffect, useRef } from 'react';
+
+type Gsap = typeof import('gsap')['gsap'];
 
 const bounceCardsStyles = `
 .bounceCardsContainer { position:relative; display:flex; justify-content:center; align-items:center; width:400px; height:400px; }
@@ -18,12 +19,12 @@ export default function BounceCards({
   ],
   enableHover = true
 }) {
-  const containerRef = useRef(null);
-  const gsapRef = useRef(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const gsapRef = useRef<Gsap | null>(null);
 
   useEffect(() => {
     let cancelled = false;
-    let ctx = null;
+    let ctx: ReturnType<Gsap['context']> | null = null;
 
     (async () => {
       const { gsap } = await import('gsap');
@@ -40,13 +41,13 @@ export default function BounceCards({
     };
   }, [animationStagger, easeType, animationDelay]);
 
-  const getNoRotationTransform = transformStr => {
+  const getNoRotationTransform = (transformStr: string) => {
     if (/rotate\([\s\S]*?\)/.test(transformStr)) return transformStr.replace(/rotate\([\s\S]*?\)/, 'rotate(0deg)');
     if (transformStr === 'none') return 'rotate(0deg)';
     return `${transformStr} rotate(0deg)`;
   };
 
-  const getPushedTransform = (baseTransform, offsetX) => {
+  const getPushedTransform = (baseTransform: string, offsetX: number) => {
     const translateRegex = /translate\(([-0-9.]+)px\)/;
     const match = baseTransform.match(translateRegex);
     if (match) {
@@ -56,7 +57,7 @@ export default function BounceCards({
     return baseTransform === 'none' ? `translate(${offsetX}px)` : `${baseTransform} translate(${offsetX}px)`;
   };
 
-  const pushSiblings = hoveredIdx => {
+  const pushSiblings = (hoveredIdx: number) => {
     const gsap = gsapRef.current;
     if (!enableHover || !containerRef.current || !gsap) return;
     const q = gsap.utils.selector(containerRef);

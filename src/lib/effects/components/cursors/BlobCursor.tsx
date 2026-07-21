@@ -1,6 +1,6 @@
-// @ts-nocheck
 "use client";
 
+import type * as React from 'react';
 import { useRef, useEffect, useCallback } from 'react';
 
 const _inject_BlobCursor_Styles = () => {
@@ -65,9 +65,9 @@ export default function BlobCursor({
   slowEase = 'power1.out',
   zIndex = 100
 }) {
-  const containerRef = useRef(null);
-  const blobsRef = useRef([]);
-  const gsapRef = useRef(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const blobsRef = useRef<(HTMLDivElement | null)[]>([]);
+  const gsapRef = useRef<typeof import('gsap').gsap | null>(null);
 
   useEffect(() => {
     import('gsap').then(mod => { gsapRef.current = mod.gsap; });
@@ -80,7 +80,7 @@ export default function BlobCursor({
   }, []);
 
   const handleMove = useCallback(
-    e => {
+    (e: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>) => {
       const gsap = gsapRef.current;
       if (!gsap) return;
       const { left, top } = updateOffset();
@@ -128,7 +128,7 @@ export default function BlobCursor({
         {Array.from({ length: trailCount }).map((_, i) => (
           <div
             key={i}
-            ref={el => (blobsRef.current[i] = el)}
+            ref={el => { blobsRef.current[i] = el; }}
             className="blob"
             style={{
               width: sizes[i],

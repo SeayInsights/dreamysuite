@@ -1,8 +1,21 @@
-// @ts-nocheck
 "use client";
 
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useEffect, useRef, type ReactNode } from 'react';
 import { motion, useMotionValue, useAnimationFrame, useTransform } from 'motion/react';
+
+interface ShinyTextProps {
+  text?: ReactNode;
+  disabled?: boolean;
+  speed?: number;
+  className?: string;
+  color?: string;
+  shineColor?: string;
+  spread?: number;
+  yoyo?: boolean;
+  pauseOnHover?: boolean;
+  direction?: string;
+  delay?: number;
+}
 
 const ShinyText = ({
   text,
@@ -16,11 +29,11 @@ const ShinyText = ({
   pauseOnHover = false,
   direction = 'left',
   delay = 0
-}) => {
+}: ShinyTextProps) => {
   const [isPaused, setIsPaused] = useState(false);
   const progress = useMotionValue(0);
   const elapsedRef = useRef(0);
-  const lastTimeRef = useRef(null);
+  const lastTimeRef = useRef<number | null>(null);
   const directionRef = useRef(direction === 'left' ? 1 : -1);
 
   const animationDuration = speed * 1000;

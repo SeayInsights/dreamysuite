@@ -1,4 +1,3 @@
-// @ts-nocheck
 "use client";
 
 import { useEffect, useRef } from 'react';
@@ -39,10 +38,10 @@ const ReflectiveCard = ({
   className = '',
   style = {}
 }) => {
-  const videoRef = useRef(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
-    let stream = null;
+    let stream: MediaStream | null = null;
     const startWebcam = async () => {
       try {
         stream = await navigator.mediaDevices.getUserMedia({
@@ -67,7 +66,7 @@ const ReflectiveCard = ({
     '--overlay-color': overlayColor,
     '--text-color': color,
     '--saturation': saturation
-  };
+  } as React.CSSProperties;
 
   return (
     <>

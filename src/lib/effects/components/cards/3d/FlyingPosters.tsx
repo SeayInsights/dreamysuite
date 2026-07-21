@@ -1,8 +1,21 @@
-// @ts-nocheck
 "use client";
 
 import { useRef, useEffect } from 'react';
 import { Renderer, Camera, Transform, Plane, Program, Mesh, Texture } from 'ogl';
+import type { OGLRenderingContext } from 'ogl';
+
+interface Size { width: number; height: number; }
+interface Scroll { ease: number; current: number; target: number; last: number; position?: number; }
+
+interface FlyingPostersProps extends React.HTMLAttributes<HTMLDivElement> {
+  items?: string[];
+  planeWidth?: number;
+  planeHeight?: number;
+  distortion?: number;
+  scrollEase?: number;
+  cameraFov?: number;
+  cameraZ?: number;
+}
 
 const flyingPostersStyles = `
 .posters-container { width:100%; height:100%; overflow:hidden; position:relative; z-index:2; }
@@ -61,9 +74,9 @@ void main() {
 }
 `;
 
-function AutoBind(self, { include, exclude } = {}) {
-  const getAllProperties = object => { const properties = new Set(); do { for (const key of Reflect.ownKeys(object)) properties.add([object, key]); } while ((object = Reflect.getPrototypeOf(object)) && object !== Object.prototype); return properties; };
-  const filter = key => { const match = pattern => (typeof pattern === 'string' ? key === pattern : pattern.test(key)); if (include) return include.some(match); if (exclude) return !exclude.some(match); return true; };
+function AutoBind(self: any, { include, exclude }: { include?: Array<string | RegExp>; exclude?: Array<string | RegExp> } = {}) {
+  const getAllProperties = (object: any) => { const properties = new Set<[any, string | symbol]>(); do { for (const key of Reflect.ownKeys(object)) properties.add([object, key]); } while ((object = Reflect.getPrototypeOf(object)) && object !== Object.prototype); return properties; };
+  const filter = (key: string | symbol) => { const match = (pattern: string | RegExp) => (typeof pattern === 'string' ? key === pattern : pattern.test(key as string)); if (include) return include.some(match); if (exclude) return !exclude.some(match); return true; };
   for (const [object, key] of getAllProperties(self.constructor.prototype)) {
     if (key === 'constructor' || !filter(key)) continue;
     const descriptor = Reflect.getOwnPropertyDescriptor(object, key);
@@ -72,11 +85,29 @@ function AutoBind(self, { include, exclude } = {}) {
   return self;
 }
 
-function lerp(p1, p2, t) { return p1 + (p2 - p1) * t; }
-function map(num, min1, max1, min2, max2, round = false) { const num1 = (num - min1) / (max1 - min1); const num2 = num1 * (max2 - min2) + min2; return round ? Math.round(num2) : num2; }
+function lerp(p1: number, p2: number, t: number) { return p1 + (p2 - p1) * t; }
+function map(num: number, min1: number, max1: number, min2: number, max2: number, round = false) { const num1 = (num - min1) / (max1 - min1); const num2 = num1 * (max2 - min2) + min2; return round ? Math.round(num2) : num2; }
 
 class Media {
-  constructor({ gl, geometry, scene, screen, viewport, image, length, index, planeWidth, planeHeight, distortion }) {
+  extra: number;
+  gl!: OGLRenderingContext;
+  geometry!: Plane;
+  scene!: Transform;
+  screen!: Size;
+  viewport!: Size;
+  image!: string;
+  length!: number;
+  index!: number;
+  planeWidth!: number;
+  planeHeight!: number;
+  distortion!: number;
+  program!: Program;
+  plane!: Mesh;
+  padding!: number;
+  height!: number;
+  heightTotal!: number;
+  y!: number;
+  constructor({ gl, geometry, scene, screen, viewport, image, length, index, planeWidth, planeHeight, distortion }: { gl: OGLRenderingContext; geometry: Plane; scene: Transform; screen: Size; viewport: Size; image: string; length: number; index: number; planeWidth: number; planeHeight: number; distortion: number }) {
     this.extra = 0;
     Object.assign(this, { gl, geometry, scene, screen, viewport, image, length, index, planeWidth, planeHeight, distortion });
     this.createShader(); this.createMesh(); this.onResize();
@@ -98,14 +129,14 @@ class Media {
     this.plane.position.x = 0;
     this.plane.program.uniforms.uPlaneSize.value = [this.plane.scale.x, this.plane.scale.y];
   }
-  onResize({ screen, viewport } = {}) {
+  onResize({ screen, viewport }: { screen?: Size; viewport?: Size } = {}) {
     if (screen) this.screen = screen;
     if (viewport) { this.viewport = viewport; this.plane.program.uniforms.uViewportSize.value = [this.viewport.width, this.viewport.height]; }
     this.setScale();
     this.padding = 5; this.height = this.plane.scale.y + this.padding; this.heightTotal = this.height * this.length;
     this.y = -this.heightTotal / 2 + (this.index + 0.5) * this.height;
   }
-  update(scroll) {
+  update(scroll: Scroll) {
     this.plane.position.y = this.y - scroll.current - this.extra;
     this.program.uniforms.uPosition.value = map(this.plane.position.y, -this.viewport.height, this.viewport.height, 5, 15);
     this.program.uniforms.uTime.value += 0.04;
@@ -118,7 +149,27 @@ class Media {
 }
 
 class FPCanvas {
-  constructor({ container, canvas, items, planeWidth, planeHeight, distortion, scrollEase, cameraFov, cameraZ }) {
+  container!: HTMLElement;
+  canvas!: HTMLCanvasElement;
+  items!: string[];
+  planeWidth!: number;
+  planeHeight!: number;
+  distortion!: number;
+  cameraFov!: number;
+  cameraZ!: number;
+  scroll: Scroll;
+  renderer!: Renderer;
+  gl!: OGLRenderingContext;
+  camera!: Camera;
+  scene!: Transform;
+  planeGeometry!: Plane;
+  medias!: Media[];
+  loaded!: number;
+  screen!: Size;
+  viewport!: Size;
+  isDown?: boolean;
+  start!: number;
+  constructor({ container, canvas, items, planeWidth, planeHeight, distortion, scrollEase, cameraFov, cameraZ }: { container: HTMLElement; canvas: HTMLCanvasElement; items: string[]; planeWidth: number; planeHeight: number; distortion: number; scrollEase: number; cameraFov: number; cameraZ: number }) {
     Object.assign(this, { container, canvas, items, planeWidth, planeHeight, distortion, cameraFov, cameraZ });
     this.scroll = { ease: scrollEase, current: 0, target: 0, last: 0 };
     AutoBind(this);
@@ -156,10 +207,10 @@ class FPCanvas {
     this.viewport = { height, width: height * this.camera.aspect };
     if (this.medias) this.medias.forEach(media => media.onResize({ screen: this.screen, viewport: this.viewport }));
   }
-  onTouchDown(e) { this.isDown = true; this.scroll.position = this.scroll.current; this.start = e.touches ? e.touches[0].clientY : e.clientY; }
-  onTouchMove(e) { if (!this.isDown) return; const y = e.touches ? e.touches[0].clientY : e.clientY; this.scroll.target = this.scroll.position + (this.start - y) * 0.1; }
+  onTouchDown(e: MouseEvent | TouchEvent) { this.isDown = true; this.scroll.position = this.scroll.current; this.start = (e as TouchEvent).touches ? (e as TouchEvent).touches[0].clientY : (e as MouseEvent).clientY; }
+  onTouchMove(e: MouseEvent | TouchEvent) { if (!this.isDown) return; const y = (e as TouchEvent).touches ? (e as TouchEvent).touches[0].clientY : (e as MouseEvent).clientY; this.scroll.target = this.scroll.position! + (this.start - y) * 0.1; }
   onTouchUp() { this.isDown = false; }
-  onWheel(e) { this.scroll.target += e.deltaY * 0.005; }
+  onWheel(e: WheelEvent) { this.scroll.target += e.deltaY * 0.005; }
   update() {
     this.scroll.current = lerp(this.scroll.current, this.scroll.target, this.scroll.ease);
     if (this.medias) this.medias.forEach(media => media.update(this.scroll));
@@ -168,12 +219,12 @@ class FPCanvas {
     requestAnimationFrame(this.update);
   }
   addEventListeners() {
-    window.addEventListener('resize', this.onResize); window.addEventListener('wheel', this.onWheel); window.addEventListener('mousewheel', this.onWheel);
+    window.addEventListener('resize', this.onResize); window.addEventListener('wheel', this.onWheel); window.addEventListener('mousewheel', this.onWheel as EventListener);
     window.addEventListener('mousedown', this.onTouchDown); window.addEventListener('mousemove', this.onTouchMove); window.addEventListener('mouseup', this.onTouchUp);
     window.addEventListener('touchstart', this.onTouchDown); window.addEventListener('touchmove', this.onTouchMove); window.addEventListener('touchend', this.onTouchUp);
   }
   destroy() {
-    window.removeEventListener('resize', this.onResize); window.removeEventListener('wheel', this.onWheel); window.removeEventListener('mousewheel', this.onWheel);
+    window.removeEventListener('resize', this.onResize); window.removeEventListener('wheel', this.onWheel); window.removeEventListener('mousewheel', this.onWheel as EventListener);
     window.removeEventListener('mousedown', this.onTouchDown); window.removeEventListener('mousemove', this.onTouchMove); window.removeEventListener('mouseup', this.onTouchUp);
     window.removeEventListener('touchstart', this.onTouchDown); window.removeEventListener('touchmove', this.onTouchMove); window.removeEventListener('touchend', this.onTouchUp);
   }
@@ -182,22 +233,22 @@ class FPCanvas {
 export default function FlyingPosters({
   items = [], planeWidth = 320, planeHeight = 320, distortion = 3,
   scrollEase = 0.01, cameraFov = 45, cameraZ = 20, className, ...props
-}) {
-  const containerRef = useRef(null);
-  const canvasRef = useRef(null);
-  const instanceRef = useRef(null);
+}: FlyingPostersProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const instanceRef = useRef<FPCanvas | null>(null);
 
   useEffect(() => {
     if (!containerRef.current) return;
-    instanceRef.current = new FPCanvas({ container: containerRef.current, canvas: canvasRef.current, items, planeWidth, planeHeight, distortion, scrollEase, cameraFov, cameraZ });
+    instanceRef.current = new FPCanvas({ container: containerRef.current, canvas: canvasRef.current!, items, planeWidth, planeHeight, distortion, scrollEase, cameraFov, cameraZ });
     return () => { if (instanceRef.current) { instanceRef.current.destroy(); instanceRef.current = null; } };
   }, [items, planeWidth, planeHeight, distortion, scrollEase, cameraFov, cameraZ]);
 
   useEffect(() => {
     if (!canvasRef.current) return;
     const canvasEl = canvasRef.current;
-    const handleWheel = e => { e.preventDefault(); if (instanceRef.current) instanceRef.current.onWheel(e); };
-    const handleTouchMove = e => { e.preventDefault(); };
+    const handleWheel = (e: WheelEvent) => { e.preventDefault(); if (instanceRef.current) instanceRef.current.onWheel(e); };
+    const handleTouchMove = (e: TouchEvent) => { e.preventDefault(); };
     canvasEl.addEventListener('wheel', handleWheel, { passive: false });
     canvasEl.addEventListener('touchmove', handleTouchMove, { passive: false });
     return () => { canvasEl.removeEventListener('wheel', handleWheel); canvasEl.removeEventListener('touchmove', handleTouchMove); };

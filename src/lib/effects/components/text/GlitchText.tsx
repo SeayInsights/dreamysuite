@@ -1,14 +1,22 @@
-// @ts-nocheck
 "use client";
 
+import type { CSSProperties, ReactNode } from 'react';
 
-const GlitchText = ({ children, speed = 1, enableShadows = true, enableOnHover = true, className = '' }) => {
+interface GlitchTextProps {
+  children?: ReactNode;
+  speed?: number;
+  enableShadows?: boolean;
+  enableOnHover?: boolean;
+  className?: string;
+}
+
+const GlitchText = ({ children, speed = 1, enableShadows = true, enableOnHover = true, className = '' }: GlitchTextProps) => {
   const inlineStyles = {
     '--after-duration': `${speed * 3}s`,
     '--before-duration': `${speed * 2}s`,
     '--after-shadow': enableShadows ? '-5px 0 red' : 'none',
     '--before-shadow': enableShadows ? '5px 0 cyan' : 'none'
-  };
+  } as CSSProperties;
 
   const hoverClass = enableOnHover ? 'enable-on-hover' : '';
 

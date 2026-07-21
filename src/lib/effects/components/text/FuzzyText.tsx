@@ -1,7 +1,30 @@
-// @ts-nocheck
 "use client";
 
 import React, { useEffect, useRef } from 'react';
+
+interface FuzzyTextProps {
+  children?: React.ReactNode;
+  fontSize?: string | number;
+  fontWeight?: string | number;
+  fontFamily?: string;
+  color?: string;
+  enableHover?: boolean;
+  baseIntensity?: number;
+  hoverIntensity?: number;
+  fuzzRange?: number;
+  fps?: number;
+  direction?: string;
+  transitionDuration?: number;
+  clickEffect?: boolean;
+  glitchMode?: boolean;
+  glitchInterval?: number;
+  glitchDuration?: number;
+  gradient?: string[] | null;
+  letterSpacing?: number;
+  className?: string;
+}
+
+type FuzzyCanvas = HTMLCanvasElement & { cleanupFuzzyText?: () => void };
 
 const FuzzyText = ({
   children,
@@ -23,15 +46,15 @@ const FuzzyText = ({
   gradient = null,
   letterSpacing = 0,
   className = ''
-}) => {
-  const canvasRef = useRef(null);
+}: FuzzyTextProps) => {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
-    let animationFrameId;
+    let animationFrameId: number;
     let isCancelled = false;
-    let glitchTimeoutId;
-    let glitchEndTimeoutId;
-    let clickTimeoutId;
+    let glitchTimeoutId: ReturnType<typeof setTimeout>;
+    let glitchEndTimeoutId: ReturnType<typeof setTimeout>;
+    let clickTimeoutId: ReturnType<typeof setTimeout>;
     const canvas = canvasRef.current;
     if (!canvas) return;
 
@@ -153,7 +176,7 @@ const FuzzyText = ({
 
       if (glitchMode) startGlitchLoop();
 
-      const run = timestamp => {
+      const run = (timestamp: number) => {
         if (isCancelled) return;
 
         if (timestamp - lastFrameTime < frameDuration) {
@@ -230,11 +253,11 @@ const FuzzyText = ({
 
       animationFrameId = window.requestAnimationFrame(run);
 
-      const isInsideTextArea = (x, y) => {
+      const isInsideTextArea = (x: number, y: number) => {
         return x >= interactiveLeft && x <= interactiveRight && y >= interactiveTop && y <= interactiveBottom;
       };
 
-      const handleMouseMove = e => {
+      const handleMouseMove = (e: MouseEvent) => {
         if (!enableHover) return;
         const rect = canvas.getBoundingClientRect();
         const x = e.clientX - rect.left;
@@ -255,7 +278,7 @@ const FuzzyText = ({
         }, 150);
       };
 
-      const handleTouchMove = e => {
+      const handleTouchMove = (e: TouchEvent) => {
         if (!enableHover) return;
         e.preventDefault();
         const rect = canvas.getBoundingClientRect();
@@ -296,7 +319,7 @@ const FuzzyText = ({
         }
       };
 
-      canvas.cleanupFuzzyText = cleanup;
+      (canvas as FuzzyCanvas).cleanupFuzzyText = cleanup;
     };
 
     init();
@@ -307,8 +330,8 @@ const FuzzyText = ({
       clearTimeout(glitchTimeoutId);
       clearTimeout(glitchEndTimeoutId);
       clearTimeout(clickTimeoutId);
-      if (canvas && canvas.cleanupFuzzyText) {
-        canvas.cleanupFuzzyText();
+      if (canvas && (canvas as FuzzyCanvas).cleanupFuzzyText) {
+        (canvas as FuzzyCanvas).cleanupFuzzyText!();
       }
     };
   }, [

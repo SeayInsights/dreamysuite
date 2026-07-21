@@ -1,8 +1,7 @@
-// @ts-nocheck
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { motion, useMotionValue, useTransform } from 'motion/react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { motion, useMotionValue, useTransform, type MotionValue, type Transition } from 'motion/react';
 import { Circle, Code, FileText, Layers, Layout } from 'lucide-react';
 
 const carouselStyles = `
@@ -38,9 +37,31 @@ const DEFAULT_ITEMS = [
 const DRAG_BUFFER = 0;
 const VELOCITY_THRESHOLD = 500;
 const GAP = 16;
-const SPRING_OPTIONS = { type: 'spring', stiffness: 300, damping: 30 };
+const SPRING_OPTIONS = { type: 'spring', stiffness: 300, damping: 30 } as const;
 
-function CarouselItem({ item, index, itemWidth, round, trackItemOffset, x, transition }) {
+interface CarouselItemData {
+  title: string;
+  description: string;
+  id: number;
+  icon: ReactNode;
+}
+
+interface CarouselItemProps {
+  item: CarouselItemData;
+  index: number;
+  itemWidth: number;
+  round: boolean;
+  trackItemOffset: number;
+  x: MotionValue<number>;
+  transition: Transition;
+}
+
+interface DragInfo {
+  offset: { x: number; y: number };
+  velocity: { x: number; y: number };
+}
+
+function CarouselItem({ item, index, itemWidth, round, trackItemOffset, x, transition }: CarouselItemProps) {
   const range = [-(index + 1) * trackItemOffset, -index * trackItemOffset, -(index - 1) * trackItemOffset];
   const rotateY = useTransform(x, range, [90, 0, -90], { clamp: false });
   return (
@@ -61,10 +82,20 @@ function CarouselItem({ item, index, itemWidth, round, trackItemOffset, x, trans
   );
 }
 
+interface CarouselProps {
+  items?: CarouselItemData[];
+  baseWidth?: number;
+  autoplay?: boolean;
+  autoplayDelay?: number;
+  pauseOnHover?: boolean;
+  loop?: boolean;
+  round?: boolean;
+}
+
 export default function Carousel({
   items = DEFAULT_ITEMS, baseWidth = 300, autoplay = false, autoplayDelay = 3000,
   pauseOnHover = false, loop = false, round = false
-}) {
+}: CarouselProps) {
   const containerPadding = 16;
   const itemWidth = baseWidth - containerPadding * 2;
   const trackItemOffset = itemWidth + GAP;
@@ -79,7 +110,7 @@ export default function Carousel({
   const [isHovered, setIsHovered] = useState(false);
   const [isJumping, setIsJumping] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
-  const containerRef = useRef(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (pauseOnHover && containerRef.current) {
@@ -125,7 +156,7 @@ export default function Carousel({
     setIsAnimating(false);
   };
 
-  const handleDragEnd = (_, info) => {
+  const handleDragEnd = (_: MouseEvent | TouchEvent | PointerEvent, info: DragInfo) => {
     const { offset, velocity } = info;
     const direction = offset.x < -DRAG_BUFFER || velocity.x < -VELOCITY_THRESHOLD ? 1 : offset.x > DRAG_BUFFER || velocity.x > VELOCITY_THRESHOLD ? -1 : 0;
     if (direction === 0) return;

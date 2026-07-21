@@ -1,8 +1,7 @@
-// @ts-nocheck
 "use client";
 
-import { useRef, useState, useEffect, useCallback } from 'react';
-import { motion, useInView } from 'motion/react';
+import { useRef, useState, useEffect, useCallback, type ReactNode, type UIEvent } from 'react';
+import { motion, useInView, type UseInViewOptions } from 'motion/react';
 
 const animatedListStyles = `
 .scroll-list-container { position: relative; width: 500px; }
@@ -19,9 +18,17 @@ const animatedListStyles = `
 .bottom-gradient { position: absolute; bottom: 0; left: 0; right: 0; height: 100px; background: linear-gradient(to top, #120F17, transparent); pointer-events: none; transition: opacity 0.3s ease; }
 `;
 
-const AnimatedItem = ({ children, delay = 0, index, onMouseEnter, onClick }) => {
+interface AnimatedItemProps {
+  children: ReactNode;
+  delay?: number;
+  index: number;
+  onMouseEnter: () => void;
+  onClick: () => void;
+}
+
+const AnimatedItem = ({ children, delay = 0, index, onMouseEnter, onClick }: AnimatedItemProps) => {
   const ref = useRef(null);
-  const inView = useInView(ref, { amount: 0.5, triggerOnce: false });
+  const inView = useInView(ref, { amount: 0.5, triggerOnce: false } as UseInViewOptions);
   return (
     <motion.div
       ref={ref}
@@ -38,6 +45,17 @@ const AnimatedItem = ({ children, delay = 0, index, onMouseEnter, onClick }) => 
   );
 };
 
+interface AnimatedListProps {
+  items?: string[];
+  onItemSelect?: (item: string, index: number) => void;
+  showGradients?: boolean;
+  enableArrowNavigation?: boolean;
+  className?: string;
+  itemClassName?: string;
+  displayScrollbar?: boolean;
+  initialSelectedIndex?: number;
+}
+
 const AnimatedList = ({
   items = ['Item 1','Item 2','Item 3','Item 4','Item 5','Item 6','Item 7','Item 8','Item 9','Item 10','Item 11','Item 12','Item 13','Item 14','Item 15'],
   onItemSelect,
@@ -47,21 +65,21 @@ const AnimatedList = ({
   itemClassName = '',
   displayScrollbar = true,
   initialSelectedIndex = -1
-}) => {
-  const listRef = useRef(null);
+}: AnimatedListProps) => {
+  const listRef = useRef<HTMLDivElement>(null);
   const [selectedIndex, setSelectedIndex] = useState(initialSelectedIndex);
   const [keyboardNav, setKeyboardNav] = useState(false);
   const [topGradientOpacity, setTopGradientOpacity] = useState(0);
   const [bottomGradientOpacity, setBottomGradientOpacity] = useState(1);
 
-  const handleItemMouseEnter = useCallback(index => { setSelectedIndex(index); }, []);
-  const handleItemClick = useCallback((item, index) => {
+  const handleItemMouseEnter = useCallback((index: number) => { setSelectedIndex(index); }, []);
+  const handleItemClick = useCallback((item: string, index: number) => {
     setSelectedIndex(index);
     if (onItemSelect) onItemSelect(item, index);
   }, [onItemSelect]);
 
-  const handleScroll = useCallback(e => {
-    const { scrollTop, scrollHeight, clientHeight } = e.target;
+  const handleScroll = useCallback((e: UIEvent<HTMLDivElement>) => {
+    const { scrollTop, scrollHeight, clientHeight } = e.target as HTMLDivElement;
     setTopGradientOpacity(Math.min(scrollTop / 50, 1));
     const bottomDistance = scrollHeight - (scrollTop + clientHeight);
     setBottomGradientOpacity(scrollHeight <= clientHeight ? 0 : Math.min(bottomDistance / 50, 1));
@@ -69,7 +87,7 @@ const AnimatedList = ({
 
   useEffect(() => {
     if (!enableArrowNavigation) return;
-    const handleKeyDown = e => {
+    const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'ArrowDown' || (e.key === 'Tab' && !e.shiftKey)) {
         e.preventDefault(); setKeyboardNav(true);
         setSelectedIndex(prev => Math.min(prev + 1, items.length - 1));
@@ -90,7 +108,7 @@ const AnimatedList = ({
   useEffect(() => {
     if (!keyboardNav || selectedIndex < 0 || !listRef.current) return;
     const container = listRef.current;
-    const selectedItem = container.querySelector(`[data-index="${selectedIndex}"]`);
+    const selectedItem = container.querySelector<HTMLElement>(`[data-index="${selectedIndex}"]`);
     if (selectedItem) {
       const extraMargin = 50;
       const itemTop = selectedItem.offsetTop;
