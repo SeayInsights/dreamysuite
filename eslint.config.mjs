@@ -15,6 +15,16 @@ const eslintConfig = [
 					destructuredArrayIgnorePattern: "^_",
 				},
 			],
+			// Lock in the effects @ts-nocheck burndown: no blanket file-level
+			// suppression. Use a scoped `@ts-expect-error <reason>` instead.
+			"@typescript-eslint/ban-ts-comment": [
+				"error",
+				{
+					"ts-nocheck": true,
+					"ts-ignore": true,
+					"ts-expect-error": "allow-with-description",
+				},
+			],
 		},
 	},
 	{
@@ -22,7 +32,8 @@ const eslintConfig = [
 		files: ["src/lib/effects/**"],
 		rules: {
 			"prefer-const": "off",
-			"@typescript-eslint/ban-ts-comment": "off",
+			// ban-ts-comment intentionally NOT disabled here anymore — the effects
+			// tree is now @ts-nocheck-free and stays that way (see global rule above).
 			"@typescript-eslint/no-explicit-any": "off",
 			"@typescript-eslint/no-unused-vars": "off",
 			"@typescript-eslint/no-unused-expressions": "off",
