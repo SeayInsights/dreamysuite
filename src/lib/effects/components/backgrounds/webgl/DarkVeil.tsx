@@ -1,4 +1,3 @@
-// @ts-nocheck
 "use client";
 import { useRef, useEffect } from 'react';
 import { Renderer, Program, Mesh, Triangle, Vec2 } from 'ogl';
@@ -84,11 +83,11 @@ export default function DarkVeil({
   warpAmount = 0,
   resolutionScale = 1
 }) {
-  const ref = useRef(null);
+  const ref = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
-    const canvas = ref.current;
-    const parent = canvas.parentElement;
+    const canvas = ref.current!;
+    const parent = canvas.parentElement!;
 
     const renderer = new Renderer({
       dpr: Math.min(window.devicePixelRatio, 2),

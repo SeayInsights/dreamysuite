@@ -1,9 +1,54 @@
-// @ts-nocheck
 "use client";
 
 import { BloomEffect, EffectComposer, EffectPass, RenderPass, SMAAEffect, SMAAPreset } from 'postprocessing';
 import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
+
+interface Distortion {
+  uniforms: Record<string, THREE.IUniform>;
+  getDistortion: string;
+  getJS?: (progress: number, time: number) => THREE.Vector3;
+}
+
+interface ColorsConfig {
+  roadColor: number;
+  islandColor: number;
+  background: number;
+  shoulderLines: number;
+  brokenLines: number;
+  leftCars: number | number[];
+  rightCars: number | number[];
+  sticks: number | number[];
+}
+
+interface EffectOptions {
+  onSpeedUp?: (ev: Event) => void;
+  onSlowDown?: (ev: Event) => void;
+  distortion: Distortion;
+  length: number;
+  roadWidth: number;
+  islandWidth: number;
+  lanesPerRoad: number;
+  fov: number;
+  fovSpeedUp: number;
+  speedUp: number;
+  carLightsFade: number;
+  totalSideLightSticks: number;
+  lightPairsPerRoadWay: number;
+  shoulderLinesWidthPercentage: number;
+  brokenLinesWidthPercentage: number;
+  brokenLinesLengthPercentage: number;
+  lightStickWidth: number[];
+  lightStickHeight: number[];
+  movingAwaySpeed: number[];
+  movingCloserSpeed: number[];
+  carLightsLength: number[];
+  carLightsRadius: number[];
+  carWidthPercentage: number[];
+  carShiftX: number[];
+  carFloorSeparation: number[];
+  colors: ColorsConfig;
+}
 
 const DEFAULT_EFFECT_OPTIONS = {
   onSpeedUp: () => {},
@@ -44,8 +89,8 @@ const DEFAULT_EFFECT_OPTIONS = {
 };
 
 export default function Hyperspeed({ effectOptions = DEFAULT_EFFECT_OPTIONS }) {
-  const hyperspeed = useRef(null);
-  const appRef = useRef(null);
+  const hyperspeed = useRef<HTMLDivElement | null>(null);
+  const appRef = useRef<{ dispose: () => void } | null>(null);
 
   useEffect(() => {
     if (appRef.current) {
@@ -84,9 +129,9 @@ export default function Hyperspeed({ effectOptions = DEFAULT_EFFECT_OPTIONS }) {
       uPowY: { value: new THREE.Vector2(20, 2) }
     };
 
-    const nsin = val => Math.sin(val) * 0.5 + 0.5;
+    const nsin = (val: number) => Math.sin(val) * 0.5 + 0.5;
 
-    const distortions = {
+    const distortions: Record<string, Distortion> = {
       mountainDistortion: {
         uniforms: mountainUniforms,
         getDistortion: `
@@ -217,11 +262,11 @@ export default function Hyperspeed({ effectOptions = DEFAULT_EFFECT_OPTIONS }) {
           const uFreq = turbulentUniforms.uFreq.value;
           const uAmp = turbulentUniforms.uAmp.value;
 
-          const getX = p =>
+          const getX = (p: number) =>
             Math.cos(Math.PI * p * uFreq.x + time) * uAmp.x +
             Math.pow(Math.cos(Math.PI * p * uFreq.y + time * (uFreq.y / uFreq.x)), 2) * uAmp.y;
 
-          const getY = p =>
+          const getY = (p: number) =>
             -nsin(Math.PI * p * uFreq.z + time) * uAmp.z -
             Math.pow(nsin(Math.PI * p * uFreq.w + time / (uFreq.z / uFreq.w)), 5) * uAmp.w;
 
@@ -327,8 +372,8 @@ export default function Hyperspeed({ effectOptions = DEFAULT_EFFECT_OPTIONS }) {
           const uAmp = deepUniforms.uAmp.value;
           const uPowY = deepUniforms.uPowY.value;
 
-          const getX = p => Math.sin(p * Math.PI * uFreq.x + time) * uAmp.x;
-          const getY = p =>
+          const getX = (p: number) => Math.sin(p * Math.PI * uFreq.x + time) * uAmp.x;
+          const getY = (p: number) =>
             Math.pow(p * uPowY.x, uPowY.y) + Math.sin(p * Math.PI * uFreq.y + time) * uAmp.y;
 
           const distortion = new THREE.Vector3(
@@ -369,17 +414,17 @@ export default function Hyperspeed({ effectOptions = DEFAULT_EFFECT_OPTIONS }) {
       }
     `;
 
-    const random = base => {
+    const random = (base: number | number[]) => {
       if (Array.isArray(base)) return Math.random() * (base[1] - base[0]) + base[0];
       return Math.random() * base;
     };
 
-    const pickRandom = arr => {
+    const pickRandom = <T,>(arr: T | T[]): T => {
       if (Array.isArray(arr)) return arr[Math.floor(Math.random() * arr.length)];
       return arr;
     };
 
-    function lerp(current, target, speed = 0.1, limit = 0.001) {
+    function lerp(current: number, target: number, speed = 0.1, limit = 0.001) {
       let change = (target - current) * speed;
       if (Math.abs(change) < limit) {
         change = target - current;
@@ -388,7 +433,20 @@ export default function Hyperspeed({ effectOptions = DEFAULT_EFFECT_OPTIONS }) {
     }
 
     class CarLights {
-      constructor(webgl, options, colors, speed, fade) {
+      declare webgl: App;
+      declare options: EffectOptions;
+      declare colors: number | number[];
+      declare speed: number | number[];
+      declare fade: THREE.Vector2;
+      declare mesh: THREE.Mesh<THREE.InstancedBufferGeometry, THREE.ShaderMaterial>;
+
+      constructor(
+        webgl: App,
+        options: EffectOptions,
+        colors: number | number[],
+        speed: number | number[],
+        fade: THREE.Vector2
+      ) {
         this.webgl = webgl;
         this.options = options;
         this.colors = colors;
@@ -401,15 +459,17 @@ export default function Hyperspeed({ effectOptions = DEFAULT_EFFECT_OPTIONS }) {
         const curve = new THREE.LineCurve3(new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 0, -1));
         const geometry = new THREE.TubeGeometry(curve, 40, 1, 8, false);
 
-        const instanced = new THREE.InstancedBufferGeometry().copy(geometry);
+        const instanced = new THREE.InstancedBufferGeometry().copy(
+          geometry as unknown as THREE.InstancedBufferGeometry
+        );
         instanced.instanceCount = options.lightPairsPerRoadWay * 2;
 
         const laneWidth = options.roadWidth / options.lanesPerRoad;
-        const aOffset = [];
-        const aMetrics = [];
-        const aColor = [];
+        const aOffset: number[] = [];
+        const aMetrics: number[] = [];
+        const aColor: number[] = [];
 
-        let colors = this.colors;
+        let colors: THREE.Color | THREE.Color[] | number | number[] = this.colors;
         if (Array.isArray(colors)) {
           colors = colors.map(c => new THREE.Color(c));
         } else {
@@ -489,7 +549,7 @@ export default function Hyperspeed({ effectOptions = DEFAULT_EFFECT_OPTIONS }) {
         this.mesh = mesh;
       }
 
-      update(time) {
+      update(time: number) {
         this.mesh.material.uniforms.uTime.value = time;
       }
     }
@@ -544,7 +604,11 @@ export default function Hyperspeed({ effectOptions = DEFAULT_EFFECT_OPTIONS }) {
     `;
 
     class LightsSticks {
-      constructor(webgl, options) {
+      declare webgl: App;
+      declare options: EffectOptions;
+      declare mesh: THREE.Mesh<THREE.InstancedBufferGeometry, THREE.ShaderMaterial>;
+
+      constructor(webgl: App, options: EffectOptions) {
         this.webgl = webgl;
         this.options = options;
       }
@@ -552,16 +616,18 @@ export default function Hyperspeed({ effectOptions = DEFAULT_EFFECT_OPTIONS }) {
       init() {
         const options = this.options;
         const geometry = new THREE.PlaneGeometry(1, 1);
-        const instanced = new THREE.InstancedBufferGeometry().copy(geometry);
+        const instanced = new THREE.InstancedBufferGeometry().copy(
+          geometry as unknown as THREE.InstancedBufferGeometry
+        );
         const totalSticks = options.totalSideLightSticks;
         instanced.instanceCount = totalSticks;
 
         const stickoffset = options.length / (totalSticks - 1);
-        const aOffset = [];
-        const aColor = [];
-        const aMetrics = [];
+        const aOffset: number[] = [];
+        const aColor: number[] = [];
+        const aMetrics: number[] = [];
 
-        let colors = options.colors.sticks;
+        let colors: THREE.Color | THREE.Color[] | number | number[] = options.colors.sticks;
         if (Array.isArray(colors)) {
           colors = colors.map(c => new THREE.Color(c));
         } else {
@@ -613,7 +679,7 @@ export default function Hyperspeed({ effectOptions = DEFAULT_EFFECT_OPTIONS }) {
         this.mesh = mesh;
       }
 
-      update(time) {
+      update(time: number) {
         this.mesh.material.uniforms.uTime.value = time;
       }
     }
@@ -670,13 +736,20 @@ export default function Hyperspeed({ effectOptions = DEFAULT_EFFECT_OPTIONS }) {
     `;
 
     class Road {
-      constructor(webgl, options) {
+      declare webgl: App;
+      declare options: EffectOptions;
+      declare uTime: { value: number };
+      declare leftRoadWay: THREE.Mesh;
+      declare rightRoadWay: THREE.Mesh;
+      declare island: THREE.Mesh;
+
+      constructor(webgl: App, options: EffectOptions) {
         this.webgl = webgl;
         this.options = options;
         this.uTime = { value: 0 };
       }
 
-      createPlane(side, width, isRoad) {
+      createPlane(side: number, width: number, isRoad: boolean) {
         const options = this.options;
         const segments = 100;
         const geometry = new THREE.PlaneGeometry(
@@ -731,7 +804,7 @@ export default function Hyperspeed({ effectOptions = DEFAULT_EFFECT_OPTIONS }) {
         this.island = this.createPlane(0, this.options.islandWidth, false);
       }
 
-      update(time) {
+      update(time: number) {
         this.uTime.value = time;
       }
     }
@@ -810,7 +883,10 @@ export default function Hyperspeed({ effectOptions = DEFAULT_EFFECT_OPTIONS }) {
       }
     `;
 
-    function resizeRendererToDisplaySize(renderer, setSize) {
+    function resizeRendererToDisplaySize(
+      renderer: THREE.WebGLRenderer,
+      setSize: (width: number, height: number, updateStyles: boolean) => void
+    ) {
       const canvas = renderer.domElement;
       const width = canvas.clientWidth;
       const height = canvas.clientHeight;
@@ -821,7 +897,29 @@ export default function Hyperspeed({ effectOptions = DEFAULT_EFFECT_OPTIONS }) {
     }
 
     class App {
-      constructor(container, options = {}) {
+      declare options: EffectOptions;
+      declare container: HTMLElement;
+      declare hasValidSize: boolean;
+      declare renderer: THREE.WebGLRenderer;
+      declare composer: EffectComposer;
+      declare camera: THREE.PerspectiveCamera;
+      declare scene: THREE.Scene;
+      declare fogUniforms: Record<string, THREE.IUniform>;
+      declare clock: THREE.Clock;
+      declare assets: Record<string, any>;
+      declare disposed: boolean;
+      declare road: Road;
+      declare leftCarLights: CarLights;
+      declare rightCarLights: CarLights;
+      declare leftSticks: LightsSticks;
+      declare fovTarget: number;
+      declare speedUpTarget: number;
+      declare speedUp: number;
+      declare timeOffset: number;
+      declare renderPass: RenderPass;
+      declare bloomPass: EffectPass;
+
+      constructor(container: HTMLElement, options: EffectOptions = {} as EffectOptions) {
         this.options = options;
         if (this.options.distortion == null) {
           this.options.distortion = {
@@ -839,7 +937,7 @@ export default function Hyperspeed({ effectOptions = DEFAULT_EFFECT_OPTIONS }) {
         this.renderer.setSize(initW, initH, false);
         this.renderer.setPixelRatio(window.devicePixelRatio);
         this.composer = new EffectComposer(this.renderer);
-        container.append(this.renderer.domElement);
+        (container as ParentNode).append(this.renderer.domElement);
 
         this.camera = new THREE.PerspectiveCamera(options.fov, initW / initH, 0.1, 10000);
         this.camera.position.z = -5;
@@ -930,7 +1028,7 @@ export default function Hyperspeed({ effectOptions = DEFAULT_EFFECT_OPTIONS }) {
             preset: SMAAPreset.MEDIUM,
             searchImage: SMAAEffect.searchImageDataURL,
             areaImage: SMAAEffect.areaImageDataURL
-          })
+          } as ConstructorParameters<typeof SMAAEffect>[0])
         );
         this.renderPass.renderToScreen = false;
         this.bloomPass.renderToScreen = false;
@@ -943,7 +1041,7 @@ export default function Hyperspeed({ effectOptions = DEFAULT_EFFECT_OPTIONS }) {
       loadAssets() {
         const assets = this.assets;
         return new Promise(resolve => {
-          const manager = new THREE.LoadingManager(resolve);
+          const manager = new THREE.LoadingManager(resolve as () => void);
 
           const searchImage = new Image();
           const areaImage = new Image();
@@ -985,35 +1083,35 @@ export default function Hyperspeed({ effectOptions = DEFAULT_EFFECT_OPTIONS }) {
         this.tick();
       }
 
-      onMouseDown(ev) {
+      onMouseDown(ev: MouseEvent) {
         if (this.options.onSpeedUp) this.options.onSpeedUp(ev);
         this.fovTarget = this.options.fovSpeedUp;
         this.speedUpTarget = this.options.speedUp;
       }
 
-      onMouseUp(ev) {
+      onMouseUp(ev: MouseEvent) {
         if (this.options.onSlowDown) this.options.onSlowDown(ev);
         this.fovTarget = this.options.fov;
         this.speedUpTarget = 0;
       }
 
-      onTouchStart(ev) {
+      onTouchStart(ev: TouchEvent) {
         if (this.options.onSpeedUp) this.options.onSpeedUp(ev);
         this.fovTarget = this.options.fovSpeedUp;
         this.speedUpTarget = this.options.speedUp;
       }
 
-      onTouchEnd(ev) {
+      onTouchEnd(ev: TouchEvent) {
         if (this.options.onSlowDown) this.options.onSlowDown(ev);
         this.fovTarget = this.options.fov;
         this.speedUpTarget = 0;
       }
 
-      onContextMenu(ev) {
+      onContextMenu(ev: Event) {
         ev.preventDefault();
       }
 
-      update(delta) {
+      update(delta: number) {
         const lerpPercentage = Math.exp(-(-60 * Math.log2(1 - 0.1)) * delta);
         this.speedUp += lerp(this.speedUp, this.speedUpTarget, lerpPercentage, 0.00001);
         this.timeOffset += this.speedUp * delta;
@@ -1048,7 +1146,7 @@ export default function Hyperspeed({ effectOptions = DEFAULT_EFFECT_OPTIONS }) {
         }
       }
 
-      render(delta) {
+      render(delta: number) {
         this.composer.render(delta);
       }
 
@@ -1057,7 +1155,7 @@ export default function Hyperspeed({ effectOptions = DEFAULT_EFFECT_OPTIONS }) {
 
         if (this.scene) {
           this.scene.traverse(object => {
-            const obj = object;
+            const obj = object as THREE.Mesh;
             if (!obj.isMesh) return;
             if (obj.geometry) obj.geometry.dispose();
             if (obj.material) {
@@ -1094,7 +1192,7 @@ export default function Hyperspeed({ effectOptions = DEFAULT_EFFECT_OPTIONS }) {
         }
       }
 
-      setSize(width, height, updateStyles) {
+      setSize(width: number, height: number, updateStyles: boolean) {
         if (width <= 0 || height <= 0) {
           this.hasValidSize = false;
           return;
@@ -1142,12 +1240,12 @@ export default function Hyperspeed({ effectOptions = DEFAULT_EFFECT_OPTIONS }) {
     const container = hyperspeed.current;
     if (!container) return;
 
-    const options = {
+    const options: EffectOptions = {
       ...DEFAULT_EFFECT_OPTIONS,
       ...effectOptions,
       colors: { ...DEFAULT_EFFECT_OPTIONS.colors, ...effectOptions.colors }
-    };
-    options.distortion = distortions[options.distortion];
+    } as unknown as EffectOptions;
+    options.distortion = distortions[options.distortion as unknown as string];
 
     const myApp = new App(container, options);
     appRef.current = myApp;

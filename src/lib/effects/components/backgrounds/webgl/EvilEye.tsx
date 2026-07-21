@@ -1,10 +1,9 @@
-// @ts-nocheck
 "use client";
 
 import { Renderer, Program, Mesh, Triangle, Texture } from 'ogl';
 import { useEffect, useRef } from 'react';
 
-function hexToVec3(hex) {
+function hexToVec3(hex: string) {
   const h = hex.replace('#', '');
   return [
     parseInt(h.slice(0, 2), 16) / 255,
@@ -16,13 +15,13 @@ function hexToVec3(hex) {
 function generateNoiseTexture(size = 256) {
   const data = new Uint8Array(size * size * 4);
 
-  function hash(x, y, s) {
+  function hash(x: number, y: number, s: number) {
     let n = x * 374761393 + y * 668265263 + s * 1274126177;
     n = Math.imul(n ^ (n >>> 13), 1274126177);
     return ((n ^ (n >>> 16)) >>> 0) / 4294967296;
   }
 
-  function noise(px, py, freq, seed) {
+  function noise(px: number, py: number, freq: number, seed: number) {
     const fx = (px / size) * freq;
     const fy = (py / size) * freq;
     const ix = Math.floor(fx);
@@ -163,7 +162,7 @@ export default function EvilEye({
   flameSpeed = 1.0,
   backgroundColor = '#000000'
 }) {
-  const containerRef = useRef(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -187,7 +186,7 @@ export default function EvilEye({
 
     const mouse = { x: 0, y: 0, tx: 0, ty: 0 };
 
-    function onMouseMove(e) {
+    function onMouseMove(e: MouseEvent) {
       const rect = container.getBoundingClientRect();
       mouse.tx = ((e.clientX - rect.left) / rect.width) * 2 - 1;
       mouse.ty = -(((e.clientY - rect.top) / rect.height) * 2 - 1);
@@ -201,7 +200,7 @@ export default function EvilEye({
     container.addEventListener('mousemove', onMouseMove);
     container.addEventListener('mouseleave', onMouseLeave);
 
-    let program;
+    let program: Program;
 
     function resize() {
       renderer.setSize(container.offsetWidth, container.offsetHeight);
@@ -237,9 +236,9 @@ export default function EvilEye({
     const mesh = new Mesh(gl, { geometry, program });
     container.appendChild(gl.canvas);
 
-    let animationFrameId;
+    let animationFrameId: number;
 
-    function update(time) {
+    function update(time: number) {
       animationFrameId = requestAnimationFrame(update);
       mouse.x += (mouse.tx - mouse.x) * 0.05;
       mouse.y += (mouse.ty - mouse.y) * 0.05;

@@ -1,4 +1,3 @@
-// @ts-nocheck
 "use client";
 import { useEffect, useRef } from "react";
 import { Renderer, Program, Mesh, Triangle, Color } from "ogl";
@@ -88,7 +87,7 @@ function parseColorToRgb(c: any): [number, number, number] {
 
 const Threads = ({ color = [1, 1, 1], amplitude = 1, distance = 0, enableMouseInteraction = false }: any) => {
   const containerRef = useRef<HTMLDivElement>(null);
-  const animationFrameId = useRef<number>();
+  const animationFrameId = useRef<number | undefined>(undefined);
 
   useEffect(() => {
     if (!containerRef.current) return;

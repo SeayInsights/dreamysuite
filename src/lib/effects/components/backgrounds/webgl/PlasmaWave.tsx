@@ -1,10 +1,9 @@
-// @ts-nocheck
 "use client";
 
 import { useRef, useEffect } from 'react';
 import { Renderer, Camera, Transform, Program, Mesh, Geometry } from 'ogl';
 
-function hexToRgb(hex) {
+function hexToRgb(hex: string) {
   const r = parseInt(hex.slice(1, 3), 16) / 255;
   const g = parseInt(hex.slice(3, 5), 16) / 255;
   const b = parseInt(hex.slice(5, 7), 16) / 255;
@@ -105,7 +104,7 @@ void main() {
 }
 `;
 
-export default function PlasmaWave(props) {
+export default function PlasmaWave(props: any) {
   const {
     xOffset = 0,
     yOffset = 0,
@@ -122,7 +121,7 @@ export default function PlasmaWave(props) {
   const propsRef = useRef(props);
   propsRef.current = props;
 
-  const containerRef = useRef(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const ctn = containerRef.current;
@@ -190,9 +189,9 @@ export default function PlasmaWave(props) {
     resize();
 
     const startTime = performance.now();
-    let animateId;
+    let animateId: number;
 
-    const update = (now) => {
+    const update = (now: number) => {
       const {
         xOffset: xOff = 0,
         yOffset: yOff = 0,

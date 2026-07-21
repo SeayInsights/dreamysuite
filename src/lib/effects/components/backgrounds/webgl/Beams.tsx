@@ -1,4 +1,3 @@
-// @ts-nocheck
 "use client";
  
 import { forwardRef, useImperativeHandle, useEffect, useRef, useMemo } from "react";
@@ -12,7 +11,7 @@ const containerStyle: React.CSSProperties = { width: "100%", height: "100%" };
 function extendMaterial(BaseMaterial: any, cfg: any) {
   const physical = THREE.ShaderLib.physical;
   const { vertexShader: baseVert, fragmentShader: baseFrag, uniforms: baseUniforms } = physical;
-  const baseDefines = physical.defines ?? {};
+  const baseDefines = (physical as { defines?: Record<string, unknown> }).defines ?? {};
   const uniforms = THREE.UniformsUtils.clone(baseUniforms);
   const defaults = new BaseMaterial(cfg.material || {}) as any;
   if (defaults.color) uniforms.diffuse.value = defaults.color;

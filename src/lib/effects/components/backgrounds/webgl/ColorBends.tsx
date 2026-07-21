@@ -1,6 +1,5 @@
-// @ts-nocheck
 "use client";
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, type CSSProperties } from 'react';
 import * as THREE from 'three';
 
 const MAX_COLORS = 8;
@@ -108,6 +107,25 @@ void main() {
 }
 `;
 
+interface ColorBendsProps {
+  className?: string;
+  style?: CSSProperties;
+  rotation?: number;
+  speed?: number;
+  colors?: string[];
+  transparent?: boolean;
+  autoRotate?: number;
+  scale?: number;
+  frequency?: number;
+  warpStrength?: number;
+  mouseInfluence?: number;
+  parallax?: number;
+  noise?: number;
+  iterations?: number;
+  intensity?: number;
+  bandWidth?: number;
+}
+
 export default function ColorBends({
   className,
   style,
@@ -125,12 +143,12 @@ export default function ColorBends({
   iterations = 1,
   intensity = 1.5,
   bandWidth = 6
-}) {
-  const containerRef = useRef(null);
-  const rendererRef = useRef(null);
-  const rafRef = useRef(null);
-  const materialRef = useRef(null);
-  const resizeObserverRef = useRef(null);
+}: ColorBendsProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
+  const rafRef = useRef<number | null>(null);
+  const materialRef = useRef<THREE.ShaderMaterial | null>(null);
+  const resizeObserverRef = useRef<ResizeObserver | null>(null);
   const rotationRef = useRef(rotation);
   const autoRotateRef = useRef(autoRotate);
   const pointerTargetRef = useRef(new THREE.Vector2(0, 0));
@@ -185,13 +203,13 @@ export default function ColorBends({
     renderer.domElement.style.width = '100%';
     renderer.domElement.style.height = '100%';
     renderer.domElement.style.display = 'block';
-    container.appendChild(renderer.domElement);
+    container!.appendChild(renderer.domElement);
 
     const clock = new THREE.Clock();
 
     const handleResize = () => {
-      const w = container.clientWidth || 1;
-      const h = container.clientHeight || 1;
+      const w = container!.clientWidth || 1;
+      const h = container!.clientHeight || 1;
       renderer.setSize(w, h, false);
       material.uniforms.uCanvas.value.set(w, h);
     };
@@ -199,10 +217,10 @@ export default function ColorBends({
 
     if ('ResizeObserver' in window) {
       const ro = new ResizeObserver(handleResize);
-      ro.observe(container);
+      ro.observe(container!);
       resizeObserverRef.current = ro;
     } else {
-      window.addEventListener('resize', handleResize);
+      (window as Window).addEventListener('resize', handleResize);
     }
 
     const loop = () => {
@@ -235,7 +253,7 @@ export default function ColorBends({
       renderer.dispose();
       renderer.forceContextLoss();
       if (renderer.domElement && renderer.domElement.parentElement === container) {
-        container.removeChild(renderer.domElement);
+        container!.removeChild(renderer.domElement);
       }
     };
   }, [bandWidth, frequency, intensity, iterations, mouseInfluence, noise, parallax, scale, speed, transparent, warpStrength]);
@@ -258,7 +276,7 @@ export default function ColorBends({
     material.uniforms.uIntensity.value = intensity;
     material.uniforms.uBandWidth.value = bandWidth;
 
-    const toVec3 = hex => {
+    const toVec3 = (hex: string) => {
       const h = hex.replace('#', '').trim();
       const v =
         h.length === 3
@@ -286,7 +304,7 @@ export default function ColorBends({
     const container = containerRef.current;
     if (!material || !container) return;
 
-    const handlePointerMove = e => {
+    const handlePointerMove = (e: PointerEvent) => {
       const rect = container.getBoundingClientRect();
       const x = ((e.clientX - rect.left) / (rect.width || 1)) * 2 - 1;
       const y = -(((e.clientY - rect.top) / (rect.height || 1)) * 2 - 1);
