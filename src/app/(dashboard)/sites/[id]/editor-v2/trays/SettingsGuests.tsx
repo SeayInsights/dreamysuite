@@ -6,7 +6,6 @@ import { Check, Plus, Trash2, X } from "lucide-react";
 
 import { useEditorStore } from "@/app/stores/editorStore";
 import {
-  BLANK_GUEST_FORM,
   DROP_FIELDS,
   GUEST_COLUMNS,
   GUEST_FIELDS,
@@ -23,11 +22,7 @@ import {
   type ImportState,
 } from "./guests/ImportGuestsModal";
 import { CategoryManagerModal } from "./guests/CategoryManagerModal";
-
-const IN =
-  "rounded-md border border-border bg-background px-2 py-1.5 text-sm outline-none focus:border-ring";
-const LB =
-  "flex flex-col gap-0.5 text-[11px] font-medium uppercase tracking-wider text-muted-foreground";
+import { AddGuestModal, type GuestForm } from "./guests/AddGuestModal";
 
 export function GuestsPanel({ onBack }: { onBack: () => void }) {
   const siteId = useEditorStore((s) => s.siteId);
@@ -38,8 +33,6 @@ export function GuestsPanel({ onBack }: { onBack: () => void }) {
   const [guests, setGuests] = useState<Guest[]>([]);
   const [loading, setLoading] = useState(() => Boolean(siteId));
   const [showModal, setShowModal] = useState(false);
-  const [form, setForm] = useState(BLANK_GUEST_FORM);
-  const [saving, setSaving] = useState(false);
   const [editing, setEditing] = useState<{ id: string; field: string } | null>(
     null,
   );
@@ -116,10 +109,8 @@ export function GuestsPanel({ onBack }: { onBack: () => void }) {
     setEditing(null);
   }
 
-  async function addGuest(e: { preventDefault(): void }) {
-    e.preventDefault();
-    if (!siteId) return;
-    setSaving(true);
+  async function addGuest(form: GuestForm): Promise<boolean> {
+    if (!siteId) return false;
     setActionError(null);
     try {
       const res = await fetch(`/api/sites/${siteId}/guests`, {
@@ -130,14 +121,12 @@ export function GuestsPanel({ onBack }: { onBack: () => void }) {
       if (!res.ok) throw new Error("Create failed");
       const { guest } = (await res.json()) as { guest: Guest };
       setGuests((prev) => [guest, ...prev]);
-      setShowModal(false);
-      setForm(BLANK_GUEST_FORM);
+      return true;
     } catch {
       setActionError(
         "That guest could not be added. Check the details and try again.",
       );
-    } finally {
-      setSaving(false);
+      return false;
     }
   }
 
@@ -154,34 +143,6 @@ export function GuestsPanel({ onBack }: { onBack: () => void }) {
     >
       {s === "yes" ? "Attending" : s === "no" ? "Declined" : "Pending"}
     </span>
-  );
-
-  const set =
-    (k: keyof typeof BLANK_GUEST_FORM) => (e: { target: { value: string } }) =>
-      setForm((p) => ({ ...p, [k]: e.target.value }));
-
-  const fld = (lbl: string, k: keyof typeof BLANK_GUEST_FORM, t = "text") => (
-    <label className={LB}>
-      {lbl}
-      <input type={t} value={form[k]} onChange={set(k)} className={IN} />
-    </label>
-  );
-
-  const sel = (
-    lbl: string,
-    k: keyof typeof BLANK_GUEST_FORM,
-    opts: string[],
-  ) => (
-    <label className={`${LB} flex-1`}>
-      {lbl}
-      <select value={form[k]} onChange={set(k)} className={IN}>
-        {opts.map((o) => (
-          <option key={o} value={o}>
-            {o ? o[0].toUpperCase() + o.slice(1) : "— Select —"}
-          </option>
-        ))}
-      </select>
-    </label>
   );
 
   function cell(
@@ -676,55 +637,11 @@ export function GuestsPanel({ onBack }: { onBack: () => void }) {
       </div>
 
       {showModal && (
-        <div
-          className="fixed inset-0 z-[var(--z-modal)] flex items-center justify-center bg-black/40"
-          onClick={() => setShowModal(false)}
-        >
-          <form
-            onSubmit={addGuest}
-            onClick={(e) => e.stopPropagation()}
-            className="flex w-80 flex-col gap-3 rounded-lg border border-border bg-background p-4 shadow-xl"
-          >
-            <h3 className="text-sm font-semibold">Add Guest</h3>
-            <div className="flex gap-2">
-              {fld("First Name", "firstName")}
-              {fld("Last Name", "lastName")}
-            </div>
-            {fld("Email", "email", "email")}
-            {fld("Phone", "phone", "tel")}
-            {sel("Category", "category", ["", ...categories])}
-            {fld("Invited By", "invitedBy")}
-            <div className="flex gap-2">
-              {sel("Ceremony/Reception", "ceremonyOrReception", [
-                "ceremony",
-                "reception",
-                "both",
-              ])}
-              {sel("Invitation Type", "invitationType", [
-                "digital",
-                "printed",
-                "both",
-              ])}
-            </div>
-            {fld("Table #", "tableNumber")}
-            <div className="flex justify-end gap-2">
-              <button
-                type="button"
-                onClick={() => setShowModal(false)}
-                className="rounded-md border border-border px-3 py-1.5 text-xs hover:bg-accent/30"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                disabled={saving || !form.firstName.trim()}
-                className="rounded-md bg-foreground px-3 py-1.5 text-xs font-medium text-background hover:opacity-90 disabled:opacity-50"
-              >
-                {saving ? "Saving…" : "Add Guest"}
-              </button>
-            </div>
-          </form>
-        </div>
+        <AddGuestModal
+          categories={categories}
+          onClose={() => setShowModal(false)}
+          onSubmit={addGuest}
+        />
       )}
 
       {showCatMgr && (
