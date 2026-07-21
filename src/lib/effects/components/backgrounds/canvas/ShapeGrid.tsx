@@ -1,7 +1,22 @@
-// @ts-nocheck
 "use client";
 
 import { useRef, useEffect } from 'react';
+
+interface ShapeGridProps {
+  direction?: string;
+  speed?: number;
+  borderColor?: string;
+  squareSize?: number;
+  hoverFillColor?: string;
+  shape?: string;
+  hoverTrailAmount?: number;
+  className?: string;
+}
+
+interface GridCell {
+  x: number;
+  y: number;
+}
 
 const ShapeGrid = ({
   direction = 'right',
@@ -12,19 +27,19 @@ const ShapeGrid = ({
   shape = 'square',
   hoverTrailAmount = 0,
   className = ''
-}) => {
-  const canvasRef = useRef(null);
-  const requestRef = useRef(null);
-  const numSquaresX = useRef();
-  const numSquaresY = useRef();
+}: ShapeGridProps) => {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const requestRef = useRef<number | null>(null);
+  const numSquaresX = useRef<number>(undefined);
+  const numSquaresY = useRef<number>(undefined);
   const gridOffset = useRef({ x: 0, y: 0 });
-  const hoveredSquare = useRef(null);
-  const trailCells = useRef([]);
-  const cellOpacities = useRef(new Map());
+  const hoveredSquare = useRef<GridCell | null>(null);
+  const trailCells = useRef<GridCell[]>([]);
+  const cellOpacities = useRef(new Map<string, number>());
 
   useEffect(() => {
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d');
+    const canvas = canvasRef.current!;
+    const ctx = canvas.getContext('2d')!;
 
     const isHex = shape === 'hexagon';
     const isTri = shape === 'triangle';
@@ -41,7 +56,7 @@ const ShapeGrid = ({
     window.addEventListener('resize', resizeCanvas);
     resizeCanvas();
 
-    const drawHex = (cx, cy, size) => {
+    const drawHex = (cx: number, cy: number, size: number) => {
       ctx.beginPath();
       for (let i = 0; i < 6; i++) {
         const angle = (Math.PI / 3) * i;
@@ -53,13 +68,13 @@ const ShapeGrid = ({
       ctx.closePath();
     };
 
-    const drawCircle = (cx, cy, size) => {
+    const drawCircle = (cx: number, cy: number, size: number) => {
       ctx.beginPath();
       ctx.arc(cx, cy, size / 2, 0, Math.PI * 2);
       ctx.closePath();
     };
 
-    const drawTriangle = (cx, cy, size, flip) => {
+    const drawTriangle = (cx: number, cy: number, size: number, flip: boolean) => {
       ctx.beginPath();
       if (flip) {
         ctx.moveTo(cx, cy + size / 2);
@@ -235,7 +250,7 @@ const ShapeGrid = ({
     };
 
     const updateCellOpacities = () => {
-      const targets = new Map();
+      const targets = new Map<string, number>();
 
       if (hoveredSquare.current) {
         targets.set(`${hoveredSquare.current.x},${hoveredSquare.current.y}`, 1);
@@ -268,7 +283,7 @@ const ShapeGrid = ({
       }
     };
 
-    const handleMouseMove = event => {
+    const handleMouseMove = (event: MouseEvent) => {
       const rect = canvas.getBoundingClientRect();
       const mouseX = event.clientX - rect.left;
       const mouseY = event.clientY - rect.top;
@@ -377,7 +392,7 @@ const ShapeGrid = ({
 
     return () => {
       window.removeEventListener('resize', resizeCanvas);
-      cancelAnimationFrame(requestRef.current);
+      cancelAnimationFrame(requestRef.current!);
       canvas.removeEventListener('mousemove', handleMouseMove);
       canvas.removeEventListener('mouseleave', handleMouseLeave);
     };
