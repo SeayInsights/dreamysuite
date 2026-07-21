@@ -1,10 +1,17 @@
-// @ts-nocheck
 "use client";
 
 import { useRef, useEffect } from 'react';
 
-const Lightning = ({ hue = 230, xOffset = 0, speed = 1, intensity = 1, size = 1 }) => {
-  const canvasRef = useRef(null);
+interface LightningProps {
+  hue?: number;
+  xOffset?: number;
+  speed?: number;
+  intensity?: number;
+  size?: number;
+}
+
+const Lightning = ({ hue = 230, xOffset = 0, speed = 1, intensity = 1, size = 1 }: LightningProps) => {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -111,7 +118,7 @@ const Lightning = ({ hue = 230, xOffset = 0, speed = 1, intensity = 1, size = 1 
       }
     `;
 
-    const compileShader = (source, type) => {
+    const compileShader = (source: string, type: number) => {
       const shader = gl.createShader(type);
       if (!shader) return null;
       gl.shaderSource(shader, source);
@@ -157,7 +164,7 @@ const Lightning = ({ hue = 230, xOffset = 0, speed = 1, intensity = 1, size = 1 
     const uSizeLocation = gl.getUniformLocation(program, 'uSize');
 
     const startTime = performance.now();
-    let rafId;
+    let rafId: number;
     const render = () => {
       resizeCanvas();
       gl.viewport(0, 0, canvas.width, canvas.height);
