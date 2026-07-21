@@ -1,18 +1,37 @@
-// @ts-nocheck
 "use client";
 
 import { useEffect, useRef } from 'react';
+import type { CSSProperties } from 'react';
 import { Renderer, Program, Mesh, Triangle } from 'ogl';
 
+interface GradientBlindsProps {
+  className?: string;
+  dpr?: number;
+  paused?: boolean;
+  gradientColors?: string[];
+  angle?: number;
+  noise?: number;
+  blindCount?: number;
+  blindMinWidth?: number;
+  mouseDampening?: number;
+  mirrorGradient?: boolean;
+  spotlightRadius?: number;
+  spotlightSoftness?: number;
+  spotlightOpacity?: number;
+  distortAmount?: number;
+  shineDirection?: string;
+  mixBlendMode?: CSSProperties['mixBlendMode'];
+}
+
 const MAX_COLORS = 8;
-const hexToRGB = hex => {
+const hexToRGB = (hex: string) => {
   const c = hex.replace('#', '').padEnd(6, '0');
   const r = parseInt(c.slice(0, 2), 16) / 255;
   const g = parseInt(c.slice(2, 4), 16) / 255;
   const b = parseInt(c.slice(4, 6), 16) / 255;
   return [r, g, b];
 };
-const prepStops = stops => {
+const prepStops = (stops: string[] | undefined) => {
   const base = (stops && stops.length ? stops : ['#FF9FFC', '#5227FF']).slice(0, MAX_COLORS);
   if (base.length === 1) base.push(base[0]);
   while (base.length < MAX_COLORS) base.push(base[base.length - 1]);
@@ -39,13 +58,13 @@ export default function GradientBlinds({
   distortAmount = 0,
   shineDirection = 'left',
   mixBlendMode = 'lighten'
-}) {
-  const containerRef = useRef(null);
-  const rafRef = useRef(null);
-  const programRef = useRef(null);
-  const meshRef = useRef(null);
-  const geometryRef = useRef(null);
-  const rendererRef = useRef(null);
+}: GradientBlindsProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const rafRef = useRef<number | null>(null);
+  const programRef = useRef<Program | null>(null);
+  const meshRef = useRef<Mesh | null>(null);
+  const geometryRef = useRef<Triangle | null>(null);
+  const rendererRef = useRef<Renderer | null>(null);
   const mouseTargetRef = useRef([0, 0]);
   const lastTimeRef = useRef(0);
   const firstResizeRef = useRef(true);
@@ -250,7 +269,7 @@ void main() {
     const ro = new ResizeObserver(resize);
     ro.observe(container);
 
-    const onPointerMove = e => {
+    const onPointerMove = (e: PointerEvent) => {
       const rect = canvas.getBoundingClientRect();
       const scale = renderer.dpr || 1;
       const x = (e.clientX - rect.left) * scale;
@@ -262,7 +281,7 @@ void main() {
     };
     canvas.addEventListener('pointermove', onPointerMove);
 
-    const loop = t => {
+    const loop = (t: number) => {
       rafRef.current = requestAnimationFrame(loop);
       uniforms.iTime.value = t * 0.001;
       if (mouseDampening > 0) {
@@ -294,7 +313,7 @@ void main() {
       canvas.removeEventListener('pointermove', onPointerMove);
       ro.disconnect();
       if (canvas.parentElement === container) container.removeChild(canvas);
-      const callIfFn = (obj, key) => {
+      const callIfFn = (obj: any, key: string) => {
         if (obj && typeof obj[key] === 'function') obj[key].call(obj);
       };
       callIfFn(programRef.current, 'remove');

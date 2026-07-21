@@ -1,9 +1,36 @@
-// @ts-nocheck
 "use client";
 
 import { BloomEffect, ChromaticAberrationEffect, EffectComposer, EffectPass, RenderPass } from 'postprocessing';
 import { useEffect, useRef, useState } from 'react';
+import type { CSSProperties } from 'react';
 import * as THREE from 'three';
+
+interface GridScanProps {
+  sensitivity?: number;
+  lineThickness?: number;
+  linesColor?: string;
+  scanColor?: string;
+  scanOpacity?: number;
+  gridScale?: number;
+  lineStyle?: string;
+  lineJitter?: number;
+  scanDirection?: string;
+  enablePost?: boolean;
+  bloomIntensity?: number;
+  bloomThreshold?: number;
+  bloomSmoothing?: number;
+  chromaticAberration?: number;
+  noiseIntensity?: number;
+  scanGlow?: number;
+  scanSoftness?: number;
+  scanPhaseTaper?: number;
+  scanDuration?: number;
+  scanDelay?: number;
+  scanOnClick?: boolean;
+  snapBackDelay?: number;
+  className?: string;
+  style?: CSSProperties;
+}
 
 const vert = `
 varying vec2 vUv;
@@ -269,12 +296,12 @@ void main(){
 }
 `;
 
-function srgbColor(hex) {
+function srgbColor(hex: string) {
   const c = new THREE.Color(hex);
   return c.convertSRGBToLinear();
 }
 
-function smoothDampVec2(current, target, currentVelocity, smoothTime, maxSpeed, deltaTime) {
+function smoothDampVec2(current: THREE.Vector2, target: THREE.Vector2, currentVelocity: THREE.Vector2, smoothTime: number, maxSpeed: number, deltaTime: number) {
   const out = current.clone();
   smoothTime = Math.max(0.0001, smoothTime);
   const omega = 2 / smoothTime;
@@ -303,7 +330,7 @@ function smoothDampVec2(current, target, currentVelocity, smoothTime, maxSpeed, 
   return out;
 }
 
-function smoothDampFloat(current, target, velRef, smoothTime, maxSpeed, deltaTime) {
+function smoothDampFloat(current: number, target: number, velRef: { v: number }, smoothTime: number, maxSpeed: number, deltaTime: number) {
   smoothTime = Math.max(0.0001, smoothTime);
   const omega = 2 / smoothTime;
   const x = omega * deltaTime;
@@ -355,15 +382,15 @@ export function GridScan({
   snapBackDelay = 250,
   className,
   style
-}) {
-  const containerRef = useRef(null);
+}: GridScanProps) {
+  const containerRef = useRef<HTMLDivElement | null>(null);
 
-  const rendererRef = useRef(null);
-  const materialRef = useRef(null);
-  const composerRef = useRef(null);
-  const bloomRef = useRef(null);
-  const chromaRef = useRef(null);
-  const rafRef = useRef(null);
+  const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
+  const materialRef = useRef<THREE.ShaderMaterial | null>(null);
+  const composerRef = useRef<EffectComposer | null>(null);
+  const bloomRef = useRef<BloomEffect | null>(null);
+  const chromaRef = useRef<ChromaticAberrationEffect | null>(null);
+  const rafRef = useRef<number | null>(null);
 
   const lookTarget = useRef(new THREE.Vector2(0, 0));
   const tiltTarget = useRef(0);
@@ -377,9 +404,9 @@ export function GridScan({
   const yawVel = useRef(0);
 
   const MAX_SCANS = 8;
-  const scanStartsRef = useRef([]);
+  const scanStartsRef = useRef<number[]>([]);
 
-  const pushScan = t => {
+  const pushScan = (t: number) => {
     const arr = scanStartsRef.current.slice();
     if (arr.length >= MAX_SCANS) arr.shift();
     arr.push(t);
@@ -404,8 +431,8 @@ export function GridScan({
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
-    let leaveTimer = null;
-    const onMove = e => {
+    let leaveTimer: number | null = null;
+    const onMove = (e: MouseEvent) => {
       if (leaveTimer) {
         clearTimeout(leaveTimer);
         leaveTimer = null;

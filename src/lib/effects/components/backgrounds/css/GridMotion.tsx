@@ -1,12 +1,17 @@
-// @ts-nocheck
 "use client";
 
 import { useEffect, useRef } from 'react';
+import type { ReactNode } from 'react';
 
-export default function GridMotion({ items = [], gradientColor = 'black' }) {
-  const gridRef = useRef(null);
-  const rowRefs = useRef([]);
-  const mouseXRef = useRef(
+interface GridMotionProps {
+  items?: ReactNode[];
+  gradientColor?: string;
+}
+
+export default function GridMotion({ items = [], gradientColor = 'black' }: GridMotionProps) {
+  const gridRef = useRef<HTMLDivElement>(null);
+  const rowRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const mouseXRef = useRef<number>(
     typeof window !== 'undefined' ? window.innerWidth / 2 : 0
   );
 
@@ -24,7 +29,7 @@ export default function GridMotion({ items = [], gradientColor = 'black' }) {
 
       gsap.ticker.lagSmoothing(0);
 
-      const handleMouseMove = e => {
+      const handleMouseMove = (e: MouseEvent) => {
         mouseXRef.current = e.clientX;
       };
 
@@ -92,7 +97,9 @@ export default function GridMotion({ items = [], gradientColor = 'black' }) {
           {[...Array(4)].map((_, rowIndex) => (
             <div
               key={rowIndex}
-              ref={el => (rowRefs.current[rowIndex] = el)}
+              ref={el => {
+                rowRefs.current[rowIndex] = el;
+              }}
               style={{
                 display: 'flex',
                 gap: '1rem',

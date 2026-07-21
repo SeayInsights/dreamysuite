@@ -1,4 +1,3 @@
-// @ts-nocheck
 "use client";
 
 import { useEffect, useRef } from 'react';
@@ -27,6 +26,15 @@ void main() {
   gl_FragColor = texture2D(uTexture, uv - 0.02 * offset.rg);
 }`;
 
+interface GridDistortionProps {
+  grid?: number;
+  mouse?: number;
+  strength?: number;
+  relaxation?: number;
+  imageSrc?: string;
+  className?: string;
+}
+
 export default function GridDistortion({
   grid = 15,
   mouse = 0.1,
@@ -34,15 +42,15 @@ export default function GridDistortion({
   relaxation = 0.9,
   imageSrc,
   className = ''
-}) {
-  const containerRef = useRef(null);
-  const sceneRef = useRef(null);
-  const rendererRef = useRef(null);
-  const cameraRef = useRef(null);
-  const planeRef = useRef(null);
+}: GridDistortionProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const sceneRef = useRef<THREE.Scene | null>(null);
+  const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
+  const cameraRef = useRef<THREE.OrthographicCamera | null>(null);
+  const planeRef = useRef<THREE.Mesh | null>(null);
   const imageAspectRef = useRef(1);
-  const animationIdRef = useRef(null);
-  const resizeObserverRef = useRef(null);
+  const animationIdRef = useRef<number | null>(null);
+  const resizeObserverRef = useRef<ResizeObserver | null>(null);
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -71,8 +79,8 @@ export default function GridDistortion({
     const uniforms = {
       time: { value: 0 },
       resolution: { value: new THREE.Vector4() },
-      uTexture: { value: null },
-      uDataTexture: { value: null }
+      uTexture: { value: null as THREE.Texture | null },
+      uDataTexture: { value: null as THREE.DataTexture | null }
     };
 
     if (imageSrc) {
@@ -150,7 +158,7 @@ export default function GridDistortion({
 
     const mouseState = { x: 0, y: 0, prevX: 0, prevY: 0, vX: 0, vY: 0 };
 
-    const handleMouseMove = e => {
+    const handleMouseMove = (e: MouseEvent) => {
       const rect = container.getBoundingClientRect();
       const x = (e.clientX - rect.left) / rect.width;
       const y = 1 - (e.clientY - rect.top) / rect.height;
@@ -176,7 +184,7 @@ export default function GridDistortion({
 
       uniforms.time.value += 0.05;
 
-      const d = dataTexture.image.data;
+      const d = dataTexture.image.data!;
       for (let i = 0; i < size * size; i++) {
         d[i * 4] *= relaxation;
         d[i * 4 + 1] *= relaxation;

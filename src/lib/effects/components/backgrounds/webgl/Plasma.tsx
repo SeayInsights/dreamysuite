@@ -1,10 +1,9 @@
-// @ts-nocheck
 "use client";
 
 import { useEffect, useRef } from 'react';
 import { Renderer, Program, Mesh, Triangle } from 'ogl';
 
-const hexToRgb = hex => {
+const hexToRgb = (hex: string) => {
   const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
   if (!result) return [1, 0.5, 0.2];
   return [parseInt(result[1], 16) / 255, parseInt(result[2], 16) / 255, parseInt(result[3], 16) / 255];
@@ -90,7 +89,7 @@ export const Plasma = ({
   opacity = 1,
   mouseInteractive = true
 }) => {
-  const containerRef = useRef(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const mousePos = useRef({ x: 0, y: 0 });
 
   useEffect(() => {
@@ -136,9 +135,9 @@ export const Plasma = ({
 
     const mesh = new Mesh(gl, { geometry, program });
 
-    const handleMouseMove = e => {
+    const handleMouseMove = (e: MouseEvent) => {
       if (!mouseInteractive) return;
-      const rect = containerRef.current.getBoundingClientRect();
+      const rect = containerRef.current!.getBoundingClientRect();
       mousePos.current.x = e.clientX - rect.left;
       mousePos.current.y = e.clientY - rect.top;
       const mouseUniform = program.uniforms.uMouse.value;
@@ -151,7 +150,7 @@ export const Plasma = ({
     }
 
     const setSize = () => {
-      const rect = containerRef.current.getBoundingClientRect();
+      const rect = containerRef.current!.getBoundingClientRect();
       const width = Math.max(1, Math.floor(rect.width));
       const height = Math.max(1, Math.floor(rect.height));
       renderer.setSize(width, height);
@@ -166,7 +165,7 @@ export const Plasma = ({
 
     let raf = 0;
     const t0 = performance.now();
-    const loop = t => {
+    const loop = (t: number) => {
       const timeValue = (t - t0) * 0.001;
       if (direction === 'pingpong') {
         const pingpongDuration = 10;

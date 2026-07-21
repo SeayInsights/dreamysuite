@@ -1,4 +1,3 @@
-// @ts-nocheck
 "use client";
 import { useEffect, useRef } from 'react';
 import {
@@ -24,34 +23,94 @@ import {
   Raycaster as y
 } from 'three';
 import { RoomEnvironment as z } from 'three/examples/jsm/environments/RoomEnvironment.js';
+import type { MeshPhysicalMaterialParameters, OrthographicCamera, WebGLRendererParameters } from 'three';
+
+interface TimeState { elapsed: number; delta: number; }
+interface SizeState { width: number; height: number; wWidth: number; wHeight: number; ratio: number; pixelRatio: number; }
+interface ThreeAppSize { width: number; height: number; }
+interface ThreeAppOptions {
+  canvas?: HTMLCanvasElement;
+  id?: string;
+  rendererOptions?: WebGLRendererParameters;
+  size?: 'parent' | ThreeAppSize;
+}
+interface PostProcessing {
+  render: () => void;
+  setSize: (width: number, height: number) => void;
+  dispose: () => void;
+}
+interface BallpitMaterialParams {
+  metalness: number;
+  roughness: number;
+  clearcoat: number;
+  clearcoatRoughness: number;
+}
+interface BallpitConfig {
+  count: number;
+  colors: number[];
+  ambientColor: number;
+  ambientIntensity: number;
+  lightIntensity: number;
+  materialParams: BallpitMaterialParams;
+  minSize: number;
+  maxSize: number;
+  size0: number;
+  gravity: number;
+  friction: number;
+  wallBounce: number;
+  maxVelocity: number;
+  maxX: number;
+  maxY: number;
+  maxZ: number;
+  controlSphere0: boolean;
+  followCursor: boolean;
+}
+interface PointerHandler {
+  position: r;
+  nPosition: r;
+  hover: boolean;
+  touching: boolean;
+  onEnter: (handler: PointerHandler) => void;
+  onMove: (handler: PointerHandler) => void;
+  onClick: (handler: PointerHandler) => void;
+  onLeave: (handler: PointerHandler) => void;
+  dispose?: () => void;
+}
+interface PointerOptions {
+  domElement: HTMLElement;
+  onEnter?: (handler: PointerHandler) => void;
+  onMove?: (handler: PointerHandler) => void;
+  onClick?: (handler: PointerHandler) => void;
+  onLeave?: (handler: PointerHandler) => void;
+}
 
 class ThreeApp {
   #opts;
-  canvas;
-  camera;
-  cameraMinAspect;
-  cameraMaxAspect;
-  cameraFov;
-  maxPixelRatio;
-  minPixelRatio;
-  scene;
-  renderer;
-  #postprocessing;
+  declare canvas: HTMLCanvasElement;
+  declare camera: t & OrthographicCamera;
+  declare cameraMinAspect: number;
+  declare cameraMaxAspect: number;
+  declare cameraFov: number;
+  declare maxPixelRatio: number;
+  declare minPixelRatio: number;
+  declare scene: i;
+  declare renderer: s;
+  #postprocessing!: PostProcessing;
   size = { width: 0, height: 0, wWidth: 0, wHeight: 0, ratio: 0, pixelRatio: 0 };
-  onBeforeRender = () => {};
-  onAfterRender = () => {};
-  onAfterResize = () => {};
+  onBeforeRender: (time: TimeState) => void = () => {};
+  onAfterRender: (time: TimeState) => void = () => {};
+  onAfterResize: (size: SizeState) => void = () => {};
   #isVisible = false;
   #isAnimating = false;
   isDisposed = false;
-  #intersectionObserver;
-  #resizeObserver;
-  #resizeTimeout;
+  #intersectionObserver: IntersectionObserver | undefined;
+  #resizeObserver: ResizeObserver | undefined;
+  #resizeTimeout: ReturnType<typeof setTimeout> | undefined;
   #clock = new e();
   #time = { elapsed: 0, delta: 0 };
-  #rafId;
+  #rafId!: number;
 
-  constructor(opts) {
+  constructor(opts: ThreeAppOptions) {
     this.#opts = { ...opts };
     this.#initCamera();
     this.#initScene();
@@ -60,7 +119,7 @@ class ThreeApp {
     this.#initObservers();
   }
   #initCamera() {
-    this.camera = new t();
+    this.camera = new t() as t & OrthographicCamera;
     this.cameraFov = this.camera.fov;
   }
   #initScene() {
@@ -70,12 +129,12 @@ class ThreeApp {
     if (this.#opts.canvas) {
       this.canvas = this.#opts.canvas;
     } else if (this.#opts.id) {
-      this.canvas = document.getElementById(this.#opts.id);
+      this.canvas = document.getElementById(this.#opts.id) as HTMLCanvasElement;
     } else {
       console.error('Three: Missing canvas or id parameter');
     }
     this.canvas.style.display = 'block';
-    const rendererOpts = {
+    const rendererOpts: WebGLRendererParameters = {
       canvas: this.canvas,
       powerPreference: 'high-performance',
       ...(this.#opts.rendererOptions ?? {})
@@ -88,7 +147,7 @@ class ThreeApp {
       window.addEventListener('resize', this.#onWindowResize.bind(this));
       if (this.#opts.size === 'parent' && this.canvas.parentNode) {
         this.#resizeObserver = new ResizeObserver(this.#onWindowResize.bind(this));
-        this.#resizeObserver.observe(this.canvas.parentNode);
+        this.#resizeObserver.observe(this.canvas.parentNode as HTMLElement);
       }
     }
     this.#intersectionObserver = new IntersectionObserver(this.#onIntersect.bind(this), {
@@ -103,7 +162,7 @@ class ThreeApp {
     this.#intersectionObserver?.disconnect();
     document.removeEventListener('visibilitychange', this.#onVisibilityChange.bind(this));
   }
-  #onIntersect(entries) {
+  #onIntersect(entries: IntersectionObserverEntry[]) {
     this.#isVisible = entries[0].isIntersecting;
     this.#isVisible ? this.#startAnimation() : this.#stopAnimation();
   }
@@ -122,8 +181,8 @@ class ThreeApp {
       width = this.#opts.size.width;
       height = this.#opts.size.height;
     } else if (this.#opts.size === 'parent' && this.canvas.parentNode) {
-      width = this.canvas.parentNode.offsetWidth;
-      height = this.canvas.parentNode.offsetHeight;
+      width = (this.canvas.parentNode as HTMLElement).offsetWidth;
+      height = (this.canvas.parentNode as HTMLElement).offsetHeight;
     } else {
       width = window.innerWidth;
       height = window.innerHeight;
@@ -149,7 +208,7 @@ class ThreeApp {
     this.camera.updateProjectionMatrix();
     this.updateWorldSize();
   }
-  #adjustFov(aspect) {
+  #adjustFov(aspect: number) {
     const tanHalf = Math.tan(o.degToRad(this.cameraFov / 2)) / (this.camera.aspect / aspect);
     this.camera.fov = 2 * o.radToDeg(Math.atan(tanHalf));
   }
@@ -173,7 +232,7 @@ class ThreeApp {
     this.size.pixelRatio = dpr;
   }
   get postprocessing() { return this.#postprocessing; }
-  set postprocessing(pp) {
+  set postprocessing(pp: PostProcessing) {
     this.#postprocessing = pp;
     this.render = pp.render.bind(pp);
   }
@@ -202,7 +261,7 @@ class ThreeApp {
     }
   }
   clear() {
-    this.scene.traverse(obj => {
+    this.scene.traverse((obj: any) => {
       if (obj.isMesh && typeof obj.material === 'object' && obj.material !== null) {
         Object.keys(obj.material).forEach(key => {
           const val = obj.material[key];
@@ -225,12 +284,12 @@ class ThreeApp {
   }
 }
 
-const pointerMap = new Map();
+const pointerMap = new Map<HTMLElement, PointerHandler>();
 const globalPointer = new r();
 let globalListening = false;
 
-function createPointerHandler(opts) {
-  const handler = {
+function createPointerHandler(opts: PointerOptions) {
+  const handler: PointerHandler = {
     position: new r(),
     nPosition: new r(),
     hover: false,
@@ -270,7 +329,7 @@ function createPointerHandler(opts) {
   return handler;
 }
 
-function onPointerMove(evt) {
+function onPointerMove(evt: PointerEvent) {
   globalPointer.x = evt.clientX;
   globalPointer.y = evt.clientY;
   processPointerInteraction();
@@ -290,7 +349,7 @@ function processPointerInteraction() {
   }
 }
 
-function onPointerClick(evt) {
+function onPointerClick(evt: MouseEvent) {
   globalPointer.x = evt.clientX;
   globalPointer.y = evt.clientY;
   for (const [elem, handler] of pointerMap) {
@@ -306,7 +365,7 @@ function onPointerLeave() {
   }
 }
 
-function onTouchStart(evt) {
+function onTouchStart(evt: TouchEvent) {
   if (evt.touches.length > 0) {
     evt.preventDefault();
     globalPointer.x = evt.touches[0].clientX;
@@ -323,7 +382,7 @@ function onTouchStart(evt) {
   }
 }
 
-function onTouchMove(evt) {
+function onTouchMove(evt: TouchEvent) {
   if (evt.touches.length > 0) {
     evt.preventDefault();
     globalPointer.x = evt.touches[0].clientX;
@@ -350,14 +409,14 @@ function onTouchEnd() {
   }
 }
 
-function updateHandlerPosition(handler, rect) {
+function updateHandlerPosition(handler: PointerHandler, rect: DOMRect) {
   handler.position.x = globalPointer.x - rect.left;
   handler.position.y = globalPointer.y - rect.top;
   handler.nPosition.x = (handler.position.x / rect.width) * 2 - 1;
   handler.nPosition.y = (-handler.position.y / rect.height) * 2 + 1;
 }
 
-function isPointerInRect(rect) {
+function isPointerInRect(rect: DOMRect) {
   const { x, y } = globalPointer;
   return x >= rect.left && x <= rect.left + rect.width && y >= rect.top && y <= rect.top + rect.height;
 }
@@ -368,7 +427,12 @@ const v3e = new a(), v3f = new a(), v3g = new a(), v3h = new a();
 const v3i = new a(), v3j = new a();
 
 class BallPhysics {
-  constructor(config) {
+  declare config: BallpitConfig;
+  declare positionData: Float32Array;
+  declare velocityData: Float32Array;
+  declare sizeData: Float32Array;
+  declare center: a;
+  constructor(config: BallpitConfig) {
     this.config = config;
     this.positionData = new Float32Array(3 * config.count).fill(0);
     this.velocityData = new Float32Array(3 * config.count).fill(0);
@@ -392,7 +456,7 @@ class BallPhysics {
     sz[0] = cfg.size0;
     for (let i = 1; i < cfg.count; i++) sz[i] = randFloat(cfg.minSize, cfg.maxSize);
   }
-  update(frame) {
+  update(frame: TimeState) {
     const { config: cfg, center, positionData: pos, sizeData: sz, velocityData: vel } = this;
     let start = 0;
     if (cfg.controlSphere0) {
@@ -472,7 +536,9 @@ class BallPhysics {
 }
 
 class SubsurfaceMaterial extends c {
-  constructor(opts) {
+  declare uniforms: Record<string, { value: number }>;
+  declare onBeforeCompile2?: (shader: Parameters<c['onBeforeCompile']>[0]) => void;
+  constructor(opts: MeshPhysicalMaterialParameters) {
     super(opts);
     this.uniforms = {
       thicknessDistortion: { value: 0.1 },
@@ -481,7 +547,7 @@ class SubsurfaceMaterial extends c {
       thicknessPower: { value: 2 },
       thicknessScale: { value: 10 }
     };
-    this.defines.USE_UV = '';
+    this.defines!.USE_UV = '';
     this.onBeforeCompile = shader => {
       Object.assign(shader.uniforms, this.uniforms);
       shader.fragmentShader =
@@ -501,7 +567,7 @@ class SubsurfaceMaterial extends c {
   }
 }
 
-const DEFAULT_BALLPIT_CONFIG = {
+const DEFAULT_BALLPIT_CONFIG: BallpitConfig = {
   count: 200,
   colors: [0, 0, 0],
   ambientColor: 16777215,
@@ -525,10 +591,14 @@ const DEFAULT_BALLPIT_CONFIG = {
 const dummyObj = new m();
 
 class BallpitMesh extends d {
-  constructor(renderer, opts = {}) {
+  declare config: BallpitConfig;
+  declare physics: BallPhysics;
+  declare ambientLight: f;
+  declare light: u;
+  constructor(renderer: s, opts: Partial<BallpitConfig> = {}) {
     const cfg = { ...DEFAULT_BALLPIT_CONFIG, ...opts };
     const env = new z();
-    const envTexture = new p(renderer, 0.04).fromScene(env).texture;
+    const envTexture = new (p as new (renderer: s, sizeHint?: number) => p)(renderer, 0.04).fromScene(env).texture;
     const geo = new g();
     const mat = new SubsurfaceMaterial({ envMap: envTexture, ...cfg.materialParams });
     mat.envMapRotation.x = -Math.PI / 2;
@@ -544,10 +614,10 @@ class BallpitMesh extends d {
     this.light = new u(this.config.colors[0], this.config.lightIntensity);
     this.add(this.light);
   }
-  setColors(colors) {
+  setColors(colors: number[]) {
     if (!Array.isArray(colors) || colors.length <= 1) return;
     const colorList = colors.map(col => new l(col));
-    const getColorAt = (ratio, out = new l()) => {
+    const getColorAt = (ratio: number, out = new l()) => {
       const scaled = Math.max(0, Math.min(1, ratio)) * (colorList.length - 1);
       const idx = Math.floor(scaled);
       const start = colorList[idx];
@@ -563,9 +633,9 @@ class BallpitMesh extends d {
       this.setColorAt(idx, getColorAt(idx / this.count));
       if (idx === 0) this.light.color.copy(getColorAt(idx / this.count));
     }
-    this.instanceColor.needsUpdate = true;
+    this.instanceColor!.needsUpdate = true;
   }
-  update(frame) {
+  update(frame: TimeState) {
     this.physics.update(frame);
     for (let idx = 0; idx < this.count; idx++) {
       dummyObj.position.fromArray(this.physics.positionData, 3 * idx);
@@ -582,13 +652,13 @@ class BallpitMesh extends d {
   }
 }
 
-function createBallpit(canvas, opts = {}) {
+function createBallpit(canvas: HTMLCanvasElement, opts: Partial<BallpitConfig> = {}) {
   const app = new ThreeApp({
     canvas,
     size: 'parent',
     rendererOptions: { antialias: true, alpha: true }
   });
-  let spheres;
+  let spheres: BallpitMesh;
   app.renderer.toneMapping = v;
   app.camera.position.set(0, 0, 20);
   app.camera.lookAt(0, 0, 0);
@@ -618,7 +688,7 @@ function createBallpit(canvas, opts = {}) {
     }
   });
 
-  function initialize(cfg) {
+  function initialize(cfg: Partial<BallpitConfig>) {
     if (spheres) {
       app.clear();
       app.scene.remove(spheres);
@@ -638,15 +708,15 @@ function createBallpit(canvas, opts = {}) {
   return {
     three: app,
     get spheres() { return spheres; },
-    setCount(count) { initialize({ ...spheres.config, count }); },
+    setCount(count: number) { initialize({ ...spheres.config, count }); },
     togglePause() { paused = !paused; },
-    dispose() { pointerHandler.dispose(); app.dispose(); }
+    dispose() { pointerHandler.dispose!(); app.dispose(); }
   };
 }
 
 const Ballpit = ({ className = '', followCursor = true, ...props }) => {
-  const canvasRef = useRef(null);
-  const instanceRef = useRef(null);
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const instanceRef = useRef<ReturnType<typeof createBallpit> | null>(null);
 
   useEffect(() => {
     const canvas = canvasRef.current;

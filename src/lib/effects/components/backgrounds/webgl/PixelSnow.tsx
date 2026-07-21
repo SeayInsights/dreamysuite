@@ -1,4 +1,3 @@
-// @ts-nocheck
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef } from 'react';
@@ -178,12 +177,12 @@ export default function PixelSnow({
   className = '',
   style = {}
 }) {
-  const containerRef = useRef(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const animationRef = useRef(0);
   const isVisibleRef = useRef(true);
-  const rendererRef = useRef(null);
-  const materialRef = useRef(null);
-  const resizeTimeoutRef = useRef(null);
+  const rendererRef = useRef<WebGLRenderer | null>(null);
+  const materialRef = useRef<ShaderMaterial | null>(null);
+  const resizeTimeoutRef = useRef<number | null>(null);
 
   const variantValue = useMemo(() => {
     return variant === 'round' ? 1.0 : variant === 'snowflake' ? 2.0 : 0.0;
