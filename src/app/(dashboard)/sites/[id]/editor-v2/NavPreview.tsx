@@ -1,4 +1,3 @@
-/* eslint-disable react-hooks/static-components */
 "use client";
 
 import { useMemo, useState } from "react";
@@ -380,6 +379,7 @@ export function NavPreview() {
           padding: isCompact ? "4px 0 0 4px" : undefined,
         }}
       >
+        {/* eslint-disable-next-line react-hooks/static-components -- dynamic effect from the module-cached registry (effects/loader), stable per id, not recreated per render */}
         <NavStyleEffect
           items={navItems}
           logo={logoSvg}

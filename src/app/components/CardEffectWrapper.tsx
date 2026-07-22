@@ -1,4 +1,3 @@
-/* eslint-disable react-hooks/static-components */
 "use client";
 
 import { Suspense, useMemo, type ReactNode } from "react";
@@ -19,7 +18,10 @@ export function CardEffectWrapper({ children, className }: Props) {
   const effectsEnabled = useEffectsEnabled();
 
   const CardEffect = useMemo(
-    () => (effectsEnabled.cards && effectCard ? getEffectComponent(effectCard) : null),
+    () =>
+      effectsEnabled.cards && effectCard
+        ? getEffectComponent(effectCard)
+        : null,
     [effectsEnabled.cards, effectCard],
   );
 
@@ -40,6 +42,7 @@ export function CardEffectWrapper({ children, className }: Props) {
       >
         <EffectErrorBoundary>
           <Suspense fallback={null}>
+            {/* eslint-disable-next-line react-hooks/static-components -- dynamic effect from the module-cached registry (effects/loader), stable per id, not recreated per render */}
             <CardEffect color={color} />
           </Suspense>
         </EffectErrorBoundary>

@@ -1,4 +1,3 @@
-/* eslint-disable react-hooks/static-components */
 "use client";
 
 import {
@@ -29,12 +28,20 @@ function extractText(node: ReactNode): string {
   if (typeof node === "number") return String(node);
   if (Array.isArray(node)) return node.map(extractText).join("");
   if (node && typeof node === "object" && "props" in node) {
-    return extractText((node as { props: { children?: ReactNode } }).props.children);
+    return extractText(
+      (node as { props: { children?: ReactNode } }).props.children,
+    );
   }
   return "";
 }
 
-export function TextEffectWrapper({ as: Tag, children, className, style, ...rest }: Props) {
+export function TextEffectWrapper({
+  as: Tag,
+  children,
+  className,
+  style,
+  ...rest
+}: Props) {
   const effectText = useEditorStore((s) => s.settings.effectText);
   const c1 = useEditorStore((s) => s.settings.effectColor1);
   const c2 = useEditorStore((s) => s.settings.effectColor2);
@@ -114,6 +121,7 @@ export function TextEffectWrapper({ as: Tag, children, className, style, ...rest
       {layoutReady ? (
         <EffectErrorBoundary fallback={<span>{children}</span>}>
           <Suspense fallback={<span>{children}</span>}>
+            {/* eslint-disable-next-line react-hooks/static-components -- dynamic effect from the module-cached registry (effects/loader), stable per id, not recreated per render */}
             <TextEffect key={effectText} {...effectProps} />
           </Suspense>
         </EffectErrorBoundary>

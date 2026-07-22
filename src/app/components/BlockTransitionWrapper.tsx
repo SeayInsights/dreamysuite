@@ -1,4 +1,3 @@
-/* eslint-disable react-hooks/static-components */
 "use client";
 
 import { Suspense, useMemo, type ReactNode } from "react";
@@ -19,7 +18,10 @@ export function BlockTransitionWrapper({ children }: Props) {
   const isWrapper = WRAPPER_TRANSITIONS.has(effectTransition ?? "");
 
   const TransitionEffect = useMemo(
-    () => (effectsEnabled.transitions && effectTransition && isWrapper ? getEffectComponent(effectTransition) : null),
+    () =>
+      effectsEnabled.transitions && effectTransition && isWrapper
+        ? getEffectComponent(effectTransition)
+        : null,
     [effectsEnabled.transitions, effectTransition, isWrapper],
   );
 
@@ -28,6 +30,7 @@ export function BlockTransitionWrapper({ children }: Props) {
   return (
     <EffectErrorBoundary fallback={<>{children}</>}>
       <Suspense fallback={<>{children}</>}>
+        {/* eslint-disable-next-line react-hooks/static-components -- dynamic effect from the module-cached registry (effects/loader), stable per id, not recreated per render */}
         <TransitionEffect>{children}</TransitionEffect>
       </Suspense>
     </EffectErrorBoundary>
