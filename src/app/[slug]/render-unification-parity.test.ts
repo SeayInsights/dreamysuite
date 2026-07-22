@@ -91,7 +91,7 @@ function makeBlock(
 }
 
 describe("render unification — home-hero React-SSR parity", () => {
-  it("plain config matches the legacy string output", () => {
+  it("plain config matches the legacy string output", async () => {
     const expectedLegacy = `
         <section class="block block-home-hero" aria-label="Hero" data-block-id="hh1" data-block-type="home-hero">
           <div class="hero-inner">
@@ -102,11 +102,14 @@ describe("render unification — home-hero React-SSR parity", () => {
             <div class="hero-divider" aria-hidden="true">&#10038;</div>
           </div>
         </section>`;
-    const actual = renderBlock(makeBlock("hh1", "home-hero", {}), settings);
+    const actual = await renderBlock(
+      makeBlock("hh1", "home-hero", {}),
+      settings,
+    );
     expect(normalizeHtml(actual)).toBe(normalizeHtml(expectedLegacy));
   });
 
-  it("container-styled config matches the legacy bsAttr serialization", () => {
+  it("container-styled config matches the legacy bsAttr serialization", async () => {
     const cfg = {
       blockWidth: 50,
       blockMarginLeft: 10,
@@ -127,17 +130,20 @@ describe("render unification — home-hero React-SSR parity", () => {
             <div class="hero-divider" aria-hidden="true">&#10038;</div>
           </div>
         </section>`;
-    const actual = renderBlock(makeBlock("hh2", "home-hero", cfg), settings);
+    const actual = await renderBlock(
+      makeBlock("hh2", "home-hero", cfg),
+      settings,
+    );
     expect(normalizeHtml(actual)).toBe(normalizeHtml(expectedLegacy));
   });
 
-  it("omits empty date/location (no editor placeholders leak to published)", () => {
+  it("omits empty date/location (no editor placeholders leak to published)", async () => {
     const bare = {
       siteId: "s1",
       accentColor: "#B8921A",
       eventName: "Solo",
     } as unknown as SiteSettingRow;
-    const actual = renderBlock(makeBlock("hh3", "home-hero", {}), bare);
+    const actual = await renderBlock(makeBlock("hh3", "home-hero", {}), bare);
     expect(actual).not.toContain("hero-date");
     expect(actual).not.toContain("hero-location");
     expect(actual).not.toContain("Add wedding date");
@@ -146,22 +152,22 @@ describe("render unification — home-hero React-SSR parity", () => {
 });
 
 describe("render unification — batch A (spacer, youtube, venue-map)", () => {
-  it("spacer matches the legacy string output", () => {
+  it("spacer matches the legacy string output", async () => {
     const expectedLegacy = `<div class="block-spacer" style="height:100px" aria-hidden="true"></div>`;
-    const actual = renderBlock(
+    const actual = await renderBlock(
       makeBlock("sp1", "spacer", { height: 100 }),
       settings,
     );
     expect(normalizeHtml(actual)).toBe(normalizeHtml(expectedLegacy));
   });
 
-  it("spacer defaults to 60px", () => {
+  it("spacer defaults to 60px", async () => {
     const expectedLegacy = `<div class="block-spacer" style="height:60px" aria-hidden="true"></div>`;
-    const actual = renderBlock(makeBlock("sp2", "spacer", {}), settings);
+    const actual = await renderBlock(makeBlock("sp2", "spacer", {}), settings);
     expect(normalizeHtml(actual)).toBe(normalizeHtml(expectedLegacy));
   });
 
-  it("youtube (with video) matches the legacy string output", () => {
+  it("youtube (with video) matches the legacy string output", async () => {
     const expectedLegacy = `
         <section class="block block-youtube" aria-label="YouTube video" data-block-id="yt1" data-block-type="youtube">
           <div class="video-wrap">
@@ -175,14 +181,14 @@ describe("render unification — batch A (spacer, youtube, venue-map)", () => {
                    ></iframe>
                  </div>
         </section>`;
-    const actual = renderBlock(
+    const actual = await renderBlock(
       makeBlock("yt1", "youtube", { videoId: "abc123" }),
       settings,
     );
     expect(normalizeHtml(actual)).toBe(normalizeHtml(expectedLegacy));
   });
 
-  it("youtube (empty) renders the media placeholder", () => {
+  it("youtube (empty) renders the media placeholder", async () => {
     const expectedLegacy = `
         <section class="block block-youtube" aria-label="YouTube video" data-block-id="yt2" data-block-type="youtube">
           <div class="media-placeholder" aria-label="YouTube Video placeholder">
@@ -190,11 +196,11 @@ describe("render unification — batch A (spacer, youtube, venue-map)", () => {
     <p>YouTube Video will appear here once added.</p>
   </div>
         </section>`;
-    const actual = renderBlock(makeBlock("yt2", "youtube", {}), settings);
+    const actual = await renderBlock(makeBlock("yt2", "youtube", {}), settings);
     expect(normalizeHtml(actual)).toBe(normalizeHtml(expectedLegacy));
   });
 
-  it("venue-map (embed url) matches the legacy string output", () => {
+  it("venue-map (embed url) matches the legacy string output", async () => {
     const expectedLegacy = `
         <section class="block block-venue-map" aria-label="Venue location" data-block-id="vm1" data-block-type="venue-map">
           <h2 class="section-heading">Venue</h2>
@@ -214,7 +220,7 @@ describe("render unification — batch A (spacer, youtube, venue-map)", () => {
                  </div>
                  <p class="venue-address">123 Main St</p>
         </section>`;
-    const actual = renderBlock(
+    const actual = await renderBlock(
       makeBlock("vm1", "venue-map", {
         embedUrl: "https://maps.example.com/e",
         name: "Grand Hall",
@@ -226,20 +232,23 @@ describe("render unification — batch A (spacer, youtube, venue-map)", () => {
     expect(normalizeHtml(actual)).toBe(normalizeHtml(expectedLegacy));
   });
 
-  it("venue-map (empty) renders the placeholder", () => {
+  it("venue-map (empty) renders the placeholder", async () => {
     const expectedLegacy = `
         <section class="block block-venue-map" aria-label="Venue location" data-block-id="vm2" data-block-type="venue-map">
           <h2 class="section-heading">Venue</h2>
           <div class="section-rule" aria-hidden="true"></div>
           <p class="placeholder-text">Venue address and map will appear here.</p>
         </section>`;
-    const actual = renderBlock(makeBlock("vm2", "venue-map", {}), settings);
+    const actual = await renderBlock(
+      makeBlock("vm2", "venue-map", {}),
+      settings,
+    );
     expect(normalizeHtml(actual)).toBe(normalizeHtml(expectedLegacy));
   });
 });
 
 describe("render unification — batch B (cards)", () => {
-  it("registry-card (populated) matches the legacy string output", () => {
+  it("registry-card (populated) matches the legacy string output", async () => {
     const expectedLegacy = `
         <section class="block block-registry-card" aria-label="Gift registry" data-block-id="rc1" data-block-type="registry-card">
           <h2 class="section-heading">Registry</h2>
@@ -250,7 +259,7 @@ describe("render unification — batch B (cards)", () => {
                    <a href="https://registry.example.com" target="_blank" rel="noopener noreferrer" class="card-link" style="color:#B8921A">View Registry</a>
                  </div>
         </section>`;
-    const actual = renderBlock(
+    const actual = await renderBlock(
       makeBlock("rc1", "registry-card", {
         name: "Our Registry",
         url: "https://registry.example.com",
@@ -261,18 +270,21 @@ describe("render unification — batch B (cards)", () => {
     expect(normalizeHtml(actual)).toBe(normalizeHtml(expectedLegacy));
   });
 
-  it("registry-card (empty) renders the placeholder", () => {
+  it("registry-card (empty) renders the placeholder", async () => {
     const expectedLegacy = `
         <section class="block block-registry-card" aria-label="Gift registry" data-block-id="rc2" data-block-type="registry-card">
           <h2 class="section-heading">Registry</h2>
           <div class="section-rule" aria-hidden="true"></div>
           <p class="placeholder-text">Registry details will appear here once added.</p>
         </section>`;
-    const actual = renderBlock(makeBlock("rc2", "registry-card", {}), settings);
+    const actual = await renderBlock(
+      makeBlock("rc2", "registry-card", {}),
+      settings,
+    );
     expect(normalizeHtml(actual)).toBe(normalizeHtml(expectedLegacy));
   });
 
-  it("hotel-card (populated) matches the legacy string output", () => {
+  it("hotel-card (populated) matches the legacy string output", async () => {
     const expectedLegacy = `
         <section class="block block-hotel-card" aria-label="Hotel and accommodations" data-block-id="hc1" data-block-type="hotel-card">
           <h2 class="section-heading">Hotels &amp; Accommodations</h2>
@@ -284,7 +296,7 @@ describe("render unification — batch B (cards)", () => {
                    <a href="https://hotel.example.com" target="_blank" rel="noopener noreferrer" class="card-link" style="color:#B8921A">Book Now</a>
                  </div>
         </section>`;
-    const actual = renderBlock(
+    const actual = await renderBlock(
       makeBlock("hc1", "hotel-card", {
         name: "Grand Hotel",
         address: "1 Main St",
@@ -296,7 +308,7 @@ describe("render unification — batch B (cards)", () => {
     expect(normalizeHtml(actual)).toBe(normalizeHtml(expectedLegacy));
   });
 
-  it("info-card (hotel variant, with image) matches the legacy string output", () => {
+  it("info-card (hotel variant, with image) matches the legacy string output", async () => {
     const expectedLegacy = `
         <section class="block block-info-card" aria-label="Hotels &amp;amp; Accommodations" data-block-id="ic1" data-block-type="info-card">
           <h2 class="section-heading">Hotels &amp; Accommodations</h2>
@@ -308,7 +320,7 @@ describe("render unification — batch B (cards)", () => {
             <a href="https://inn.example.com" target="_blank" rel="noopener noreferrer" class="card-link" style="color:#B8921A">Book Now</a>
           </div>
         </section>`;
-    const actual = renderBlock(
+    const actual = await renderBlock(
       makeBlock("ic1", "info-card", {
         variant: "hotel",
         name: "Seaside Inn",
@@ -321,7 +333,7 @@ describe("render unification — batch B (cards)", () => {
     expect(normalizeHtml(actual)).toBe(normalizeHtml(expectedLegacy));
   });
 
-  it("info-card (registry variant, defaults) matches the legacy string output", () => {
+  it("info-card (registry variant, defaults) matches the legacy string output", async () => {
     const expectedLegacy = `
         <section class="block block-info-card" aria-label="Registry" data-block-id="ic2" data-block-type="info-card">
           <h2 class="section-heading">Registry</h2>
@@ -330,19 +342,22 @@ describe("render unification — batch B (cards)", () => {
             <p class="card-title">Registry</p>
           </div>
         </section>`;
-    const actual = renderBlock(makeBlock("ic2", "info-card", {}), settings);
+    const actual = await renderBlock(
+      makeBlock("ic2", "info-card", {}),
+      settings,
+    );
     expect(normalizeHtml(actual)).toBe(normalizeHtml(expectedLegacy));
   });
 });
 
 describe("render unification — batch C (header, text)", () => {
-  it("header (styled title) matches the legacy string output", () => {
+  it("header (styled title) matches the legacy string output", async () => {
     const expectedLegacy = `
         <section class="block block-header" data-block-id="hd1" data-block-type="header">
           <h2 class="section-heading" style="font-size:2rem;text-align:center;font-weight:700;font-style:italic;text-decoration:underline">Welcome</h2>
           <div class="section-rule" aria-hidden="true"></div>
         </section>`;
-    const actual = renderBlock(
+    const actual = await renderBlock(
       makeBlock("hd1", "header", {
         title: "Welcome",
         titleSize: "2rem",
@@ -356,17 +371,17 @@ describe("render unification — batch C (header, text)", () => {
     expect(normalizeHtml(actual)).toBe(normalizeHtml(expectedLegacy));
   });
 
-  it("header (no style, default text) matches the legacy string output", () => {
+  it("header (no style, default text) matches the legacy string output", async () => {
     const expectedLegacy = `
         <section class="block block-header" data-block-id="hd2" data-block-type="header">
           <h2 class="section-heading">Section</h2>
           <div class="section-rule" aria-hidden="true"></div>
         </section>`;
-    const actual = renderBlock(makeBlock("hd2", "header", {}), settings);
+    const actual = await renderBlock(makeBlock("hd2", "header", {}), settings);
     expect(normalizeHtml(actual)).toBe(normalizeHtml(expectedLegacy));
   });
 
-  it("text (heading + multiline body) matches the legacy string output", () => {
+  it("text (heading + multiline body) matches the legacy string output", async () => {
     const expectedLegacy = `
         <section class="block block-text" data-block-id="tx1" data-block-type="text">
           <h2 class="section-heading" style="font-size:1.5rem">Our Story</h2><div class="section-rule" aria-hidden="true"></div>
@@ -374,7 +389,7 @@ describe("render unification — batch C (header, text)", () => {
             <p>Line one<br>Line two</p>
           </div>
         </section>`;
-    const actual = renderBlock(
+    const actual = await renderBlock(
       makeBlock("tx1", "text", {
         heading: "Our Story",
         headingSize: "1.5rem",
@@ -385,7 +400,7 @@ describe("render unification — batch C (header, text)", () => {
     expect(normalizeHtml(actual)).toBe(normalizeHtml(expectedLegacy));
   });
 
-  it("text (contentKey lang fields) matches the legacy string output", () => {
+  it("text (contentKey lang fields) matches the legacy string output", async () => {
     const expectedLegacy = `
         <section class="block block-text" data-block-id="tx2" data-block-type="text">
           <h2 class="section-heading" data-lang-field="story_heading">Chapter</h2><div class="section-rule" aria-hidden="true"></div>
@@ -393,7 +408,7 @@ describe("render unification — batch C (header, text)", () => {
             <p data-lang-field="story">Body text</p>
           </div>
         </section>`;
-    const actual = renderBlock(
+    const actual = await renderBlock(
       makeBlock("tx2", "text", { contentKey: "story" }),
       {
         siteId: "s1",
@@ -406,20 +421,20 @@ describe("render unification — batch C (header, text)", () => {
     expect(normalizeHtml(actual)).toBe(normalizeHtml(expectedLegacy));
   });
 
-  it("text (empty) renders the placeholder", () => {
+  it("text (empty) renders the placeholder", async () => {
     const expectedLegacy = `
         <section class="block block-text" data-block-id="tx3" data-block-type="text">
           <div class="text-body">
             <p class="placeholder-text">Story text will appear here once added.</p>
           </div>
         </section>`;
-    const actual = renderBlock(makeBlock("tx3", "text", {}), settings);
+    const actual = await renderBlock(makeBlock("tx3", "text", {}), settings);
     expect(normalizeHtml(actual)).toBe(normalizeHtml(expectedLegacy));
   });
 });
 
 describe("render unification — batch D (tidbits, fun-facts)", () => {
-  it("tidbits (populated, 2 cols) matches the legacy string output", () => {
+  it("tidbits (populated, 2 cols) matches the legacy string output", async () => {
     const expectedLegacy = `
     <section class="block block-tidbits" aria-label="Fun facts" data-block-id="tb1" data-block-type="tidbits">
       <h2 class="section-heading">Fun Facts</h2><div class="section-rule" aria-hidden="true"></div>
@@ -431,7 +446,7 @@ describe("render unification — batch D (tidbits, fun-facts)", () => {
              </div>
            </div>
     </section>`;
-    const actual = renderBlock(
+    const actual = await renderBlock(
       makeBlock("tb1", "tidbits", {
         columns: "2",
         items: [{ icon: "🎉", title: "Fun", body: "A fact" }],
@@ -441,17 +456,17 @@ describe("render unification — batch D (tidbits, fun-facts)", () => {
     expect(normalizeHtml(actual)).toBe(normalizeHtml(expectedLegacy));
   });
 
-  it("tidbits (empty) renders the placeholder with title", () => {
+  it("tidbits (empty) renders the placeholder with title", async () => {
     const expectedLegacy = `
     <section class="block block-tidbits" aria-label="Fun facts" data-block-id="tb2" data-block-type="tidbits">
       <h2 class="section-heading">Fun Facts</h2><div class="section-rule" aria-hidden="true"></div>
       <p class="placeholder-text">Fun facts will appear here once added in the Content tab.</p>
     </section>`;
-    const actual = renderBlock(makeBlock("tb2", "tidbits", {}), settings);
+    const actual = await renderBlock(makeBlock("tb2", "tidbits", {}), settings);
     expect(normalizeHtml(actual)).toBe(normalizeHtml(expectedLegacy));
   });
 
-  it("fun-facts (populated, 3 cols) matches the legacy string output", () => {
+  it("fun-facts (populated, 3 cols) matches the legacy string output", async () => {
     const expectedLegacy = `
     <section class="block block-tidbits" aria-label="Fun facts" data-block-id="ff1" data-block-type="fun-facts">
       <h2 class="section-heading">Fun Facts</h2><div class="section-rule" aria-hidden="true"></div>
@@ -463,7 +478,7 @@ describe("render unification — batch D (tidbits, fun-facts)", () => {
              </div>
            </div>
     </section>`;
-    const actual = renderBlock(
+    const actual = await renderBlock(
       makeBlock("ff1", "fun-facts", {
         columns: "3",
         items: [{ icon: "💍", question: "How met?", body: "At a cafe" }],
@@ -473,7 +488,7 @@ describe("render unification — batch D (tidbits, fun-facts)", () => {
     expect(normalizeHtml(actual)).toBe(normalizeHtml(expectedLegacy));
   });
 
-  it("fun-facts (showTitle:false, body-only item) matches the legacy string output", () => {
+  it("fun-facts (showTitle:false, body-only item) matches the legacy string output", async () => {
     const expectedLegacy = `
     <section class="block block-tidbits" aria-label="Fun facts" data-block-id="ff2" data-block-type="fun-facts">
       <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:1rem;">
@@ -482,7 +497,7 @@ describe("render unification — batch D (tidbits, fun-facts)", () => {
              </div>
            </div>
     </section>`;
-    const actual = renderBlock(
+    const actual = await renderBlock(
       makeBlock("ff2", "fun-facts", {
         showTitle: false,
         items: [{ body: "x" }],
@@ -494,7 +509,7 @@ describe("render unification — batch D (tidbits, fun-facts)", () => {
 });
 
 describe("render unification — multi-text (5 sub-modes)", () => {
-  it("schedule mode matches the legacy string output", () => {
+  it("schedule mode matches the legacy string output", async () => {
     const expectedLegacy = `
   <section class="block block-schedule" aria-label="Schedule" data-block-id="mt1" data-block-type="multi-text">
     <h2 class="section-heading">Our Day</h2>
@@ -511,7 +526,7 @@ describe("render unification — multi-text (5 sub-modes)", () => {
              </li>
          </ol>
   </section>`;
-    const actual = renderBlock(
+    const actual = await renderBlock(
       makeBlock("mt1", "multi-text", { mode: "schedule", title: "Our Day" }),
       settings,
       {
@@ -529,7 +544,7 @@ describe("render unification — multi-text (5 sub-modes)", () => {
     expect(normalizeHtml(actual)).toBe(normalizeHtml(expectedLegacy));
   });
 
-  it("faq mode matches the legacy string output", () => {
+  it("faq mode matches the legacy string output", async () => {
     const expectedLegacy = `
   <section class="block block-faq" aria-label="Frequently asked questions" data-block-id="mt2" data-block-type="multi-text">
     <h2 class="section-heading">Questions &amp; Answers</h2>
@@ -538,7 +553,7 @@ describe("render unification — multi-text (5 sub-modes)", () => {
            <dt class="faq-question">When?</dt><dd class="faq-answer">June</dd>
          </dl>
   </section>`;
-    const actual = renderBlock(
+    const actual = await renderBlock(
       makeBlock("mt2", "multi-text", { mode: "faq" }),
       settings,
       {
@@ -548,7 +563,7 @@ describe("render unification — multi-text (5 sub-modes)", () => {
     expect(normalizeHtml(actual)).toBe(normalizeHtml(expectedLegacy));
   });
 
-  it("tidbits mode (title override) matches the legacy string output", () => {
+  it("tidbits mode (title override) matches the legacy string output", async () => {
     const expectedLegacy = `
   <section class="block block-tidbits" aria-label="Fun facts" data-block-id="mt3" data-block-type="multi-text">
     <h2 class="section-heading">Facts</h2><div class="section-rule" aria-hidden="true"></div>
@@ -560,7 +575,7 @@ describe("render unification — multi-text (5 sub-modes)", () => {
            </div>
          </div>
   </section>`;
-    const actual = renderBlock(
+    const actual = await renderBlock(
       makeBlock("mt3", "multi-text", {
         mode: "tidbits",
         title: "Facts",
@@ -572,7 +587,7 @@ describe("render unification — multi-text (5 sub-modes)", () => {
     expect(normalizeHtml(actual)).toBe(normalizeHtml(expectedLegacy));
   });
 
-  it("travel mode matches the legacy string output", () => {
+  it("travel mode matches the legacy string output", async () => {
     const expectedLegacy = `
   <section class="block block-travel" aria-label="Travel information" data-block-id="mt4" data-block-type="multi-text">
     <h2 class="section-heading">Getting There</h2>
@@ -583,7 +598,7 @@ describe("render unification — multi-text (5 sub-modes)", () => {
             <a href="https://book.example.com" target="_blank" rel="noopener noreferrer" style="color:var(--site-accent)">Book</a>
           </div>
   </section>`;
-    const actual = renderBlock(
+    const actual = await renderBlock(
       makeBlock("mt4", "multi-text", { mode: "travel" }),
       settings,
       {
@@ -600,13 +615,13 @@ describe("render unification — multi-text (5 sub-modes)", () => {
     expect(normalizeHtml(actual)).toBe(normalizeHtml(expectedLegacy));
   });
 
-  it("text mode (single heading/body, multiline) matches the legacy string output", () => {
+  it("text mode (single heading/body, multiline) matches the legacy string output", async () => {
     const expectedLegacy = `
     <section class="block block-text" data-block-id="mt5" data-block-type="multi-text">
       <h2 class="section-heading" style="font-size:2rem">Title</h2><div class="section-rule" aria-hidden="true"></div>
       <div class="text-body"><p>a<br>b</p></div>
     </section>`;
-    const actual = renderBlock(
+    const actual = await renderBlock(
       makeBlock("mt5", "multi-text", {
         heading: "Title",
         headingSize: "2rem",
@@ -617,7 +632,7 @@ describe("render unification — multi-text (5 sub-modes)", () => {
     expect(normalizeHtml(actual)).toBe(normalizeHtml(expectedLegacy));
   });
 
-  it("text mode (textItems array) matches the legacy string output", () => {
+  it("text mode (textItems array) matches the legacy string output", async () => {
     const expectedLegacy = `
     <section class="block block-text" data-block-id="mt6" data-block-type="multi-text">
       <h2 class="section-heading">H1</h2><div class="section-rule" aria-hidden="true"></div>
@@ -625,7 +640,7 @@ describe("render unification — multi-text (5 sub-modes)", () => {
       <h2 class="section-heading">H2</h2>
       <div class="text-body" style="margin-top:1.5rem"><p>B2</p></div>
     </section>`;
-    const actual = renderBlock(
+    const actual = await renderBlock(
       makeBlock("mt6", "multi-text", {
         textItems: [
           { heading: "H1", body: "B1" },
@@ -639,7 +654,7 @@ describe("render unification — multi-text (5 sub-modes)", () => {
 });
 
 describe("render unification — lists (schedule, faq, travel, travel-section)", () => {
-  it("schedule (cfg.events) matches the legacy string output", () => {
+  it("schedule (cfg.events) matches the legacy string output", async () => {
     const expectedLegacy = `
     <section class="block block-schedule" aria-label="Schedule" data-block-id="sc1" data-block-type="schedule">
       <h2 class="section-heading">The Day</h2>
@@ -653,7 +668,7 @@ describe("render unification — lists (schedule, faq, travel, travel-section)",
                </li>
            </ol>
     </section>`;
-    const actual = renderBlock(
+    const actual = await renderBlock(
       makeBlock("sc1", "schedule", {
         events: [{ time: "3pm", name: "Reception" }],
       }),
@@ -662,18 +677,21 @@ describe("render unification — lists (schedule, faq, travel, travel-section)",
     expect(normalizeHtml(actual)).toBe(normalizeHtml(expectedLegacy));
   });
 
-  it("schedule (empty) renders the placeholder", () => {
+  it("schedule (empty) renders the placeholder", async () => {
     const expectedLegacy = `
     <section class="block block-schedule" aria-label="Schedule" data-block-id="sc2" data-block-type="schedule">
       <h2 class="section-heading">The Day</h2>
       <div class="section-rule" aria-hidden="true"></div>
       <p class="placeholder-text">The wedding day schedule will appear here once added in the Content tab.</p>
     </section>`;
-    const actual = renderBlock(makeBlock("sc2", "schedule", {}), settings);
+    const actual = await renderBlock(
+      makeBlock("sc2", "schedule", {}),
+      settings,
+    );
     expect(normalizeHtml(actual)).toBe(normalizeHtml(expectedLegacy));
   });
 
-  it("faq (cfg.items question/answer) matches the legacy string output", () => {
+  it("faq (cfg.items question/answer) matches the legacy string output", async () => {
     const expectedLegacy = `
     <section class="block block-faq" aria-label="Frequently asked questions" data-block-id="fq1" data-block-type="faq">
       <h2 class="section-heading">Questions &amp; Answers</h2>
@@ -682,7 +700,7 @@ describe("render unification — lists (schedule, faq, travel, travel-section)",
                <dt class="faq-question">Q1</dt><dd class="faq-answer">A1</dd>
            </dl>
     </section>`;
-    const actual = renderBlock(
+    const actual = await renderBlock(
       makeBlock("fq1", "faq", {
         items: [{ question: "Q1", answer: "A1" }],
       }),
@@ -691,7 +709,7 @@ describe("render unification — lists (schedule, faq, travel, travel-section)",
     expect(normalizeHtml(actual)).toBe(normalizeHtml(expectedLegacy));
   });
 
-  it("travel-section (nl2br body + link) matches the legacy string output", () => {
+  it("travel-section (nl2br body + link) matches the legacy string output", async () => {
     const expectedLegacy = `
     <section class="block block-travel" aria-label="Travel information" data-block-id="tv1" data-block-type="travel-section">
       <h2 class="section-heading">Travel</h2>
@@ -702,7 +720,7 @@ describe("render unification — lists (schedule, faq, travel, travel-section)",
               <a href="https://t.example.com" target="_blank" rel="noopener noreferrer" style="color:var(--site-accent)">Book</a>
             </div>
     </section>`;
-    const actual = renderBlock(
+    const actual = await renderBlock(
       makeBlock("tv1", "travel-section", {
         title: "Travel",
         items: [
@@ -719,7 +737,7 @@ describe("render unification — lists (schedule, faq, travel, travel-section)",
     expect(normalizeHtml(actual)).toBe(normalizeHtml(expectedLegacy));
   });
 
-  it("travel (cfg.items only, default title) matches the legacy string output", () => {
+  it("travel (cfg.items only, default title) matches the legacy string output", async () => {
     const expectedLegacy = `
     <section class="block block-travel" aria-label="Travel information" data-block-id="tv2" data-block-type="travel">
       <h2 class="section-heading">Getting There</h2>
@@ -728,7 +746,7 @@ describe("render unification — lists (schedule, faq, travel, travel-section)",
               <h3 style="font-size:1.05rem;margin:0 0 0.4rem;">Car</h3>
             </div>
     </section>`;
-    const actual = renderBlock(
+    const actual = await renderBlock(
       makeBlock("tv2", "travel", { items: [{ heading: "Car" }] }),
       settings,
     );
@@ -737,7 +755,7 @@ describe("render unification — lists (schedule, faq, travel, travel-section)",
 });
 
 describe("render unification — media 1 (countdown, video, media-video)", () => {
-  it("countdown (with date, no rsvp button) matches the legacy string output", () => {
+  it("countdown (with date, no rsvp button) matches the legacy string output", async () => {
     const expectedLegacy = `
     <section class="block block-countdown" aria-label="Countdown" data-block-id="cd1" data-block-type="countdown">
       <p class="countdown-label">Until we say I do</p>
@@ -751,11 +769,14 @@ describe("render unification — media 1 (countdown, video, media-video)", () =>
         <a href="#rsvp" class="rsvp-submit" style="background:#B8921A;color:#fff;text-decoration:none;display:inline-block">RSVP Now</a>
       </div>
     </section>`;
-    const actual = renderBlock(makeBlock("cd1", "countdown", {}), settings);
+    const actual = await renderBlock(
+      makeBlock("cd1", "countdown", {}),
+      settings,
+    );
     expect(normalizeHtml(actual)).toBe(normalizeHtml(expectedLegacy));
   });
 
-  it("video (vimeo) matches the legacy string output", () => {
+  it("video (vimeo) matches the legacy string output", async () => {
     const expectedLegacy = `
         <section class="block block-video" aria-label="Video" data-block-id="vid1" data-block-type="video"
           style="position:relative;width:100%;height:100dvh;overflow:hidden;background:#000;">
@@ -767,14 +788,14 @@ describe("render unification — media 1 (countdown, video, media-video)", () =>
             title="Wedding video"
           ></iframe>
         </section>`;
-    const actual = renderBlock(
+    const actual = await renderBlock(
       makeBlock("vid1", "video", { vimeoId: "12345" }),
       settings,
     );
     expect(normalizeHtml(actual)).toBe(normalizeHtml(expectedLegacy));
   });
 
-  it("video (direct, empty) renders the media placeholder", () => {
+  it("video (direct, empty) renders the media placeholder", async () => {
     const expectedLegacy = `
         <section class="block block-video" aria-label="Video" data-block-id="vid2" data-block-type="video" style="position:relative;">
           <div class="media-placeholder" aria-label="Video placeholder">
@@ -782,11 +803,11 @@ describe("render unification — media 1 (countdown, video, media-video)", () =>
     <p>Video will appear here once added.</p>
   </div>
         </section>`;
-    const actual = renderBlock(makeBlock("vid2", "video", {}), settings);
+    const actual = await renderBlock(makeBlock("vid2", "video", {}), settings);
     expect(normalizeHtml(actual)).toBe(normalizeHtml(expectedLegacy));
   });
 
-  it("media-video (vimeo) matches the legacy string output", () => {
+  it("media-video (vimeo) matches the legacy string output", async () => {
     const expectedLegacy = `
         <section class="block block-media-video" aria-label="Video" data-block-id="mv1" data-block-type="media-video"
           style="position:relative;width:100%;height:100dvh;overflow:hidden;background:#000;">
@@ -796,14 +817,14 @@ describe("render unification — media 1 (countdown, video, media-video)", () =>
             allow="autoplay; fullscreen; picture-in-picture" allowfullscreen title="Video"
           ></iframe>
         </section>`;
-    const actual = renderBlock(
+    const actual = await renderBlock(
       makeBlock("mv1", "media-video", { vimeoId: "999" }),
       settings,
     );
     expect(normalizeHtml(actual)).toBe(normalizeHtml(expectedLegacy));
   });
 
-  it("media-video (youtube) matches the legacy string output", () => {
+  it("media-video (youtube) matches the legacy string output", async () => {
     const expectedLegacy = `
         <section class="block block-media-video" aria-label="Video" data-block-id="mv2" data-block-type="media-video">
           <div class="video-wrap">
@@ -811,7 +832,7 @@ describe("render unification — media 1 (countdown, video, media-video)", () =>
                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen class="youtube-iframe"></iframe>
                </div>
         </section>`;
-    const actual = renderBlock(
+    const actual = await renderBlock(
       makeBlock("mv2", "media-video", {
         url: "https://youtu.be/abc",
         provider: "youtube",
@@ -821,12 +842,12 @@ describe("render unification — media 1 (countdown, video, media-video)", () =>
     expect(normalizeHtml(actual)).toBe(normalizeHtml(expectedLegacy));
   });
 
-  it("media-video (direct) matches the legacy string output", () => {
+  it("media-video (direct) matches the legacy string output", async () => {
     const expectedLegacy = `
         <section class="block block-media-video" aria-label="Video" data-block-id="mv3" data-block-type="media-video" style="position:relative;height:100dvh">
           <video src="https://cdn.example.com/v.mp4" autoplay muted loop playsinline style="width:100%;height:100%;object-fit:cover;"></video>
         </section>`;
-    const actual = renderBlock(
+    const actual = await renderBlock(
       makeBlock("mv3", "media-video", {
         url: "https://cdn.example.com/v.mp4",
         provider: "direct",
@@ -838,14 +859,14 @@ describe("render unification — media 1 (countdown, video, media-video)", () =>
 });
 
 describe("render unification — media 2 (images, gallery)", () => {
-  it("images (grid-2) matches the legacy string output", () => {
+  it("images (grid-2) matches the legacy string output", async () => {
     const expectedLegacy = `
         <section class="block block-images" aria-label="Photo gallery" data-block-id="im1" data-block-type="images">
           <div class="image-grid" style="display:grid;grid-template-columns:repeat(2,1fr);gap:0.75rem;">
                    <img src="https://a.jpg" alt="Wedding photo 1" loading="lazy" width="800" height="600" class="gallery-img" style="object-position:center center;border-radius:12px" /><img src="https://b.jpg" alt="Wedding photo 2" loading="lazy" width="800" height="600" class="gallery-img" style="object-position:center center;border-radius:12px" />
                  </div>
         </section>`;
-    const actual = renderBlock(
+    const actual = await renderBlock(
       makeBlock("im1", "images", {
         layout: "grid-2",
         urls: ["https://a.jpg", "https://b.jpg"],
@@ -856,14 +877,14 @@ describe("render unification — media 2 (images, gallery)", () => {
     expect(normalizeHtml(actual)).toBe(normalizeHtml(expectedLegacy));
   });
 
-  it("images (masonry, per-image extra style) matches the legacy string output", () => {
+  it("images (masonry, per-image extra style) matches the legacy string output", async () => {
     const expectedLegacy = `
         <section class="block block-images" aria-label="Photo gallery" data-block-id="im3" data-block-type="images">
           <div class="image-grid" style="columns:2;column-gap:0.75rem">
                    <img src="https://a.jpg" alt="Wedding photo 1" loading="lazy" width="800" height="600" class="gallery-img" style="object-position:center center;border-radius:8px;break-inside:avoid;aspect-ratio:auto" />
                  </div>
         </section>`;
-    const actual = renderBlock(
+    const actual = await renderBlock(
       makeBlock("im3", "images", {
         layout: "masonry",
         urls: ["https://a.jpg"],
@@ -873,26 +894,26 @@ describe("render unification — media 2 (images, gallery)", () => {
     expect(normalizeHtml(actual)).toBe(normalizeHtml(expectedLegacy));
   });
 
-  it("images (empty, named slot) renders the placeholder", () => {
+  it("images (empty, named slot) renders the placeholder", async () => {
     const expectedLegacy = `
         <section class="block block-images" aria-label="Photo gallery" data-block-id="im2" data-block-type="images">
           <p class="placeholder-text">Photos for &quot;gallery1&quot; will appear here.</p>
         </section>`;
-    const actual = renderBlock(
+    const actual = await renderBlock(
       makeBlock("im2", "images", { imageSlot: "gallery1" }),
       settings,
     );
     expect(normalizeHtml(actual)).toBe(normalizeHtml(expectedLegacy));
   });
 
-  it("gallery (grid, 2 images) matches the legacy string output", () => {
+  it("gallery (grid, 2 images) matches the legacy string output", async () => {
     const expectedLegacy = `
         <section class="block block-gallery" aria-label="Photo gallery" data-block-id="gl1" data-block-type="gallery">
           <div class="image-grid" style="display:grid;gap:0.5rem;grid-template-columns:1fr 1fr;">
                  <img src="https://x.jpg" alt="Gallery photo 1" loading="lazy" style="width:100%;border-radius:8px;object-fit:cover;" /><img src="https://y.jpg" alt="Gallery photo 2" loading="lazy" style="width:100%;border-radius:8px;object-fit:cover;" />
                </div>
         </section>`;
-    const actual = renderBlock(
+    const actual = await renderBlock(
       makeBlock("gl1", "gallery", {
         urls: ["https://x.jpg", "https://y.jpg"],
       }),
@@ -901,12 +922,12 @@ describe("render unification — media 2 (images, gallery)", () => {
     expect(normalizeHtml(actual)).toBe(normalizeHtml(expectedLegacy));
   });
 
-  it("gallery (split mode) matches the legacy string output", () => {
+  it("gallery (split mode) matches the legacy string output", async () => {
     const expectedLegacy = `
         <section class="block block-gallery" data-block-id="gl2" data-block-type="gallery">
           <div style="display:flex;gap:1.5rem;align-items:center;flex-wrap:wrap;"><div style="flex:1;"><img src="https://s.jpg" alt="" loading="lazy" style="width:100%;border-radius:8px;object-fit:cover;" /></div><div style="flex:1;"><h3>Us</h3><p>hi</p></div></div>
         </section>`;
-    const actual = renderBlock(
+    const actual = await renderBlock(
       makeBlock("gl2", "gallery", {
         layout: "split",
         imageUrl: "https://s.jpg",
@@ -920,14 +941,14 @@ describe("render unification — media 2 (images, gallery)", () => {
 });
 
 describe("render unification — media 3 (photo-split, story-timeline)", () => {
-  it("photo-split (left photo, multi-paragraph body) matches the legacy string output", () => {
+  it("photo-split (left photo, multi-paragraph body) matches the legacy string output", async () => {
     const expectedLegacy = `<section class="block block-photo-split" data-block-id="ps1" data-block-type="photo-split">
         <div style="display:flex;gap:2rem;align-items:center;flex-wrap:wrap;"><div class="ps-photo" style="flex-shrink:0;">
              <img src="https://p.jpg" alt="Photo" loading="lazy"
                style="width:auto;height:auto;max-width:100%;object-fit:cover;object-position:center;border-radius:8px;" />
            </div><div class="ps-content" style="flex:1;min-width:200px;"><div class="ps-comp-text"><h3 style="margin:0 0 0.6rem">Us</h3><p style="margin:0;line-height:1.75">para1</p><p style="margin:0;line-height:1.75">para2</p></div></div></div>
       </section>`;
-    const actual = renderBlock(
+    const actual = await renderBlock(
       makeBlock("ps1", "photo-split", {
         imageUrl: "https://p.jpg",
         heading: "Us",
@@ -938,14 +959,14 @@ describe("render unification — media 3 (photo-split, story-timeline)", () => {
     expect(normalizeHtml(actual)).toBe(normalizeHtml(expectedLegacy));
   });
 
-  it("photo-split (right photo, offset margin, content first) matches the legacy string output", () => {
+  it("photo-split (right photo, offset margin, content first) matches the legacy string output", async () => {
     const expectedLegacy = `<section class="block block-photo-split" data-block-id="ps2" data-block-type="photo-split">
         <div style="display:flex;gap:2rem;align-items:center;flex-wrap:wrap;"><div class="ps-content" style="flex:1;min-width:200px;"><div class="ps-comp-text"><h3 style="margin:0 0 0.6rem">H</h3></div></div><div class="ps-photo" style="flex-shrink:0;margin-right:15px;">
              <img src="https://q.jpg" alt="Photo" loading="lazy"
                style="width:auto;height:auto;max-width:100%;object-fit:cover;object-position:center;border-radius:8px;" />
            </div></div>
       </section>`;
-    const actual = renderBlock(
+    const actual = await renderBlock(
       makeBlock("ps2", "photo-split", {
         photo: { url: "https://q.jpg", offsetX: 15 },
         photoSide: "right",
@@ -956,7 +977,7 @@ describe("render unification — media 3 (photo-split, story-timeline)", () => {
     expect(normalizeHtml(actual)).toBe(normalizeHtml(expectedLegacy));
   });
 
-  it("story-timeline (one event) matches the legacy string output", () => {
+  it("story-timeline (one event) matches the legacy string output", async () => {
     const expectedLegacy = `
         <section class="block block-story-timeline" aria-label="Our Story" data-block-id="st1" data-block-type="story-timeline">
           <h2 class="section-heading">Our Story</h2><div class="section-rule" aria-hidden="true"></div>
@@ -973,7 +994,7 @@ describe("render unification — media 3 (photo-split, story-timeline)", () => {
                   </div>
               </div>
         </section>`;
-    const actual = renderBlock(
+    const actual = await renderBlock(
       makeBlock("st1", "story-timeline", {
         heading: "Our Story",
         events: [
@@ -990,13 +1011,13 @@ describe("render unification — media 3 (photo-split, story-timeline)", () => {
     expect(normalizeHtml(actual)).toBe(normalizeHtml(expectedLegacy));
   });
 
-  it("story-timeline (empty) renders the placeholder", () => {
+  it("story-timeline (empty) renders the placeholder", async () => {
     const expectedLegacy = `
         <section class="block block-story-timeline" aria-label="Our Story" data-block-id="st2" data-block-type="story-timeline">
           <h2 class="section-heading">Our Story</h2><div class="section-rule" aria-hidden="true"></div>
           <p class="placeholder-text">Timeline events will appear here once added.</p>
         </section>`;
-    const actual = renderBlock(
+    const actual = await renderBlock(
       makeBlock("st2", "story-timeline", {}),
       settings,
     );
@@ -1008,7 +1029,7 @@ describe("render unification — forms (delegated wiring)", () => {
   // Forms intentionally change: the inline onsubmit is replaced by data-* attrs;
   // scripts.ts attaches the submit handler by delegation. Parity is against the
   // intended new markup (same fields/ids), and we assert onsubmit is gone.
-  it("rsvp emits data-* wiring and the full form (no inline onsubmit)", () => {
+  it("rsvp emits data-* wiring and the full form (no inline onsubmit)", async () => {
     const expectedNew = `
         <section class="block block-rsvp" aria-label="RSVP" data-block-id="rv1" data-block-type="rsvp">
           <h2 class="section-heading">RSVP</h2>
@@ -1043,7 +1064,7 @@ describe("render unification — forms (delegated wiring)", () => {
           </form>
           <div id="rsvp-msg-rv1" role="alert" aria-live="polite" style="display:none;margin-top:1.25rem;text-align:center;font-size:0.9375rem;padding:0.875rem 1rem;border-radius:6px;"></div>
         </section>`;
-    const actual = renderBlock(
+    const actual = await renderBlock(
       makeBlock("rv1", "rsvp", {}),
       settings,
       undefined,
@@ -1053,8 +1074,8 @@ describe("render unification — forms (delegated wiring)", () => {
     expect(normalizeHtml(actual)).toBe(normalizeHtml(expectedNew));
   });
 
-  it("rsvp-form adds subheading + heading title and the data-* wiring", () => {
-    const actual = renderBlock(
+  it("rsvp-form adds subheading + heading title and the data-* wiring", async () => {
+    const actual = await renderBlock(
       makeBlock("rf1", "rsvp-form", {
         heading: "Join Us",
         subheading: "Please reply",
@@ -1072,7 +1093,7 @@ describe("render unification — forms (delegated wiring)", () => {
     expect(actual).toContain('name="attending"');
   });
 
-  it("guest-book emits data-* wiring and the full form (no inline onsubmit)", () => {
+  it("guest-book emits data-* wiring and the full form (no inline onsubmit)", async () => {
     const expectedNew = `
         <section class="block block-guest-book" aria-label="Guest Book" data-block-id="gb1" data-block-type="guest-book" style="max-width:600px;margin:0 auto;">
           <h2 class="section-heading">Guest Book</h2><div class="section-rule" aria-hidden="true"></div>
@@ -1089,7 +1110,10 @@ describe("render unification — forms (delegated wiring)", () => {
           </form>
           <div id="gb-list-gb1" style="margin-top:1.5rem;display:flex;flex-direction:column;gap:0.75rem;"></div>
         </section>`;
-    const actual = renderBlock(makeBlock("gb1", "guest-book", {}), settings);
+    const actual = await renderBlock(
+      makeBlock("gb1", "guest-book", {}),
+      settings,
+    );
     expect(actual).not.toContain("onsubmit");
     expect(normalizeHtml(actual)).toBe(normalizeHtml(expectedNew));
   });
@@ -1100,24 +1124,24 @@ describe("render unification — forms (delegated wiring)", () => {
 // the container style to its <section>. Covers the paths the earlier styled case
 // did not: border, blockHeight, padding, and the blockHeight+padding combo.
 describe("render unification — container style contract", () => {
-  it("border", () => {
-    const actual = renderBlock(
+  it("border", async () => {
+    const actual = await renderBlock(
       makeBlock("cs1", "home-hero", { borderColor: "#ccc" }),
       settings,
     );
     expect(actual).toContain('style="border:1px solid #ccc"');
   });
 
-  it("hideBorder suppresses the border", () => {
-    const actual = renderBlock(
+  it("hideBorder suppresses the border", async () => {
+    const actual = await renderBlock(
       makeBlock("cs2", "home-hero", { borderColor: "#ccc", hideBorder: true }),
       settings,
     );
     expect(actual).not.toContain("border:1px solid");
   });
 
-  it("blockHeight (no padding) zeroes top/bottom for the flex layout", () => {
-    const actual = renderBlock(
+  it("blockHeight (no padding) zeroes top/bottom for the flex layout", async () => {
+    const actual = await renderBlock(
       makeBlock("cs3", "home-hero", { blockHeight: 300 }),
       settings,
     );
@@ -1127,8 +1151,8 @@ describe("render unification — container style contract", () => {
     expect(actual).toContain('data-bh="300"');
   });
 
-  it("padding object", () => {
-    const actual = renderBlock(
+  it("padding object", async () => {
+    const actual = await renderBlock(
       makeBlock("cs4", "home-hero", {
         padding: { top: 10, right: 20, bottom: 30, left: 40 },
       }),
@@ -1139,8 +1163,8 @@ describe("render unification — container style contract", () => {
     );
   });
 
-  it("blockHeight + padding: the padding object's top/bottom win (regression guard)", () => {
-    const actual = renderBlock(
+  it("blockHeight + padding: the padding object's top/bottom win (regression guard)", async () => {
+    const actual = await renderBlock(
       makeBlock("cs5", "home-hero", {
         blockHeight: 300,
         padding: { top: 10, right: 20, bottom: 30, left: 40 },
