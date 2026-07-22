@@ -5,6 +5,7 @@ export interface Env {
   DB: D1Database;
   KV: KVNamespace;
   R2: R2Bucket;
+  IMAGES: ImagesBinding;
   AUTH_SECRET: string;
   APP_URL: string;
   CF_ACCOUNT_ID: string;

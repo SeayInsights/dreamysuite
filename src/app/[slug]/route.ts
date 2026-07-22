@@ -6,6 +6,7 @@
  */
 import { NextRequest } from "next/server";
 import { getEnv } from "@/lib/cloudflare";
+import { rewritePhotoUrlsToPublic } from "@/lib/publicImages";
 import { createAuth } from "@/app/lib/auth.server";
 import { safeBlockConfig } from "@/lib/validation";
 import { getEffectById } from "@/lib/effects/registry";
@@ -214,27 +215,29 @@ export async function GET(
   }
 
   const activeLang = new URL(req.url).searchParams.get("_lang") ?? null;
-  return new Response(
-    await buildHtml(
-      site,
-      settings ?? null,
-      pages,
-      contentMap,
-      blockTransMap,
-      site.slug,
-      activeLang,
-      lockedPageIds,
-    ),
-    {
-      status: 200,
-      headers: {
-        "content-type": "text/html; charset=utf-8",
-        "cache-control": "public, max-age=300, stale-while-revalidate=600",
-        "content-security-policy":
-          "default-src 'self'; script-src 'self' 'unsafe-inline' https://esm.sh https://cdnjs.cloudflare.com https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://cloudflareinsights.com; frame-src https:",
-      },
-    },
+  const html = await buildHtml(
+    site,
+    settings ?? null,
+    pages,
+    contentMap,
+    blockTransMap,
+    site.slug,
+    activeLang,
+    lockedPageIds,
   );
+  // Published pages are viewed by the public, but the owner photo route
+  // (/api/sites/[id]/photos/[photoId]) requires auth — so rewrite those URLs to
+  // the public, WebP-optimized image route so guest browsers can load images.
+  const publicHtml = rewritePhotoUrlsToPublic(html);
+  return new Response(publicHtml, {
+    status: 200,
+    headers: {
+      "content-type": "text/html; charset=utf-8",
+      "cache-control": "public, max-age=300, stale-while-revalidate=600",
+      "content-security-policy":
+        "default-src 'self'; script-src 'self' 'unsafe-inline' https://esm.sh https://cdnjs.cloudflare.com https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://cloudflareinsights.com; frame-src https:",
+    },
+  });
 }
 
 export async function POST(
