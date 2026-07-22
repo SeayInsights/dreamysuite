@@ -191,7 +191,7 @@ export function VideoView({
         }}
       >
         <iframe
-          src={`https://player.vimeo.com/video/${vimeoId}?autoplay=1&muted=1&loop=1&background=1`}
+          data-lazy-src={`https://player.vimeo.com/video/${vimeoId}?autoplay=1&muted=1&loop=1&background=1`}
           style={{
             position: "absolute",
             top: "50%",
@@ -274,7 +274,7 @@ export function MediaVideoView({
         }}
       >
         <iframe
-          src={`https://player.vimeo.com/video/${resolvedVimeoId}?autoplay=1&muted=1&loop=1&background=1`}
+          data-lazy-src={`https://player.vimeo.com/video/${resolvedVimeoId}?autoplay=1&muted=1&loop=1&background=1`}
           style={{
             position: "absolute",
             top: "50%",
@@ -306,7 +306,7 @@ export function MediaVideoView({
         {ytId ? (
           <div className="video-wrap">
             <iframe
-              src={`https://www.youtube-nocookie.com/embed/${ytId}`}
+              data-lazy-src={`https://www.youtube-nocookie.com/embed/${ytId}`}
               title="YouTube video"
               frameBorder="0"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"

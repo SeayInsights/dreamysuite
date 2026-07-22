@@ -586,3 +586,24 @@ export function buildResponsiveScript(): string {
 })();
 </script>`;
 }
+
+/**
+ * Defer video iframe loading. Iframes render with `data-lazy-src` instead of
+ * `src`, so their (heavy, third-party) network load is kept off the critical
+ * path; this script assigns `src` once the frame is within 200px of the
+ * viewport. Autoplay/background behavior is preserved — the frame just loads a
+ * beat after the page content, improving initial load rather than requiring a
+ * tap. Falls back to eager loading where IntersectionObserver is unavailable.
+ */
+export function buildLazyVideoScript(): string {
+  return `<script>
+(function(){
+  var frames=document.querySelectorAll('iframe[data-lazy-src]');
+  if(!frames.length)return;
+  function load(f){var s=f.getAttribute('data-lazy-src');if(s){f.src=s;f.removeAttribute('data-lazy-src');}}
+  if(!('IntersectionObserver' in window)){for(var i=0;i<frames.length;i++)load(frames[i]);return;}
+  var io=new IntersectionObserver(function(entries){entries.forEach(function(e){if(e.isIntersecting){load(e.target);io.unobserve(e.target);}});},{rootMargin:'200px'});
+  for(var i=0;i<frames.length;i++)io.observe(frames[i]);
+})();
+</script>`;
+}
