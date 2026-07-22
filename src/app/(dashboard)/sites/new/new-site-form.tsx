@@ -2,6 +2,7 @@
 
 import { useState, useActionState } from "react";
 import Link from "next/link";
+import { STARTER_SUMMARIES } from "@/lib/templates/starters";
 
 const EVENT_TYPES = [
   { type: "wedding", icon: "💍", label: "Wedding" },
@@ -25,6 +26,7 @@ export function NewSiteForm({ action }: { action: ActionFn }) {
   const [eventType, setEventType] = useState("wedding");
   const [slug, setSlug] = useState("");
   const [slugEdited, setSlugEdited] = useState(false);
+  const [templateId, setTemplateId] = useState("blank");
 
   const autoSlug = name
     .toLowerCase()
@@ -73,9 +75,87 @@ export function NewSiteForm({ action }: { action: ActionFn }) {
       </div>
 
       <form action={formAction}>
-        {/* Hidden field for eventType and slug */}
+        {/* Hidden fields */}
         <input type="hidden" name="eventType" value={eventType} />
         <input type="hidden" name="slug" value={displaySlug} />
+        <input type="hidden" name="templateId" value={templateId} />
+
+        {/* Starting point — pick a starter template (or blank) */}
+        <div style={{ marginBottom: "1.5rem" }}>
+          <label style={labelStyle}>Start from</label>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))",
+              gap: "10px",
+            }}
+          >
+            {STARTER_SUMMARIES.map((s) => {
+              const selected = templateId === s.id;
+              return (
+                <button
+                  key={s.id}
+                  type="button"
+                  onClick={() => {
+                    setTemplateId(s.id);
+                    setEventType(s.eventType);
+                  }}
+                  style={{
+                    textAlign: "left",
+                    background: selected ? "#FDF6E0" : "#fff",
+                    border: `1.5px solid ${selected ? "#B8921A" : "#e8e4e0"}`,
+                    borderRadius: "10px",
+                    padding: "0.75rem",
+                    cursor: "pointer",
+                    transition: "all 0.15s",
+                    boxShadow: selected
+                      ? "0 0 0 3px rgba(184,146,26,0.12)"
+                      : "none",
+                  }}
+                >
+                  <div
+                    style={{
+                      height: 6,
+                      borderRadius: 3,
+                      background: s.previewColor,
+                      marginBottom: 8,
+                    }}
+                  />
+                  <div
+                    style={{
+                      fontSize: "0.82rem",
+                      fontWeight: 600,
+                      color: "#1c1917",
+                    }}
+                  >
+                    {s.name}
+                  </div>
+                  <div
+                    style={{
+                      fontSize: "0.72rem",
+                      color: "#9b8e85",
+                      marginTop: 2,
+                      lineHeight: 1.4,
+                    }}
+                  >
+                    {s.description}
+                  </div>
+                  {s.pageCount > 0 && (
+                    <div
+                      style={{
+                        fontSize: "0.68rem",
+                        color: "#B8921A",
+                        marginTop: 6,
+                      }}
+                    >
+                      {s.pageCount} page{s.pageCount === 1 ? "" : "s"}
+                    </div>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </div>
 
         {/* Site Name */}
         <div style={{ marginBottom: "1.5rem" }}>
