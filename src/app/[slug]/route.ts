@@ -215,7 +215,7 @@ export async function GET(
 
   const activeLang = new URL(req.url).searchParams.get("_lang") ?? null;
   return new Response(
-    buildHtml(
+    await buildHtml(
       site,
       settings ?? null,
       pages,

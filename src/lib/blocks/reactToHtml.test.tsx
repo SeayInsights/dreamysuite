@@ -1,11 +1,12 @@
 import { describe, it, expect } from "vitest";
 import { renderReactToHtml } from "./reactToHtml";
 
-// Feasibility spike: prove React -> static HTML string works in this toolchain
-// before building the presentational block components on top of it.
-describe("renderReactToHtml (mechanism spike)", () => {
-  it("renders a simple element to static markup", () => {
-    const html = renderReactToHtml(
+// Proves React -> static HTML string works via the streaming renderer and that
+// the output stays clean (no hydration markers), matching the old
+// renderToStaticMarkup contract that the published zero-JS page depends on.
+describe("renderReactToHtml", () => {
+  it("renders a simple element to static markup", async () => {
+    const html = await renderReactToHtml(
       <section className="block" data-block-id="x">
         <h1>Hi</h1>
       </section>,
@@ -15,8 +16,8 @@ describe("renderReactToHtml (mechanism spike)", () => {
     );
   });
 
-  it("emits no hydration markers or comment nodes", () => {
-    const html = renderReactToHtml(<div>{["a", "b"]}</div>);
+  it("emits no hydration markers or comment nodes", async () => {
+    const html = await renderReactToHtml(<div>{["a", "b"]}</div>);
     expect(html).not.toContain("<!--");
     expect(html).toBe("<div>ab</div>");
   });

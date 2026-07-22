@@ -28,7 +28,7 @@ const R3F_EFFECTS = new Set([
   "pixel-trail",
 ]);
 
-export function buildHtml(
+export async function buildHtml(
   site: SiteRow,
   settings: SiteSettingRow | null,
   pages: PageWithBlocks[],
@@ -37,7 +37,7 @@ export function buildHtml(
   siteSlug: string,
   activeLang?: string | null,
   lockedPageIds: Set<string> = new Set(),
-): string {
+): Promise<string> {
   const mainLang = settings?.mainLanguage ?? "en";
   const eventTitle = settings?.eventName ?? site.name;
   const eventDate = settings?.eventDate ?? null;
@@ -188,92 +188,97 @@ export function buildHtml(
 
   // Page sections with show/hide — track when activeLang content is absent so we can show a fallback banner
   let _anyLangFallback = false;
-  const pageSectionsHtml = visiblePages
-    .map((page, i) => {
-      const sectionClass = hasMultiplePages
-        ? `page-section${i === 0 ? " active" : ""}`
-        : "page-section active";
+  const pageSectionsHtml = (
+    await Promise.all(
+      visiblePages.map(async (page, i) => {
+        const sectionClass = hasMultiplePages
+          ? `page-section${i === 0 ? " active" : ""}`
+          : "page-section active";
 
-      if (lockedPageIds.has(page.id)) {
-        const accent = settings?.accentColor ?? "#B8921A";
-        return `<div class="${sectionClass}" id="page-${escHtml(page.id)}"><div style="display:flex;align-items:center;justify-content:center;min-height:40vh;padding:2rem"><div style="text-align:center;max-width:320px"><p style="color:#78716c;margin-bottom:1.25rem;font-size:.9375rem">This page is password protected.</p><form method="post" style="display:flex;flex-direction:column;gap:.75rem"><input type="password" name="pw" placeholder="Enter password" required style="border:1px solid #e7e5e4;border-radius:6px;padding:.625rem .875rem;font-family:inherit;font-size:1rem;outline:none" aria-label="Page password"/><button type="submit" style="padding:.625rem 1.5rem;border:none;border-radius:6px;background:${escHtml(accent)};color:#fff;font-family:inherit;font-size:.875rem;cursor:pointer">Unlock</button></form></div></div></div>`;
-      }
+        if (lockedPageIds.has(page.id)) {
+          const accent = settings?.accentColor ?? "#B8921A";
+          return `<div class="${sectionClass}" id="page-${escHtml(page.id)}"><div style="display:flex;align-items:center;justify-content:center;min-height:40vh;padding:2rem"><div style="text-align:center;max-width:320px"><p style="color:#78716c;margin-bottom:1.25rem;font-size:.9375rem">This page is password protected.</p><form method="post" style="display:flex;flex-direction:column;gap:.75rem"><input type="password" name="pw" placeholder="Enter password" required style="border:1px solid #e7e5e4;border-radius:6px;padding:.625rem .875rem;font-family:inherit;font-size:1rem;outline:none" aria-label="Page password"/><button type="submit" style="padding:.625rem 1.5rem;border:none;border-radius:6px;background:${escHtml(accent)};color:#fff;font-family:inherit;font-size:.875rem;cursor:pointer">Unlock</button></form></div></div></div>`;
+        }
 
-      const pageContentByLang = contentMap.get(page.slug);
-      const renderLang = activeLang ?? mainLang;
-      if (activeLang && !pageContentByLang?.get(activeLang))
-        _anyLangFallback = true;
-      const pageContent =
-        pageContentByLang?.get(renderLang) ??
-        pageContentByLang?.get(mainLang) ??
-        (pageContentByLang ? [...pageContentByLang.values()][0] : undefined);
-      const blocksHtml = page.blocks
-        .map((block) => {
-          let html: string;
-          try {
-            html = renderBlock(
-              block,
-              settings,
-              pageContent,
-              siteSlug,
-              blockTransMap,
-              renderLang,
-              mainLang,
-            );
-          } catch (err) {
-            // Resilience: one block that throws during server-render must never
-            // take down the whole published site. Before this guard, a single
-            // failing block surfaced as a blank HTTP 500 for the entire page
-            // (every site with real content). Log for diagnosis and emit an
-            // empty placeholder so the rest of the page still renders.
-            console.error(
-              `[published-render] block ${block.id} (${block.type}) failed to render`,
-              err,
-            );
-            return `<section class="block block-render-error" data-block-id="${escHtml(
-              block.id,
-            )}" aria-hidden="true"></section>`;
-          }
-          const animRaw = (block.config as Record<string, unknown>).animation;
-          type AnimConfig = {
-            presetId?: string;
-            duration?: number;
-            delay?: number;
-            easing?: string;
-            trigger?: string;
-          };
-          let animPreset = "";
-          let animDuration: number | undefined;
-          let animDelay: number | undefined;
-          let animEasing: string | undefined;
-          let animTrigger: string | undefined;
-          if (typeof animRaw === "object" && animRaw !== null) {
-            const cfg = animRaw as AnimConfig;
-            animPreset = cfg.presetId ?? "";
-            animDuration = cfg.duration;
-            animDelay = cfg.delay;
-            animEasing = cfg.easing;
-            animTrigger = cfg.trigger;
-          } else if (typeof animRaw === "string") {
-            animPreset = animRaw;
-          }
-          if (!animPreset) return html;
-          // Build data attribute string — only emit non-default values to keep HTML lean
-          let dataAttrs = ` data-animation="${escHtml(animPreset)}"`;
-          if (animDuration !== undefined && animDuration !== 0.6)
-            dataAttrs += ` data-animation-duration="${animDuration}"`;
-          if (animDelay !== undefined && animDelay !== 0)
-            dataAttrs += ` data-animation-delay="${animDelay}"`;
-          if (animEasing !== undefined && animEasing !== "power2.out")
-            dataAttrs += ` data-animation-easing="${escHtml(animEasing)}"`;
-          if (animTrigger !== undefined && animTrigger !== "on-view")
-            dataAttrs += ` data-animation-trigger="${escHtml(animTrigger)}"`;
-          return html.replace(/(<section\b[^>]*)(>)/, `$1${dataAttrs}$2`);
-        })
-        .join("\n");
-      return `<div class="${sectionClass}" id="page-${escHtml(page.id)}">${blocksHtml}</div>`;
-    })
-    .join("\n");
+        const pageContentByLang = contentMap.get(page.slug);
+        const renderLang = activeLang ?? mainLang;
+        if (activeLang && !pageContentByLang?.get(activeLang))
+          _anyLangFallback = true;
+        const pageContent =
+          pageContentByLang?.get(renderLang) ??
+          pageContentByLang?.get(mainLang) ??
+          (pageContentByLang ? [...pageContentByLang.values()][0] : undefined);
+        const blocksHtml = (
+          await Promise.all(
+            page.blocks.map(async (block) => {
+              let html: string;
+              try {
+                html = await renderBlock(
+                  block,
+                  settings,
+                  pageContent,
+                  siteSlug,
+                  blockTransMap,
+                  renderLang,
+                  mainLang,
+                );
+              } catch (err) {
+                // Resilience: one block that throws during server-render must never
+                // take down the whole published site. Before this guard, a single
+                // failing block surfaced as a blank HTTP 500 for the entire page
+                // (every site with real content). Log for diagnosis and emit an
+                // empty placeholder so the rest of the page still renders.
+                console.error(
+                  `[published-render] block ${block.id} (${block.type}) failed to render`,
+                  err,
+                );
+                return `<section class="block block-render-error" data-block-id="${escHtml(
+                  block.id,
+                )}" aria-hidden="true"></section>`;
+              }
+              const animRaw = (block.config as Record<string, unknown>)
+                .animation;
+              type AnimConfig = {
+                presetId?: string;
+                duration?: number;
+                delay?: number;
+                easing?: string;
+                trigger?: string;
+              };
+              let animPreset = "";
+              let animDuration: number | undefined;
+              let animDelay: number | undefined;
+              let animEasing: string | undefined;
+              let animTrigger: string | undefined;
+              if (typeof animRaw === "object" && animRaw !== null) {
+                const cfg = animRaw as AnimConfig;
+                animPreset = cfg.presetId ?? "";
+                animDuration = cfg.duration;
+                animDelay = cfg.delay;
+                animEasing = cfg.easing;
+                animTrigger = cfg.trigger;
+              } else if (typeof animRaw === "string") {
+                animPreset = animRaw;
+              }
+              if (!animPreset) return html;
+              // Build data attribute string — only emit non-default values to keep HTML lean
+              let dataAttrs = ` data-animation="${escHtml(animPreset)}"`;
+              if (animDuration !== undefined && animDuration !== 0.6)
+                dataAttrs += ` data-animation-duration="${animDuration}"`;
+              if (animDelay !== undefined && animDelay !== 0)
+                dataAttrs += ` data-animation-delay="${animDelay}"`;
+              if (animEasing !== undefined && animEasing !== "power2.out")
+                dataAttrs += ` data-animation-easing="${escHtml(animEasing)}"`;
+              if (animTrigger !== undefined && animTrigger !== "on-view")
+                dataAttrs += ` data-animation-trigger="${escHtml(animTrigger)}"`;
+              return html.replace(/(<section\b[^>]*)(>)/, `$1${dataAttrs}$2`);
+            }),
+          )
+        ).join("\n");
+        return `<div class="${sectionClass}" id="page-${escHtml(page.id)}">${blocksHtml}</div>`;
+      }),
+    )
+  ).join("\n");
 
   // Content margin padding
   const mTop = Number(settings?.marginTop ?? 0) || 0;

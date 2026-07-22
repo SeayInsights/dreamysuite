@@ -43,7 +43,7 @@ const site = {
 } as unknown as Parameters<typeof buildHtml>[0];
 
 describe("published renderer resilience", () => {
-  it("does not blank-500 when a single block throws; renders the rest", () => {
+  it("does not blank-500 when a single block throws; renders the rest", async () => {
     const pages = [
       {
         id: "page-1",
@@ -59,19 +59,16 @@ describe("published renderer resilience", () => {
     ] as unknown as PageWithBlocks[];
 
     const errSpy = vi.spyOn(console, "error").mockImplementation(() => {});
-    let html = "";
-    expect(() => {
-      html = buildHtml(
-        site,
-        settings,
-        pages,
-        new Map() as ContentMap,
-        {},
-        "test",
-        null,
-        new Set(),
-      );
-    }).not.toThrow();
+    const html = await buildHtml(
+      site,
+      settings,
+      pages,
+      new Map() as ContentMap,
+      {},
+      "test",
+      null,
+      new Set(),
+    );
 
     // Surviving blocks rendered
     expect(html).toContain("rendered:ok");

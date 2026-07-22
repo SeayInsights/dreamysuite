@@ -52,7 +52,7 @@ export interface RenderContext {
   cnt: (contentKey: string, cfgKey?: string, fallback?: string) => string;
 }
 
-type BlockRenderer = (ctx: RenderContext) => string;
+type BlockRenderer = (ctx: RenderContext) => string | Promise<string>;
 
 function renderUnknown({ block }: RenderContext): string {
   return `<section class="block block-unknown">${placeholder(`This block (${escHtml(block.type)}) is not yet supported.`)}</section>`;
@@ -89,7 +89,7 @@ const BLOCK_RENDERERS: Record<string, BlockRenderer> = {
   "guest-book": renderGuestBookReact,
 };
 
-export function renderBlock(
+export async function renderBlock(
   block: ParsedBlock,
   settings: SiteSettingRow | null,
   pageContent?: Record<string, unknown>,
@@ -97,7 +97,7 @@ export function renderBlock(
   blockTransMap?: BlockTransMap,
   renderLang?: string,
   mainLang?: string,
-): string {
+): Promise<string> {
   const cfg = block.config;
   const accent = settings?.accentColor ?? "#B8921A";
   const _ml = mainLang ?? "en";
@@ -122,5 +122,5 @@ export function renderBlock(
     accent,
     cnt,
   };
-  return (BLOCK_RENDERERS[block.type] ?? renderUnknown)(ctx);
+  return await (BLOCK_RENDERERS[block.type] ?? renderUnknown)(ctx);
 }

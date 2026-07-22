@@ -53,7 +53,7 @@ import {
  * presentational component to a static HTML string. These are wired into
  * BLOCK_RENDERERS as block types migrate off the hand-written string path.
  */
-export function renderHomeHeroReact(ctx: RenderContext): string {
+export function renderHomeHeroReact(ctx: RenderContext): Promise<string> {
   const { block, settings, cfg, cnt } = ctx;
   const title = cnt(
     "couple",
@@ -80,12 +80,12 @@ export function renderHomeHeroReact(ctx: RenderContext): string {
   );
 }
 
-export function renderSpacerReact(ctx: RenderContext): string {
+export function renderSpacerReact(ctx: RenderContext): Promise<string> {
   const height = Math.max(0, Math.min(400, Number(ctx.cfg.height ?? 60)));
   return renderReactToHtml(<SpacerView height={height} />);
 }
 
-export function renderHeaderReact(ctx: RenderContext): string {
+export function renderHeaderReact(ctx: RenderContext): Promise<string> {
   const { block, cfg, cnt } = ctx;
   const text = cnt(
     "title",
@@ -105,7 +105,7 @@ export function renderHeaderReact(ctx: RenderContext): string {
   );
 }
 
-export function renderTidbitsReact(ctx: RenderContext): string {
+export function renderTidbitsReact(ctx: RenderContext): Promise<string> {
   const { block, cfg, pageContent } = ctx;
   const cfgItems = Array.isArray(cfg.items)
     ? (cfg.items as Array<{ icon?: string; title?: string; body?: string }>)
@@ -139,7 +139,7 @@ export function renderTidbitsReact(ctx: RenderContext): string {
   );
 }
 
-export function renderFunFactsReact(ctx: RenderContext): string {
+export function renderFunFactsReact(ctx: RenderContext): Promise<string> {
   const { block, cfg, pageContent } = ctx;
   const cfgItems = Array.isArray(cfg.items)
     ? (cfg.items as Array<{ icon?: string; question?: string; body?: string }>)
@@ -173,7 +173,7 @@ export function renderFunFactsReact(ctx: RenderContext): string {
   );
 }
 
-export function renderRsvpReact(ctx: RenderContext): string {
+export function renderRsvpReact(ctx: RenderContext): Promise<string> {
   const { block, cfg, siteSlug } = ctx;
   const { style, data } = blockContainerStyle(cfg);
   return renderReactToHtml(
@@ -189,7 +189,7 @@ export function renderRsvpReact(ctx: RenderContext): string {
   );
 }
 
-export function renderRsvpFormReact(ctx: RenderContext): string {
+export function renderRsvpFormReact(ctx: RenderContext): Promise<string> {
   const { block, cfg, siteSlug } = ctx;
   const title =
     (cfg.heading as string | undefined) ??
@@ -207,7 +207,7 @@ export function renderRsvpFormReact(ctx: RenderContext): string {
   );
 }
 
-export function renderGuestBookReact(ctx: RenderContext): string {
+export function renderGuestBookReact(ctx: RenderContext): Promise<string> {
   const { block, cfg } = ctx;
   const { style, data } = blockContainerStyle(cfg);
   const sectionStyle: CSSProperties = {
@@ -230,7 +230,7 @@ export function renderGuestBookReact(ctx: RenderContext): string {
   );
 }
 
-export function renderPhotoSplitReact(ctx: RenderContext): string {
+export function renderPhotoSplitReact(ctx: RenderContext): Promise<string> {
   const { block, cfg } = ctx;
   const photo = (cfg.photo as Record<string, unknown> | undefined) ?? {};
   const flatImageUrl = cfg.imageUrl as string | undefined;
@@ -314,7 +314,7 @@ export function renderPhotoSplitReact(ctx: RenderContext): string {
   );
 }
 
-export function renderStoryTimelineReact(ctx: RenderContext): string {
+export function renderStoryTimelineReact(ctx: RenderContext): Promise<string> {
   const { block, cfg } = ctx;
   const heading = String(cfg.heading ?? "Our Story");
   const events = Array.isArray(cfg.events)
@@ -333,7 +333,7 @@ export function renderStoryTimelineReact(ctx: RenderContext): string {
   );
 }
 
-export function renderImagesReact(ctx: RenderContext): string {
+export function renderImagesReact(ctx: RenderContext): Promise<string> {
   const { block, cfg } = ctx;
   const urls = cfg.urls as string[] | undefined;
   const focusX = String(cfg.imageFocusX ?? "center");
@@ -368,7 +368,7 @@ export function renderImagesReact(ctx: RenderContext): string {
   );
 }
 
-export function renderGalleryReact(ctx: RenderContext): string {
+export function renderGalleryReact(ctx: RenderContext): Promise<string> {
   const { block, cfg } = ctx;
   const urls = Array.isArray(cfg.urls) ? (cfg.urls as string[]) : [];
   const imageSlot = cfg.imageUrl as string | undefined;
@@ -390,7 +390,7 @@ export function renderGalleryReact(ctx: RenderContext): string {
   );
 }
 
-export function renderCountdownReact(ctx: RenderContext): string {
+export function renderCountdownReact(ctx: RenderContext): Promise<string> {
   const { block, settings, cfg, accent } = ctx;
   const { style, data } = blockContainerStyle(cfg);
   return renderReactToHtml(
@@ -414,7 +414,7 @@ export function renderCountdownReact(ctx: RenderContext): string {
   );
 }
 
-export function renderVideoReact(ctx: RenderContext): string {
+export function renderVideoReact(ctx: RenderContext): Promise<string> {
   const { block, settings, cfg } = ctx;
   const cdXRaw = Number(cfg.countdownX ?? 0);
   const cdYRaw = Number(cfg.countdownY ?? 120);
@@ -433,7 +433,7 @@ export function renderVideoReact(ctx: RenderContext): string {
   );
 }
 
-export function renderMediaVideoReact(ctx: RenderContext): string {
+export function renderMediaVideoReact(ctx: RenderContext): Promise<string> {
   const { block, cfg } = ctx;
   const url = cfg.url as string | undefined;
   const vimeoId = cfg.vimeoId as string | undefined;
@@ -469,7 +469,7 @@ export function renderMediaVideoReact(ctx: RenderContext): string {
   );
 }
 
-export function renderScheduleReact(ctx: RenderContext): string {
+export function renderScheduleReact(ctx: RenderContext): Promise<string> {
   const { block, cfg, pageContent } = ctx;
   const cfgEvents = Array.isArray(cfg.events)
     ? (cfg.events as TimelineEvent[])
@@ -492,7 +492,7 @@ export function renderScheduleReact(ctx: RenderContext): string {
   );
 }
 
-export function renderFaqReact(ctx: RenderContext): string {
+export function renderFaqReact(ctx: RenderContext): Promise<string> {
   const { block, cfg, pageContent } = ctx;
   const cfgItems = Array.isArray(cfg.items)
     ? (cfg.items as Array<{ question?: string; answer?: string }>)
@@ -518,7 +518,7 @@ export function renderFaqReact(ctx: RenderContext): string {
   );
 }
 
-export function renderTravelSectionReact(ctx: RenderContext): string {
+export function renderTravelSectionReact(ctx: RenderContext): Promise<string> {
   const { block, cfg, pageContent } = ctx;
   const title = (cfg.title as string | undefined) ?? "Getting There";
   const cfgItems = Array.isArray(cfg.items) ? (cfg.items as TravelItem[]) : [];
@@ -541,7 +541,7 @@ export function renderTravelSectionReact(ctx: RenderContext): string {
   );
 }
 
-export function renderTravelReact(ctx: RenderContext): string {
+export function renderTravelReact(ctx: RenderContext): Promise<string> {
   const { block, cfg } = ctx;
   const title = (cfg.title as string | undefined) ?? "Getting There";
   const items = Array.isArray(cfg.items) ? (cfg.items as TravelItem[]) : [];
@@ -560,7 +560,7 @@ export function renderTravelReact(ctx: RenderContext): string {
   );
 }
 
-export function renderMultiTextReact(ctx: RenderContext): string {
+export function renderMultiTextReact(ctx: RenderContext): Promise<string> {
   const { block, cfg, pageContent } = ctx;
   const mode = String(cfg.mode ?? "text");
   const rawTitle = String(cfg.title ?? "");
@@ -679,7 +679,7 @@ export function renderMultiTextReact(ctx: RenderContext): string {
   );
 }
 
-export function renderTextReact(ctx: RenderContext): string {
+export function renderTextReact(ctx: RenderContext): Promise<string> {
   const { block, cfg, pageContent } = ctx;
   const contentKey = cfg.contentKey as string | undefined;
   const heading = contentKey
@@ -704,7 +704,7 @@ export function renderTextReact(ctx: RenderContext): string {
   );
 }
 
-export function renderYoutubeReact(ctx: RenderContext): string {
+export function renderYoutubeReact(ctx: RenderContext): Promise<string> {
   const { block, cfg } = ctx;
   const rawUrl = cfg.url as string | undefined;
   const videoId =
@@ -724,7 +724,7 @@ export function renderYoutubeReact(ctx: RenderContext): string {
   );
 }
 
-export function renderVenueMapReact(ctx: RenderContext): string {
+export function renderVenueMapReact(ctx: RenderContext): Promise<string> {
   const { block, cfg } = ctx;
   const embedUrl =
     (cfg.embedUrl as string | undefined) ?? (cfg.mapUrl as string | undefined);
@@ -752,7 +752,7 @@ export function renderVenueMapReact(ctx: RenderContext): string {
   );
 }
 
-export function renderRegistryCardReact(ctx: RenderContext): string {
+export function renderRegistryCardReact(ctx: RenderContext): Promise<string> {
   const { block, cfg, accent } = ctx;
   const url = cfg.url as string | undefined;
   const { style, data } = blockContainerStyle(cfg);
@@ -770,7 +770,7 @@ export function renderRegistryCardReact(ctx: RenderContext): string {
   );
 }
 
-export function renderHotelCardReact(ctx: RenderContext): string {
+export function renderHotelCardReact(ctx: RenderContext): Promise<string> {
   const { block, cfg, accent } = ctx;
   const url = cfg.url as string | undefined;
   const { style, data } = blockContainerStyle(cfg);
@@ -789,7 +789,7 @@ export function renderHotelCardReact(ctx: RenderContext): string {
   );
 }
 
-export function renderInfoCardReact(ctx: RenderContext): string {
+export function renderInfoCardReact(ctx: RenderContext): Promise<string> {
   const { block, cfg, accent } = ctx;
   const variant = String(cfg.variant ?? "registry");
   const isHotel = variant === "hotel";

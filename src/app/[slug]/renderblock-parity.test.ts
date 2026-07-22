@@ -76,8 +76,8 @@ function makeBlock(type: string): ParsedBlock {
 
 describe("renderBlock output parity", () => {
   for (const type of TYPES) {
-    it(`renders '${type}' identically`, () => {
-      const html = renderBlock(
+    it(`renders '${type}' identically`, async () => {
+      const html = await renderBlock(
         makeBlock(type),
         settings,
         undefined,
