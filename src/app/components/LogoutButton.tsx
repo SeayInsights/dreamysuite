@@ -10,9 +10,11 @@ import { useState } from "react";
  */
 export function LogoutButton({
   className,
+  style,
   children,
 }: {
   className?: string;
+  style?: React.CSSProperties;
   children: React.ReactNode;
 }) {
   const [pending, setPending] = useState(false);
@@ -37,6 +39,7 @@ export function LogoutButton({
       onClick={handleLogout}
       disabled={pending}
       className={className}
+      style={style}
       aria-label="Log out"
     >
       {children}
