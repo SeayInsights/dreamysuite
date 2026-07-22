@@ -209,15 +209,31 @@ export function buildHtml(
         (pageContentByLang ? [...pageContentByLang.values()][0] : undefined);
       const blocksHtml = page.blocks
         .map((block) => {
-          const html = renderBlock(
-            block,
-            settings,
-            pageContent,
-            siteSlug,
-            blockTransMap,
-            renderLang,
-            mainLang,
-          );
+          let html: string;
+          try {
+            html = renderBlock(
+              block,
+              settings,
+              pageContent,
+              siteSlug,
+              blockTransMap,
+              renderLang,
+              mainLang,
+            );
+          } catch (err) {
+            // Resilience: one block that throws during server-render must never
+            // take down the whole published site. Before this guard, a single
+            // failing block surfaced as a blank HTTP 500 for the entire page
+            // (every site with real content). Log for diagnosis and emit an
+            // empty placeholder so the rest of the page still renders.
+            console.error(
+              `[published-render] block ${block.id} (${block.type}) failed to render`,
+              err,
+            );
+            return `<section class="block block-render-error" data-block-id="${escHtml(
+              block.id,
+            )}" aria-hidden="true"></section>`;
+          }
           const animRaw = (block.config as Record<string, unknown>).animation;
           type AnimConfig = {
             presetId?: string;
