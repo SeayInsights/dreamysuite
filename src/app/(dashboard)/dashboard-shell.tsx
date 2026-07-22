@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { LogoutButton } from "@/app/components/LogoutButton";
 import { usePathname, useSearchParams, useRouter } from "next/navigation";
@@ -39,6 +40,18 @@ export default function DashboardShell({
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const router = useRouter();
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!menuOpen) return;
+    function onDocClick(e: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", onDocClick);
+    return () => document.removeEventListener("mousedown", onDocClick);
+  }, [menuOpen]);
 
   // Detect editor mode: /sites/[id] pattern
   const pathMatch = pathname.match(/^\/sites\/([^/]+)$/);
@@ -62,7 +75,7 @@ export default function DashboardShell({
     <div className="ds-shell">
       <aside className="ds-sidebar">
         <div className="ds-logo-area">
-          <Link href="/sites" className="ds-logo-link">
+          <Link href="/" className="ds-logo-link">
             <span className="ds-logo-text">
               <em>Dreamy</em>Suite
             </span>
@@ -115,14 +128,54 @@ export default function DashboardShell({
               <NavLink href="/settings" icon="settings">
                 Settings
               </NavLink>
-              <LogoutButton className="ds-nav-item">
+            </>
+          )}
+        </nav>
+        <div
+          className="ds-user-footer-wrap"
+          ref={menuRef}
+          style={{ position: "relative" }}
+        >
+          {menuOpen && (
+            <div
+              role="menu"
+              style={{
+                position: "absolute",
+                bottom: "calc(100% + 8px)",
+                left: 0,
+                right: 0,
+                background: "#fff",
+                border: "1px solid #e8e4e0",
+                borderRadius: 10,
+                boxShadow: "0 10px 28px rgba(0,0,0,0.14)",
+                padding: 6,
+                zIndex: 60,
+              }}
+            >
+              <LogoutButton
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "0.55rem",
+                  width: "100%",
+                  padding: "0.55rem 0.7rem",
+                  background: "none",
+                  border: "none",
+                  borderRadius: 7,
+                  cursor: "pointer",
+                  font: "inherit",
+                  fontSize: "0.875rem",
+                  color: "#292524",
+                  textAlign: "left",
+                }}
+              >
                 <svg
-                  width="18"
-                  height="18"
+                  width="16"
+                  height="16"
                   viewBox="0 0 24 24"
                   fill="none"
                   stroke="currentColor"
-                  strokeWidth="1.5"
+                  strokeWidth="1.6"
                   strokeLinecap="round"
                   strokeLinejoin="round"
                 >
@@ -130,14 +183,41 @@ export default function DashboardShell({
                 </svg>
                 Log out
               </LogoutButton>
-            </>
+            </div>
           )}
-        </nav>
-        <div className="ds-user-footer">
-          <div className="ds-avatar">{initials}</div>
-          <div className="ds-user-info">
-            <span className="ds-user-name">{user.name ?? "Account"}</span>
-            <span className="ds-user-email">{user.email}</span>
+          <div
+            className="ds-user-footer"
+            role="button"
+            tabIndex={0}
+            aria-haspopup="menu"
+            aria-expanded={menuOpen}
+            onClick={() => setMenuOpen((o) => !o)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                setMenuOpen((o) => !o);
+              }
+            }}
+            style={{ cursor: "pointer" }}
+          >
+            <div className="ds-avatar">{initials}</div>
+            <div className="ds-user-info">
+              <span className="ds-user-name">{user.name ?? "Account"}</span>
+              <span className="ds-user-email">{user.email}</span>
+            </div>
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              style={{ marginLeft: "auto", opacity: 0.5, flexShrink: 0 }}
+            >
+              <path d="M18 15l-6-6-6 6" />
+            </svg>
           </div>
         </div>
       </aside>
