@@ -14,6 +14,7 @@ import {
   buildMessageListenerScript,
   buildBlockAnimationScript,
   buildResponsiveScript,
+  buildLazyVideoScript,
 } from "./scripts";
 import { buildIntroHtml } from "./pages";
 import { LANG_NATIVE } from "@/lib/i18n/languages";
@@ -1295,6 +1296,7 @@ window.__dsTextDone=(async()=>{
       : ""
   }
   ${buildResponsiveScript()}
+  ${buildLazyVideoScript()}
 </body>
 </html>`;
 }

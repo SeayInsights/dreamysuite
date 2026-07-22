@@ -781,7 +781,7 @@ describe("render unification — media 1 (countdown, video, media-video)", () =>
         <section class="block block-video" aria-label="Video" data-block-id="vid1" data-block-type="video"
           style="position:relative;width:100%;height:100dvh;overflow:hidden;background:#000;">
           <iframe
-            src="https://player.vimeo.com/video/12345?autoplay=1&muted=1&loop=1&background=1"
+            data-lazy-src="https://player.vimeo.com/video/12345?autoplay=1&muted=1&loop=1&background=1"
             style="position:absolute;top:50%;left:50%;width:177.78vh;min-width:100%;min-height:100%;height:56.25vw;transform:translate(-50%,-50%);border:0;"
             allow="autoplay; fullscreen; picture-in-picture"
             allowfullscreen
@@ -812,7 +812,7 @@ describe("render unification — media 1 (countdown, video, media-video)", () =>
         <section class="block block-media-video" aria-label="Video" data-block-id="mv1" data-block-type="media-video"
           style="position:relative;width:100%;height:100dvh;overflow:hidden;background:#000;">
           <iframe
-            src="https://player.vimeo.com/video/999?autoplay=1&muted=1&loop=1&background=1"
+            data-lazy-src="https://player.vimeo.com/video/999?autoplay=1&muted=1&loop=1&background=1"
             style="position:absolute;top:50%;left:50%;width:177.78vh;min-width:100%;min-height:100%;height:56.25vw;transform:translate(-50%,-50%);border:0;"
             allow="autoplay; fullscreen; picture-in-picture" allowfullscreen title="Video"
           ></iframe>
@@ -828,7 +828,7 @@ describe("render unification — media 1 (countdown, video, media-video)", () =>
     const expectedLegacy = `
         <section class="block block-media-video" aria-label="Video" data-block-id="mv2" data-block-type="media-video">
           <div class="video-wrap">
-                 <iframe src="https://www.youtube-nocookie.com/embed/abc" title="YouTube video" frameborder="0"
+                 <iframe data-lazy-src="https://www.youtube-nocookie.com/embed/abc" title="YouTube video" frameborder="0"
                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen class="youtube-iframe"></iframe>
                </div>
         </section>`;
