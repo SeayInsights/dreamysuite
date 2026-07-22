@@ -724,7 +724,10 @@ export function buildStyles(settings: SiteSettingRow | null): BuiltStyles {
     }
 
     /* ── Text ── */
-    .text-body { max-width: 640px; margin: 0 auto; text-align: center; color: var(--block-text, var(--body-color)); font-size: 1.0625rem; }
+    /* Long-form body reads best left-aligned (a centered multi-paragraph block
+       has a ragged left edge). The block itself still centers on the page via
+       margin auto; owners can re-center per block via the body-align control. */
+    .text-body { max-width: 640px; margin: 0 auto; text-align: left; color: var(--block-text, var(--body-color)); font-size: 1.0625rem; }
 
     /* ── Countdown ── */
     .block-countdown { text-align: center; position: relative; z-index: 1; background: var(--bg, transparent); min-height: 4rem; }
