@@ -14,12 +14,20 @@ interface Site {
   updatedAt: number;
 }
 
-export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
   const { id } = await params;
   return { title: `Editor — ${id} — DreamySuite` };
 }
 
-export default async function SiteEditorPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function SiteEditorPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
   const { id } = await params;
   const env = await getEnv();
 
@@ -30,27 +38,30 @@ export default async function SiteEditorPage({ params }: { params: Promise<{ id:
   }
 
   // Primary: owner check
-  let result = await env.DB
-    .prepare("SELECT id, name, slug, customDomain, eventType, status, previewColor, updatedAt FROM site WHERE id = ? AND userId = ?")
+  let result = await env.DB.prepare(
+    "SELECT id, name, slug, customDomain, eventType, status, previewColor, updatedAt FROM site WHERE id = ? AND userId = ?",
+  )
     .bind(id, session.user.id)
     .first<Site>();
 
   // Fallback: collaborator invite check
   if (!result) {
-    const invite = await env.DB
-      .prepare("SELECT id FROM site_invite WHERE siteId = ? AND email = ?")
+    const invite = await env.DB.prepare(
+      "SELECT id FROM site_invite WHERE siteId = ? AND email = ?",
+    )
       .bind(id, session.user.email.toLowerCase())
       .first<{ id: string }>();
     if (invite) {
-      result = await env.DB
-        .prepare("SELECT id, name, slug, customDomain, eventType, status, previewColor, updatedAt FROM site WHERE id = ?")
+      result = await env.DB.prepare(
+        "SELECT id, name, slug, customDomain, eventType, status, previewColor, updatedAt FROM site WHERE id = ?",
+      )
         .bind(id)
         .first<Site>();
     }
   }
 
   if (!result) {
-    redirect("/");
+    redirect("/sites");
   }
 
   return <SiteEditorV2 site={result} user={session.user} />;

@@ -37,7 +37,7 @@ export default function LoginForm() {
         }
 
         // Success - redirect to dashboard
-        router.push("/");
+        router.push("/sites");
         router.refresh(); // Refresh to pick up new session
       } catch {
         setError("Invalid email or password.");

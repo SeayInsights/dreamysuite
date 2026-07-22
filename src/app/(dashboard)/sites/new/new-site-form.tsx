@@ -12,7 +12,10 @@ const EVENT_TYPES = [
   { type: "celebration", icon: "🎉", label: "Celebration" },
 ];
 
-type ActionFn = (prevState: { error?: string } | null, formData: FormData) => Promise<{ error?: string }>;
+type ActionFn = (
+  prevState: { error?: string } | null,
+  formData: FormData,
+) => Promise<{ error?: string }>;
 
 export function NewSiteForm({ action }: { action: ActionFn }) {
   const [state, formAction, pending] = useActionState(action, null);
@@ -23,7 +26,10 @@ export function NewSiteForm({ action }: { action: ActionFn }) {
   const [slug, setSlug] = useState("");
   const [slugEdited, setSlugEdited] = useState(false);
 
-  const autoSlug = name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  const autoSlug = name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
   const displaySlug = slugEdited ? slug : autoSlug;
 
   const inputStyle: React.CSSProperties = {
@@ -50,7 +56,15 @@ export function NewSiteForm({ action }: { action: ActionFn }) {
   return (
     <div style={{ padding: "2rem 2.5rem", maxWidth: "680px" }}>
       <div style={{ marginBottom: "2rem" }}>
-        <h1 style={{ fontSize: "1.5rem", fontWeight: 700, color: "#1c1917", letterSpacing: "-0.02em", marginBottom: "0.25rem" }}>
+        <h1
+          style={{
+            fontSize: "1.5rem",
+            fontWeight: 700,
+            color: "#1c1917",
+            letterSpacing: "-0.02em",
+            marginBottom: "0.25rem",
+          }}
+        >
           Create a new site
         </h1>
         <p style={{ fontSize: "0.875rem", color: "#9b8e85" }}>
@@ -65,7 +79,9 @@ export function NewSiteForm({ action }: { action: ActionFn }) {
 
         {/* Site Name */}
         <div style={{ marginBottom: "1.5rem" }}>
-          <label htmlFor="name" style={labelStyle}>Site name</label>
+          <label htmlFor="name" style={labelStyle}>
+            Site name
+          </label>
           <input
             id="name"
             name="name"
@@ -78,20 +94,38 @@ export function NewSiteForm({ action }: { action: ActionFn }) {
               ...inputStyle,
               borderColor: nameTouched && !name.trim() ? "#dc2626" : "#e8e4e0",
             }}
-            onFocus={(e) => (e.target.style.borderColor = nameTouched && !name.trim() ? "#dc2626" : "#B8921A")}
+            onFocus={(e) =>
+              (e.target.style.borderColor =
+                nameTouched && !name.trim() ? "#dc2626" : "#B8921A")
+            }
             onBlur={(e) => {
               setNameTouched(true);
               e.target.style.borderColor = !name.trim() ? "#dc2626" : "#e8e4e0";
             }}
           />
           {nameTouched && !name.trim() && (
-            <p style={{ fontSize: "0.75rem", color: "#dc2626", marginTop: "0.375rem" }}>
+            <p
+              style={{
+                fontSize: "0.75rem",
+                color: "#dc2626",
+                marginTop: "0.375rem",
+              }}
+            >
               Site name is required
             </p>
           )}
           {displaySlug && name.trim() && (
-            <p style={{ fontSize: "0.75rem", color: "#9b8e85", marginTop: "0.375rem" }}>
-              URL: <span style={{ color: "#B8921A" }}>{displaySlug}.dreamysuite.com</span>
+            <p
+              style={{
+                fontSize: "0.75rem",
+                color: "#9b8e85",
+                marginTop: "0.375rem",
+              }}
+            >
+              URL:{" "}
+              <span style={{ color: "#B8921A" }}>
+                {displaySlug}.dreamysuite.com
+              </span>
             </p>
           )}
         </div>
@@ -99,7 +133,13 @@ export function NewSiteForm({ action }: { action: ActionFn }) {
         {/* Event Type */}
         <div style={{ marginBottom: "1.5rem" }}>
           <label style={labelStyle}>Event type</label>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(100px, 1fr))", gap: "8px" }}>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fill, minmax(100px, 1fr))",
+              gap: "8px",
+            }}
+          >
             {EVENT_TYPES.map(({ type, icon, label }) => (
               <button
                 key={type}
@@ -116,15 +156,22 @@ export function NewSiteForm({ action }: { action: ActionFn }) {
                   gap: "5px",
                   cursor: "pointer",
                   transition: "all 0.15s",
-                  boxShadow: eventType === type ? "0 0 0 3px rgba(184,146,26,0.12)" : "none",
+                  boxShadow:
+                    eventType === type
+                      ? "0 0 0 3px rgba(184,146,26,0.12)"
+                      : "none",
                 }}
               >
-                <span style={{ fontSize: "1.5rem", lineHeight: 1 }}>{icon}</span>
-                <span style={{
-                  fontSize: "0.72rem",
-                  fontWeight: 500,
-                  color: eventType === type ? "#B8921A" : "#1c1917",
-                }}>
+                <span style={{ fontSize: "1.5rem", lineHeight: 1 }}>
+                  {icon}
+                </span>
+                <span
+                  style={{
+                    fontSize: "0.72rem",
+                    fontWeight: 500,
+                    color: eventType === type ? "#B8921A" : "#1c1917",
+                  }}
+                >
                   {label}
                 </span>
               </button>
@@ -136,10 +183,22 @@ export function NewSiteForm({ action }: { action: ActionFn }) {
         <div style={{ marginBottom: "1.5rem" }}>
           <label htmlFor="slug-input" style={labelStyle}>
             URL slug{" "}
-            <span style={{ fontSize: "0.7rem", color: "#9b8e85", fontWeight: 400 }}>(optional — auto-generated from name)</span>
+            <span
+              style={{ fontSize: "0.7rem", color: "#9b8e85", fontWeight: 400 }}
+            >
+              (optional — auto-generated from name)
+            </span>
           </label>
           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-            <span style={{ fontSize: "0.82rem", color: "#9b8e85", whiteSpace: "nowrap" }}>dreamysuite.com/</span>
+            <span
+              style={{
+                fontSize: "0.82rem",
+                color: "#9b8e85",
+                whiteSpace: "nowrap",
+              }}
+            >
+              dreamysuite.com/
+            </span>
             <input
               id="slug-input"
               type="text"
@@ -147,7 +206,9 @@ export function NewSiteForm({ action }: { action: ActionFn }) {
               value={slugEdited ? slug : autoSlug}
               onChange={(e) => {
                 setSlugEdited(true);
-                setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""));
+                setSlug(
+                  e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""),
+                );
               }}
               style={{ ...inputStyle, flex: 1 }}
               onFocus={(e) => (e.target.style.borderColor = "#B8921A")}
@@ -157,42 +218,52 @@ export function NewSiteForm({ action }: { action: ActionFn }) {
         </div>
 
         {state && "error" in state && state.error && (
-          <div style={{
-            fontSize: "0.82rem",
-            color: "#dc2626",
-            background: "#fef2f2",
-            border: "1px solid #fecaca",
-            borderRadius: "8px",
-            padding: "0.625rem 0.875rem",
-            marginBottom: "1rem",
-          }}>
+          <div
+            style={{
+              fontSize: "0.82rem",
+              color: "#dc2626",
+              background: "#fef2f2",
+              border: "1px solid #fecaca",
+              borderRadius: "8px",
+              padding: "0.625rem 0.875rem",
+              marginBottom: "1rem",
+            }}
+          >
             {state.error}
           </div>
         )}
 
         <div style={{ display: "flex", gap: "0.75rem", alignItems: "center" }}>
-          <div onClick={() => { if (!name.trim()) setNameTouched(true); }}>
-          <button
-            type="submit"
-            disabled={pending || !name.trim()}
-            style={{
-              padding: "0.7rem 1.75rem",
-              background: pending ? "#9b8e85" : "#B8921A",
-              color: "white",
-              border: "none",
-              borderRadius: "8px",
-              fontSize: "0.9rem",
-              fontWeight: 600,
-              cursor: pending ? "default" : "pointer",
-              transition: "background 0.15s",
+          <div
+            onClick={() => {
+              if (!name.trim()) setNameTouched(true);
             }}
           >
-            {pending ? "Creating…" : "Create Site"}
-          </button>
+            <button
+              type="submit"
+              disabled={pending || !name.trim()}
+              style={{
+                padding: "0.7rem 1.75rem",
+                background: pending ? "#9b8e85" : "#B8921A",
+                color: "white",
+                border: "none",
+                borderRadius: "8px",
+                fontSize: "0.9rem",
+                fontWeight: 600,
+                cursor: pending ? "default" : "pointer",
+                transition: "background 0.15s",
+              }}
+            >
+              {pending ? "Creating…" : "Create Site"}
+            </button>
           </div>
           <Link
-            href="/"
-            style={{ fontSize: "0.85rem", color: "#9b8e85", textDecoration: "none" }}
+            href="/sites"
+            style={{
+              fontSize: "0.85rem",
+              color: "#9b8e85",
+              textDecoration: "none",
+            }}
           >
             Cancel
           </Link>

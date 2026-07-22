@@ -17,7 +17,7 @@ interface Site {
   updatedAt: number;
 }
 
-export default async function DashboardIndex() {
+export default async function SitesIndex() {
   const env = await getEnv();
 
   const auth = createAuth(env);
@@ -32,13 +32,13 @@ export default async function DashboardIndex() {
   const [owned, invited] = await Promise.all([
     db
       .prepare(
-        "SELECT id, name, eventType, status, customDomain, slug, previewColor, updatedAt FROM site WHERE userId = ? ORDER BY updatedAt DESC"
+        "SELECT id, name, eventType, status, customDomain, slug, previewColor, updatedAt FROM site WHERE userId = ? ORDER BY updatedAt DESC",
       )
       .bind(session.user.id)
       .all<Site>(),
     db
       .prepare(
-        "SELECT s.id, s.name, s.eventType, s.status, s.customDomain, s.slug, s.previewColor, s.updatedAt FROM site s JOIN site_invite i ON i.siteId = s.id WHERE i.email = ? ORDER BY s.updatedAt DESC"
+        "SELECT s.id, s.name, s.eventType, s.status, s.customDomain, s.slug, s.previewColor, s.updatedAt FROM site s JOIN site_invite i ON i.siteId = s.id WHERE i.email = ? ORDER BY s.updatedAt DESC",
       )
       .bind(session.user.email.toLowerCase())
       .all<Site>(),
@@ -62,7 +62,6 @@ export default async function DashboardIndex() {
               : `${sites.length} site${sites.length === 1 ? "" : "s"}`}
           </p>
         </div>
-
       </div>
 
       {sites.length === 0 ? (
@@ -83,7 +82,16 @@ function EmptyState() {
   return (
     <div className="sites-empty">
       <div className="sites-empty-icon">
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <svg
+          width="28"
+          height="28"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
           <rect x="3" y="3" width="18" height="18" rx="2" />
           <path d="M3 9h18M9 21V9" />
           <path d="M12 13h4M12 16h2" />
@@ -94,7 +102,16 @@ function EmptyState() {
         Choose a template, add your content, and publish — no code required.
       </p>
       <Link href="/sites/new" className="ds-btn-primary">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <svg
+          width="14"
+          height="14"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
           <path d="M12 5v14M5 12h14" />
         </svg>
         Create a site
@@ -105,7 +122,11 @@ function EmptyState() {
 
 function NewSiteCard() {
   return (
-    <Link href="/sites/new" className="site-card-outer" style={{ opacity: 0.7 }}>
+    <Link
+      href="/sites/new"
+      className="site-card-outer"
+      style={{ opacity: 0.7 }}
+    >
       <div className="site-card-inner" style={{ height: "100%" }}>
         <div
           className="site-card-preview"
@@ -117,13 +138,27 @@ function NewSiteCard() {
             justifyContent: "center",
           }}
         >
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--ds-text-subtle, #9b8e85)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+          <svg
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="var(--ds-text-subtle, #9b8e85)"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
             <path d="M12 5v14M5 12h14" />
           </svg>
         </div>
         <div className="site-card-body">
           <div className="site-card-row">
-            <p className="site-card-name" style={{ color: "var(--ds-text-subtle, #9b8e85)" }}>New Site</p>
+            <p
+              className="site-card-name"
+              style={{ color: "var(--ds-text-subtle, #9b8e85)" }}
+            >
+              New Site
+            </p>
           </div>
         </div>
       </div>
@@ -142,7 +177,16 @@ function SiteCard({ site }: { site: Site }) {
           className="site-card-preview"
           style={{ background: site.previewColor ?? "var(--ds-bg-subtle)" }}
         >
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+          <svg
+            width="22"
+            height="22"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="rgba(255,255,255,0.5)"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
             <rect x="3" y="3" width="18" height="18" rx="2" />
             <path d="M3 9h18M9 21V9" />
           </svg>
@@ -151,9 +195,13 @@ function SiteCard({ site }: { site: Site }) {
           <div className="site-card-row">
             <div style={{ minWidth: 0 }}>
               <p className="site-card-name">{site.name}</p>
-              <p className="site-card-meta">{label} · {relativeTime}</p>
+              <p className="site-card-meta">
+                {label} · {relativeTime}
+              </p>
             </div>
-            <span className={`site-card-badge ${site.status}`}>{site.status}</span>
+            <span className={`site-card-badge ${site.status}`}>
+              {site.status}
+            </span>
           </div>
         </div>
       </div>
