@@ -48,7 +48,7 @@ function NumericInput({
 
   useEffect(() => {
     const next = value !== undefined ? String(value) : "";
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- syncs local state from props/inputs after mount or a dep change; intentional one-way sync, not a render-phase cascade
     setDraft((prev) => (prev !== next ? next : prev));
   }, [value]);
 
@@ -64,9 +64,16 @@ function NumericInput({
 
   return (
     <div className="flex items-center gap-2">
-      <label className={cn("w-14 shrink-0 text-[10px] uppercase text-muted-foreground", overridden && "text-orange-500")}>
+      <label
+        className={cn(
+          "w-14 shrink-0 text-[10px] uppercase text-muted-foreground",
+          overridden && "text-orange-500",
+        )}
+      >
         {label}
-        {overridden && <span className="ml-1 inline-block h-1.5 w-1.5 rounded-full bg-orange-500 align-middle" />}
+        {overridden && (
+          <span className="ml-1 inline-block h-1.5 w-1.5 rounded-full bg-orange-500 align-middle" />
+        )}
       </label>
       <input
         type="text"
@@ -90,7 +97,7 @@ function NumericInput({
         }}
         className={cn(
           "h-7 w-full rounded border border-input bg-background px-2 text-xs tabular-nums focus:outline-none focus:ring-1 focus:ring-ring",
-          overridden && "border-orange-300"
+          overridden && "border-orange-300",
         )}
       />
       <span className="shrink-0 text-[10px] text-muted-foreground">{unit}</span>
@@ -111,7 +118,7 @@ function NumericInput({
 function getEffectiveValue(
   block: Block,
   breakpoint: "desktop" | "tablet" | "mobile",
-  field: string
+  field: string,
 ): number | undefined {
   if (breakpoint !== "desktop") {
     const override = block.overrides?.[breakpoint]?.[field];
@@ -121,7 +128,11 @@ function getEffectiveValue(
   return val !== undefined ? (val as number) : undefined;
 }
 
-function isOverridden(block: Block, breakpoint: "desktop" | "tablet" | "mobile", field: string): boolean {
+function isOverridden(
+  block: Block,
+  breakpoint: "desktop" | "tablet" | "mobile",
+  field: string,
+): boolean {
   if (breakpoint === "desktop") return false;
   return block.overrides?.[breakpoint]?.[field] !== undefined;
 }
@@ -148,10 +159,17 @@ interface AdvancedTabProps {
   updateBlock: (id: string, updates: Partial<Block>) => void;
 }
 
-export function AdvancedTab({ block, breakpoint, updateBlock }: AdvancedTabProps) {
+export function AdvancedTab({
+  block,
+  breakpoint,
+  updateBlock,
+}: AdvancedTabProps) {
   const cfg = getInspectorConfig(block.type);
   const parsed = parseCfg(block.config);
-  const currentAnim = { ...DEFAULT_ANIM, ...(parsed.animation as Partial<AnimationConfig> | undefined) };
+  const currentAnim = {
+    ...DEFAULT_ANIM,
+    ...(parsed.animation as Partial<AnimationConfig> | undefined),
+  };
 
   return (
     <div>
@@ -160,7 +178,9 @@ export function AdvancedTab({ block, breakpoint, updateBlock }: AdvancedTabProps
           <span
             className={cn(
               "inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] font-medium",
-              breakpoint === "tablet" ? "bg-blue-50 text-blue-700" : "bg-purple-50 text-purple-700"
+              breakpoint === "tablet"
+                ? "bg-blue-50 text-blue-700"
+                : "bg-purple-50 text-purple-700",
             )}
           >
             {breakpoint === "tablet" ? "Tablet" : "Mobile"}
@@ -175,15 +195,23 @@ export function AdvancedTab({ block, breakpoint, updateBlock }: AdvancedTabProps
             label="X"
             value={getEffectiveValue(block, breakpoint, "blockOffsetX")}
             overridden={isOverridden(block, breakpoint, "blockOffsetX")}
-            onChange={(v) => updateBlock(block.id, { config: { ...parsed, blockOffsetX: v } })}
-            onReset={() => resetOverride(block, breakpoint, "blockOffsetX", updateBlock)}
+            onChange={(v) =>
+              updateBlock(block.id, { config: { ...parsed, blockOffsetX: v } })
+            }
+            onReset={() =>
+              resetOverride(block, breakpoint, "blockOffsetX", updateBlock)
+            }
           />
           <NumericInput
             label="Y"
             value={getEffectiveValue(block, breakpoint, "blockOffsetY")}
             overridden={isOverridden(block, breakpoint, "blockOffsetY")}
-            onChange={(v) => updateBlock(block.id, { config: { ...parsed, blockOffsetY: v } })}
-            onReset={() => resetOverride(block, breakpoint, "blockOffsetY", updateBlock)}
+            onChange={(v) =>
+              updateBlock(block.id, { config: { ...parsed, blockOffsetY: v } })
+            }
+            onReset={() =>
+              resetOverride(block, breakpoint, "blockOffsetY", updateBlock)
+            }
           />
         </div>
       </CollapsibleSection>
@@ -195,24 +223,38 @@ export function AdvancedTab({ block, breakpoint, updateBlock }: AdvancedTabProps
             unit="%"
             value={getEffectiveValue(block, breakpoint, "blockWidth")}
             overridden={isOverridden(block, breakpoint, "blockWidth")}
-            onChange={(v) => updateBlock(block.id, { config: { ...parsed, blockWidth: v } })}
-            onReset={() => resetOverride(block, breakpoint, "blockWidth", updateBlock)}
+            onChange={(v) =>
+              updateBlock(block.id, { config: { ...parsed, blockWidth: v } })
+            }
+            onReset={() =>
+              resetOverride(block, breakpoint, "blockWidth", updateBlock)
+            }
           />
           <NumericInput
             label="Height"
             unit="px"
             value={getEffectiveValue(block, breakpoint, "blockHeight")}
             overridden={isOverridden(block, breakpoint, "blockHeight")}
-            onChange={(v) => updateBlock(block.id, { config: { ...parsed, blockHeight: v } })}
-            onReset={() => resetOverride(block, breakpoint, "blockHeight", updateBlock)}
+            onChange={(v) =>
+              updateBlock(block.id, { config: { ...parsed, blockHeight: v } })
+            }
+            onReset={() =>
+              resetOverride(block, breakpoint, "blockHeight", updateBlock)
+            }
           />
           <NumericInput
             label="Left"
             unit="%"
             value={getEffectiveValue(block, breakpoint, "blockMarginLeft")}
             overridden={isOverridden(block, breakpoint, "blockMarginLeft")}
-            onChange={(v) => updateBlock(block.id, { config: { ...parsed, blockMarginLeft: v } })}
-            onReset={() => resetOverride(block, breakpoint, "blockMarginLeft", updateBlock)}
+            onChange={(v) =>
+              updateBlock(block.id, {
+                config: { ...parsed, blockMarginLeft: v },
+              })
+            }
+            onReset={() =>
+              resetOverride(block, breakpoint, "blockMarginLeft", updateBlock)
+            }
           />
         </div>
       </CollapsibleSection>
@@ -224,16 +266,24 @@ export function AdvancedTab({ block, breakpoint, updateBlock }: AdvancedTabProps
             unit=""
             value={getEffectiveValue(block, breakpoint, "blockZIndex")}
             overridden={isOverridden(block, breakpoint, "blockZIndex")}
-            onChange={(v) => updateBlock(block.id, { config: { ...parsed, blockZIndex: v } })}
-            onReset={() => resetOverride(block, breakpoint, "blockZIndex", updateBlock)}
+            onChange={(v) =>
+              updateBlock(block.id, { config: { ...parsed, blockZIndex: v } })
+            }
+            onReset={() =>
+              resetOverride(block, breakpoint, "blockZIndex", updateBlock)
+            }
           />
           <NumericInput
             label="Rotation"
             unit="°"
             value={getEffectiveValue(block, breakpoint, "blockRotation")}
             overridden={isOverridden(block, breakpoint, "blockRotation")}
-            onChange={(v) => updateBlock(block.id, { config: { ...parsed, blockRotation: v } })}
-            onReset={() => resetOverride(block, breakpoint, "blockRotation", updateBlock)}
+            onChange={(v) =>
+              updateBlock(block.id, { config: { ...parsed, blockRotation: v } })
+            }
+            onReset={() =>
+              resetOverride(block, breakpoint, "blockRotation", updateBlock)
+            }
           />
         </div>
       </CollapsibleSection>
@@ -242,15 +292,28 @@ export function AdvancedTab({ block, breakpoint, updateBlock }: AdvancedTabProps
         <CollapsibleSection title="Order">
           <div className="space-y-2">
             <div className="flex items-center gap-2">
-              <label className="w-14 shrink-0 text-[10px] uppercase text-muted-foreground">Position</label>
+              <label className="w-14 shrink-0 text-[10px] uppercase text-muted-foreground">
+                Position
+              </label>
               <input
                 type="number"
                 min={0}
                 step={1}
                 placeholder="default"
                 value={
-                  typeof (block.overrides?.[breakpoint] as Record<string, unknown> | undefined)?.sortOrder === "number"
-                    ? String((block.overrides![breakpoint] as Record<string, unknown>).sortOrder)
+                  typeof (
+                    block.overrides?.[breakpoint] as
+                      | Record<string, unknown>
+                      | undefined
+                  )?.sortOrder === "number"
+                    ? String(
+                        (
+                          block.overrides![breakpoint] as Record<
+                            string,
+                            unknown
+                          >
+                        ).sortOrder,
+                      )
                     : ""
                 }
                 onChange={(e) => {
@@ -258,7 +321,10 @@ export function AdvancedTab({ block, breakpoint, updateBlock }: AdvancedTabProps
                   const bp = breakpoint as "tablet" | "mobile";
                   if (raw === "") {
                     const existing = block.overrides?.[bp] ?? {};
-                    const { sortOrder: _omit, ...rest } = existing as Record<string, unknown>;
+                    const { sortOrder: _omit, ...rest } = existing as Record<
+                      string,
+                      unknown
+                    >;
                     updateBlock(block.id, {
                       overrides: {
                         ...block.overrides,
@@ -271,7 +337,10 @@ export function AdvancedTab({ block, breakpoint, updateBlock }: AdvancedTabProps
                       updateBlock(block.id, {
                         overrides: {
                           ...block.overrides,
-                          [bp]: { ...(block.overrides?.[bp] ?? {}), sortOrder: n },
+                          [bp]: {
+                            ...(block.overrides?.[bp] ?? {}),
+                            sortOrder: n,
+                          },
                         },
                       });
                     }
@@ -280,19 +349,31 @@ export function AdvancedTab({ block, breakpoint, updateBlock }: AdvancedTabProps
                 onKeyDown={(e) => e.stopPropagation()}
                 className="h-7 w-20 rounded border border-input bg-background px-2 text-xs tabular-nums focus:outline-none focus:ring-1 focus:ring-ring"
               />
-              {typeof (block.overrides?.[breakpoint as "tablet" | "mobile"] as Record<string, unknown> | undefined)?.sortOrder === "number" && (
+              {typeof (
+                block.overrides?.[breakpoint as "tablet" | "mobile"] as
+                  | Record<string, unknown>
+                  | undefined
+              )?.sortOrder === "number" && (
                 <button
                   type="button"
                   title="Reset to default order"
-                  onClick={() => resetOverride(block, breakpoint, "sortOrder", updateBlock)}
+                  onClick={() =>
+                    resetOverride(block, breakpoint, "sortOrder", updateBlock)
+                  }
                   className="flex h-5 w-5 shrink-0 items-center justify-center rounded text-[11px] text-orange-500 hover:bg-orange-50"
                 >
                   ↺
                 </button>
               )}
             </div>
-            {typeof (block.overrides?.[breakpoint as "tablet" | "mobile"] as Record<string, unknown> | undefined)?.sortOrder === "number" && (
-              <p className="text-[10px] text-orange-500">Custom order on {breakpoint}</p>
+            {typeof (
+              block.overrides?.[breakpoint as "tablet" | "mobile"] as
+                | Record<string, unknown>
+                | undefined
+            )?.sortOrder === "number" && (
+              <p className="text-[10px] text-orange-500">
+                Custom order on {breakpoint}
+              </p>
             )}
           </div>
         </CollapsibleSection>
@@ -302,7 +383,9 @@ export function AdvancedTab({ block, breakpoint, updateBlock }: AdvancedTabProps
         <CollapsibleSection title="Timing">
           <div className="space-y-3">
             <div className="flex items-center gap-2">
-              <label className="w-14 shrink-0 text-[10px] uppercase text-muted-foreground">Duration</label>
+              <label className="w-14 shrink-0 text-[10px] uppercase text-muted-foreground">
+                Duration
+              </label>
               <input
                 type="number"
                 min={50}
@@ -311,7 +394,13 @@ export function AdvancedTab({ block, breakpoint, updateBlock }: AdvancedTabProps
                 value={Math.round(currentAnim.duration * 1000)}
                 onChange={(e) =>
                   updateBlock(block.id, {
-                    config: { ...parsed, animation: { ...currentAnim, duration: Math.max(0.05, Number(e.target.value) / 1000) } },
+                    config: {
+                      ...parsed,
+                      animation: {
+                        ...currentAnim,
+                        duration: Math.max(0.05, Number(e.target.value) / 1000),
+                      },
+                    },
                   })
                 }
                 onKeyDown={(e) => e.stopPropagation()}
@@ -320,7 +409,9 @@ export function AdvancedTab({ block, breakpoint, updateBlock }: AdvancedTabProps
               <span className="text-[10px] text-muted-foreground">ms</span>
             </div>
             <div className="flex items-center gap-2">
-              <label className="w-14 shrink-0 text-[10px] uppercase text-muted-foreground">Delay</label>
+              <label className="w-14 shrink-0 text-[10px] uppercase text-muted-foreground">
+                Delay
+              </label>
               <input
                 type="number"
                 min={0}
@@ -329,7 +420,13 @@ export function AdvancedTab({ block, breakpoint, updateBlock }: AdvancedTabProps
                 value={Math.round(currentAnim.delay * 1000)}
                 onChange={(e) =>
                   updateBlock(block.id, {
-                    config: { ...parsed, animation: { ...currentAnim, delay: Math.max(0, Number(e.target.value) / 1000) } },
+                    config: {
+                      ...parsed,
+                      animation: {
+                        ...currentAnim,
+                        delay: Math.max(0, Number(e.target.value) / 1000),
+                      },
+                    },
                   })
                 }
                 onKeyDown={(e) => e.stopPropagation()}
@@ -338,7 +435,9 @@ export function AdvancedTab({ block, breakpoint, updateBlock }: AdvancedTabProps
               <span className="text-[10px] text-muted-foreground">ms</span>
             </div>
             <div>
-              <p className="mb-1.5 text-[10px] uppercase text-muted-foreground">Trigger</p>
+              <p className="mb-1.5 text-[10px] uppercase text-muted-foreground">
+                Trigger
+              </p>
               <div className="flex flex-wrap gap-1">
                 {TRIGGER_OPTIONS.map((opt) => (
                   <button
@@ -346,14 +445,17 @@ export function AdvancedTab({ block, breakpoint, updateBlock }: AdvancedTabProps
                     type="button"
                     onClick={() =>
                       updateBlock(block.id, {
-                        config: { ...parsed, animation: { ...currentAnim, trigger: opt.id } },
+                        config: {
+                          ...parsed,
+                          animation: { ...currentAnim, trigger: opt.id },
+                        },
                       })
                     }
                     className={cn(
                       "h-7 rounded-sm px-2 text-[11px] font-medium transition-colors",
                       currentAnim.trigger === opt.id
                         ? "bg-accent text-accent-foreground"
-                        : "text-muted-foreground hover:bg-accent/50"
+                        : "text-muted-foreground hover:bg-accent/50",
                     )}
                   >
                     {opt.label}

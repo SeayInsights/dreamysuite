@@ -154,7 +154,7 @@ export function useEditEventHandlers({
 
     el.addEventListener("keydown", handleKeyDown);
     return () => el.removeEventListener("keydown", handleKeyDown);
-  }, [editState, discard, editStateRef]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [editState, discard, editStateRef]); // eslint-disable-line react-hooks/exhaustive-deps -- deps intentionally narrowed; this effect must not re-run on the omitted stable/ref values
 
   // -------------------------------------------------------------------------
   // Format handler — applies to cfg immediately, reflects in element style
@@ -225,7 +225,7 @@ export function useEditEventHandlers({
         editStateRef.current?.element.focus();
       });
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- deps intentionally narrowed; this effect must not re-run on the omitted stable/ref values
     [updateBlock],
   );
 

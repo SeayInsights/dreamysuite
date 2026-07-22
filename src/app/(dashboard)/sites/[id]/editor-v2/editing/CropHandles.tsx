@@ -1,4 +1,4 @@
-/* eslint-disable react-hooks/refs */
+/* eslint-disable react-hooks/refs -- CropHandles reads live element/pointer geometry refs during render to drive crop-overlay math; these are read-only snapshots, not mutations. */
 "use client";
 
 /**

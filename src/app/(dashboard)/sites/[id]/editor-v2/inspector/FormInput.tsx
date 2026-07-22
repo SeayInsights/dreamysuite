@@ -27,7 +27,14 @@ import type { Block } from "@/app/stores/editorStore";
 // Types
 // ---------------------------------------------------------------------------
 
-type FormInputType = "text" | "textarea" | "select" | "date" | "time" | "number" | "color";
+type FormInputType =
+  | "text"
+  | "textarea"
+  | "select"
+  | "date"
+  | "time"
+  | "number"
+  | "color";
 
 interface BaseFormInputProps {
   label: string;
@@ -37,7 +44,7 @@ interface BaseFormInputProps {
   disabled?: boolean;
   helpText?: string;
   maxLength?: number;
-  unit?: string;  // For numeric inputs (px, %, rem, etc.)
+  unit?: string; // For numeric inputs (px, %, rem, etc.)
 }
 
 interface BlockModeProps extends BaseFormInputProps {
@@ -71,7 +78,7 @@ type FormInputProps = BlockModeProps | PageModeProps;
 function isPropertyOverridden(
   block: Block,
   breakpoint: "desktop" | "tablet" | "mobile",
-  propertyName: string
+  propertyName: string,
 ): boolean {
   if (breakpoint === "desktop") return false;
   return propertyName in (block.overrides?.[breakpoint] || {});
@@ -107,7 +114,9 @@ function ResetButton({
     const newOverrides = {
       ...block.overrides,
       [breakpoint]:
-        Object.keys(remainingOverrides).length > 0 ? remainingOverrides : undefined,
+        Object.keys(remainingOverrides).length > 0
+          ? remainingOverrides
+          : undefined,
     };
 
     updateBlock(block.id, { overrides: newOverrides });
@@ -146,7 +155,7 @@ export function FormInput(props: FormInputProps) {
   const [draft, setDraft] = useState(value);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- syncs local state from props/inputs after mount or a dep change; intentional one-way sync, not a render-phase cascade
     setDraft((prev) => (prev !== value ? value : prev));
   }, [value]);
 
@@ -179,7 +188,9 @@ export function FormInput(props: FormInputProps) {
     <div className="mb-2 flex items-center justify-between">
       <label className="flex items-center text-xs font-semibold uppercase tracking-wide text-muted-foreground">
         {label}
-        {isOverridden && <OverrideIndicator sourceBreakpoint={sourceBreakpoint} />}
+        {isOverridden && (
+          <OverrideIndicator sourceBreakpoint={sourceBreakpoint} />
+        )}
         {isOverridden &&
           showCascadeIndicator &&
           props.breakpoint !== "desktop" &&
@@ -198,7 +209,9 @@ export function FormInput(props: FormInputProps) {
       {maxLength && type === "textarea" && (
         <span
           className={`text-xs tabular-nums ${
-            draft.length > maxLength ? "text-destructive" : "text-muted-foreground"
+            draft.length > maxLength
+              ? "text-destructive"
+              : "text-muted-foreground"
           }`}
         >
           {draft.length}/{maxLength}
@@ -234,7 +247,9 @@ export function FormInput(props: FormInputProps) {
             data-testid={`form-input-${label.toLowerCase().replace(/\s+/g, "-")}`}
           />
           {unit && (
-            <span className="shrink-0 text-xs text-muted-foreground">{unit}</span>
+            <span className="shrink-0 text-xs text-muted-foreground">
+              {unit}
+            </span>
           )}
         </div>
       );
@@ -300,7 +315,9 @@ export function FormInput(props: FormInputProps) {
       break;
 
     default:
-      inputElement = <div className="text-xs text-destructive">Unsupported input type</div>;
+      inputElement = (
+        <div className="text-xs text-destructive">Unsupported input type</div>
+      );
   }
 
   // ---------------------------------------------------------------------------
@@ -312,7 +329,9 @@ export function FormInput(props: FormInputProps) {
       {labelElement}
       {inputElement}
       {helpText && (
-        <p className="text-xs leading-normal text-muted-foreground">{helpText}</p>
+        <p className="text-xs leading-normal text-muted-foreground">
+          {helpText}
+        </p>
       )}
     </div>
   );

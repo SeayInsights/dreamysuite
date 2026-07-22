@@ -12,7 +12,7 @@ import type { Block } from "@/app/stores/editorStore";
 function isPropertyOverridden(
   block: Block | undefined,
   breakpoint: "desktop" | "tablet" | "mobile" | undefined,
-  propertyName: string | undefined
+  propertyName: string | undefined,
 ): boolean {
   if (!block || !breakpoint || !propertyName) return false;
   if (breakpoint === "desktop") return false;
@@ -49,9 +49,10 @@ function ResetOverrideButton({
     // Update block with new overrides
     const newOverrides = {
       ...block.overrides,
-      [breakpoint]: Object.keys(remainingOverrides).length > 0
-        ? remainingOverrides
-        : undefined, // Remove breakpoint key if empty
+      [breakpoint]:
+        Object.keys(remainingOverrides).length > 0
+          ? remainingOverrides
+          : undefined, // Remove breakpoint key if empty
     };
 
     updateBlock(block.id, { overrides: newOverrides });
@@ -96,7 +97,7 @@ export function PanelTextInput({
   const isOverridden = isPropertyOverridden(block, breakpoint, propertyName);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- syncs local state from props/inputs after mount or a dep change; intentional one-way sync, not a render-phase cascade
     setDraft((prev) => (prev !== value ? value : prev));
   }, [value]);
 
@@ -111,14 +112,18 @@ export function PanelTextInput({
         {isOverridden && (
           <>
             <OverrideIndicator />
-            {block && breakpoint && breakpoint !== "desktop" && propertyName && updateBlock && (
-              <ResetOverrideButton
-                block={block}
-                breakpoint={breakpoint}
-                propertyName={propertyName}
-                updateBlock={updateBlock}
-              />
-            )}
+            {block &&
+              breakpoint &&
+              breakpoint !== "desktop" &&
+              propertyName &&
+              updateBlock && (
+                <ResetOverrideButton
+                  block={block}
+                  breakpoint={breakpoint}
+                  propertyName={propertyName}
+                  updateBlock={updateBlock}
+                />
+              )}
           </>
         )}
       </label>
@@ -161,7 +166,7 @@ export function PanelTextArea({
   const isOverridden = isPropertyOverridden(block, breakpoint, propertyName);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- syncs local state from props/inputs after mount or a dep change; intentional one-way sync, not a render-phase cascade
     setDraft((prev) => (prev !== value ? value : prev));
   }, [value]);
 
@@ -176,14 +181,18 @@ export function PanelTextArea({
         {isOverridden && (
           <>
             <OverrideIndicator />
-            {block && breakpoint && breakpoint !== "desktop" && propertyName && updateBlock && (
-              <ResetOverrideButton
-                block={block}
-                breakpoint={breakpoint}
-                propertyName={propertyName}
-                updateBlock={updateBlock}
-              />
-            )}
+            {block &&
+              breakpoint &&
+              breakpoint !== "desktop" &&
+              propertyName &&
+              updateBlock && (
+                <ResetOverrideButton
+                  block={block}
+                  breakpoint={breakpoint}
+                  propertyName={propertyName}
+                  updateBlock={updateBlock}
+                />
+              )}
           </>
         )}
       </label>
@@ -226,14 +235,18 @@ export function PanelDateInput({
         {isOverridden && (
           <>
             <OverrideIndicator />
-            {block && breakpoint && breakpoint !== "desktop" && propertyName && updateBlock && (
-              <ResetOverrideButton
-                block={block}
-                breakpoint={breakpoint}
-                propertyName={propertyName}
-                updateBlock={updateBlock}
-              />
-            )}
+            {block &&
+              breakpoint &&
+              breakpoint !== "desktop" &&
+              propertyName &&
+              updateBlock && (
+                <ResetOverrideButton
+                  block={block}
+                  breakpoint={breakpoint}
+                  propertyName={propertyName}
+                  updateBlock={updateBlock}
+                />
+              )}
           </>
         )}
       </label>
@@ -274,14 +287,18 @@ export function PanelSelectInput({
         {isOverridden && (
           <>
             <OverrideIndicator />
-            {block && breakpoint && breakpoint !== "desktop" && propertyName && updateBlock && (
-              <ResetOverrideButton
-                block={block}
-                breakpoint={breakpoint}
-                propertyName={propertyName}
-                updateBlock={updateBlock}
-              />
-            )}
+            {block &&
+              breakpoint &&
+              breakpoint !== "desktop" &&
+              propertyName &&
+              updateBlock && (
+                <ResetOverrideButton
+                  block={block}
+                  breakpoint={breakpoint}
+                  propertyName={propertyName}
+                  updateBlock={updateBlock}
+                />
+              )}
           </>
         )}
       </label>
@@ -291,7 +308,9 @@ export function PanelSelectInput({
         className="h-8 w-full rounded border border-input bg-background px-2.5 text-xs focus:outline-none focus:ring-1 focus:ring-ring"
       >
         {options.map((o) => (
-          <option key={o.value} value={o.value}>{o.label}</option>
+          <option key={o.value} value={o.value}>
+            {o.label}
+          </option>
         ))}
       </select>
     </div>
@@ -324,14 +343,18 @@ export function PanelTimeInput({
         {isOverridden && (
           <>
             <OverrideIndicator />
-            {block && breakpoint && breakpoint !== "desktop" && propertyName && updateBlock && (
-              <ResetOverrideButton
-                block={block}
-                breakpoint={breakpoint}
-                propertyName={propertyName}
-                updateBlock={updateBlock}
-              />
-            )}
+            {block &&
+              breakpoint &&
+              breakpoint !== "desktop" &&
+              propertyName &&
+              updateBlock && (
+                <ResetOverrideButton
+                  block={block}
+                  breakpoint={breakpoint}
+                  propertyName={propertyName}
+                  updateBlock={updateBlock}
+                />
+              )}
           </>
         )}
       </label>

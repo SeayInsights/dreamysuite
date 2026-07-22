@@ -599,7 +599,7 @@ export function useDrag(containerRef: React.RefObject<HTMLElement | null>): {
       setDraggedId(blockId);
       attachListeners(e);
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- deps intentionally narrowed; this effect must not re-run on the omitted stable/ref values
     [
       blocks,
       onPointerMove,
@@ -715,7 +715,7 @@ export function useDrag(containerRef: React.RefObject<HTMLElement | null>): {
       setDraggedId(blockId);
       attachListeners(e);
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- deps intentionally narrowed; this effect must not re-run on the omitted stable/ref values
     [
       blocks,
       containerRef,

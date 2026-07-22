@@ -59,7 +59,11 @@ export function useToolbarPosition({
   // Drag offset applied on top of the calculated position
   const [dragOffset, setDragOffset] = useState<Position>({ top: 0, left: 0 });
   const dragOffsetRef = useRef<Position>({ top: 0, left: 0 });
-  const toolbarDragRef = useRef<{ startX: number; startY: number; startOffset: Position } | null>(null);
+  const toolbarDragRef = useRef<{
+    startX: number;
+    startY: number;
+    startOffset: Position;
+  } | null>(null);
 
   // Reset drag offset when block selection changes
   const prevSelectedRef = useRef(selectedBlockId);
@@ -107,19 +111,24 @@ export function useToolbarPosition({
   const [renderBlockId, setRenderBlockId] = useState<string | null>(null);
   const renderBlockIdRef = useRef<string | null>(null);
   const animTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const pendingShowRef = useRef<{ pos: Position; blockId: string } | null>(null);
+  const pendingShowRef = useRef<{ pos: Position; blockId: string } | null>(
+    null,
+  );
 
   const setToolbarPhase = useCallback((p: ToolbarPhase) => {
     phaseRef.current = p;
     setToolbarPhaseState(p);
   }, []);
 
-  const showBlock = useCallback((pos: Position, blockId: string) => {
-    renderBlockIdRef.current = blockId;
-    setRenderPos(pos);
-    setRenderBlockId(blockId);
-    setToolbarPhase("shown");
-  }, [setToolbarPhase]);
+  const showBlock = useCallback(
+    (pos: Position, blockId: string) => {
+      renderBlockIdRef.current = blockId;
+      setRenderPos(pos);
+      setRenderBlockId(blockId);
+      setToolbarPhase("shown");
+    },
+    [setToolbarPhase],
+  );
 
   // Measure toolbar position relative to the selected block
   const measurePosition = useCallback(() => {
@@ -128,7 +137,9 @@ export function useToolbarPosition({
       setPosition(null);
       return;
     }
-    const node = container.querySelector<HTMLElement>(`[data-block-id="${selectedBlockId}"]`);
+    const node = container.querySelector<HTMLElement>(
+      `[data-block-id="${selectedBlockId}"]`,
+    );
     if (!node) {
       setPosition(null);
       return;
@@ -138,7 +149,8 @@ export function useToolbarPosition({
     const relTop = box.top - frameBox.top + (container.scrollTop ?? 0);
 
     const TOOLBAR_WIDTH = 320;
-    const rawLeft = (box.left - frameBox.left) + box.width / 2 - TOOLBAR_WIDTH / 2;
+    const rawLeft =
+      box.left - frameBox.left + box.width / 2 - TOOLBAR_WIDTH / 2;
     const maxLeft = frameBox.width - TOOLBAR_WIDTH;
     const clampedLeft = Math.max(0, Math.min(rawLeft, Math.max(0, maxLeft)));
 
@@ -200,7 +212,7 @@ export function useToolbarPosition({
       { opacity: [0, 1], transform: ["translateY(8px)", "translateY(0px)"] },
       { duration: ANIM_MS / 1000, ease: [0.16, 1, 0.3, 1] },
     );
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- deps intentionally narrowed; this effect must not re-run on the omitted stable/ref values
   }, [renderBlockId]);
 
   // Exit animation
@@ -224,7 +236,10 @@ export function useToolbarPosition({
         phaseRef.current === "shown" &&
         selectedBlockId !== renderBlockIdRef.current;
 
-      if (animTimerRef.current) { clearTimeout(animTimerRef.current); animTimerRef.current = null; }
+      if (animTimerRef.current) {
+        clearTimeout(animTimerRef.current);
+        animTimerRef.current = null;
+      }
 
       if (switchingBlock) {
         pendingShowRef.current = { pos: position, blockId: selectedBlockId };
@@ -239,8 +254,14 @@ export function useToolbarPosition({
       } else {
         setRenderPos(position);
       }
-    } else if (phaseRef.current !== "hidden" && phaseRef.current !== "exiting") {
-      if (animTimerRef.current) { clearTimeout(animTimerRef.current); animTimerRef.current = null; }
+    } else if (
+      phaseRef.current !== "hidden" &&
+      phaseRef.current !== "exiting"
+    ) {
+      if (animTimerRef.current) {
+        clearTimeout(animTimerRef.current);
+        animTimerRef.current = null;
+      }
       pendingShowRef.current = null;
       setToolbarPhase("exiting");
       animTimerRef.current = setTimeout(() => {
@@ -251,12 +272,21 @@ export function useToolbarPosition({
         setRenderBlockId(null);
       }, ANIM_MS);
     }
-  }, [selectedBlockId, blockToolbarVisible, position, setToolbarPhase, showBlock]);
+  }, [
+    selectedBlockId,
+    blockToolbarVisible,
+    position,
+    setToolbarPhase,
+    showBlock,
+  ]);
 
   // Cleanup on unmount
-  useEffect(() => () => {
-    if (animTimerRef.current) clearTimeout(animTimerRef.current);
-  }, []);
+  useEffect(
+    () => () => {
+      if (animTimerRef.current) clearTimeout(animTimerRef.current);
+    },
+    [],
+  );
 
   return {
     toolbarRef,

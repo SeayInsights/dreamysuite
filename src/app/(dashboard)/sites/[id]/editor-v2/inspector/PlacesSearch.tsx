@@ -31,7 +31,7 @@ export function usePlacesSearch() {
 
   useEffect(() => {
     if (query.length < 2) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- syncs local state from props/inputs after mount or a dep change; intentional one-way sync, not a render-phase cascade
       setResults((prev) => (prev.length === 0 ? prev : []));
       return;
     }

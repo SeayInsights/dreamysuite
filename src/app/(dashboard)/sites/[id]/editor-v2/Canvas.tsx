@@ -157,7 +157,7 @@ export function Canvas({ siteId }: Props) {
     return () => {
       cancelled = true;
     };
-  }, [siteId, setBlocks, setPages, setCurrentPageId, setCachedPageBlocks]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [siteId, setBlocks, setPages, setCurrentPageId, setCachedPageBlocks]); // eslint-disable-line react-hooks/exhaustive-deps -- deps intentionally narrowed; this effect must not re-run on the omitted stable/ref values
 
   // Track previous page to save blocks on navigation
   const prevPageIdRef = useRef<string | null>(null);
