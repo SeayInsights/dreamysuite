@@ -820,7 +820,10 @@ function toggleMusic(){var a=document.getElementById('audio-player'),b=document.
   <style>${siteCss}
   .lang-select{appearance:none;border:1px solid var(--site-border,#e7e5e4);border-radius:6px;padding:0.375rem 1.75rem 0.375rem 0.625rem;font-family:inherit;font-size:0.8125rem;background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23666' d='M3 4.5L6 7.5L9 4.5'/%3E%3C/svg%3E") no-repeat right 0.5rem center;cursor:pointer;outline:none;color:var(--text,#292524)}
   /* ── Responsive: Reflow mode ── */
-  body.ds-reflow .page-section{display:flex!important;flex-direction:column!important}
+  /* Keep one page visible at a time on mobile so the (hamburger) nav still
+     switches pages — without this scope the reflow forced every page-section
+     visible, stacking all pages into one scroll and breaking navigation. */
+  body.ds-reflow .page-section.active{display:flex!important;flex-direction:column!important}
   body.ds-reflow .block[data-block-id]{width:100%!important;margin-left:0!important;margin-right:0!important;transform:none!important;height:auto!important;position:static!important;z-index:auto!important;padding-left:1rem!important;padding-right:1rem!important}
   body.ds-reflow .block h1,body.ds-reflow .block h2,body.ds-reflow .block h3,body.ds-reflow .section-heading,body.ds-reflow .hero-title{font-size:clamp(1.25rem,5vw,2.5rem)!important}
   body.ds-reflow .block p,body.ds-reflow .block li,body.ds-reflow .block dd,body.ds-reflow .block dt,body.ds-reflow .block label,body.ds-reflow .text-body{font-size:clamp(0.875rem,3.5vw,1rem)!important}
