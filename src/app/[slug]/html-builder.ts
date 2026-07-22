@@ -20,15 +20,6 @@ import { buildIntroHtml } from "./pages";
 import { LANG_NATIVE } from "@/lib/i18n/languages";
 import { detectDesignedAtWidth } from "@/lib/responsiveScale";
 
-// Allowlist prevents arbitrary path injection into import() URLs
-const R3F_EFFECTS = new Set([
-  "silk",
-  "beams",
-  "dither",
-  "antigravity",
-  "pixel-trail",
-]);
-
 export async function buildHtml(
   site: SiteRow,
   settings: SiteSettingRow | null,
@@ -475,9 +466,11 @@ function switchLang() {
     settings?.popupTitle ?? null,
     greeting,
   );
+  // Self-hosted gsap UMD (built into /effects/vendor by build-public-effects.mjs)
+  // for intro animations + block presets that use the global `gsap`. No CDN.
   const gsapCdn =
     introHtml || usedBlockPresets.size > 0
-      ? `<script defer src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.15.0/gsap.min.js"></script>\n  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.15.0/CustomEase.min.js"></script>${blockPresetNeedsScrollTrigger ? '\n  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.15.0/ScrollTrigger.min.js"></script>' : ""}`
+      ? `<script defer src="/effects/vendor/gsap.min.js"></script>\n  <script defer src="/effects/vendor/CustomEase.min.js"></script>${blockPresetNeedsScrollTrigger ? '\n  <script defer src="/effects/vendor/ScrollTrigger.min.js"></script>' : ""}`
       : "";
 
   const triggerPopupAfterAnim = showPopup && !!animation && !popupBundleActive;
@@ -812,11 +805,44 @@ function toggleMusic(){var a=document.getElementById('audio-player'),b=document.
       settings?.effectNavStyle,
     ].filter(Boolean) as string[];
     if (!allEffects.length) return "";
-    const needsR3F = allEffects.some((id) => R3F_EFFECTS.has(id));
-    const r3fImports = needsR3F
-      ? ',"@react-three/fiber":"https://esm.sh/@react-three/fiber@9.6.0?external=react,react-dom,three","@react-three/drei":"https://esm.sh/@react-three/drei@10.7.7?external=react,react-dom,three,@react-three/fiber","@react-three/postprocessing":"https://esm.sh/@react-three/postprocessing@3.0.4?external=react,react-dom,three,@react-three/fiber,postprocessing"'
-      : "";
-    return `<script type="importmap">{"imports":{"react":"https://esm.sh/react@19.1.5","react/":"https://esm.sh/react@19.1.5/","react-dom":"https://esm.sh/react-dom@19.1.5","react-dom/":"https://esm.sh/react-dom@19.1.5/","motion/react":"https://esm.sh/motion@12.38.0/react?external=react,react-dom","motion":"https://esm.sh/motion@12.38.0?external=react,react-dom"${r3fImports},"three":"https://esm.sh/three@0.184.0","three/":"https://esm.sh/three@0.184.0/","postprocessing":"https://esm.sh/postprocessing@6.39.1?external=three","ogl":"https://esm.sh/ogl@1.0.11","gsap":"https://esm.sh/gsap@3.15.0","gsap/":"https://esm.sh/gsap@3.15.0/"}}</script>`;
+    // Self-hosted importmap → /effects/vendor/* (built by build-public-effects.mjs).
+    // No esm.sh / cdnjs runtime dependency. Keys mirror the exact bare specifiers
+    // the effect bundles import; react/react-dom/react-dom/client resolve to one
+    // canonical module (single react instance — see build script). Emitting every
+    // key unconditionally is safe: the browser only fetches modules it imports.
+    return `<script type="importmap">${JSON.stringify({
+      imports: {
+        react: "/effects/vendor/react-dom.js",
+        "react-dom": "/effects/vendor/react-dom.js",
+        "react-dom/client": "/effects/vendor/react-dom.js",
+        "react/jsx-runtime": "/effects/vendor/react-jsx-runtime.js",
+        "motion/react": "/effects/vendor/motion-react.js",
+        three: "/effects/vendor/three.js",
+        "three/src/math/MathUtils.js": "/effects/vendor/three-mathutils.js",
+        "three/examples/jsm/postprocessing/EffectComposer.js":
+          "/effects/vendor/three-effectcomposer.js",
+        "three/examples/jsm/postprocessing/Pass.js":
+          "/effects/vendor/three-pass.js",
+        "three/examples/jsm/postprocessing/RenderPass.js":
+          "/effects/vendor/three-renderpass.js",
+        "three/examples/jsm/postprocessing/ShaderPass.js":
+          "/effects/vendor/three-shaderpass.js",
+        "three/examples/jsm/postprocessing/UnrealBloomPass.js":
+          "/effects/vendor/three-unrealbloompass.js",
+        "three/examples/jsm/loaders/OBJLoader.js":
+          "/effects/vendor/three-objloader.js",
+        "three/examples/jsm/environments/RoomEnvironment.js":
+          "/effects/vendor/three-roomenvironment.js",
+        ogl: "/effects/vendor/ogl.js",
+        gsap: "/effects/vendor/gsap.js",
+        "gsap/ScrollTrigger": "/effects/vendor/gsap.js",
+        "gsap/Draggable": "/effects/vendor/gsap.js",
+        postprocessing: "/effects/vendor/postprocessing.js",
+        "@react-three/fiber": "/effects/vendor/r3f-fiber.js",
+        "@react-three/drei": "/effects/vendor/r3f-drei.js",
+        "@react-three/postprocessing": "/effects/vendor/r3f-postprocessing.js",
+      },
+    })}</script>`;
   })()}
   <style>${siteCss}
   .lang-select{appearance:none;border:1px solid var(--site-border,#e7e5e4);border-radius:6px;padding:0.375rem 1.75rem 0.375rem 0.625rem;font-family:inherit;font-size:0.8125rem;background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23666' d='M3 4.5L6 7.5L9 4.5'/%3E%3C/svg%3E") no-repeat right 0.5rem center;cursor:pointer;outline:none;color:var(--text,#292524)}
