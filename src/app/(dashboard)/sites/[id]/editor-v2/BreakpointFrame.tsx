@@ -1,4 +1,3 @@
-/* eslint-disable react-hooks/static-components */
 "use client";
 
 import {
@@ -430,6 +429,7 @@ export function BreakpointFrame({ children, nav }: Props) {
                       : { top: mT, right: mR, bottom: mB, left: mL }
                   }
                 >
+                  {/* eslint-disable-next-line react-hooks/static-components -- dynamic effect from the module-cached registry (effects/loader), stable per id, not recreated per render */}
                   <BgEffect {...effectColors} />
                 </div>
               )}
@@ -473,6 +473,7 @@ export function BreakpointFrame({ children, nav }: Props) {
                   className="pointer-events-none absolute inset-0 overflow-hidden"
                   style={{ zIndex: 15 }}
                 >
+                  {/* eslint-disable-next-line react-hooks/static-components -- dynamic effect from the module-cached registry (effects/loader), stable per id, not recreated per render */}
                   <DecorationEffect {...effectColors} />
                 </div>
               )}
@@ -481,6 +482,7 @@ export function BreakpointFrame({ children, nav }: Props) {
                   className="pointer-events-none absolute inset-0 overflow-hidden"
                   style={{ zIndex: 16 }}
                 >
+                  {/* eslint-disable-next-line react-hooks/static-components -- dynamic effect from the module-cached registry (effects/loader), stable per id, not recreated per render */}
                   <TransitionEffect {...effectColors} />
                 </div>
               )}
@@ -536,6 +538,7 @@ export function BreakpointFrame({ children, nav }: Props) {
                   className="pointer-events-none absolute inset-0 overflow-hidden"
                   style={{ zIndex: 40 }}
                 >
+                  {/* eslint-disable-next-line react-hooks/static-components -- dynamic effect from the module-cached registry (effects/loader), stable per id, not recreated per render */}
                   <CursorEffect {...effectColors} />
                 </div>
               )}
