@@ -234,8 +234,11 @@ export async function GET(
     headers: {
       "content-type": "text/html; charset=utf-8",
       "cache-control": "public, max-age=300, stale-while-revalidate=600",
+      // Effect runtimes + gsap are self-hosted under /effects/vendor, so script
+      // origins are limited to 'self' (+ Cloudflare web-analytics). No esm.sh /
+      // cdnjs runtime dependency.
       "content-security-policy":
-        "default-src 'self'; script-src 'self' 'unsafe-inline' https://esm.sh https://cdnjs.cloudflare.com https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://cloudflareinsights.com; frame-src https:",
+        "default-src 'self'; script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://cloudflareinsights.com; frame-src https:",
     },
   });
 }
