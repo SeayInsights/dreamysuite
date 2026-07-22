@@ -1,7 +1,9 @@
 -- Guest management: extend guest table with contact, tracking, and seating fields
 ALTER TABLE guest ADD COLUMN "address" TEXT DEFAULT NULL;
 ALTER TABLE guest ADD COLUMN "phone" TEXT DEFAULT NULL;
-ALTER TABLE guest ADD COLUMN "email" TEXT DEFAULT NULL;
+-- "email" is added earlier by 0022_guest_email.sql; adding it again here made a
+-- fresh `migrations apply` fail on a duplicate column. Removed to keep the chain
+-- idempotent (prod already applied 0038, so its history is unaffected).
 ALTER TABLE guest ADD COLUMN "invitedBy" TEXT DEFAULT NULL;
 ALTER TABLE guest ADD COLUMN "category" TEXT DEFAULT NULL;
 ALTER TABLE guest ADD COLUMN "invited" INTEGER DEFAULT 0;

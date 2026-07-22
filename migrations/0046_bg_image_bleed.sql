@@ -1,2 +1,5 @@
 -- Persist the editor background margin mode.
-ALTER TABLE site_setting ADD COLUMN "bgImageBleed" INTEGER DEFAULT 1;
+-- NOTE: "bgImageBleed" was already added by 0044_bg_image_bleed.sql. Re-adding it
+-- here made a fresh `migrations apply` fail on a duplicate column. This migration
+-- is retained as an intentional no-op so applied-migration history is preserved
+-- (prod already ran it) while a fresh apply of the full chain succeeds.
