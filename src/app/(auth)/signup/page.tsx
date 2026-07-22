@@ -14,11 +14,11 @@ export default async function SignupPage() {
   const auth = createAuth(env as Parameters<typeof createAuth>[0]);
   const requestHeaders = await headers();
   const session = await auth.api.getSession({ headers: requestHeaders });
-  if (session) redirect("/");
+  if (session) redirect("/sites");
 
   async function signupAction(
     _prevState: { error: string | null },
-    formData: FormData
+    formData: FormData,
   ): Promise<{ error: string | null }> {
     "use server";
     const name = String(formData.get("name") ?? "").trim();
@@ -33,7 +33,9 @@ export default async function SignupPage() {
     }
 
     const { env: actionEnv } = await getCloudflareContext({ async: true });
-    const actionAuth = createAuth(actionEnv as Parameters<typeof createAuth>[0]);
+    const actionAuth = createAuth(
+      actionEnv as Parameters<typeof createAuth>[0],
+    );
 
     try {
       const response = await actionAuth.api.signUpEmail({
@@ -45,7 +47,8 @@ export default async function SignupPage() {
         const body = await response.json().catch(() => ({}));
         return {
           error:
-            (body as { message?: string }).message ?? "Could not create account.",
+            (body as { message?: string }).message ??
+            "Could not create account.",
         };
       }
 
@@ -65,7 +68,11 @@ export default async function SignupPage() {
             if (p.startsWith("samesite="))
               options.sameSite = p.slice(9) as "lax" | "strict" | "none";
           });
-          cookieStore.set(cookieName.trim(), cookieValue?.trim() ?? "", options);
+          cookieStore.set(
+            cookieName.trim(),
+            cookieValue?.trim() ?? "",
+            options,
+          );
         }
       });
     } catch (err) {
@@ -74,7 +81,7 @@ export default async function SignupPage() {
       return { error: msg };
     }
 
-    redirect("/");
+    redirect("/sites");
   }
 
   return <SignupForm action={signupAction} />;

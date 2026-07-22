@@ -14,7 +14,7 @@ export default async function LoginPage() {
   const auth = createAuth(env as Parameters<typeof createAuth>[0]);
   const requestHeaders = await headers();
   const session = await auth.api.getSession({ headers: requestHeaders });
-  if (session) redirect("/");
+  if (session) redirect("/sites");
 
   return <LoginForm />;
 }

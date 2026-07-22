@@ -30,7 +30,11 @@ const editorNavItems = [
   { key: "analytics", label: "Analytics", icon: "analytics" },
 ] as const;
 
-export default function DashboardShell({ user, children, site }: DashboardShellProps) {
+export default function DashboardShell({
+  user,
+  children,
+  site,
+}: DashboardShellProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -57,7 +61,7 @@ export default function DashboardShell({ user, children, site }: DashboardShellP
     <div className="ds-shell">
       <aside className="ds-sidebar">
         <div className="ds-logo-area">
-          <Link href="/" className="ds-logo-link">
+          <Link href="/sites" className="ds-logo-link">
             <span className="ds-logo-text">
               <em>Dreamy</em>Suite
             </span>
@@ -66,7 +70,7 @@ export default function DashboardShell({ user, children, site }: DashboardShellP
         <nav className="ds-nav">
           {isEditor ? (
             <>
-              <Link href="/" className="ds-nav-back">
+              <Link href="/sites" className="ds-nav-back">
                 <svg
                   className="ds-nav-icon"
                   viewBox="0 0 24 24"
@@ -100,7 +104,7 @@ export default function DashboardShell({ user, children, site }: DashboardShellP
           ) : (
             <>
               <span className="ds-nav-section-label">Workspace</span>
-              <NavLink href="/" icon="grid">
+              <NavLink href="/sites" icon="grid">
                 My Sites
               </NavLink>
               <NavLink href="/templates" icon="layout">
@@ -144,18 +148,70 @@ export default function DashboardShell({ user, children, site }: DashboardShellP
 
 function NavIcon({ name }: { name: string }) {
   const paths: Record<string, React.ReactNode> = {
-    website: <><rect x="3" y="3" width="18" height="18" rx="2" /><path d="M3 9h18M9 21V9" /></>,
-    media: <><rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><polyline points="21 15 16 10 5 21" /></>,
-    guestlist: <><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" /></>,
-    templates: <><rect x="3" y="3" width="18" height="18" rx="2" /><path d="M3 9h18M9 21V9" /><path d="M12 13h4M12 16h2" /></>,
-    settings: <><circle cx="12" cy="12" r="3" /><path d="M19.07 4.93l-1.41 1.41M4.93 4.93l1.41 1.41M19.07 19.07l-1.41-1.41M4.93 19.07l1.41-1.41M12 2v2M12 20v2M2 12h2M20 12h2" /></>,
-    analytics: <><polyline points="22 12 18 12 15 21 9 3 6 12 2 12" /></>,
-    grid: <><rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" /><rect x="3" y="14" width="7" height="7" /><rect x="14" y="14" width="7" height="7" /></>,
-    layout: <><rect x="3" y="3" width="18" height="18" rx="2" /><path d="M3 9h18M9 21V9" /></>,
+    website: (
+      <>
+        <rect x="3" y="3" width="18" height="18" rx="2" />
+        <path d="M3 9h18M9 21V9" />
+      </>
+    ),
+    media: (
+      <>
+        <rect x="3" y="3" width="18" height="18" rx="2" />
+        <circle cx="8.5" cy="8.5" r="1.5" />
+        <polyline points="21 15 16 10 5 21" />
+      </>
+    ),
+    guestlist: (
+      <>
+        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+        <circle cx="9" cy="7" r="4" />
+        <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
+      </>
+    ),
+    templates: (
+      <>
+        <rect x="3" y="3" width="18" height="18" rx="2" />
+        <path d="M3 9h18M9 21V9" />
+        <path d="M12 13h4M12 16h2" />
+      </>
+    ),
+    settings: (
+      <>
+        <circle cx="12" cy="12" r="3" />
+        <path d="M19.07 4.93l-1.41 1.41M4.93 4.93l1.41 1.41M19.07 19.07l-1.41-1.41M4.93 19.07l1.41-1.41M12 2v2M12 20v2M2 12h2M20 12h2" />
+      </>
+    ),
+    analytics: (
+      <>
+        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+      </>
+    ),
+    grid: (
+      <>
+        <rect x="3" y="3" width="7" height="7" />
+        <rect x="14" y="3" width="7" height="7" />
+        <rect x="3" y="14" width="7" height="7" />
+        <rect x="14" y="14" width="7" height="7" />
+      </>
+    ),
+    layout: (
+      <>
+        <rect x="3" y="3" width="18" height="18" rx="2" />
+        <path d="M3 9h18M9 21V9" />
+      </>
+    ),
   };
 
   return (
-    <svg className="ds-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+    <svg
+      className="ds-nav-icon"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.75"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
       {paths[name]}
     </svg>
   );
