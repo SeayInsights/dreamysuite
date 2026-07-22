@@ -1,5 +1,5 @@
 import { type SiteSettingRow } from "./types";
-import { escHtml, safeUrl } from "./helpers";
+import { escHtml, safeUrl, ensureReadableText } from "./helpers";
 
 // ── CSS ───────────────────────────────────────────────────────────────────────
 
@@ -27,6 +27,10 @@ export function buildStyles(settings: SiteSettingRow | null): BuiltStyles {
   const headingFont = settings?.headingFont ?? "Georgia";
   const bodyFont = settings?.bodyFont ?? "Inter";
   const bg = settings?.bgColor ?? "#ffffff";
+  // Body + muted text default to the site's bodyColor. Enforce a WCAG-AA floor
+  // against the background so a pale color choice can't make published copy
+  // illegible (a readable choice is passed through unchanged).
+  const readableBody = ensureReadableText(settings?.bodyColor ?? "#78716c", bg);
   const navPosition = settings?.navPosition ?? "fixed";
   const isFixed = navPosition === "fixed" || navPosition === "hide-on-scroll";
   const isScrollAway =
@@ -72,12 +76,12 @@ export function buildStyles(settings: SiteSettingRow | null): BuiltStyles {
       --body-font: ${escHtml(bodyFont)}${/(?:^|,)\s*(?:serif|sans-serif|monospace|cursive|fantasy|system-ui)\s*$/i.test(bodyFont) ? "" : ", system-ui, sans-serif"};
       --bg: ${escHtml(bg)};
       --text: ${escHtml(settings?.siteTextColor ?? "#292524")};
-      --site-muted: ${escHtml(settings?.bodyColor ?? "#78716c")};
+      --site-muted: ${escHtml(readableBody)};
       --site-border: #e7e5e4;
       --site-radius: 12px;
       --max-width: 820px;
       --heading-color: ${escHtml(settings?.headingColor ?? "var(--text)")};
-      --body-color: ${escHtml(settings?.bodyColor ?? "var(--site-muted)")};
+      --body-color: ${escHtml(readableBody)};
       --site-text: ${escHtml(settings?.siteTextColor ?? "var(--text)")};
       --site-border: ${escHtml(settings?.siteBorderColor ?? "#e7e5e4")};
       --nav-bg: ${(() => {
