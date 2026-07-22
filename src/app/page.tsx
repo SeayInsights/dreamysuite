@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { headers } from "next/headers";
-import { redirect } from "next/navigation";
 import { getEnv } from "@/lib/cloudflare";
 import { createAuth } from "@/app/lib/auth.server";
+import { LogoutButton } from "@/app/components/LogoutButton";
 
 export const metadata = {
   title: "DreamySuite — Beautiful event websites, in minutes",
@@ -10,8 +10,8 @@ export const metadata = {
     "Design and publish a stunning wedding or event site — RSVP, guest lists, bilingual pages, and cinematic motion effects. No code required.",
 };
 
-// Public marketing landing. Authenticated visitors are sent straight to their
-// workspace; everyone else sees the front door.
+// Public marketing homepage — shown to everyone. When signed in, the nav + CTAs
+// point into the workspace instead of sign-up.
 export default async function Landing() {
   const env = await getEnv();
   let authed = false;
@@ -22,7 +22,6 @@ export default async function Landing() {
   } catch {
     /* unauthenticated visitor */
   }
-  if (authed) redirect("/sites");
 
   const features: Array<{ title: string; body: string; icon: string }> = [
     {
@@ -64,12 +63,23 @@ export default async function Landing() {
       <header className="lp-nav">
         <span className="lp-logo">DreamySuite</span>
         <nav className="lp-nav-actions">
-          <Link href="/login" className="lp-link">
-            Log in
-          </Link>
-          <Link href="/signup" className="lp-btn lp-btn-primary">
-            Get started
-          </Link>
+          {authed ? (
+            <>
+              <Link href="/sites" className="lp-link">
+                My Sites
+              </Link>
+              <LogoutButton className="lp-link">Log out</LogoutButton>
+            </>
+          ) : (
+            <>
+              <Link href="/login" className="lp-link">
+                Log in
+              </Link>
+              <Link href="/signup" className="lp-btn lp-btn-primary">
+                Get started
+              </Link>
+            </>
+          )}
         </nav>
       </header>
 
@@ -86,16 +96,26 @@ export default async function Landing() {
           a line of code.
         </p>
         <div className="lp-cta-row">
-          <Link href="/signup" className="lp-btn lp-btn-primary lp-btn-lg">
-            Start building — free
-          </Link>
-          <Link href="/login" className="lp-btn lp-btn-ghost lp-btn-lg">
-            I already have an account
-          </Link>
+          {authed ? (
+            <Link href="/sites" className="lp-btn lp-btn-primary lp-btn-lg">
+              Go to your sites
+            </Link>
+          ) : (
+            <>
+              <Link href="/signup" className="lp-btn lp-btn-primary lp-btn-lg">
+                Start building — free
+              </Link>
+              <Link href="/login" className="lp-btn lp-btn-ghost lp-btn-lg">
+                I already have an account
+              </Link>
+            </>
+          )}
         </div>
-        <p className="lp-trust">
-          No credit card · Publish instantly · Your data stays yours
-        </p>
+        {!authed && (
+          <p className="lp-trust">
+            No credit card · Publish instantly · Your data stays yours
+          </p>
+        )}
       </section>
 
       <section className="lp-section">
@@ -131,8 +151,11 @@ export default async function Landing() {
           ships a motion system built for moments that matter, not just another
           template.
         </p>
-        <Link href="/signup" className="lp-btn lp-btn-primary lp-btn-lg">
-          Create yours
+        <Link
+          href={authed ? "/sites" : "/signup"}
+          className="lp-btn lp-btn-primary lp-btn-lg"
+        >
+          {authed ? "Go to your sites" : "Create yours"}
         </Link>
       </section>
 
@@ -157,7 +180,8 @@ const CSS = `
   font-weight:600;letter-spacing:.01em;}
 .lp-logo-sm{font-size:1.25rem;}
 .lp-nav-actions{display:flex;align-items:center;gap:1rem;}
-.lp-link{color:var(--ink);text-decoration:none;font-size:.9375rem;}
+.lp-link{color:var(--ink);text-decoration:none;font-size:.9375rem;
+  background:none;border:none;padding:0;cursor:pointer;font-family:inherit;}
 .lp-link:hover{color:var(--gold);}
 .lp-btn{display:inline-flex;align-items:center;justify-content:center;
   border-radius:999px;font-size:.9375rem;font-weight:500;text-decoration:none;
