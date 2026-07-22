@@ -50,7 +50,7 @@ export function InspectorV2({ overlay = false }: Props) {
   // Reset to Design tab whenever the selected block changes
   useEffect(() => {
     setInspectorTab("design");
-  }, [selectedBlockId]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [selectedBlockId]); // eslint-disable-line react-hooks/exhaustive-deps -- deps intentionally narrowed; this effect must not re-run on the omitted stable/ref values
 
   useEffect(() => {
     const el = ref.current;

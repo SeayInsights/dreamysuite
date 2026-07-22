@@ -77,7 +77,7 @@ function NumericInput({
 
   useEffect(() => {
     const next = String(value ?? "");
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- syncs local state from props/inputs after mount or a dep change; intentional one-way sync, not a render-phase cascade
     setDraft((prev) => (prev !== next ? next : prev));
   }, [value]);
 

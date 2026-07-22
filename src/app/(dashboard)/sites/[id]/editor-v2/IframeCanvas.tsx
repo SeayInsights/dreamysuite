@@ -1,6 +1,6 @@
 "use client";
 
-/* eslint-disable react-hooks/immutability -- effects intentionally synchronize the iframe document DOM. */
+/* eslint-disable react-hooks/immutability -- effects intentionally synchronize the iframe document DOM (an external mutable system). */
 
 import { createPortal } from "react-dom";
 import {

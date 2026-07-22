@@ -8,7 +8,9 @@ import type { PendingOps, Block } from "@/app/stores/slices/document";
 // object before serializing. These appear when a corrupted JSON string is spread
 // character-by-character into the store and would blow past the 64 KB keepalive limit.
 function cleanConfig(cfg: Record<string, unknown>): Record<string, unknown> {
-  return Object.fromEntries(Object.entries(cfg).filter(([k]) => !/^\d+$/.test(k)));
+  return Object.fromEntries(
+    Object.entries(cfg).filter(([k]) => !/^\d+$/.test(k)),
+  );
 }
 
 const DEBOUNCE_MS = 1_500;
@@ -59,11 +61,18 @@ export async function flushOps(
     if (ops.inserted.has(id)) continue;
     const block = blocks.find((b) => b.id === id);
     if (!block) continue;
-    const payload: Record<string, unknown> = { type: block.type, config: cleanConfig(block.config) };
-    if (block.isVisible !== undefined) payload.isVisible = block.isVisible !== 0;
+    const payload: Record<string, unknown> = {
+      type: block.type,
+      config: cleanConfig(block.config),
+    };
+    if (block.isVisible !== undefined)
+      payload.isVisible = block.isVisible !== 0;
     if (block.overrides !== undefined) payload.overrides = block.overrides;
     if (DEBUG_SYNC) {
-      console.log(`[useBlockSync] PUT block=${id} type=${block.type} config=`, JSON.parse(JSON.stringify(block.config)));
+      console.log(
+        `[useBlockSync] PUT block=${id} type=${block.type} config=`,
+        JSON.parse(JSON.stringify(block.config)),
+      );
     }
     promises.push(
       fetch(`/api/sites/${siteId}/blocks/${id}`, {
@@ -103,8 +112,7 @@ export async function flushOps(
 
   const failures = results.filter(
     (r): r is PromiseRejectedResult | PromiseFulfilledResult<Response> =>
-      r.status === "rejected" ||
-      (r.status === "fulfilled" && !r.value.ok),
+      r.status === "rejected" || (r.status === "fulfilled" && !r.value.ok),
   );
 
   if (DEBUG_SYNC) {
@@ -114,11 +122,16 @@ export async function flushOps(
         console.error(`[useBlockSync] request ${i} rejected:`, r.reason);
       } else if (!r.value.ok) {
         r.value.text().then((body) => {
-          console.error(`[useBlockSync] request ${i} HTTP ${r.value.status}:`, body);
+          console.error(
+            `[useBlockSync] request ${i} HTTP ${r.value.status}:`,
+            body,
+          );
         });
       }
     }
-    console.log(`[useBlockSync] result: ${failures.length === 0 ? "SUCCESS" : `FAILED (${failures.length} failures)`}`);
+    console.log(
+      `[useBlockSync] result: ${failures.length === 0 ? "SUCCESS" : `FAILED (${failures.length} failures)`}`,
+    );
     console.groupEnd();
   }
 
@@ -132,7 +145,7 @@ export function useBlockSync(siteId: string) {
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const retryRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const siteIdRef = useRef(siteId);
-  // eslint-disable-next-line react-hooks/refs
+  // eslint-disable-next-line react-hooks/refs -- imperative ref read/write outside the render phase; intentional
   siteIdRef.current = siteId;
 
   const flushNow = useCallback(() => {
@@ -162,16 +175,22 @@ export function useBlockSync(siteId: string) {
           setSaveError(null);
         } else {
           setSaveError("Some changes could not be saved. Retrying…");
-          retryRef.current = setTimeout(() => debouncedFlushRef.current(), DEBOUNCE_MS * 2);
+          retryRef.current = setTimeout(
+            () => debouncedFlushRef.current(),
+            DEBOUNCE_MS * 2,
+          );
         }
       },
       () => {
         setSaveError("Save failed — retrying…");
-        retryRef.current = setTimeout(() => debouncedFlushRef.current(), DEBOUNCE_MS * 2);
+        retryRef.current = setTimeout(
+          () => debouncedFlushRef.current(),
+          DEBOUNCE_MS * 2,
+        );
       },
     );
   }, [markFlushed, setSaveError]);
-  // eslint-disable-next-line react-hooks/refs
+  // eslint-disable-next-line react-hooks/refs -- imperative ref read/write outside the render phase; intentional
   debouncedFlushRef.current = debouncedFlush;
 
   useEffect(() => {

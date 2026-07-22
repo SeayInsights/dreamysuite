@@ -48,7 +48,7 @@ function useResponsiveScale(designedAtWidth: number) {
   }, [designedAtWidth]);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- syncs local state from props/inputs after mount or a dep change; intentional one-way sync, not a render-phase cascade
     update();
     let timer: ReturnType<typeof setTimeout>;
     const handler = () => {

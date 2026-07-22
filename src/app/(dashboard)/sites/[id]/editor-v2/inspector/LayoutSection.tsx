@@ -16,8 +16,11 @@ interface BgImageConfig {
 
 function parseBgImage(raw: string | null | undefined): BgImageConfig | null {
   if (!raw) return null;
-  try { return JSON.parse(raw) as BgImageConfig; }
-  catch { return null; }
+  try {
+    return JSON.parse(raw) as BgImageConfig;
+  } catch {
+    return null;
+  }
 }
 
 function BackgroundImageSection() {
@@ -26,7 +29,13 @@ function BackgroundImageSection() {
   const config = parseBgImage(settings.backgroundImage);
 
   function patch(p: Partial<BgImageConfig>) {
-    const base: BgImageConfig = config ?? { url: "", opacity: 1, fit: "cover", position: "center", scope: "site" };
+    const base: BgImageConfig = config ?? {
+      url: "",
+      opacity: 1,
+      fit: "cover",
+      position: "center",
+      scope: "site",
+    };
     updateSettings({ backgroundImage: JSON.stringify({ ...base, ...p }) });
   }
 
@@ -36,7 +45,10 @@ function BackgroundImageSection() {
         label="Background Image"
         value={config?.url ?? null}
         onChange={(url) => {
-          if (!url) { updateSettings({ backgroundImage: null }); return; }
+          if (!url) {
+            updateSettings({ backgroundImage: null });
+            return;
+          }
           patch({ url });
         }}
       />
@@ -44,21 +56,32 @@ function BackgroundImageSection() {
         <>
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
-              <label className="text-[10px] uppercase text-muted-foreground">Opacity</label>
-              <span className="text-[10px] tabular-nums text-muted-foreground">{Math.round((config.opacity ?? 1) * 100)}%</span>
+              <label className="text-[10px] uppercase text-muted-foreground">
+                Opacity
+              </label>
+              <span className="text-[10px] tabular-nums text-muted-foreground">
+                {Math.round((config.opacity ?? 1) * 100)}%
+              </span>
             </div>
             <input
-              type="range" min={0} max={1} step={0.05}
+              type="range"
+              min={0}
+              max={1}
+              step={0.05}
               value={config.opacity ?? 1}
               onChange={(e) => patch({ opacity: parseFloat(e.target.value) })}
               className="w-full accent-primary"
             />
           </div>
           <div className="space-y-1.5">
-            <label className="text-[10px] uppercase text-muted-foreground">Fit</label>
+            <label className="text-[10px] uppercase text-muted-foreground">
+              Fit
+            </label>
             <select
               value={config.fit ?? "cover"}
-              onChange={(e) => patch({ fit: e.target.value as BgImageConfig["fit"] })}
+              onChange={(e) =>
+                patch({ fit: e.target.value as BgImageConfig["fit"] })
+              }
               className="h-8 w-full rounded border border-input bg-background px-2 text-xs focus:outline-none focus:ring-1 focus:ring-ring"
             >
               <option value="cover">Cover</option>
@@ -68,7 +91,9 @@ function BackgroundImageSection() {
             </select>
           </div>
           <div className="space-y-1.5">
-            <label className="text-[10px] uppercase text-muted-foreground">Position</label>
+            <label className="text-[10px] uppercase text-muted-foreground">
+              Position
+            </label>
             <select
               value={config.position ?? "center"}
               onChange={(e) => patch({ position: e.target.value })}
@@ -82,7 +107,9 @@ function BackgroundImageSection() {
             </select>
           </div>
           <div className="space-y-1.5">
-            <label className="text-[10px] uppercase text-muted-foreground">Apply To</label>
+            <label className="text-[10px] uppercase text-muted-foreground">
+              Apply To
+            </label>
             <div className="grid grid-cols-2 gap-1">
               {(["site", "page"] as const).map((s) => (
                 <button
@@ -130,7 +157,7 @@ function SpacingInput({
 
   useEffect(() => {
     const next = value ?? "";
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- syncs local state from props/inputs after mount or a dep change; intentional one-way sync, not a render-phase cascade
     setDraft((prev) => (prev !== next ? next : prev));
   }, [value]);
 
@@ -141,7 +168,9 @@ function SpacingInput({
 
   return (
     <div className="flex items-center gap-2">
-      <label className="w-12 shrink-0 text-[10px] uppercase text-muted-foreground">{label}</label>
+      <label className="w-12 shrink-0 text-[10px] uppercase text-muted-foreground">
+        {label}
+      </label>
       <input
         type="text"
         inputMode="numeric"
@@ -178,10 +207,26 @@ export function LayoutSection() {
             Page Margins
           </p>
           <div className="grid grid-cols-2 gap-x-4 gap-y-2">
-            <SpacingInput label="Top" value={settings.marginTop} onChange={(v) => updateSettings({ marginTop: v })} />
-            <SpacingInput label="Right" value={settings.marginRight} onChange={(v) => updateSettings({ marginRight: v })} />
-            <SpacingInput label="Bottom" value={settings.marginBottom} onChange={(v) => updateSettings({ marginBottom: v })} />
-            <SpacingInput label="Left" value={settings.marginLeft} onChange={(v) => updateSettings({ marginLeft: v })} />
+            <SpacingInput
+              label="Top"
+              value={settings.marginTop}
+              onChange={(v) => updateSettings({ marginTop: v })}
+            />
+            <SpacingInput
+              label="Right"
+              value={settings.marginRight}
+              onChange={(v) => updateSettings({ marginRight: v })}
+            />
+            <SpacingInput
+              label="Bottom"
+              value={settings.marginBottom}
+              onChange={(v) => updateSettings({ marginBottom: v })}
+            />
+            <SpacingInput
+              label="Left"
+              value={settings.marginLeft}
+              onChange={(v) => updateSettings({ marginLeft: v })}
+            />
           </div>
         </div>
 
@@ -190,7 +235,9 @@ export function LayoutSection() {
             <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
               Section Gap
             </p>
-            <span className="text-[10px] italic text-muted-foreground">tablet &amp; mobile only</span>
+            <span className="text-[10px] italic text-muted-foreground">
+              tablet &amp; mobile only
+            </span>
           </div>
           <SpacingInput
             label="Gap"

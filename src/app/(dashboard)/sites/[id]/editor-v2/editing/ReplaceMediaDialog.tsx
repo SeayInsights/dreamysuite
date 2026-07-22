@@ -32,7 +32,7 @@ export function ReplaceMediaDialog({ open, onClose, onSelect }: Props) {
 
   useEffect(() => {
     if (!open || !siteId) return;
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- syncs local state from props/inputs after mount or a dep change; intentional one-way sync, not a render-phase cascade
     setSelectedUrl(null);
 
     setQuery("");

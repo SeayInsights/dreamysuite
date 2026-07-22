@@ -22,27 +22,36 @@ export interface BgPopoverProps {
 // ---------------------------------------------------------------------------
 
 const GRAD_DIRECTIONS: { label: string; angle: string; icon: string }[] = [
-  { label: "Left → Right", angle: "90deg",  icon: "→" },
+  { label: "Left → Right", angle: "90deg", icon: "→" },
   { label: "Top → Bottom", angle: "180deg", icon: "↓" },
-  { label: "Bottom → Top", angle: "0deg",   icon: "↑" },
+  { label: "Bottom → Top", angle: "0deg", icon: "↑" },
   { label: "Right → Left", angle: "270deg", icon: "←" },
 ];
 
 function applyAngle(gradValue: string, angle: string): string {
-  return gradValue.replace(/^linear-gradient\([^,]+,/, `linear-gradient(${angle},`);
+  return gradValue.replace(
+    /^linear-gradient\([^,]+,/,
+    `linear-gradient(${angle},`,
+  );
 }
 
 type ColorMode = "hex" | "rgb";
 
 function parseRgbaOpacity(val: string): { hex: string; opacity: number } {
-  const m = val.match(/^rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*(?:,\s*([\d.]+))?\s*\)$/);
+  const m = val.match(
+    /^rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*(?:,\s*([\d.]+))?\s*\)$/,
+  );
   if (m) {
     const r = parseInt(m[1], 10);
     const g = parseInt(m[2], 10);
     const b = parseInt(m[3], 10);
     const a = m[4] !== undefined ? parseFloat(m[4]) : 1;
-    const toHex = (n: number) => Math.max(0, Math.min(255, n)).toString(16).padStart(2, "0");
-    return { hex: `#${toHex(r)}${toHex(g)}${toHex(b)}`, opacity: Math.round(a * 100) };
+    const toHex = (n: number) =>
+      Math.max(0, Math.min(255, n)).toString(16).padStart(2, "0");
+    return {
+      hex: `#${toHex(r)}${toHex(g)}${toHex(b)}`,
+      opacity: Math.round(a * 100),
+    };
   }
   return { hex: val, opacity: 100 };
 }
@@ -51,19 +60,37 @@ function parseRgbaOpacity(val: string): { hex: string; opacity: number } {
 // Component
 // ---------------------------------------------------------------------------
 
-export function BackgroundPopover({ currentValue, onSelect, swatches, gradients }: BgPopoverProps) {
-  const isGradient = currentValue.startsWith("linear-gradient") || currentValue.startsWith("radial-gradient");
+export function BackgroundPopover({
+  currentValue,
+  onSelect,
+  swatches,
+  gradients,
+}: BgPopoverProps) {
+  const isGradient =
+    currentValue.startsWith("linear-gradient") ||
+    currentValue.startsWith("radial-gradient");
   const isTransparent = currentValue === "transparent" || currentValue === "";
-  const parsed = !isGradient && !isTransparent ? parseRgbaOpacity(currentValue) : null;
-  const [tab, setTab] = useState<BgTab>(isGradient ? "gradient" : isTransparent ? "transparent" : "solid");
-  const [hex, setHex] = useState(parsed ? parsed.hex : isGradient || isTransparent ? "#ffffff" : currentValue);
+  const parsed =
+    !isGradient && !isTransparent ? parseRgbaOpacity(currentValue) : null;
+  const [tab, setTab] = useState<BgTab>(
+    isGradient ? "gradient" : isTransparent ? "transparent" : "solid",
+  );
+  const [hex, setHex] = useState(
+    parsed
+      ? parsed.hex
+      : isGradient || isTransparent
+        ? "#ffffff"
+        : currentValue,
+  );
   const [opacity, setOpacity] = useState(parsed ? parsed.opacity : 100);
 
   useEffect(() => {
-    const isGrad = currentValue.startsWith("linear-gradient") || currentValue.startsWith("radial-gradient");
+    const isGrad =
+      currentValue.startsWith("linear-gradient") ||
+      currentValue.startsWith("radial-gradient");
     const isTrans = currentValue === "transparent" || currentValue === "";
     const nextTab = isGrad ? "gradient" : isTrans ? "transparent" : "solid";
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- syncs local state from props/inputs after mount or a dep change; intentional one-way sync, not a render-phase cascade
     setTab((prev) => (prev !== nextTab ? nextTab : prev));
     if (!isGrad && !isTrans) {
       const p = parseRgbaOpacity(currentValue);
@@ -78,7 +105,10 @@ export function BackgroundPopover({ currentValue, onSelect, swatches, gradients 
   const [colorMode, setColorMode] = useState<ColorMode>("hex");
 
   function applyHexOpacity(h: string, op: number) {
-    if (op >= 100) { onSelect(h); return; }
+    if (op >= 100) {
+      onSelect(h);
+      return;
+    }
     const r = parseInt(h.slice(1, 3), 16);
     const g = parseInt(h.slice(3, 5), 16);
     const b = parseInt(h.slice(5, 7), 16);
@@ -101,7 +131,9 @@ export function BackgroundPopover({ currentValue, onSelect, swatches, gradients 
             }}
             className={cn(
               "flex-1 py-1 capitalize transition-colors",
-              tab === t ? "bg-primary text-primary-foreground" : "bg-background text-muted-foreground hover:bg-muted",
+              tab === t
+                ? "bg-primary text-primary-foreground"
+                : "bg-background text-muted-foreground hover:bg-muted",
             )}
           >
             {t}
@@ -117,10 +149,15 @@ export function BackgroundPopover({ currentValue, onSelect, swatches, gradients 
                 key={i}
                 type="button"
                 aria-label={`Set background to ${color}`}
-                onClick={() => { setHex(color); applyHexOpacity(color, opacity); }}
+                onClick={() => {
+                  setHex(color);
+                  applyHexOpacity(color, opacity);
+                }}
                 className={cn(
                   "h-7 w-full rounded border transition-transform hover:scale-110",
-                  currentValue === color ? "border-primary ring-1 ring-primary" : "border-border",
+                  currentValue === color
+                    ? "border-primary ring-1 ring-primary"
+                    : "border-border",
                 )}
                 style={{ backgroundColor: color }}
               />
@@ -128,8 +165,20 @@ export function BackgroundPopover({ currentValue, onSelect, swatches, gradients 
           </div>
           <div className="flex items-center gap-1.5">
             <div className="flex h-7 shrink-0 overflow-hidden rounded border border-input text-[10px] font-medium">
-              <button type="button" onClick={() => setColorMode("hex")} className={`px-1.5 transition-colors ${colorMode === "hex" ? "bg-accent text-accent-foreground" : "bg-background text-muted-foreground hover:bg-accent/50"}`}>HEX</button>
-              <button type="button" onClick={() => setColorMode("rgb")} className={`px-1.5 transition-colors ${colorMode === "rgb" ? "bg-accent text-accent-foreground" : "bg-background text-muted-foreground hover:bg-accent/50"}`}>RGB</button>
+              <button
+                type="button"
+                onClick={() => setColorMode("hex")}
+                className={`px-1.5 transition-colors ${colorMode === "hex" ? "bg-accent text-accent-foreground" : "bg-background text-muted-foreground hover:bg-accent/50"}`}
+              >
+                HEX
+              </button>
+              <button
+                type="button"
+                onClick={() => setColorMode("rgb")}
+                className={`px-1.5 transition-colors ${colorMode === "rgb" ? "bg-accent text-accent-foreground" : "bg-background text-muted-foreground hover:bg-accent/50"}`}
+              >
+                RGB
+              </button>
             </div>
             {colorMode === "hex" ? (
               <input
@@ -138,8 +187,15 @@ export function BackgroundPopover({ currentValue, onSelect, swatches, gradients 
                 maxLength={7}
                 className="h-7 w-full rounded border border-input bg-background px-2 text-xs focus:outline-none focus:ring-1 focus:ring-ring"
                 onChange={(e) => setHex(e.target.value)}
-                onBlur={() => { if (/^#[0-9a-fA-F]{6}$/.test(hex.trim())) applyHexOpacity(hex.trim(), opacity); }}
-                onKeyDown={(e) => { if (e.key === "Enter" && /^#[0-9a-fA-F]{6}$/.test(hex.trim())) applyHexOpacity(hex.trim(), opacity); e.stopPropagation(); }}
+                onBlur={() => {
+                  if (/^#[0-9a-fA-F]{6}$/.test(hex.trim()))
+                    applyHexOpacity(hex.trim(), opacity);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && /^#[0-9a-fA-F]{6}$/.test(hex.trim()))
+                    applyHexOpacity(hex.trim(), opacity);
+                  e.stopPropagation();
+                }}
               />
             ) : (
               <div className="flex gap-1">
@@ -154,7 +210,10 @@ export function BackgroundPopover({ currentValue, onSelect, swatches, gradients 
                       value={parts[i]}
                       onChange={(e) => {
                         const p = hexToRgb(hex);
-                        p[i] = Math.max(0, Math.min(255, parseInt(e.target.value) || 0));
+                        p[i] = Math.max(
+                          0,
+                          Math.min(255, parseInt(e.target.value) || 0),
+                        );
                         const next = rgbToHex(p[0], p[1], p[2]);
                         setHex(next);
                         applyHexOpacity(next, opacity);
@@ -172,9 +231,16 @@ export function BackgroundPopover({ currentValue, onSelect, swatches, gradients 
               <span>{opacity}%</span>
             </div>
             <input
-              type="range" min={0} max={100} value={opacity}
+              type="range"
+              min={0}
+              max={100}
+              value={opacity}
               className="w-full accent-primary"
-              onChange={(e) => { const v = Number(e.target.value); setOpacity(v); if (/^#[0-9a-fA-F]{6}$/.test(hex)) applyHexOpacity(hex, v); }}
+              onChange={(e) => {
+                const v = Number(e.target.value);
+                setOpacity(v);
+                if (/^#[0-9a-fA-F]{6}$/.test(hex)) applyHexOpacity(hex, v);
+              }}
             />
           </div>
         </>
@@ -184,7 +250,9 @@ export function BackgroundPopover({ currentValue, onSelect, swatches, gradients 
         <div className="space-y-2.5">
           {/* Direction picker */}
           <div className="space-y-1">
-            <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Direction</p>
+            <p className="text-[10px] uppercase tracking-wide text-muted-foreground">
+              Direction
+            </p>
             <div className="grid grid-cols-4 gap-1">
               {GRAD_DIRECTIONS.map((d) => (
                 <button
@@ -220,13 +288,20 @@ export function BackgroundPopover({ currentValue, onSelect, swatches, gradients 
                   onClick={() => onSelect(value)}
                   className={cn(
                     "h-10 w-full rounded-md border px-3 text-left transition-transform hover:scale-[1.02]",
-                    currentValue === value ? "border-primary ring-1 ring-primary" : "border-border",
+                    currentValue === value
+                      ? "border-primary ring-1 ring-primary"
+                      : "border-border",
                   )}
                   style={{ background: value }}
                 >
                   <span
                     className="text-[10px] font-semibold uppercase tracking-wide"
-                    style={{ color: g.dark ? "rgba(255,255,255,0.85)" : "rgba(0,0,0,0.55)", textShadow: g.dark ? "0 1px 2px rgba(0,0,0,0.4)" : "none" }}
+                    style={{
+                      color: g.dark
+                        ? "rgba(255,255,255,0.85)"
+                        : "rgba(0,0,0,0.55)",
+                      textShadow: g.dark ? "0 1px 2px rgba(0,0,0,0.4)" : "none",
+                    }}
                   >
                     {g.label}
                   </span>
@@ -240,7 +315,11 @@ export function BackgroundPopover({ currentValue, onSelect, swatches, gradients 
       {tab === "transparent" && (
         <div
           className="h-14 w-full rounded border border-border flex items-center justify-center text-xs text-muted-foreground"
-          style={{ backgroundImage: "repeating-conic-gradient(#ddd 0% 25%, #fff 0% 50%)", backgroundSize: "12px 12px" }}
+          style={{
+            backgroundImage:
+              "repeating-conic-gradient(#ddd 0% 25%, #fff 0% 50%)",
+            backgroundSize: "12px 12px",
+          }}
         >
           No background
         </div>

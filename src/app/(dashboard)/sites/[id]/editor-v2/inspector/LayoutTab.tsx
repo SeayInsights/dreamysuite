@@ -22,7 +22,7 @@ function SettingsInput({
 
   useEffect(() => {
     const next = value ?? "";
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- syncs local state from props/inputs after mount or a dep change; intentional one-way sync, not a render-phase cascade
     setDraft((prev) => (prev !== next ? next : prev));
   }, [value]);
 
@@ -33,7 +33,9 @@ function SettingsInput({
 
   return (
     <div className="flex items-center gap-2">
-      <label className="w-14 shrink-0 text-[10px] uppercase text-muted-foreground">{label}</label>
+      <label className="w-14 shrink-0 text-[10px] uppercase text-muted-foreground">
+        {label}
+      </label>
       <input
         type="text"
         inputMode="numeric"
@@ -65,7 +67,9 @@ export function LayoutTab() {
   const updateBlock = useEditorStore((s) => s.updateBlock);
 
   const selectedBlock = useMemo(() => {
-    return selectedBlockId ? blocks.find((b) => b.id === selectedBlockId) : null;
+    return selectedBlockId
+      ? blocks.find((b) => b.id === selectedBlockId)
+      : null;
   }, [blocks, selectedBlockId]);
 
   const hasOrderOverride = useMemo(() => {
@@ -89,7 +93,10 @@ export function LayoutTab() {
     // Clone overrides and remove sortOrder for the current breakpoint
     const newOverrides = { ...selectedBlock.overrides };
     if (newOverrides[breakpoint]) {
-      const { sortOrder: _omit, ...rest } = newOverrides[breakpoint] as Record<string, unknown>;
+      const { sortOrder: _omit, ...rest } = newOverrides[breakpoint] as Record<
+        string,
+        unknown
+      >;
 
       // If no other overrides remain for this breakpoint, remove the breakpoint key entirely
       if (Object.keys(rest).length === 0) {
@@ -132,7 +139,11 @@ export function LayoutTab() {
         </div>
       )}
 
-      <div className={selectedBlock && hasOrderOverride ? "border-t border-border pt-4" : ""}>
+      <div
+        className={
+          selectedBlock && hasOrderOverride ? "border-t border-border pt-4" : ""
+        }
+      >
         <div className="space-y-2">
           <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
             Page Margins
@@ -162,7 +173,9 @@ export function LayoutTab() {
         </div>
       </div>
 
-      <div className={`space-y-2 border-t border-border pt-4 ${hasCustomPositioning ? "opacity-40 pointer-events-none" : ""}`}>
+      <div
+        className={`space-y-2 border-t border-border pt-4 ${hasCustomPositioning ? "opacity-40 pointer-events-none" : ""}`}
+      >
         <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
           Section Spacing
         </p>
@@ -174,7 +187,8 @@ export function LayoutTab() {
         />
         {hasCustomPositioning && (
           <p className="text-[10px] text-muted-foreground">
-            Gap is disabled because one or more blocks use custom positioning. Reset block offsets to re-enable.
+            Gap is disabled because one or more blocks use custom positioning.
+            Reset block offsets to re-enable.
           </p>
         )}
       </div>
