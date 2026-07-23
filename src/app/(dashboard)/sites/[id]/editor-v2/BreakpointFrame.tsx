@@ -355,13 +355,15 @@ export function BreakpointFrame({ children, nav }: Props) {
   const rawMB = Number(settings.marginBottom ?? 0) || 0;
   const rawML = Number(settings.marginLeft ?? 0) || 0;
 
-  const scale = WIDTHS[breakpoint] / WIDTHS.desktop;
-  const hCap =
-    breakpoint === "mobile" ? 10 : breakpoint === "tablet" ? 40 : Infinity;
-  const mT = Math.round(rawMT * scale);
-  const mR = Math.min(Math.round(rawMR * scale), hCap);
-  const mB = Math.round(rawMB * scale);
-  const mL = Math.min(Math.round(rawML * scale), hCap);
+  // Raw px — NOT scaled/capped per breakpoint. The frame already renders at the
+  // breakpoint's canonical width and the outer transform:scale handles the fit,
+  // so raw margins here match the published site (html-builder emits raw px).
+  // The old `* (WIDTHS[bp]/WIDTHS.desktop)` scale + 10/40px horizontal caps made
+  // tablet/mobile margins diverge sharply from the published result (WYSIWYG).
+  const mT = rawMT;
+  const mR = rawMR;
+  const mB = rawMB;
+  const mL = rawML;
   const hasMargins = mT > 0 || mR > 0 || mB > 0 || mL > 0;
   const curtainBg = settings.bgColor ?? themeTokens.colors.background;
   const bgImage = settings.bgImage as string | null;
