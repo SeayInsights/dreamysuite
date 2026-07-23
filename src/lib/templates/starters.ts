@@ -245,6 +245,460 @@ export const STARTERS: StarterTemplate[] = [
       },
     ],
   },
+  {
+    id: "golden-anniversary",
+    name: "Golden Anniversary",
+    description: "Warm gold serif elegance for a milestone anniversary.",
+    eventType: "anniversary",
+    previewColor: "#C99A2E",
+    settings: {
+      headingFont: "Cormorant Garamond",
+      bodyFont: "Nunito",
+      accentColor: "#C99A2E",
+      bgColor: "#fbf7ef",
+      siteTextColor: "#2b2417",
+      animation: "envelope",
+      eventName: "Our Anniversary",
+      greeting: "Celebrating years of love — and the many more to come.",
+    },
+    pages: [
+      {
+        slug: "home",
+        label: "Home",
+        blocks: [
+          { type: "home-hero", config: {} },
+          {
+            type: "countdown",
+            config: {
+              label: "Counting down to the celebration",
+              showRsvpButton: true,
+              rsvpButtonText: "RSVP",
+            },
+          },
+        ],
+      },
+      {
+        slug: "journey",
+        label: "Our Journey",
+        blocks: [
+          {
+            type: "multi-text",
+            config: {
+              mode: "text",
+              heading: "Our Journey",
+              body: "From the day we said 'I do' to today — share the moments that made these years unforgettable. Replace this with your own story.",
+            },
+          },
+        ],
+      },
+      {
+        slug: "celebration",
+        label: "Celebration",
+        blocks: [
+          {
+            type: "schedule",
+            config: {
+              heading: "The Evening",
+              displayMode: "timeline",
+              events: [
+                {
+                  id: "s1",
+                  name: "Cocktail Hour",
+                  time: "17:00",
+                  description: "Drinks and mingling.",
+                },
+                {
+                  id: "s2",
+                  name: "Dinner & Toasts",
+                  time: "18:30",
+                  description: "A seated dinner with a few words.",
+                },
+              ],
+            },
+          },
+        ],
+      },
+      {
+        slug: "rsvp",
+        label: "RSVP",
+        blocks: [
+          {
+            type: "rsvp-form",
+            config: {
+              heading: "RSVP",
+              subheading: "Kindly let us know if you can join us.",
+            },
+          },
+        ],
+      },
+    ],
+  },
+  {
+    id: "engagement-party",
+    name: "Engagement Party",
+    description: "Bold, modern rose tones to announce the big news.",
+    eventType: "engagement",
+    previewColor: "#E14D8B",
+    settings: {
+      headingFont: "Montserrat",
+      bodyFont: "Inter",
+      accentColor: "#E14D8B",
+      bgColor: "#fff5f8",
+      siteTextColor: "#2a1a22",
+      animation: "doors",
+      eventName: "We're Engaged!",
+      greeting: "Come celebrate with us.",
+    },
+    pages: [
+      {
+        slug: "home",
+        label: "Home",
+        blocks: [
+          { type: "home-hero", config: {} },
+          {
+            type: "countdown",
+            config: {
+              label: "The party's coming up",
+              showRsvpButton: true,
+              rsvpButtonText: "RSVP",
+            },
+          },
+        ],
+      },
+      {
+        slug: "story",
+        label: "Our Story",
+        blocks: [
+          {
+            type: "multi-text",
+            config: {
+              mode: "text",
+              heading: "How We Got Here",
+              body: "The story of how you met and the proposal. Swap this out for your own words.",
+            },
+          },
+        ],
+      },
+      {
+        slug: "rsvp",
+        label: "RSVP",
+        blocks: [
+          {
+            type: "rsvp-form",
+            config: {
+              heading: "Join Us",
+              subheading: "Let us know you're coming.",
+            },
+          },
+        ],
+      },
+    ],
+  },
+  {
+    id: "vow-renewal",
+    name: "Vow Renewal",
+    description: "Soft sage and script for renewing your promises.",
+    eventType: "vow-renewal",
+    previewColor: "#6B8E7A",
+    settings: {
+      headingFont: "Great Vibes",
+      bodyFont: "Lora",
+      accentColor: "#6B8E7A",
+      bgColor: "#f4f7f4",
+      siteTextColor: "#26302b",
+      animation: "storybook",
+      eventName: "Renewing Our Vows",
+      greeting: "Ten years on, we'd choose each other all over again.",
+    },
+    pages: [
+      {
+        slug: "home",
+        label: "Home",
+        blocks: [
+          { type: "home-hero", config: {} },
+          {
+            type: "countdown",
+            config: {
+              label: "Counting down",
+              showRsvpButton: true,
+              rsvpButtonText: "RSVP",
+            },
+          },
+        ],
+      },
+      {
+        slug: "story",
+        label: "Our Story",
+        blocks: [
+          {
+            type: "multi-text",
+            config: {
+              mode: "text",
+              heading: "Our Story So Far",
+              body: "Reflect on the journey that brought you back to this moment. Replace with your own words.",
+            },
+          },
+        ],
+      },
+      {
+        slug: "schedule",
+        label: "Schedule",
+        blocks: [
+          {
+            type: "schedule",
+            config: {
+              heading: "The Day",
+              displayMode: "timeline",
+              events: [
+                {
+                  id: "s1",
+                  name: "Ceremony",
+                  time: "16:00",
+                  description: "A renewal of our vows.",
+                },
+                {
+                  id: "s2",
+                  name: "Reception",
+                  time: "17:30",
+                  description: "Dinner and celebration.",
+                },
+              ],
+            },
+          },
+        ],
+      },
+      {
+        slug: "rsvp",
+        label: "RSVP",
+        blocks: [
+          {
+            type: "rsvp-form",
+            config: {
+              heading: "RSVP",
+              subheading: "We hope you'll join us.",
+            },
+          },
+        ],
+      },
+    ],
+  },
+  {
+    id: "elopement-adventure",
+    name: "Elopement",
+    description: "Moody, cinematic dark theme with a soft aurora backdrop.",
+    eventType: "elopement",
+    previewColor: "#3E5C76",
+    settings: {
+      headingFont: "Libre Baskerville",
+      bodyFont: "Raleway",
+      accentColor: "#8FB3D9",
+      bgColor: "#0f1720",
+      siteTextColor: "#e8edf2",
+      animation: "none",
+      effectBg: "aurora",
+      eventName: "We Eloped",
+      greeting: "We ran away to say 'I do' — here's the story.",
+    },
+    pages: [
+      {
+        slug: "home",
+        label: "Home",
+        blocks: [
+          { type: "home-hero", config: {} },
+          {
+            type: "multi-text",
+            config: {
+              mode: "text",
+              heading: "The Adventure",
+              body: "Where you went, why you eloped, and what it meant. Replace with your own words.",
+            },
+          },
+          {
+            type: "rsvp-form",
+            config: {
+              heading: "Celebrate With Us",
+              subheading: "We'd love to see you at the after-party.",
+            },
+          },
+        ],
+      },
+    ],
+  },
+  {
+    id: "starlit-evening",
+    name: "Starlit Evening",
+    description: "Dramatic indigo night sky with a galaxy background.",
+    eventType: "celebration",
+    previewColor: "#4C3A8C",
+    settings: {
+      headingFont: "Playfair Display",
+      bodyFont: "Nunito",
+      accentColor: "#B9A7FF",
+      bgColor: "#0b0a1a",
+      siteTextColor: "#ece9ff",
+      animation: "none",
+      effectBg: "galaxy",
+      eventName: "An Evening to Remember",
+      greeting: "Join us under the stars.",
+    },
+    pages: [
+      {
+        slug: "home",
+        label: "Home",
+        blocks: [
+          { type: "home-hero", config: {} },
+          {
+            type: "countdown",
+            config: {
+              label: "The countdown begins",
+              showRsvpButton: true,
+              rsvpButtonText: "RSVP",
+            },
+          },
+        ],
+      },
+      {
+        slug: "schedule",
+        label: "Schedule",
+        blocks: [
+          {
+            type: "schedule",
+            config: {
+              heading: "The Night",
+              displayMode: "timeline",
+              events: [
+                {
+                  id: "s1",
+                  name: "Arrival",
+                  time: "19:00",
+                  description: "Welcome drinks.",
+                },
+                {
+                  id: "s2",
+                  name: "Dinner & Dancing",
+                  time: "20:00",
+                  description: "The celebration begins.",
+                },
+              ],
+            },
+          },
+        ],
+      },
+      {
+        slug: "rsvp",
+        label: "RSVP",
+        blocks: [
+          {
+            type: "rsvp-form",
+            config: {
+              heading: "RSVP",
+              subheading: "Save us a spot on the dance floor.",
+            },
+          },
+        ],
+      },
+    ],
+  },
+  {
+    id: "garden-party",
+    name: "Garden Party",
+    description: "Fresh, leafy greens for a relaxed daytime celebration.",
+    eventType: "celebration",
+    previewColor: "#4E7A3A",
+    settings: {
+      headingFont: "Lora",
+      bodyFont: "Nunito",
+      accentColor: "#4E7A3A",
+      bgColor: "#f6faf2",
+      siteTextColor: "#22301c",
+      animation: "none",
+      eventName: "Garden Celebration",
+      greeting: "Join us for an afternoon in the garden.",
+    },
+    pages: [
+      {
+        slug: "home",
+        label: "Home",
+        blocks: [
+          { type: "home-hero", config: {} },
+          {
+            type: "countdown",
+            config: {
+              label: "See you soon",
+              showRsvpButton: true,
+              rsvpButtonText: "RSVP",
+            },
+          },
+        ],
+      },
+      {
+        slug: "schedule",
+        label: "Schedule",
+        blocks: [
+          {
+            type: "schedule",
+            config: {
+              heading: "The Afternoon",
+              displayMode: "timeline",
+              events: [
+                {
+                  id: "s1",
+                  name: "Garden Reception",
+                  time: "14:00",
+                  description: "Drinks and lawn games.",
+                },
+                {
+                  id: "s2",
+                  name: "Lunch",
+                  time: "15:00",
+                  description: "A relaxed seated meal.",
+                },
+              ],
+            },
+          },
+        ],
+      },
+      {
+        slug: "faq",
+        label: "FAQ",
+        blocks: [
+          {
+            type: "faq",
+            config: {
+              heading: "Good to Know",
+              displayMode: "faq",
+              columns: "1",
+              items: [
+                {
+                  id: "q1",
+                  question: "What should I wear?",
+                  body: "Garden-party attire — comfortable shoes for the lawn.",
+                },
+                {
+                  id: "q2",
+                  question: "Will it be outdoors?",
+                  body: "Yes, weather permitting, with covered areas available.",
+                },
+              ],
+            },
+          },
+        ],
+      },
+      {
+        slug: "rsvp",
+        label: "RSVP",
+        blocks: [
+          {
+            type: "rsvp-form",
+            config: {
+              heading: "RSVP",
+              subheading: "Let us know you can make it.",
+            },
+          },
+        ],
+      },
+    ],
+  },
 ];
 
 /** Lightweight summaries for the create-site picker (no page/block payloads). */
@@ -281,8 +735,8 @@ export async function applyStarter(
         `INSERT INTO site_setting
           (siteId, mainLanguage, headingFont, bodyFont, accentColor, bgColor,
            siteTextColor, eventName, eventDate, eventLocation, greeting,
-           animation, isLive, updatedAt)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?)`,
+           animation, effectBg, effectText, effectCard, isLive, updatedAt)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?)`,
       )
       .bind(
         siteId,
@@ -297,6 +751,9 @@ export async function applyStarter(
         (s.eventLocation as string) ?? null,
         (s.greeting as string) ?? null,
         (s.animation as string) ?? null,
+        (s.effectBg as string) ?? null,
+        (s.effectText as string) ?? null,
+        (s.effectCard as string) ?? null,
         now,
       )
       .run();
