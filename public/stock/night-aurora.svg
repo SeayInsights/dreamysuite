@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Aurora bands over a deep night sky">
+  <defs>
+    <linearGradient id="na-sky" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#0a1028"/>
+      <stop offset="60%" stop-color="#111a3a"/>
+      <stop offset="100%" stop-color="#0b1230"/>
+    </linearGradient>
+    <linearGradient id="na-aur" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#2fd3b3" stop-opacity="0"/>
+      <stop offset="45%" stop-color="#39d6b0" stop-opacity="0.7"/>
+      <stop offset="70%" stop-color="#8a6be6" stop-opacity="0.6"/>
+      <stop offset="100%" stop-color="#8a6be6" stop-opacity="0"/>
+    </linearGradient>
+    <filter id="na-blur"><feGaussianBlur stdDeviation="26"/></filter>
+  </defs>
+  <rect width="1600" height="1000" fill="url(#na-sky)"/>
+  <g filter="url(#na-blur)" opacity="0.8">
+    <path d="M-100 420 C 300 300, 700 500, 1100 340 C 1400 220, 1600 380, 1700 320 L 1700 560 C 1300 620, 900 520, 500 640 C 200 720, 0 600, -100 660 Z" fill="url(#na-aur)"/>
+    <path d="M-100 560 C 400 480, 800 640, 1200 500 C 1450 420, 1700 540, 1700 520 L 1700 720 C 1200 780, 800 660, 400 760 C 150 820, -100 720, -100 760 Z" fill="url(#na-aur)" opacity="0.7"/>
+  </g>
+  <g fill="#eaf2ff">
+    <circle cx="180" cy="140" r="1.6" opacity="0.9"/>
+    <circle cx="420" cy="90" r="1.2" opacity="0.7"/>
+    <circle cx="700" cy="160" r="1.8" opacity="0.9"/>
+    <circle cx="980" cy="70" r="1.2" opacity="0.6"/>
+    <circle cx="1240" cy="150" r="1.6" opacity="0.85"/>
+    <circle cx="1460" cy="90" r="1.3" opacity="0.7"/>
+    <circle cx="300" cy="260" r="1.3" opacity="0.7"/>
+    <circle cx="1120" cy="250" r="1.4" opacity="0.75"/>
+  </g>
+</svg>

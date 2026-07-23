@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Concentric gold arcs on charcoal">
+  <defs>
+    <linearGradient id="cg-bg" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#20211f"/>
+      <stop offset="100%" stop-color="#111210"/>
+    </linearGradient>
+    <linearGradient id="cg-gold" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#d9b45f"/>
+      <stop offset="50%" stop-color="#f2d79a"/>
+      <stop offset="100%" stop-color="#c69a4a"/>
+    </linearGradient>
+  </defs>
+  <rect width="1600" height="1000" fill="url(#cg-bg)"/>
+  <g fill="none" stroke="url(#cg-gold)" stroke-linecap="round">
+    <circle cx="1600" cy="0" r="360" stroke-width="2.5" opacity="0.85"/>
+    <circle cx="1600" cy="0" r="520" stroke-width="2" opacity="0.6"/>
+    <circle cx="1600" cy="0" r="700" stroke-width="1.5" opacity="0.4"/>
+    <circle cx="0" cy="1000" r="300" stroke-width="2.5" opacity="0.8"/>
+    <circle cx="0" cy="1000" r="460" stroke-width="2" opacity="0.55"/>
+    <circle cx="0" cy="1000" r="640" stroke-width="1.5" opacity="0.35"/>
+  </g>
+  <g fill="#f2d79a" opacity="0.9">
+    <path d="M760 470 l6 18 18 6 -18 6 -6 18 -6 -18 -18 -6 18 -6z"/>
+    <path d="M980 300 l4 12 12 4 -12 4 -4 12 -4 -12 -12 -4 12 -4z"/>
+    <path d="M620 640 l4 12 12 4 -12 4 -4 12 -4 -12 -12 -4 12 -4z"/>
+  </g>
+</svg>

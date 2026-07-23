@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Warm sunset wash of peach, rose and lavender">
+  <defs>
+    <linearGradient id="rs-sky" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#c9b6e4"/>
+      <stop offset="38%" stop-color="#f4b8bf"/>
+      <stop offset="72%" stop-color="#f8cfa8"/>
+      <stop offset="100%" stop-color="#fbe6c9"/>
+    </linearGradient>
+    <radialGradient id="rs-sun" cx="50%" cy="86%" r="42%">
+      <stop offset="0%" stop-color="#fff3df" stop-opacity="0.95"/>
+      <stop offset="100%" stop-color="#fff3df" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1600" height="1000" fill="url(#rs-sky)"/>
+  <rect width="1600" height="1000" fill="url(#rs-sun)"/>
+</svg>

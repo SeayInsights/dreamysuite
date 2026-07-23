@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Starfield with a faint milky band on deep indigo">
+  <defs>
+    <radialGradient id="sf-bg" cx="50%" cy="40%" r="80%">
+      <stop offset="0%" stop-color="#1a2350"/>
+      <stop offset="60%" stop-color="#0e1436"/>
+      <stop offset="100%" stop-color="#070a20"/>
+    </radialGradient>
+    <linearGradient id="sf-band" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#6d78c8" stop-opacity="0"/>
+      <stop offset="50%" stop-color="#8b93d6" stop-opacity="0.28"/>
+      <stop offset="100%" stop-color="#6d78c8" stop-opacity="0"/>
+    </linearGradient>
+    <filter id="sf-blur"><feGaussianBlur stdDeviation="40"/></filter>
+  </defs>
+  <rect width="1600" height="1000" fill="url(#sf-bg)"/>
+  <rect width="1600" height="1000" fill="url(#sf-band)" filter="url(#sf-blur)" transform="rotate(-18 800 500)"/>
+  <g fill="#f4f7ff">
+    <circle cx="120" cy="180" r="1.8"/><circle cx="260" cy="90" r="1.1"/><circle cx="360" cy="300" r="1.4"/>
+    <circle cx="480" cy="160" r="2"/><circle cx="600" cy="380" r="1.2"/><circle cx="700" cy="120" r="1.5"/>
+    <circle cx="820" cy="260" r="1.9"/><circle cx="900" cy="440" r="1.1"/><circle cx="1020" cy="180" r="1.6"/>
+    <circle cx="1140" cy="320" r="1.3"/><circle cx="1240" cy="120" r="2"/><circle cx="1360" cy="280" r="1.4"/>
+    <circle cx="1480" cy="180" r="1.2"/><circle cx="180" cy="520" r="1.4"/><circle cx="340" cy="640" r="1.1"/>
+    <circle cx="520" cy="560" r="1.7"/><circle cx="680" cy="700" r="1.2"/><circle cx="860" cy="600" r="1.5"/>
+    <circle cx="1040" cy="720" r="1.1"/><circle cx="1220" cy="580" r="1.8"/><circle cx="1400" cy="680" r="1.3"/>
+    <circle cx="240" cy="820" r="1.3"/><circle cx="560" cy="880" r="1.1"/><circle cx="900" cy="840" r="1.6"/>
+    <circle cx="1280" cy="880" r="1.2"/>
+  </g>
+  <g fill="#fff" opacity="0.85">
+    <path d="M480 160 l3 8 8 3 -8 3 -3 8 -3 -8 -8 -3 8 -3z"/>
+    <path d="M1240 120 l3 8 8 3 -8 3 -3 8 -3 -8 -8 -3 8 -3z"/>
+  </g>
+</svg>
