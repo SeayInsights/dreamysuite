@@ -84,11 +84,10 @@ export function blockContainerStyle(cfg: Record<string, unknown>): {
   const pad = cfg.padding as Record<string, unknown> | null | undefined;
   const hasPad = !!(pad && typeof pad === "object" && !Array.isArray(pad));
   if (bh) {
-    style.height = `${bh}px`;
-    // Zero top/bottom for the fixed-height flex layout — but only when there is
-    // no padding object. When both are set, the padding object wins (a padding:0
-    // reset + longhands below), so emitting these here would just be overwritten
-    // AND, as object keys, would reorder ahead of `padding:0` and get reset to 0.
+    // minHeight (not height): blockHeight is a FLOOR so the box grows with
+    // content instead of clipping/overflowing. Matches the editor
+    // (blockSectionStyle) for WYSIWYG parity.
+    style.minHeight = `${bh}px`;
     if (!hasPad) {
       style.paddingTop = "0";
       style.paddingBottom = "0";

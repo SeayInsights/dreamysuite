@@ -188,9 +188,12 @@ export function blockSectionStyle(
   }
 
   if (typeof cfg.blockHeight === "number" && cfg.blockHeight > 0) {
-    style.height = `${cfg.blockHeight * scale}px`;
-    style.paddingTop = "0";
-    style.paddingBottom = "0";
+    // minHeight (not height): blockHeight is a FLOOR, so the box grows to fit
+    // content instead of freezing at a fixed height and clipping/overflowing
+    // text. Fixes the selection box not wrapping overflowing content and text
+    // spilling after a resize; also means a block can't be shrunk below its
+    // content.
+    style.minHeight = `${cfg.blockHeight * scale}px`;
     style.display = "flex";
     style.flexDirection = "column";
     style.alignItems = "stretch";

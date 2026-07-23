@@ -78,9 +78,11 @@ describe("blockContainerStyle", () => {
     ).toBeUndefined();
   });
 
-  it("applies blockHeight with a flex layout, zeroing padding when no padding object", () => {
+  it("applies blockHeight as a min-height floor with a flex layout, zeroing padding when no padding object", () => {
     const { style, data } = blockContainerStyle({ blockHeight: 300 });
-    expect(style.height).toBe("300px");
+    // minHeight (not height): the box grows with content instead of clipping.
+    expect(style.minHeight).toBe("300px");
+    expect(style.height).toBeUndefined();
     expect(style.display).toBe("flex");
     expect(style.flexDirection).toBe("column");
     expect(style.alignItems).toBe("stretch");
@@ -105,7 +107,7 @@ describe("blockContainerStyle", () => {
       blockHeight: 300,
       padding: { top: 12, bottom: 24 },
     });
-    expect(style.height).toBe("300px");
+    expect(style.minHeight).toBe("300px");
     expect(style.padding).toBe("0");
     // the padding object wins — these must NOT be reset to "0"
     expect(style.paddingTop).toBe("12px");

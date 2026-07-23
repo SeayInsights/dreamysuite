@@ -1170,13 +1170,14 @@ describe("render unification — container style contract", () => {
     expect(actual).not.toContain("border:1px solid");
   });
 
-  it("blockHeight (no padding) zeroes top/bottom for the flex layout", async () => {
+  it("blockHeight (no padding) applies a min-height floor + flex layout", async () => {
     const actual = await renderBlock(
       makeBlock("cs3", "home-hero", { blockHeight: 300 }),
       settings,
     );
+    // min-height (not height): box grows with content instead of clipping.
     expect(actual).toContain(
-      'style="height:300px;padding-top:0;padding-bottom:0;display:flex;flex-direction:column;align-items:stretch"',
+      'style="min-height:300px;padding-top:0;padding-bottom:0;display:flex;flex-direction:column;align-items:stretch"',
     );
     expect(actual).toContain('data-bh="300"');
   });
@@ -1203,7 +1204,7 @@ describe("render unification — container style contract", () => {
     );
     // padding:0 comes before the longhands, so the custom top/bottom survive.
     expect(actual).toContain(
-      'style="height:300px;display:flex;flex-direction:column;align-items:stretch;padding:0;padding-top:10px;padding-right:20px;padding-bottom:30px;padding-left:40px"',
+      'style="min-height:300px;display:flex;flex-direction:column;align-items:stretch;padding:0;padding-top:10px;padding-right:20px;padding-bottom:30px;padding-left:40px"',
     );
     expect(actual).toContain('data-bh="300"');
   });
