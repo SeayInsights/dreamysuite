@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Sunlit garden landscape with rolling hills">
+  <defs>
+    <linearGradient id="gd-sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#dbeccf"/>
+      <stop offset="60%" stop-color="#eef4df"/>
+      <stop offset="100%" stop-color="#f5f7e8"/>
+    </linearGradient>
+    <radialGradient id="gd-sun" cx="76%" cy="24%" r="30%">
+      <stop offset="0%" stop-color="#fff7dd"/>
+      <stop offset="100%" stop-color="#fff7dd" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1600" height="1000" fill="url(#gd-sky)"/>
+  <circle cx="1216" cy="240" r="120" fill="#fdf3c9" opacity="0.9"/>
+  <rect width="1600" height="1000" fill="url(#gd-sun)"/>
+  <!-- layered hills -->
+  <path d="M0 640 C 300 560, 620 620, 900 580 C 1180 545, 1420 600, 1600 570 L1600 1000 L0 1000 Z" fill="#bcd39a"/>
+  <path d="M0 740 C 360 680, 700 740, 1020 700 C 1300 665, 1460 710, 1600 690 L1600 1000 L0 1000 Z" fill="#9cbf7c" opacity="0.95"/>
+  <path d="M0 850 C 400 800, 820 860, 1180 820 C 1380 798, 1500 830, 1600 815 L1600 1000 L0 1000 Z" fill="#7ba362"/>
+  <!-- foreground foliage -->
+  <g fill="#5f8a4d" opacity="0.9">
+    <ellipse cx="120" cy="940" rx="90" ry="60"/><ellipse cx="260" cy="960" rx="70" ry="48"/>
+    <ellipse cx="1480" cy="940" rx="100" ry="66"/><ellipse cx="1340" cy="965" rx="72" ry="46"/>
+  </g>
+  <g fill="#f6f1e0"><circle cx="180" cy="905" r="7"/><circle cx="230" cy="930" r="6"/><circle cx="1440" cy="905" r="7"/><circle cx="1400" cy="935" r="6"/></g>
+</svg>

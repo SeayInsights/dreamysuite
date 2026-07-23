@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Art-deco gold arcs on a deep charcoal field">
+  <defs>
+    <linearGradient id="eg-bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#2a2622"/>
+      <stop offset="100%" stop-color="#14110e"/>
+    </linearGradient>
+    <linearGradient id="eg-gold" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#caa14e"/>
+      <stop offset="50%" stop-color="#f4dc9c"/>
+      <stop offset="100%" stop-color="#b9862f"/>
+    </linearGradient>
+  </defs>
+  <rect width="1600" height="1000" fill="url(#eg-bg)"/>
+  <g fill="none" stroke="url(#eg-gold)" stroke-linecap="round">
+    <circle cx="800" cy="500" r="300" stroke-width="2.5" opacity="0.9"/>
+    <circle cx="800" cy="500" r="220" stroke-width="1.6" opacity="0.6"/>
+    <path d="M500 500 A 300 300 0 0 1 1100 500" stroke-width="4" opacity="0.95"/>
+    <path d="M560 660 L 800 500 L 1040 660" stroke-width="2" opacity="0.7"/>
+    <circle cx="1520" cy="80" r="240" stroke-width="1.5" opacity="0.4"/>
+    <circle cx="80" cy="920" r="240" stroke-width="1.5" opacity="0.4"/>
+  </g>
+  <g fill="#f4dc9c" opacity="0.95">
+    <path d="M800 470 l7 20 20 7 -20 7 -7 20 -7 -20 -20 -7 20 -7z"/>
+    <path d="M620 640 l4 12 12 4 -12 4 -4 12 -4 -12 -12 -4 12 -4z"/>
+    <path d="M980 640 l4 12 12 4 -12 4 -4 12 -4 -12 -12 -4 12 -4z"/>
+  </g>
+</svg>
