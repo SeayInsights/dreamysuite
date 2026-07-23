@@ -4,7 +4,9 @@ import {
   STARTER_SUMMARIES,
   getStarter,
   applyStarter,
+  withEntranceAnimation,
 } from "./starters";
+import { VALID_PRESET_IDS } from "@/app/[slug]/scripts";
 
 type ApplyDb = Parameters<typeof applyStarter>[0];
 
@@ -76,5 +78,55 @@ describe("starter templates", () => {
     expect(blocks.length).toBe(
       starter.pages.reduce((n, p) => n + p.blocks.length, 0),
     );
+  });
+
+  it("applyStarter persists a valid entrance animation on every block", async () => {
+    const { db, calls } = mockDb();
+    await applyStarter(db, "site1", "classic-wedding", 1700000000000);
+    const blocks = calls.filter((c) => c.sql.includes("INSERT INTO block"));
+    expect(blocks.length).toBeGreaterThan(0);
+    for (const b of blocks) {
+      // config is the 5th bound arg (0-indexed 4): id, siteId, pageId, type, config
+      const cfg = JSON.parse(b.args[4] as string) as {
+        animation?: unknown;
+      };
+      expect(typeof cfg.animation).toBe("string");
+      expect(VALID_PRESET_IDS.has(cfg.animation as string)).toBe(true);
+    }
+  });
+});
+
+describe("withEntranceAnimation", () => {
+  it("assigns a valid on-view preset when none is set", () => {
+    const out = withEntranceAnimation({ type: "text", config: {} });
+    expect(VALID_PRESET_IDS.has(out.config.animation as string)).toBe(true);
+  });
+
+  it("does not override an explicit animation", () => {
+    const out = withEntranceAnimation({
+      type: "text",
+      config: { animation: "spring-in" },
+    });
+    expect(out.config.animation).toBe("spring-in");
+  });
+
+  it("uses a type-specific preset for galleries", () => {
+    expect(
+      withEntranceAnimation({ type: "gallery", config: {} }).config.animation,
+    ).toBe("blur-in");
+  });
+
+  it("does not mutate the input block", () => {
+    const input = { type: "text", config: {} };
+    withEntranceAnimation(input);
+    expect(input.config).toEqual({});
+  });
+
+  it("every default preset it can assign is valid", () => {
+    for (const type of ["home-hero", "images", "gallery", "photo-split", "x"]) {
+      const preset = withEntranceAnimation({ type, config: {} }).config
+        .animation as string;
+      expect(VALID_PRESET_IDS.has(preset)).toBe(true);
+    }
   });
 });

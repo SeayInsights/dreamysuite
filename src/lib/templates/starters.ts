@@ -29,6 +29,40 @@ export interface StarterTemplate {
   pages: StarterPage[];
 }
 
+// ── Default block entrance animations ─────────────────────────────────────────
+//
+// The published renderer already ships a block-animation engine (blocks with a
+// `config.animation` preset get an on-view IntersectionObserver reveal — see
+// buildBlockAnimationScript / VALID_PRESET_IDS in src/app/[slug]/scripts.ts).
+// Starter blocks historically set no animation, so template sites rendered flat
+// as you scrolled. These tasteful on-view defaults make every template site
+// animate in on scroll — showcasing the capability — while:
+//   • never touching user-built sites (only starter blocks flow through here);
+//   • never overriding a block that already declares its own animation;
+//   • staying safe for prefers-reduced-motion (the engine skips entirely, and
+//     no pre-hide CSS exists, so blocks remain fully visible).
+// Preset ids MUST exist in VALID_PRESET_IDS.
+
+const ENTRANCE_PRESET_BY_TYPE: Record<string, string> = {
+  "home-hero": "fade-in", // above the fold — gentle, no jarring slide
+  images: "blur-in",
+  gallery: "blur-in",
+  "photo-split": "fade-slide-up",
+};
+const DEFAULT_ENTRANCE_PRESET = "fade-slide-up";
+
+/**
+ * Return a copy of `block` with a default on-view entrance animation applied,
+ * unless it already declares one. Used by both the template preview route and
+ * applyStarter so previews and freshly-created template sites animate alike.
+ */
+export function withEntranceAnimation(block: StarterBlock): StarterBlock {
+  if (block.config.animation) return block;
+  const presetId =
+    ENTRANCE_PRESET_BY_TYPE[block.type] ?? DEFAULT_ENTRANCE_PRESET;
+  return { ...block, config: { ...block.config, animation: presetId } };
+}
+
 export const STARTERS: StarterTemplate[] = [
   {
     id: "blank",
@@ -809,7 +843,7 @@ export async function applyStarter(
           siteId,
           pageId,
           block.type,
-          JSON.stringify(block.config ?? {}),
+          JSON.stringify(withEntranceAnimation(block).config),
           blockOrder++,
           now,
           now,
