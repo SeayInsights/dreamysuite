@@ -735,6 +735,30 @@ export function buildStyles(settings: SiteSettingRow | null): BuiltStyles {
     .hero-location { font-size: 0.9375rem; color: var(--site-muted); }
     .hero-divider { margin-top: 2rem; font-size: 1.25rem; color: var(--site-accent); opacity: 0.5; }
 
+    /* Hero with a background image: full-bleed cover + readability scrim + light text */
+    .block-home-hero.hero-has-image {
+      position: relative;
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      min-height: 62vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .hero-scrim {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, rgba(0,0,0,0.30) 0%, rgba(0,0,0,0.50) 100%);
+      z-index: 0;
+    }
+    .hero-has-image .hero-inner { position: relative; z-index: 1; }
+    .hero-has-image .hero-title,
+    .hero-has-image .hero-date,
+    .hero-has-image .hero-location { color: #ffffff; }
+    .hero-has-image .hero-eyebrow { color: rgba(255,255,255,0.92); }
+    .hero-has-image .hero-divider { color: #ffffff; opacity: 0.75; }
+
     /* ── Section heading ── */
     .section-heading {
       font-family: var(--heading-font);
