@@ -207,6 +207,49 @@ export function EditorOverlay({
   return (
     <div ref={containerRef} className="relative min-h-full w-full pb-8">
       {children}
+      <AlignGuides />
     </div>
+  );
+}
+
+/**
+ * Alignment guide lines shown while dragging a block. Rendered inside the canvas
+ * container (same canvas-px coordinate space as the blocks), so guide positions
+ * line up with blocks without any scale/iframe reconciliation. Cleared when the
+ * drag ends (setAlignGuides([])).
+ */
+function AlignGuides() {
+  const guides = useEditorStore((s) => s.alignGuides);
+  if (!guides.length) return null;
+  return (
+    <>
+      {guides.map((g, i) =>
+        g.orientation === "v" ? (
+          <div
+            key={`v-${i}`}
+            className="pointer-events-none absolute top-0 bottom-0"
+            style={{
+              left: g.pos,
+              width: 1,
+              background: "#3b82f6",
+              zIndex: 9999,
+            }}
+            aria-hidden
+          />
+        ) : (
+          <div
+            key={`h-${i}`}
+            className="pointer-events-none absolute left-0 right-0"
+            style={{
+              top: g.pos,
+              height: 1,
+              background: "#3b82f6",
+              zIndex: 9999,
+            }}
+            aria-hidden
+          />
+        ),
+      )}
+    </>
   );
 }

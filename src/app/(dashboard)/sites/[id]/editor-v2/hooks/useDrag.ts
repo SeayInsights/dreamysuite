@@ -19,6 +19,7 @@ import {
   snapToGrid,
   toCanonicalBounds,
   toScaledDomRect,
+  type AlignGuide,
 } from "./dragGeometry";
 
 // ─── Types ─────────────────────────────────────────────────────────────────
@@ -88,12 +89,14 @@ export function useDrag(containerRef: React.RefObject<HTMLElement | null>): {
   const pendingUpdateRef = useRef<{
     config: Record<string, unknown>;
     collisions?: string[];
+    guides?: AlignGuide[];
   } | null>(null);
 
   const [isDragging, setIsDragging] = useState(false);
   const [draggedId, setDraggedId] = useState<string | null>(null);
   const collidingIds = useEditorStore((s) => s.collidingIds);
   const setCollidingIds = useEditorStore((s) => s.setCollidingIds);
+  const setAlignGuides = useEditorStore((s) => s.setAlignGuides);
 
   // ── Apply batched update in rAF ────────────────────────────────────────
 
@@ -112,10 +115,13 @@ export function useDrag(containerRef: React.RefObject<HTMLElement | null>): {
     if (pending.collisions !== undefined) {
       setCollidingIds(pending.collisions);
     }
+    if (pending.guides !== undefined) {
+      setAlignGuides(pending.guides);
+    }
 
     pendingUpdateRef.current = null;
     rafRef.current = null;
-  }, [updateBlock, setCollidingIds]);
+  }, [updateBlock, setCollidingIds, setAlignGuides]);
 
   // ── End drag ───────────────────────────────────────────────────────────
 
@@ -184,6 +190,7 @@ export function useDrag(containerRef: React.RefObject<HTMLElement | null>): {
     setIsDragging(false);
     setDraggedId(null);
     setCollidingIds([]);
+    setAlignGuides([]);
 
     if (cleanupRef.current) {
       cleanupRef.current();
@@ -193,6 +200,7 @@ export function useDrag(containerRef: React.RefObject<HTMLElement | null>): {
     applyUpdate,
     resortByOffsetY,
     setCollidingIds,
+    setAlignGuides,
     setDrag,
     temporalStore,
     updateBlock,
@@ -337,7 +345,11 @@ export function useDrag(containerRef: React.RefObject<HTMLElement | null>): {
         );
 
         // Store pending update instead of applying immediately
-        pendingUpdateRef.current = { config: newConfig, collisions };
+        pendingUpdateRef.current = {
+          config: newConfig,
+          collisions,
+          guides: align.guides,
+        };
 
         // Schedule rAF if not already scheduled
         if (rafRef.current === null) {

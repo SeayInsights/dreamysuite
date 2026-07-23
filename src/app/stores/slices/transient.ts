@@ -1,5 +1,7 @@
 import type { StateCreator } from "zustand";
 
+import type { AlignGuide } from "@/app/(dashboard)/sites/[id]/editor-v2/hooks/dragGeometry";
+
 export interface DragState {
   kind: "block" | "element" | null;
   id: string | null;
@@ -13,6 +15,8 @@ export interface TransientSlice {
   selectedField: string | null;
   isCropping: boolean;
   collidingIds: string[];
+  /** Active alignment guide lines during a block drag (canvas-px coords). */
+  alignGuides: AlignGuide[];
   contentDocument: Document | null;
   setDrag: (drag: DragState) => void;
   setHoveredBlockId: (id: string | null) => void;
@@ -20,6 +24,7 @@ export interface TransientSlice {
   setSelectedField: (field: string | null) => void;
   setIsCropping: (v: boolean) => void;
   setCollidingIds: (ids: string[]) => void;
+  setAlignGuides: (guides: AlignGuide[]) => void;
   setContentDocument: (doc: Document | null) => void;
 }
 
@@ -30,6 +35,7 @@ export const createTransientSlice: StateCreator<TransientSlice> = (set) => ({
   selectedField: null,
   isCropping: false,
   collidingIds: [],
+  alignGuides: [],
   contentDocument: null,
   setDrag: (drag) => set({ drag }),
   setHoveredBlockId: (hoveredBlockId) => set({ hoveredBlockId }),
@@ -37,5 +43,6 @@ export const createTransientSlice: StateCreator<TransientSlice> = (set) => ({
   setSelectedField: (selectedField) => set({ selectedField }),
   setIsCropping: (isCropping) => set({ isCropping }),
   setCollidingIds: (collidingIds) => set({ collidingIds }),
+  setAlignGuides: (alignGuides) => set({ alignGuides }),
   setContentDocument: (contentDocument) => set({ contentDocument }),
 });
