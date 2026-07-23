@@ -13,6 +13,7 @@ import {
 import { useCanvasScale } from "../BreakpointFrame";
 import {
   COL_PCT,
+  computeAlignmentSnap,
   detectCollisions,
   handleAutoScroll,
   snapToGrid,
@@ -273,25 +274,61 @@ export function useDrag(containerRef: React.RefObject<HTMLElement | null>): {
         );
         const constrained = constrainToBounds(elementRect, bounds);
 
-        // Calculate constrained offset (difference from natural position)
-        const constrainedOffsetX = constrained.left - naturalLeft;
-        const constrainedOffsetY = constrained.top - naturalTop;
-
-        // Apply grid snapping to constrained position
-        const newConfig = {
-          ...config,
-          blockOffsetX: snapToGrid(constrainedOffsetX),
-          blockOffsetY: snapToGrid(constrainedOffsetY),
+        // Alignment snap: nudge the block into alignment with sibling edges/
+        // centres and the canvas centre (Wix-style "clicks into place"). Gather
+        // sibling rects in canonical canvas pixels.
+        const siblingRects: {
+          left: number;
+          top: number;
+          width: number;
+          height: number;
+        }[] = [];
+        for (const b of blocks) {
+          if (b.id === session.blockId) continue;
+          const sEl = container.querySelector<HTMLElement>(
+            `[data-block-id="${b.id}"]`,
+          );
+          if (!sEl) continue;
+          const sr = sEl.getBoundingClientRect();
+          siblingRects.push({
+            left: (sr.left - containerRect.left) / scaleFactor,
+            top: (sr.top - containerRect.top) / scaleFactor,
+            width: sr.width / scaleFactor,
+            height: sr.height / scaleFactor,
+          });
+        }
+        const align = computeAlignmentSnap(
+          constrained,
+          siblingRects,
+          containerRect.width / scaleFactor,
+        );
+        const aligned = {
+          ...constrained,
+          left: constrained.left + align.dx,
+          top: constrained.top + align.dy,
         };
 
-        // Detect collisions with constrained bounds.
-        // constrained is in canvas pixels; scale back to screen pixels so
+        // Calculate constrained offset (difference from natural position)
+        const constrainedOffsetX = aligned.left - naturalLeft;
+        const constrainedOffsetY = aligned.top - naturalTop;
+
+        // Apply alignment when snapped, else grid snapping.
+        const newConfig = {
+          ...config,
+          blockOffsetX:
+            align.dx !== 0
+              ? Math.round(constrainedOffsetX)
+              : snapToGrid(constrainedOffsetX),
+          blockOffsetY:
+            align.dy !== 0
+              ? Math.round(constrainedOffsetY)
+              : snapToGrid(constrainedOffsetY),
+        };
+
+        // Detect collisions with the aligned bounds.
+        // aligned is in canvas pixels; scale back to screen pixels so
         // the rect aligns with getBoundingClientRect() of sibling elements.
-        const newBounds = toScaledDomRect(
-          containerRect,
-          constrained,
-          scaleFactor,
-        );
+        const newBounds = toScaledDomRect(containerRect, aligned, scaleFactor);
         const collisions = detectCollisions(
           session.blockId,
           newBounds,
