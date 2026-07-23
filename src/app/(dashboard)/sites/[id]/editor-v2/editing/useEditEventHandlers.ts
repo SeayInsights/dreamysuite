@@ -7,10 +7,15 @@
  *   - paste → strip HTML / insert plain text
  *   - keydown → Escape (discard) + Cmd/Ctrl+B/I/U shortcuts
  *
- * Also provides `handleFormat` for toolbar button presses.
+ * FORMATTING MODEL (canonical): formatting is applied whole-field, never at the
+ * selection level. Both the keyboard shortcuts here and the inspector Content
+ * tab write companion cfg style keys (<field>Bold/<field>Size/…, see
+ * editableField.ts) which persist and render identically in editor and publish.
+ * Selection-level rich text (execCommand / <span> wrapping) is intentionally
+ * unsupported — commit saves innerText only, so inline tags could never persist.
  */
 
-import { useCallback, useEffect } from "react";
+import { useEffect } from "react";
 
 import { useEditorStore } from "@/app/stores/editorStore";
 import { type FormatCommand } from "./formatTypes";
@@ -32,6 +37,42 @@ export function useEditEventHandlers({
   discard: (state: EditState) => void;
 }) {
   const updateBlock = useEditorStore((s) => s.updateBlock);
+
+  // -------------------------------------------------------------------------
+  // Format handler — applies whole-field style keys to cfg (the canonical
+  // formatting model; see the file header). Declared before the effects that
+  // call it so it is in scope for the keydown shortcut handler below.
+  // -------------------------------------------------------------------------
+
+  function handleFormatForState(state: EditState, cmd: FormatCommand) {
+    const block = useEditorStore
+      .getState()
+      .blocks.find((b) => b.id === state.blockId);
+    if (!block) return;
+
+    // Preserve the live (uncommitted) text of the field being edited. Without
+    // this, the store write below re-renders the block from the *stored* config
+    // and resets the contentEditable DOM to the last-saved value — wiping what
+    // the user just typed. Merging the DOM's current text keeps it stable.
+    let currentCfg = parseCfgFromBlock(block);
+    const liveText = state.element.innerText;
+    if (state.arrayKey !== undefined && state.itemIndex !== undefined) {
+      const arr = Array.isArray(currentCfg[state.arrayKey])
+        ? (currentCfg[state.arrayKey] as Record<string, unknown>[]).slice()
+        : [];
+      if (arr[state.itemIndex]) {
+        arr[state.itemIndex] = {
+          ...arr[state.itemIndex],
+          [state.field]: liveText,
+        };
+      }
+      currentCfg = { ...currentCfg, [state.arrayKey]: arr };
+    } else {
+      currentCfg = { ...currentCfg, [state.field]: liveText };
+    }
+    const nextCfg = applyStyleKeyToCfg(currentCfg, state.field, cmd);
+    updateBlock(state.blockId, { config: nextCfg });
+  }
 
   // -------------------------------------------------------------------------
   // Blur → commit (with focus-restoration for inspector/toolbar interactions)
@@ -155,98 +196,4 @@ export function useEditEventHandlers({
     el.addEventListener("keydown", handleKeyDown);
     return () => el.removeEventListener("keydown", handleKeyDown);
   }, [editState, discard, editStateRef]); // eslint-disable-line react-hooks/exhaustive-deps -- deps intentionally narrowed; this effect must not re-run on the omitted stable/ref values
-
-  // -------------------------------------------------------------------------
-  // Format handler — applies to cfg immediately, reflects in element style
-  // -------------------------------------------------------------------------
-
-  function handleFormatForState(state: EditState, cmd: FormatCommand) {
-    const block = useEditorStore
-      .getState()
-      .blocks.find((b) => b.id === state.blockId);
-    if (!block) return;
-
-    // Preserve the live (uncommitted) text of the field being edited. Without
-    // this, the store write below re-renders the block from the *stored* config
-    // and resets the contentEditable DOM to the last-saved value — wiping what
-    // the user just typed. Merging the DOM's current text keeps it stable.
-    let currentCfg = parseCfgFromBlock(block);
-    const liveText = state.element.innerText;
-    if (state.arrayKey !== undefined && state.itemIndex !== undefined) {
-      const arr = Array.isArray(currentCfg[state.arrayKey])
-        ? (currentCfg[state.arrayKey] as Record<string, unknown>[]).slice()
-        : [];
-      if (arr[state.itemIndex]) {
-        arr[state.itemIndex] = {
-          ...arr[state.itemIndex],
-          [state.field]: liveText,
-        };
-      }
-      currentCfg = { ...currentCfg, [state.arrayKey]: arr };
-    } else {
-      currentCfg = { ...currentCfg, [state.field]: liveText };
-    }
-    const nextCfg = applyStyleKeyToCfg(currentCfg, state.field, cmd);
-    updateBlock(state.blockId, { config: nextCfg });
-  }
-
-  const handleFormat = useCallback(
-    (cmd: FormatCommand) => {
-      const state = editStateRef.current;
-      if (!state) return;
-
-      const el = state.element;
-      const ownerDoc = el.ownerDocument;
-      el.focus();
-      switch (cmd.type) {
-        case "bold":
-          ownerDoc.execCommand("bold");
-          break;
-        case "italic":
-          ownerDoc.execCommand("italic");
-          break;
-        case "underline":
-          ownerDoc.execCommand("underline");
-          break;
-        case "foreColor":
-          ownerDoc.execCommand("foreColor", false, cmd.value);
-          break;
-        case "fontName":
-          ownerDoc.execCommand("fontName", false, cmd.value);
-          break;
-        case "justifyLeft":
-          ownerDoc.execCommand("justifyLeft");
-          break;
-        case "justifyCenter":
-          ownerDoc.execCommand("justifyCenter");
-          break;
-        case "justifyRight":
-          ownerDoc.execCommand("justifyRight");
-          break;
-        case "fontSize": {
-          const sel = ownerDoc.defaultView?.getSelection();
-          if (sel && sel.rangeCount > 0 && !sel.isCollapsed) {
-            const range = sel.getRangeAt(0);
-            const span = ownerDoc.createElement("span");
-            span.style.fontSize =
-              cmd.value.includes("px") || cmd.value.includes("rem")
-                ? cmd.value
-                : cmd.value + "px";
-            range.surroundContents(span);
-          }
-          break;
-        }
-      }
-
-      handleFormatForState(state, cmd);
-
-      requestAnimationFrame(() => {
-        editStateRef.current?.element.focus();
-      });
-    },
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- deps intentionally narrowed; this effect must not re-run on the omitted stable/ref values
-    [updateBlock],
-  );
-
-  return { handleFormat };
 }
