@@ -2,8 +2,10 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Image from "next/image";
-import { ImagePlus, X } from "lucide-react";
+import { ImagePlus, X, Sparkles } from "lucide-react";
 import { useEditorStore } from "@/app/stores/editorStore";
+import { StockPicker } from "./StockPicker";
+import { isStockUrl } from "@/lib/stock/library";
 
 interface Photo {
   id: string;
@@ -24,6 +26,7 @@ export function SitePhotoPicker({ value, onChange, label }: Props) {
   const siteId = useEditorStore((s) => s.siteId);
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showStock, setShowStock] = useState(() => isStockUrl(value));
 
   useEffect(() => {
     if (!siteId) return;
@@ -117,6 +120,20 @@ export function SitePhotoPicker({ value, onChange, label }: Props) {
           })}
         </div>
       )}
+
+      <div className="space-y-1.5 border-t border-border pt-2">
+        <button
+          type="button"
+          onClick={() => setShowStock((v) => !v)}
+          className="flex w-full items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground transition-colors hover:text-foreground"
+        >
+          <Sparkles className="size-3" />
+          {showStock ? "Hide stock library" : "Browse stock library"}
+        </button>
+        {showStock && (
+          <StockPicker value={value} onSelect={(url) => onChange(url)} />
+        )}
+      </div>
     </div>
   );
 }

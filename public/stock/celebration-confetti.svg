@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Gold and blush confetti on deep plum">
+  <defs>
+    <linearGradient id="cc-bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#3a2340"/>
+      <stop offset="100%" stop-color="#241631"/>
+    </linearGradient>
+    <g id="cc-piece">
+      <rect x="0" y="0" width="18" height="7" rx="2" fill="#e7c37a"/>
+    </g>
+  </defs>
+  <rect width="1600" height="1000" fill="url(#cc-bg)"/>
+  <g opacity="0.92">
+    <use href="#cc-piece" transform="translate(120 140) rotate(24)"/>
+    <use href="#cc-piece" transform="translate(360 90) rotate(-40)" fill="#f0b6bf"/>
+    <use href="#cc-piece" transform="translate(560 220) rotate(12)"/>
+    <use href="#cc-piece" transform="translate(760 120) rotate(-18)" fill="#f0b6bf"/>
+    <use href="#cc-piece" transform="translate(980 190) rotate(48)"/>
+    <use href="#cc-piece" transform="translate(1200 110) rotate(-32)"/>
+    <use href="#cc-piece" transform="translate(1420 210) rotate(20)" fill="#f0b6bf"/>
+    <use href="#cc-piece" transform="translate(220 420) rotate(-12)"/>
+    <use href="#cc-piece" transform="translate(500 500) rotate(36)" fill="#f0b6bf"/>
+    <use href="#cc-piece" transform="translate(820 430) rotate(-44)"/>
+    <use href="#cc-piece" transform="translate(1120 520) rotate(16)"/>
+    <use href="#cc-piece" transform="translate(1380 470) rotate(-24)" fill="#f0b6bf"/>
+    <use href="#cc-piece" transform="translate(160 720) rotate(30)"/>
+    <use href="#cc-piece" transform="translate(440 820) rotate(-16)" fill="#f0b6bf"/>
+    <use href="#cc-piece" transform="translate(720 760) rotate(44)"/>
+    <use href="#cc-piece" transform="translate(1020 840) rotate(-36)"/>
+    <use href="#cc-piece" transform="translate(1320 780) rotate(22)" fill="#f0b6bf"/>
+  </g>
+</svg>

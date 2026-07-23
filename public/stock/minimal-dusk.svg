@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Clean dusk gradient from indigo to amber">
+  <defs>
+    <linearGradient id="md-g" x1="0%" y1="0%" x2="60%" y2="100%">
+      <stop offset="0%" stop-color="#3b3a68"/>
+      <stop offset="50%" stop-color="#9a6f8e"/>
+      <stop offset="100%" stop-color="#e8a97c"/>
+    </linearGradient>
+  </defs>
+  <rect width="1600" height="1000" fill="url(#md-g)"/>
+</svg>
