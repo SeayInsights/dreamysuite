@@ -117,13 +117,16 @@ export function EditorOverlay({
 
     function handlePointerDown(e: PointerEvent) {
       const state = useEditorStore.getState();
-      if (!state.selectedBlockId || state.drag.kind) return;
+      if (state.drag.kind) return;
 
       const blockEl = (e.target as HTMLElement).closest<HTMLElement>(
         "[data-block-id]",
       );
-      if (!blockEl || blockEl.dataset.blockId !== state.selectedBlockId) return;
+      const blockId = blockEl?.dataset.blockId;
+      if (!blockEl || !blockId) return;
 
+      // Don't hijack drags that belong to explicitly-draggable children or
+      // editable text — those have their own interactions.
       const draggable = (e.target as HTMLElement).closest<HTMLElement>(
         "[draggable='true']",
       );
@@ -132,12 +135,18 @@ export function EditorOverlay({
       const target = e.target as HTMLElement;
       if (
         target.isContentEditable ||
-        target.closest("[contenteditable='true']")
+        target.closest("[contenteditable='true']") ||
+        target.closest("[data-editable-field]") ||
+        target.closest("[data-editable-item-index]")
       )
         return;
 
+      // Grab-and-drag: arm a move for whichever block is pressed — no need to
+      // click-to-select first (Wix-style direct manipulation). Selection happens
+      // when the gesture crosses the drag threshold (below); a plain click still
+      // selects/cycles via handleClick, and pointerup clears an unused arm.
       pending = {
-        blockId: state.selectedBlockId,
+        blockId,
         startX: e.clientX,
         startY: e.clientY,
         pointerId: e.pointerId,
@@ -151,6 +160,10 @@ export function EditorOverlay({
         const dx = e.clientX - pending.startX;
         const dy = e.clientY - pending.startY;
         if (Math.sqrt(dx * dx + dy * dy) > DRAG_THRESHOLD_PX) {
+          // Select the grabbed block as the drag begins, then start moving it.
+          if (useEditorStore.getState().selectedBlockId !== pending.blockId) {
+            select(pending.blockId);
+          }
           startMove(
             pending.blockId,
             e as unknown as ReactPointerEvent<HTMLDivElement>,
