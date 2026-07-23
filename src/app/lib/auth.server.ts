@@ -10,6 +10,7 @@ export interface Env {
   APP_URL: string;
   CF_ACCOUNT_ID: string;
   CF_API_TOKEN: string;
+  CF_ZONE_ID: string;
   CANVA_CLIENT_ID: string;
   CANVA_CLIENT_SECRET: string;
   CANVA_REDIRECT_URI: string;

@@ -31,27 +31,33 @@ const RESERVED_SUBDOMAINS = new Set([
 
 export function middleware(req: NextRequest) {
   const host = (req.headers.get("host") ?? "").toLowerCase().split(":")[0];
+  const { pathname } = req.nextUrl;
 
-  // Not a subdomain of the root → leave untouched (apex, localhost, custom
-  // domains, etc.).
-  if (!host.endsWith("." + ROOT_HOST)) {
+  // Main app host → leave untouched (dashboard, landing, /[slug], etc.).
+  if (host === ROOT_HOST || host === "localhost" || host === "") {
     return NextResponse.next();
   }
 
-  const sub = host.slice(0, host.length - (ROOT_HOST.length + 1));
-  if (!sub || sub.includes(".") || RESERVED_SUBDOMAINS.has(sub)) {
-    return NextResponse.next();
+  // Per-site subdomain of dreamysuite.com → render the site whose slug === sub.
+  if (host.endsWith("." + ROOT_HOST)) {
+    const sub = host.slice(0, host.length - (ROOT_HOST.length + 1));
+    if (!sub || sub.includes(".") || RESERVED_SUBDOMAINS.has(sub)) {
+      return NextResponse.next();
+    }
+    if (pathname !== "/") return NextResponse.next();
+    const url = req.nextUrl.clone();
+    url.pathname = `/${sub}`;
+    return NextResponse.rewrite(url);
   }
 
-  // Only the site page itself (root path) maps to the site; other paths on the
-  // subdomain (assets/api are already excluded by the matcher) pass through.
-  if (req.nextUrl.pathname !== "/") {
-    return NextResponse.next();
+  // Any other host that reached the Worker is a connected custom domain — route
+  // its root to the renderer, which resolves it to a site by customDomain.
+  if (pathname === "/") {
+    const url = req.nextUrl.clone();
+    url.pathname = "/__host__";
+    return NextResponse.rewrite(url);
   }
-
-  const url = req.nextUrl.clone();
-  url.pathname = `/${sub}`;
-  return NextResponse.rewrite(url);
+  return NextResponse.next();
 }
 
 export const config = {
