@@ -167,6 +167,45 @@ describe("prepareStarterBlock (hero eyebrow)", () => {
   });
 });
 
+describe("template hero images", () => {
+  it("injects the template heroImage onto the home-hero block", () => {
+    const starter = getStarter("classic-wedding")!;
+    expect(starter.heroImage).toBeTruthy();
+    const out = prepareStarterBlock({ type: "home-hero", config: {} }, starter);
+    expect(out.config.imageUrl).toBe(starter.heroImage);
+  });
+
+  it("does not override an explicit hero imageUrl", () => {
+    const starter = getStarter("classic-wedding")!;
+    const out = prepareStarterBlock(
+      { type: "home-hero", config: { imageUrl: "/custom.webp" } },
+      starter,
+    );
+    expect(out.config.imageUrl).toBe("/custom.webp");
+  });
+
+  it("effect-background templates set no heroImage (effect is the backdrop)", () => {
+    for (const id of ["elopement-adventure", "starlit-evening"]) {
+      const s = getStarter(id)!;
+      expect(s.heroImage, `${id} should not set heroImage`).toBeUndefined();
+      expect(
+        s.settings?.effectBg,
+        `${id} should have an effectBg`,
+      ).toBeTruthy();
+    }
+  });
+
+  it("every heroImage points at a bundled /stock scene", () => {
+    for (const s of STARTERS) {
+      if (s.heroImage) {
+        expect(s.heroImage, `${s.id} heroImage`).toMatch(
+          /^\/stock\/scene-[\w-]+\.svg$/,
+        );
+      }
+    }
+  });
+});
+
 describe("template aesthetics", () => {
   it("non-wedding templates set a hero eyebrow", () => {
     for (const id of [

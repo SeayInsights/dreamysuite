@@ -30,6 +30,13 @@ export interface StarterTemplate {
    * must set this to read correctly.
    */
   heroEyebrow?: string;
+  /**
+   * Hero background image URL (typically a `/stock/scene-*.svg`). Injected onto
+   * the home-hero block so the template opens with real imagery. Leave unset for
+   * templates whose page background is a live WebGL effect (elopement/starlit) —
+   * the effect is the hero backdrop there.
+   */
+  heroImage?: string;
   /** site_setting theme values, or null to leave defaults. */
   settings: Record<string, unknown> | null;
   pages: StarterPage[];
@@ -82,6 +89,9 @@ export function prepareStarterBlock(
   let b = block;
   if (b.type === "home-hero" && starter.heroEyebrow && !b.config.eyebrow) {
     b = { ...b, config: { ...b.config, eyebrow: starter.heroEyebrow } };
+  }
+  if (b.type === "home-hero" && starter.heroImage && !b.config.imageUrl) {
+    b = { ...b, config: { ...b.config, imageUrl: starter.heroImage } };
   }
   return withEntranceAnimation(b);
 }
@@ -193,6 +203,7 @@ export const STARTERS: StarterTemplate[] = [
     id: "classic-wedding",
     name: "Classic Wedding",
     description: "Timeless serif elegance with an envelope entrance.",
+    heroImage: "/stock/scene-romance-arch.svg",
     eventType: "wedding",
     previewColor: "#B8921A",
     settings: {
@@ -286,6 +297,7 @@ export const STARTERS: StarterTemplate[] = [
     id: "modern-celebration",
     name: "Modern Celebration",
     description: "Clean, contemporary layout with a schedule and RSVP.",
+    heroImage: "/stock/scene-modern.svg",
     eventType: "celebration",
     previewColor: "#0d9488",
     settings: {
@@ -361,6 +373,7 @@ export const STARTERS: StarterTemplate[] = [
     name: "Simple Invite",
     description: "A single elegant page — hero, countdown, and RSVP.",
     heroEyebrow: "You’re invited",
+    heroImage: "/stock/scene-romance-arch.svg",
     eventType: "wedding",
     previewColor: "#7c3aed",
     settings: {
@@ -402,6 +415,7 @@ export const STARTERS: StarterTemplate[] = [
     name: "Golden Anniversary",
     description: "Warm gold serif elegance for a milestone anniversary.",
     heroEyebrow: "Celebrating a lifetime of love",
+    heroImage: "/stock/scene-elegant-gold.svg",
     eventType: "anniversary",
     previewColor: "#C99A2E",
     settings: {
@@ -492,6 +506,7 @@ export const STARTERS: StarterTemplate[] = [
     name: "Engagement Party",
     description: "Bold, modern rose tones to announce the big news.",
     heroEyebrow: "We’re engaged!",
+    heroImage: "/stock/scene-celebration.svg",
     eventType: "engagement",
     previewColor: "#E14D8B",
     settings: {
@@ -555,6 +570,7 @@ export const STARTERS: StarterTemplate[] = [
     name: "Vow Renewal",
     description: "Soft sage and script for renewing your promises.",
     heroEyebrow: "Renewing our vows",
+    heroImage: "/stock/scene-garden.svg",
     eventType: "vow-renewal",
     previewColor: "#6B8E7A",
     settings: {
@@ -764,6 +780,7 @@ export const STARTERS: StarterTemplate[] = [
     name: "Garden Party",
     description: "Fresh, leafy greens for a relaxed daytime celebration.",
     heroEyebrow: "You’re invited",
+    heroImage: "/stock/scene-garden.svg",
     eventType: "celebration",
     previewColor: "#4E7A3A",
     settings: {
