@@ -446,8 +446,13 @@ export function BreakpointFrame({ children, nav }: Props) {
                   }}
                 >
                   {bgImageBaseStyle && !pageBgDisabled && (
+                    // `fixed` (not `absolute`) pins the page-background to the
+                    // iframe viewport — mirroring the published site's fixed
+                    // bg-overlay. As absolute, it sized to the growing canvas
+                    // content, so dragging a block down stretched/reshaped the
+                    // image (background-size: auto 100% is height-relative).
                     <div
-                      className="pointer-events-none absolute overflow-hidden"
+                      className="pointer-events-none fixed overflow-hidden"
                       style={{
                         zIndex: 0,
                         top:
