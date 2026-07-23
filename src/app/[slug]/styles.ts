@@ -1,5 +1,11 @@
 import { type SiteSettingRow } from "./types";
-import { escHtml, safeUrl, ensureReadableText } from "./helpers";
+import {
+  escHtml,
+  safeUrl,
+  ensureReadableText,
+  isDarkColor,
+  hexToRgbTriplet,
+} from "./helpers";
 
 // ── CSS ───────────────────────────────────────────────────────────────────────
 
@@ -31,6 +37,16 @@ export function buildStyles(settings: SiteSettingRow | null): BuiltStyles {
   // against the background so a pale color choice can't make published copy
   // illegible (a readable choice is passed through unchanged).
   const readableBody = ensureReadableText(settings?.bodyColor ?? "#78716c", bg);
+  // Theme-aware nav surface: on a dark page the default/glass nav must be dark
+  // too, or the (light) nav text + links render invisibly on a white bar.
+  const darkBg = isDarkColor(bg);
+  const bgTriplet = hexToRgbTriplet(bg) ?? "17, 17, 20";
+  const navSolid = darkBg
+    ? `rgba(${bgTriplet}, 0.9)`
+    : "rgba(255,255,255,0.96)";
+  const navGlass = darkBg
+    ? `rgba(${bgTriplet}, 0.6)`
+    : "rgba(255,255,255,0.65)";
   const navPosition = settings?.navPosition ?? "fixed";
   const isFixed = navPosition === "fixed" || navPosition === "hide-on-scroll";
   const isScrollAway =
@@ -86,10 +102,9 @@ export function buildStyles(settings: SiteSettingRow | null): BuiltStyles {
       --site-border: ${escHtml(settings?.siteBorderColor ?? "#e7e5e4")};
       --nav-bg: ${(() => {
         const nb = settings?.navBg ?? "";
-        if (!nb || nb === "white") return "rgba(255,255,255,0.96)";
-        if (nb === "glass" || nb === "transparent")
-          return "rgba(255,255,255,0.65)";
-        if (nb === "custom") return "rgba(255,255,255,0.96)";
+        if (!nb || nb === "custom") return navSolid;
+        if (nb === "white") return "rgba(255,255,255,0.96)";
+        if (nb === "glass" || nb === "transparent") return navGlass;
         return escHtml(nb);
       })()};
       --nav-brand: ${escHtml(settings?.navBrandColor ?? "var(--text)")};

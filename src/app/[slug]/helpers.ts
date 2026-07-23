@@ -161,3 +161,15 @@ export function ensureReadableText(
   if (contrastRatio(fg, bg) >= 4.5) return fg;
   return relativeLuminance(cb) > 0.4 ? darkFallback : lightFallback;
 }
+
+/** True when a hex color is dark (low relative luminance). Unparseable → false. */
+export function isDarkColor(hex: string): boolean {
+  const c = parseHexColor(hex);
+  return c ? relativeLuminance(c) < 0.35 : false;
+}
+
+/** "r, g, b" triplet for a hex color (for building rgba()), or null if unparseable. */
+export function hexToRgbTriplet(hex: string): string | null {
+  const c = parseHexColor(hex);
+  return c ? `${c[0]}, ${c[1]}, ${c[2]}` : null;
+}
