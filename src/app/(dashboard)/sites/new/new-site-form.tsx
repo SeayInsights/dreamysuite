@@ -18,15 +18,25 @@ type ActionFn = (
   formData: FormData,
 ) => Promise<{ error?: string }>;
 
-export function NewSiteForm({ action }: { action: ActionFn }) {
+export function NewSiteForm({
+  action,
+  initialTemplate = "blank",
+}: {
+  action: ActionFn;
+  initialTemplate?: string;
+}) {
   const [state, formAction, pending] = useActionState(action, null);
+
+  const initialEventType =
+    STARTER_SUMMARIES.find((s) => s.id === initialTemplate)?.eventType ??
+    "wedding";
 
   const [name, setName] = useState("");
   const [nameTouched, setNameTouched] = useState(false);
-  const [eventType, setEventType] = useState("wedding");
+  const [eventType, setEventType] = useState(initialEventType);
   const [slug, setSlug] = useState("");
   const [slugEdited, setSlugEdited] = useState(false);
-  const [templateId, setTemplateId] = useState("blank");
+  const [templateId, setTemplateId] = useState(initialTemplate);
 
   const autoSlug = name
     .toLowerCase()

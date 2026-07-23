@@ -80,7 +80,11 @@ async function createSite(
   redirect(`/sites/${id}`);
 }
 
-export default async function NewSitePage() {
+export default async function NewSitePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ template?: string }>;
+}) {
   const env = await getEnv();
 
   const auth = createAuth(env);
@@ -90,5 +94,10 @@ export default async function NewSitePage() {
     redirect("/login");
   }
 
-  return <NewSiteForm action={createSite} />;
+  // Preselect a template when arriving from the /templates gallery
+  // (?template=<id>); fall back to "blank" for an unknown/absent id.
+  const { template } = await searchParams;
+  const initialTemplate = getStarter(template ?? "")?.id ?? "blank";
+
+  return <NewSiteForm action={createSite} initialTemplate={initialTemplate} />;
 }
