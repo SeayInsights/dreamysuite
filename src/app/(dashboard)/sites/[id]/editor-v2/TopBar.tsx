@@ -8,6 +8,7 @@ import { BreakpointToggle } from "./topbar/BreakpointToggle";
 import { InspectorToggle } from "./topbar/InspectorToggle";
 import { ModeToggle } from "./topbar/ModeToggle";
 import { UndoRedo } from "./topbar/UndoRedo";
+import { ReplayAnimations } from "./topbar/ReplayAnimations";
 import { PreviewButton } from "./topbar/PreviewButton";
 import { SaveStatus } from "./topbar/SaveStatus";
 import { PublishButton } from "./topbar/PublishButton";
@@ -48,6 +49,7 @@ export function TopBar({ site }: Props) {
         <ModeToggle />
         <div className="h-6 w-px bg-border" aria-hidden />
         <UndoRedo />
+        <ReplayAnimations />
         <InspectorToggle />
         <PreviewButton siteId={site.id} />
         <PublishButton siteId={site.id} />
