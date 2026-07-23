@@ -7,7 +7,11 @@
 import { NextRequest } from "next/server";
 import { getEnv } from "@/lib/cloudflare";
 import { createAuth } from "@/app/lib/auth.server";
-import { getStarter, prepareStarterBlock } from "@/lib/templates/starters";
+import {
+  getStarter,
+  prepareStarterBlock,
+  enrichStarterPages,
+} from "@/lib/templates/starters";
 import { buildHtml } from "@/app/[slug]/html-builder";
 import { escHtml } from "@/app/[slug]/helpers";
 import type {
@@ -75,7 +79,7 @@ export async function GET(
     effectCard: (s.effectCard as string) ?? null,
   } as unknown as SiteSettingRow;
 
-  const pages: PageWithBlocks[] = starter.pages.map((p, pi) => ({
+  const pages: PageWithBlocks[] = enrichStarterPages(starter).map((p, pi) => ({
     id: `preview-page-${pi}`,
     siteId: "preview",
     slug: p.slug,
