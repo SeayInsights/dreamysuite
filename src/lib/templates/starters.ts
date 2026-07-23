@@ -24,6 +24,12 @@ export interface StarterTemplate {
   description: string;
   eventType: string;
   previewColor: string;
+  /**
+   * Small line above the hero title. Defaults to "We're getting married" when
+   * unset — so non-wedding templates (anniversary, engagement, garden party…)
+   * must set this to read correctly.
+   */
+  heroEyebrow?: string;
   /** site_setting theme values, or null to leave defaults. */
   settings: Record<string, unknown> | null;
   pages: StarterPage[];
@@ -63,6 +69,23 @@ export function withEntranceAnimation(block: StarterBlock): StarterBlock {
   return { ...block, config: { ...block.config, animation: presetId } };
 }
 
+/**
+ * Normalize a starter block for rendering/persistence: inject the template's
+ * hero eyebrow (home-hero only, when the template sets one and the block hasn't
+ * overridden it) and a default entrance animation. Used by both the preview
+ * route and applyStarter so previews and created sites match.
+ */
+export function prepareStarterBlock(
+  block: StarterBlock,
+  starter: StarterTemplate,
+): StarterBlock {
+  let b = block;
+  if (b.type === "home-hero" && starter.heroEyebrow && !b.config.eyebrow) {
+    b = { ...b, config: { ...b.config, eyebrow: starter.heroEyebrow } };
+  }
+  return withEntranceAnimation(b);
+}
+
 export const STARTERS: StarterTemplate[] = [
   {
     id: "blank",
@@ -85,6 +108,7 @@ export const STARTERS: StarterTemplate[] = [
       accentColor: "#B8921A",
       bgColor: "#faf8f5",
       siteTextColor: "#1c1917",
+      bgImage: "/stock/texture-marble.svg",
       animation: "envelope",
       eventName: "Our Wedding",
       greeting: "We can't wait to celebrate this day with you.",
@@ -243,6 +267,7 @@ export const STARTERS: StarterTemplate[] = [
     id: "simple-invite",
     name: "Simple Invite",
     description: "A single elegant page — hero, countdown, and RSVP.",
+    heroEyebrow: "You’re invited",
     eventType: "wedding",
     previewColor: "#7c3aed",
     settings: {
@@ -283,6 +308,7 @@ export const STARTERS: StarterTemplate[] = [
     id: "golden-anniversary",
     name: "Golden Anniversary",
     description: "Warm gold serif elegance for a milestone anniversary.",
+    heroEyebrow: "Celebrating a lifetime of love",
     eventType: "anniversary",
     previewColor: "#C99A2E",
     settings: {
@@ -291,6 +317,7 @@ export const STARTERS: StarterTemplate[] = [
       accentColor: "#C99A2E",
       bgColor: "#fbf7ef",
       siteTextColor: "#2b2417",
+      bgImage: "/stock/texture-linen.svg",
       animation: "envelope",
       eventName: "Our Anniversary",
       greeting: "Celebrating years of love — and the many more to come.",
@@ -371,6 +398,7 @@ export const STARTERS: StarterTemplate[] = [
     id: "engagement-party",
     name: "Engagement Party",
     description: "Bold, modern rose tones to announce the big news.",
+    heroEyebrow: "We’re engaged!",
     eventType: "engagement",
     previewColor: "#E14D8B",
     settings: {
@@ -379,6 +407,7 @@ export const STARTERS: StarterTemplate[] = [
       accentColor: "#E14D8B",
       bgColor: "#fff5f8",
       siteTextColor: "#2a1a22",
+      bgImage: "/stock/romance-blush.svg",
       animation: "doors",
       eventName: "We're Engaged!",
       greeting: "Come celebrate with us.",
@@ -432,6 +461,7 @@ export const STARTERS: StarterTemplate[] = [
     id: "vow-renewal",
     name: "Vow Renewal",
     description: "Soft sage and script for renewing your promises.",
+    heroEyebrow: "Renewing our vows",
     eventType: "vow-renewal",
     previewColor: "#6B8E7A",
     settings: {
@@ -440,6 +470,7 @@ export const STARTERS: StarterTemplate[] = [
       accentColor: "#6B8E7A",
       bgColor: "#f4f7f4",
       siteTextColor: "#26302b",
+      bgImage: "/stock/botanical-eucalyptus.svg",
       animation: "storybook",
       eventName: "Renewing Our Vows",
       greeting: "Ten years on, we'd choose each other all over again.",
@@ -520,6 +551,7 @@ export const STARTERS: StarterTemplate[] = [
     id: "elopement-adventure",
     name: "Elopement",
     description: "Moody, cinematic dark theme with a soft aurora backdrop.",
+    heroEyebrow: "We’re eloping",
     eventType: "elopement",
     previewColor: "#3E5C76",
     settings: {
@@ -562,6 +594,7 @@ export const STARTERS: StarterTemplate[] = [
     id: "starlit-evening",
     name: "Starlit Evening",
     description: "Dramatic indigo night sky with a galaxy background.",
+    heroEyebrow: "An evening to remember",
     eventType: "celebration",
     previewColor: "#4C3A8C",
     settings: {
@@ -637,6 +670,7 @@ export const STARTERS: StarterTemplate[] = [
     id: "garden-party",
     name: "Garden Party",
     description: "Fresh, leafy greens for a relaxed daytime celebration.",
+    heroEyebrow: "You’re invited",
     eventType: "celebration",
     previewColor: "#4E7A3A",
     settings: {
@@ -645,6 +679,7 @@ export const STARTERS: StarterTemplate[] = [
       accentColor: "#4E7A3A",
       bgColor: "#f6faf2",
       siteTextColor: "#22301c",
+      bgImage: "/stock/minimal-sage.svg",
       animation: "none",
       eventName: "Garden Celebration",
       greeting: "Join us for an afternoon in the garden.",
@@ -795,9 +830,9 @@ export async function applyStarter(
       .prepare(
         `INSERT INTO site_setting
           (siteId, mainLanguage, headingFont, bodyFont, accentColor, bgColor,
-           siteTextColor, eventName, eventDate, eventLocation, greeting,
+           siteTextColor, bgImage, eventName, eventDate, eventLocation, greeting,
            animation, effectBg, effectText, effectCard, isLive, updatedAt)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?)`,
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?)`,
       )
       .bind(
         siteId,
@@ -807,6 +842,7 @@ export async function applyStarter(
         (s.accentColor as string) ?? "#B8921A",
         (s.bgColor as string) ?? "#ffffff",
         (s.siteTextColor as string) ?? "#1c1917",
+        (s.bgImage as string) ?? null,
         (s.eventName as string) ?? null,
         (s.eventDate as string) ?? null,
         (s.eventLocation as string) ?? null,
@@ -843,7 +879,7 @@ export async function applyStarter(
           siteId,
           pageId,
           block.type,
-          JSON.stringify(withEntranceAnimation(block).config),
+          JSON.stringify(prepareStarterBlock(block, starter).config),
           blockOrder++,
           now,
           now,
