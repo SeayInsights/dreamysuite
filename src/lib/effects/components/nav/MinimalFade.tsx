@@ -1,6 +1,4 @@
 "use client";
-
-import Image from "next/image";
 import { motion } from "motion/react";
 import type { NavStyleProps } from "../../types";
 
@@ -38,7 +36,7 @@ export default function MinimalFade({
           flexShrink: 0,
         }}
       >
-        <Image
+        <img
           src={logo}
           alt={logoAlt}
           width={compact ? 20 : 28}
@@ -62,7 +60,9 @@ export default function MinimalFade({
       </div>
 
       {/* Items */}
-      <div style={{ display: "flex", alignItems: "center", gap: compact ? 2 : 6 }}>
+      <div
+        style={{ display: "flex", alignItems: "center", gap: compact ? 2 : 6 }}
+      >
         {items.map((item, i) => (
           <motion.button
             key={item.label}

@@ -1,6 +1,4 @@
 "use client";
-
-import Image from "next/image";
 import { motion } from "motion/react";
 import type { NavStyleProps } from "../../types";
 
@@ -37,7 +35,7 @@ export default function MagneticHover({
           flexShrink: 0,
         }}
       >
-        <Image
+        <img
           src={logo}
           alt={logoAlt}
           width={compact ? 22 : 30}
@@ -60,7 +58,9 @@ export default function MagneticHover({
       </div>
 
       {/* Items */}
-      <div style={{ display: "flex", alignItems: "center", gap: compact ? 0 : 4 }}>
+      <div
+        style={{ display: "flex", alignItems: "center", gap: compact ? 0 : 4 }}
+      >
         {items.map((item) => (
           <motion.button
             key={item.label}
@@ -84,9 +84,7 @@ export default function MagneticHover({
               borderBottom: item.isActive
                 ? `2px solid ${accent}`
                 : "2px solid transparent",
-              boxShadow: item.isActive
-                ? "0 2px 8px rgba(0,0,0,0.06)"
-                : "none",
+              boxShadow: item.isActive ? "0 2px 8px rgba(0,0,0,0.06)" : "none",
               transition: "color 0.15s, border-color 0.15s",
             }}
           >

@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
 import { motion, LayoutGroup } from "motion/react";
 import type { NavStyleProps } from "../../types";
 
@@ -44,7 +43,7 @@ export default function GlowNav({
             zIndex: 1,
           }}
         >
-          <Image
+          <img
             src={logo}
             alt={logoAlt}
             width={compact ? 22 : 30}
@@ -91,9 +90,7 @@ export default function GlowNav({
                 fontFamily: bodyFont,
                 fontSize: compact ? "0.72rem" : "0.83rem",
                 letterSpacing: "0.03em",
-                color: item.isActive
-                  ? "#fff"
-                  : "rgba(255,255,255,0.55)",
+                color: item.isActive ? "#fff" : "rgba(255,255,255,0.55)",
                 fontWeight: item.isActive ? 600 : 400,
                 transition: "color 0.2s",
                 zIndex: 1,

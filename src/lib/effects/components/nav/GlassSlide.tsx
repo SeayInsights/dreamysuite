@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
 import { motion, LayoutGroup } from "motion/react";
 import type { NavStyleProps } from "../../types";
 
@@ -47,7 +46,7 @@ export default function GlassSlide({
             flexShrink: 0,
           }}
         >
-          <Image
+          <img
             src={logo}
             alt={logoAlt}
             width={compact ? 22 : 30}
