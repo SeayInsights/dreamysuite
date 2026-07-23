@@ -267,6 +267,15 @@ describe("enrichStarterPages", () => {
     expect(rsvp.blocks[1].type).toBe("text");
   });
 
+  it("adds an image photo-split to a lone story (multi-text) page", () => {
+    const pages = enrichStarterPages(getStarter("classic-wedding")!);
+    const story = pages.find((p) => p.slug === "story")!;
+    expect(story.blocks[0].type).toBe("multi-text");
+    const split = story.blocks.find((b) => b.type === "photo-split");
+    expect(split, "story page should showcase a photo-split").toBeTruthy();
+    expect(String(split!.config.imageUrl)).toMatch(/^\/stock\/scene-.*\.svg$/);
+  });
+
   it("never duplicates a block type already present on a page", () => {
     for (const s of STARTERS) {
       for (const page of enrichStarterPages(s)) {

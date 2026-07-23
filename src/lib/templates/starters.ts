@@ -112,6 +112,28 @@ function centeredNote(body: string): StarterBlock {
   return { type: "text", config: { body, bodyAlign: "center" } };
 }
 
+/**
+ * An image + text showcase for a story/about page — demonstrates the
+ * `photo-split` component and puts real imagery on an interior page. Uses a
+ * scene that contrasts with the hero so the template doesn't repeat one image.
+ */
+function storyPhotoBlock(starter: StarterTemplate): StarterBlock {
+  const hero = starter.heroImage;
+  const image =
+    hero === "/stock/scene-garden.svg"
+      ? "/stock/scene-romance-arch.svg"
+      : (hero ?? "/stock/scene-garden.svg");
+  return {
+    type: "photo-split",
+    config: {
+      imageUrl: image,
+      photoSide: "left",
+      heading: "A moment together",
+      body: "Swap in a favorite photo and share a little about this chapter of your story.",
+    },
+  };
+}
+
 function quickFactsBlock(starter: StarterTemplate): StarterBlock {
   const s = starter.settings ?? {};
   return {
@@ -180,7 +202,8 @@ export function enrichStarterPages(starter: StarterTemplate): StarterPage[] {
           "Still wondering about something? Get in touch and we’ll help however we can.",
         );
       } else if (only === "multi-text" || only === "text") {
-        extra = quickFactsBlock(starter);
+        // Story/about page → an image + text showcase (photo-split).
+        extra = storyPhotoBlock(starter);
       }
       if (extra) return { ...page, blocks: [...page.blocks, extra] };
     }
