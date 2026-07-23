@@ -711,6 +711,33 @@ export const STARTER_SUMMARIES = STARTERS.map((s) => ({
   pageCount: s.pages.length,
 }));
 
+/**
+ * Theme-only patches for the in-editor "apply a template theme" action — fonts,
+ * colors, intro animation, and background effect, with NO pages/blocks/content.
+ * Excludes blank + page-less starters. Client-safe (no db).
+ */
+export const STARTER_THEMES = STARTERS.filter(
+  (s) => s.settings && s.pages.length > 0,
+).map((s) => {
+  const st = s.settings as Record<string, unknown>;
+  return {
+    id: s.id,
+    name: s.name,
+    previewColor: s.previewColor,
+    theme: {
+      headingFont: st.headingFont as string,
+      bodyFont: st.bodyFont as string,
+      accentColor: st.accentColor as string,
+      bgColor: st.bgColor as string,
+      siteTextColor: (st.siteTextColor as string | undefined) ?? null,
+      animation: (st.animation as string | undefined) ?? null,
+      effectBg: (st.effectBg as string | undefined) ?? null,
+      effectText: (st.effectText as string | undefined) ?? null,
+      effectCard: (st.effectCard as string | undefined) ?? null,
+    },
+  };
+});
+
 export function getStarter(id: string): StarterTemplate | undefined {
   return STARTERS.find((s) => s.id === id);
 }
