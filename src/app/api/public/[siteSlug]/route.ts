@@ -80,6 +80,12 @@ export async function GET(
   const { siteSlug } = await params;
   const db = env.DB;
 
+  // Rate-limit public reads per IP to blunt scraping / hammering.
+  const ip = req.headers.get("cf-connecting-ip") ?? "unknown";
+  if (await isRateLimited(env.KV, `public-read:${ip}`, 120, 60)) {
+    return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+  }
+
   // Find site by slug
   const site = await db
     .prepare(
