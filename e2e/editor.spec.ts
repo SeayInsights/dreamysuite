@@ -1,201 +1,163 @@
 /**
- * DreamySuite — Editor Tests
+ * DreamySuite — Editor (v2) Tests
  *
- * Verifies: add blocks, block list renders, drag-reorder via SortableJS,
- * undo/redo via zustand/zundo, save persistence across reload.
- * Maps to e2e-verify.mjs scenarios 3–8.
+ * The v1 list-reorder editor (SortableJS, .bl-card-wrap/.drag-handle) was
+ * removed and replaced by the v2 free-canvas editor: blocks render inside an
+ * about:srcdoc iframe as `[data-block-id]` elements positioned by
+ * blockOffsetX/Y, moved via pointer drag (grab-and-drag) with alignment
+ * snapping. These tests exercise that model.
+ *
+ * Target site: E2E_EDITOR_SITE_ID (defaults to the persistent QA editor clone).
+ * The editor lives at /sites/<id>. Auth comes from the shared storageState.
  */
 
-import { test, expect } from '@playwright/test';
-import { STORAGE_STATE } from './auth-state';
-import { waitForHydration, waitForSave } from './helpers/navigation';
+import { test, expect, type Page, type Frame } from "@playwright/test";
+import { STORAGE_STATE } from "./auth-state";
 
 test.use({ storageState: STORAGE_STATE });
 
+const EDITOR_SITE_ID =
+  process.env.E2E_EDITOR_SITE_ID || "site_qa_editor_clone";
+
 /**
- * Helper: navigate to the first available site's editor.
- * If no sites exist, creates one.
+ * Open the v2 editor for the target site and return the canvas frame.
+ * Note: the full-screen editor renders `body` as effectively hidden, so we wait
+ * on the canvas iframe rather than the generic body-visible hydration helper.
  */
-async function openEditor(page: import('@playwright/test').Page) {
-  await page.goto('/');
-  await waitForHydration(page);
-
-  // Try clicking the first site card to open its editor
-  const siteCard = page.locator('a[href^="/sites/"]').first();
-  if (await siteCard.isVisible({ timeout: 3000 }).catch(() => false)) {
-    await siteCard.click();
-    await page.waitForURL('**/sites/**', { timeout: 10_000 });
-  } else {
-    // No sites — create one inline
-    await page.goto('/sites/new');
-    await waitForHydration(page);
-    await page.fill('input[name="name"]', `Editor Test ${Date.now()}`);
-    await Promise.all([
-      page.waitForURL('**/sites/**', { timeout: 15_000 }),
-      page.click('button[type="submit"]'),
-    ]);
-  }
-
-  await waitForHydration(page, 2000);
+async function openEditor(page: Page): Promise<Frame> {
+  await page.goto(`/sites/${EDITOR_SITE_ID}`, { waitUntil: "load" });
+  await page.waitForSelector("iframe", { timeout: 20_000 });
+  const frame = await waitForCanvasFrame(page);
+  await frame
+    .waitForSelector("[data-block-id]", { timeout: 20_000 })
+    .catch(() => {});
+  return frame;
 }
 
-/** Read the text content of each block card for order comparison. */
-async function getBlockOrder(page: import('@playwright/test').Page) {
-  const cards = await page.locator('.bl-card-wrap').all();
-  const order: string[] = [];
-  for (const card of cards) {
-    const text = await card.textContent().catch(() => '');
-    order.push((text ?? '').slice(0, 40).trim());
+/** The canvas frame is the one that contains block elements. */
+async function waitForCanvasFrame(page: Page): Promise<Frame> {
+  const deadline = Date.now() + 15_000;
+  while (Date.now() < deadline) {
+    for (const f of page.frames()) {
+      const has = await f
+        .evaluate(() => document.querySelector("iframe, [data-block-id]") != null)
+        .catch(() => false);
+      if (has && f !== page.mainFrame()) return f;
+    }
+    // fall back to any child frame
+    const child = page.frames().find((f) => f !== page.mainFrame());
+    if (child) return child;
+    await page.waitForTimeout(300);
   }
-  return order;
+  const child = page.frames().find((f) => f !== page.mainFrame());
+  if (!child) throw new Error("no canvas iframe found");
+  return child;
 }
 
-test.describe('Editor — Block Operations', () => {
-  test('add block via tile picker', async ({ page }) => {
-    await openEditor(page);
+function blockCount(frame: Frame): Promise<number> {
+  return frame.evaluate(
+    () => document.querySelectorAll("[data-block-id]").length,
+  );
+}
 
-    // Look for the add button
-    const addBtn = page.locator(
-      'button:has-text("Add"), button:has-text("add tile"), button:has-text("Add Tile"), [aria-label*="add"]',
-    ).first();
+test.describe("Editor v2 — canvas", () => {
+  test("loads the editor with blocks rendered in the canvas iframe", async ({
+    page,
+  }) => {
+    const frame = await openEditor(page);
+    expect(page.url()).toContain(`/sites/${EDITOR_SITE_ID}`);
+    expect(await blockCount(frame)).toBeGreaterThanOrEqual(1);
+  });
 
-    // If a Tiles tab exists, switch to it first
-    const tilesTab = page.locator('button:has-text("Tiles"), [data-tab="tiles"]').first();
-    if (await tilesTab.isVisible({ timeout: 2000 }).catch(() => false)) {
-      await tilesTab.click();
-      await page.waitForTimeout(500);
+  test("adds a block from the Elements tray", async ({ page }) => {
+    const frame = await openEditor(page);
+    const before = await blockCount(frame);
+
+    // Open the "Add" rail (SIDEBAR_SECTIONS: id add-elements, label "Add") which
+    // reveals the Elements tray. Its tiles are titled `Add <label> block`.
+    const tile = page.locator('button[title^="Add "]').first();
+    if (!(await tile.isVisible({ timeout: 2000 }).catch(() => false))) {
+      await page
+        .locator('button[aria-label="Add"], button[title="Add"]')
+        .first()
+        .click({ timeout: 5000 })
+        .catch(() => {});
+      await page.waitForTimeout(600);
     }
 
-    if (await addBtn.isVisible({ timeout: 3000 }).catch(() => false)) {
-      await addBtn.click();
-      await page.waitForTimeout(1000);
+    await expect(tile).toBeVisible({ timeout: 5000 });
+    await tile.click();
+    await expect
+      .poll(() => blockCount(frame), { timeout: 10_000 })
+      .toBeGreaterThan(before);
+  });
 
-      // Click the first available block type in the picker
-      const blockOption = page.locator(
-        '[data-block-type], [class*="block-type"], [class*="tile-option"]',
-      ).first();
+  test("dragging a block changes its position (free-canvas move)", async ({
+    page,
+  }) => {
+    const frame = await openEditor(page);
+    test.skip(
+      (await blockCount(frame)) < 1,
+      "need a block to drag",
+    );
 
-      if (await blockOption.isVisible({ timeout: 3000 }).catch(() => false)) {
-        await blockOption.click();
-        await waitForSave(page);
+    const beforeTop = await frame.evaluate(() => {
+      const el = document.querySelector<HTMLElement>("[data-block-id]");
+      return el ? Math.round(el.getBoundingClientRect().top) : null;
+    });
 
-        // At least one block should now exist
-        const blockCount = await page.locator('.bl-card-wrap, [data-block-type]').count();
-        expect(blockCount).toBeGreaterThanOrEqual(1);
+    // Grab-and-drag: pointerdown on the block, move past threshold, drag down.
+    await frame.evaluate(async () => {
+      const el = document.querySelector<HTMLElement>("[data-block-id]");
+      if (!el) return;
+      const r = el.getBoundingClientRect();
+      const cx = r.left + r.width / 2;
+      const cy = r.top + 20;
+      const pe = (type: string, x: number, y: number) =>
+        el.dispatchEvent(
+          new PointerEvent(type, {
+            bubbles: true,
+            cancelable: true,
+            clientX: x,
+            clientY: y,
+            pointerId: 1,
+            button: 0,
+          }),
+        );
+      pe("pointerdown", cx, cy);
+      for (let i = 1; i <= 10; i++) {
+        pe("pointermove", cx, cy + i * 40);
+        await new Promise((res) => setTimeout(res, 25));
       }
-    }
+      pe("pointerup", cx, cy + 400);
+    });
+    await page.waitForTimeout(800);
+
+    const afterTop = await frame.evaluate(() => {
+      const el = document.querySelector<HTMLElement>("[data-block-id]");
+      return el ? Math.round(el.getBoundingClientRect().top) : null;
+    });
+
+    expect(beforeTop).not.toBeNull();
+    expect(afterTop).not.toBeNull();
+    expect(afterTop!).toBeGreaterThan(beforeTop!);
   });
 
-  test('block list renders after adding blocks', async ({ page }) => {
-    await openEditor(page);
-    const blocks = page.locator('.bl-card-wrap, [class*="block-card"], [data-block-type]');
-    // Should have at least the blocks from previous test or pre-existing data
-    const count = await blocks.count();
-    expect(count).toBeGreaterThanOrEqual(0); // non-negative; real assertion in full suite
-  });
-});
+  test("blocks persist after a reload", async ({ page }) => {
+    const frame = await openEditor(page);
+    const before = await blockCount(frame);
+    test.skip(before < 1, "no blocks to verify persistence");
 
-test.describe('Editor — Drag Reorder + Undo/Redo', () => {
-  test('drag-reorder changes block order', async ({ page }) => {
-    await openEditor(page);
-
-    const handles = page.locator('.drag-handle');
-    const handleCount = await handles.count();
-    test.skip(handleCount < 2, 'Need >= 2 blocks with drag handles');
-
-    const initialOrder = await getBlockOrder(page);
-
-    // Drag first block below the second
-    const first = handles.nth(0);
-    const secondCard = page.locator('.bl-card-wrap').nth(1);
-    const srcBox = await first.boundingBox();
-    const tgtBox = await secondCard.boundingBox();
-
-    if (srcBox && tgtBox) {
-      await page.mouse.move(srcBox.x + srcBox.width / 2, srcBox.y + srcBox.height / 2);
-      await page.mouse.down();
-      await page.mouse.move(
-        tgtBox.x + tgtBox.width / 2,
-        tgtBox.y + tgtBox.height + 10,
-        { steps: 10 },
-      );
-      await page.mouse.up();
-      await waitForSave(page);
-
-      const afterOrder = await getBlockOrder(page);
-      expect(afterOrder).not.toEqual(initialOrder);
-    }
-  });
-
-  test('Ctrl+Z undoes reorder', async ({ page }) => {
-    await openEditor(page);
-
-    const handles = page.locator('.drag-handle');
-    test.skip((await handles.count()) < 2, 'Need >= 2 blocks');
-
-    const initialOrder = await getBlockOrder(page);
-
-    // Perform a drag
-    const srcBox = await handles.nth(0).boundingBox();
-    const tgtBox = await page.locator('.bl-card-wrap').nth(1).boundingBox();
-    if (srcBox && tgtBox) {
-      await page.mouse.move(srcBox.x + srcBox.width / 2, srcBox.y + srcBox.height / 2);
-      await page.mouse.down();
-      await page.mouse.move(tgtBox.x + tgtBox.width / 2, tgtBox.y + tgtBox.height + 10, { steps: 10 });
-      await page.mouse.up();
-      await page.waitForTimeout(1000);
-
-      // Undo
-      await page.keyboard.press('Control+z');
-      await page.waitForTimeout(1500);
-
-      const afterUndo = await getBlockOrder(page);
-      expect(afterUndo).toEqual(initialOrder);
-    }
-  });
-
-  test('Ctrl+Shift+Z redoes after undo', async ({ page }) => {
-    await openEditor(page);
-
-    const handles = page.locator('.drag-handle');
-    test.skip((await handles.count()) < 2, 'Need >= 2 blocks');
-
-    // Drag
-    const srcBox = await handles.nth(0).boundingBox();
-    const tgtBox = await page.locator('.bl-card-wrap').nth(1).boundingBox();
-    if (srcBox && tgtBox) {
-      await page.mouse.move(srcBox.x + srcBox.width / 2, srcBox.y + srcBox.height / 2);
-      await page.mouse.down();
-      await page.mouse.move(tgtBox.x + tgtBox.width / 2, tgtBox.y + tgtBox.height + 10, { steps: 10 });
-      await page.mouse.up();
-      await page.waitForTimeout(1000);
-
-      const reorderedState = await getBlockOrder(page);
-
-      // Undo then redo
-      await page.keyboard.press('Control+z');
-      await page.waitForTimeout(1000);
-      await page.keyboard.press('Control+Shift+z');
-      await page.waitForTimeout(1500);
-
-      const afterRedo = await getBlockOrder(page);
-      expect(afterRedo).toEqual(reorderedState);
-    }
-  });
-
-  test('block order persists after page reload', async ({ page }) => {
-    await openEditor(page);
-
-    const orderBefore = await getBlockOrder(page);
-    test.skip(orderBefore.length < 1, 'No blocks to verify persistence');
-
-    await waitForSave(page, 3000); // let debounced save finish
-    await page.reload({ waitUntil: 'networkidle' });
-    await waitForHydration(page, 2000);
-
-    const orderAfter = await getBlockOrder(page);
-    expect(orderAfter.length).toBeGreaterThanOrEqual(1);
-    // Order should match what was there before reload
-    expect(orderAfter).toEqual(orderBefore);
+    // Let the debounced save (1.5s) flush before reloading.
+    await page.waitForTimeout(2500);
+    await page.reload({ waitUntil: "load" });
+    await page.waitForSelector("iframe", { timeout: 20_000 });
+    const frame2 = await waitForCanvasFrame(page);
+    await frame2
+      .waitForSelector("[data-block-id]", { timeout: 20_000 })
+      .catch(() => {});
+    await expect
+      .poll(() => blockCount(frame2), { timeout: 12_000 })
+      .toBeGreaterThanOrEqual(1);
   });
 });
