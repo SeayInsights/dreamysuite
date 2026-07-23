@@ -166,7 +166,26 @@ export function useEditEventHandlers({
       .blocks.find((b) => b.id === state.blockId);
     if (!block) return;
 
-    const currentCfg = parseCfgFromBlock(block);
+    // Preserve the live (uncommitted) text of the field being edited. Without
+    // this, the store write below re-renders the block from the *stored* config
+    // and resets the contentEditable DOM to the last-saved value — wiping what
+    // the user just typed. Merging the DOM's current text keeps it stable.
+    let currentCfg = parseCfgFromBlock(block);
+    const liveText = state.element.innerText;
+    if (state.arrayKey !== undefined && state.itemIndex !== undefined) {
+      const arr = Array.isArray(currentCfg[state.arrayKey])
+        ? (currentCfg[state.arrayKey] as Record<string, unknown>[]).slice()
+        : [];
+      if (arr[state.itemIndex]) {
+        arr[state.itemIndex] = {
+          ...arr[state.itemIndex],
+          [state.field]: liveText,
+        };
+      }
+      currentCfg = { ...currentCfg, [state.arrayKey]: arr };
+    } else {
+      currentCfg = { ...currentCfg, [state.field]: liveText };
+    }
     const nextCfg = applyStyleKeyToCfg(currentCfg, state.field, cmd);
     updateBlock(state.blockId, { config: nextCfg });
   }

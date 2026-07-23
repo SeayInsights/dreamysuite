@@ -57,22 +57,27 @@ export function useDblClickActivation({
 
         const bid = selectedId ?? useEditorStore.getState().selectedBlockId;
 
+        let firstCandidate: T | null = null;
         for (const el of doc.elementsFromPoint(e.clientX, e.clientY)) {
           const candidate = (el as HTMLElement).closest<T>(selector);
           if (!candidate) continue;
+          if (!firstCandidate) firstCandidate = candidate;
 
-          // If we have a selected block, only return fields from that block
+          // Prefer a field in the already-selected block (avoids grabbing a
+          // field from a block stacked behind it).
           if (bid) {
             const candidateBlockId = candidate
               .closest("[data-block-id]")
               ?.getAttribute("data-block-id");
             if (candidateBlockId === bid) return candidate;
           } else {
-            // No selected block — return the first editable field found
             return candidate;
           }
         }
-        return null;
+        // The selected block has no editable field at this point — activate the
+        // topmost field found instead (so double-clicking text in a not-yet-
+        // selected block works on the first try).
+        return firstCandidate;
       }
 
       // -----------------------------------------------------------------------

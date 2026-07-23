@@ -145,6 +145,20 @@ export function DesignTab({
     ...(parsed.animation as Partial<AnimationConfig> | undefined),
   };
 
+  // Base config for any store write. During an active text edit it merges the
+  // field's LIVE (uncommitted) DOM text, so a style/format write doesn't
+  // re-render the block from the stale stored config and wipe what the user is
+  // typing. A no-op (returns `parsed`) when not editing.
+  const styleBase = (): Record<string, unknown> => {
+    if (isTextEditing && selectedField && contentDocument) {
+      const el = contentDocument.querySelector<HTMLElement>(
+        '[contenteditable="true"]',
+      );
+      if (el) return { ...parsed, [selectedField]: el.innerText };
+    }
+    return parsed;
+  };
+
   return (
     <div className="space-y-0">
       <CollapsibleSection title="Content" defaultOpen>
@@ -166,7 +180,7 @@ export function DesignTab({
                 onChange={(e) =>
                   updateBlock(block.id, {
                     config: {
-                      ...parsed,
+                      ...styleBase(),
                       [selectedField + "FontFamily"]: e.target.value,
                     },
                   })
@@ -195,7 +209,7 @@ export function DesignTab({
                   onChange={(e) =>
                     updateBlock(block.id, {
                       config: {
-                        ...parsed,
+                        ...styleBase(),
                         [selectedField + "Size"]: e.target.value,
                       },
                     })
@@ -216,7 +230,7 @@ export function DesignTab({
                     onClick={() =>
                       updateBlock(block.id, {
                         config: {
-                          ...parsed,
+                          ...styleBase(),
                           [selectedField + style]:
                             !parsed[selectedField + style],
                         },
@@ -247,7 +261,7 @@ export function DesignTab({
                   onChange={(e) =>
                     updateBlock(block.id, {
                       config: {
-                        ...parsed,
+                        ...styleBase(),
                         [selectedField + "Color"]: e.target.value,
                       },
                     })
@@ -265,7 +279,7 @@ export function DesignTab({
                   onChange={(e) =>
                     updateBlock(block.id, {
                       config: {
-                        ...parsed,
+                        ...styleBase(),
                         [selectedField + "Color"]: e.target.value,
                       },
                     })
@@ -285,7 +299,10 @@ export function DesignTab({
                     type="button"
                     onClick={() =>
                       updateBlock(block.id, {
-                        config: { ...parsed, [selectedField + "Align"]: align },
+                        config: {
+                          ...styleBase(),
+                          [selectedField + "Align"]: align,
+                        },
                       })
                     }
                     className={cn(
@@ -311,7 +328,7 @@ export function DesignTab({
               value={bgColor || "#ffffff"}
               onChange={(e) =>
                 updateBlock(block.id, {
-                  config: { ...parsed, backgroundColor: e.target.value },
+                  config: { ...styleBase(), backgroundColor: e.target.value },
                 })
               }
               onKeyDown={(e) => e.stopPropagation()}
@@ -324,7 +341,7 @@ export function DesignTab({
               onChange={(e) => {
                 const v = e.target.value.trim();
                 updateBlock(block.id, {
-                  config: { ...parsed, backgroundColor: v || undefined },
+                  config: { ...styleBase(), backgroundColor: v || undefined },
                 });
               }}
               onKeyDown={(e) => e.stopPropagation()}
@@ -345,14 +362,14 @@ export function DesignTab({
                   if (linked) {
                     updateBlock(block.id, {
                       config: {
-                        ...parsed,
+                        ...styleBase(),
                         padding: { top: v, right: v, bottom: v, left: v },
                       },
                     });
                   } else {
                     updateBlock(block.id, {
                       config: {
-                        ...parsed,
+                        ...styleBase(),
                         padding: { ...padding, top: v as number },
                       },
                     });
@@ -366,14 +383,14 @@ export function DesignTab({
                   if (linked) {
                     updateBlock(block.id, {
                       config: {
-                        ...parsed,
+                        ...styleBase(),
                         padding: { top: v, right: v, bottom: v, left: v },
                       },
                     });
                   } else {
                     updateBlock(block.id, {
                       config: {
-                        ...parsed,
+                        ...styleBase(),
                         padding: { ...padding, right: v as number },
                       },
                     });
@@ -387,14 +404,14 @@ export function DesignTab({
                   if (linked) {
                     updateBlock(block.id, {
                       config: {
-                        ...parsed,
+                        ...styleBase(),
                         padding: { top: v, right: v, bottom: v, left: v },
                       },
                     });
                   } else {
                     updateBlock(block.id, {
                       config: {
-                        ...parsed,
+                        ...styleBase(),
                         padding: { ...padding, bottom: v as number },
                       },
                     });
@@ -408,14 +425,14 @@ export function DesignTab({
                   if (linked) {
                     updateBlock(block.id, {
                       config: {
-                        ...parsed,
+                        ...styleBase(),
                         padding: { top: v, right: v, bottom: v, left: v },
                       },
                     });
                   } else {
                     updateBlock(block.id, {
                       config: {
-                        ...parsed,
+                        ...styleBase(),
                         padding: { ...padding, left: v as number },
                       },
                     });
@@ -478,7 +495,7 @@ export function DesignTab({
                 onChange={(id) => {
                   const next = { ...currentAnim, presetId: id };
                   updateBlock(block.id, {
-                    config: { ...parsed, animation: next },
+                    config: { ...styleBase(), animation: next },
                   });
                   if (id)
                     runPreviewAnimation(block.id, id, next, contentDocument);
@@ -501,7 +518,7 @@ export function DesignTab({
                       const dur = Math.max(0.05, Number(e.target.value) / 1000);
                       const next = { ...currentAnim, duration: dur };
                       updateBlock(block.id, {
-                        config: { ...parsed, animation: next },
+                        config: { ...styleBase(), animation: next },
                       });
                       if (next.presetId)
                         runPreviewAnimation(
@@ -530,7 +547,7 @@ export function DesignTab({
                       const del = Math.max(0, Number(e.target.value) / 1000);
                       const next = { ...currentAnim, delay: del };
                       updateBlock(block.id, {
-                        config: { ...parsed, animation: next },
+                        config: { ...styleBase(), animation: next },
                       });
                       if (next.presetId)
                         runPreviewAnimation(
@@ -554,7 +571,7 @@ export function DesignTab({
                     onChange={(e) => {
                       const next = { ...currentAnim, easing: e.target.value };
                       updateBlock(block.id, {
-                        config: { ...parsed, animation: next },
+                        config: { ...styleBase(), animation: next },
                       });
                       if (next.presetId)
                         runPreviewAnimation(
