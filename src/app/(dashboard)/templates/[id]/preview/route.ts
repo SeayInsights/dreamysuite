@@ -7,7 +7,7 @@
 import { NextRequest } from "next/server";
 import { getEnv } from "@/lib/cloudflare";
 import { createAuth } from "@/app/lib/auth.server";
-import { getStarter } from "@/lib/templates/starters";
+import { getStarter, withEntranceAnimation } from "@/lib/templates/starters";
 import { buildHtml } from "@/app/[slug]/html-builder";
 import { escHtml } from "@/app/[slug]/helpers";
 import type {
@@ -89,7 +89,7 @@ export async function GET(
       siteId: "preview",
       pageId: `preview-page-${pi}`,
       type: b.type,
-      config: b.config,
+      config: withEntranceAnimation(b).config,
       sortOrder: bi,
       isVisible: 1,
       createdAt: now,
