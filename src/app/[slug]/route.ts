@@ -7,6 +7,7 @@
 import { NextRequest } from "next/server";
 import { getEnv } from "@/lib/cloudflare";
 import { rewritePhotoUrlsToPublic } from "@/lib/publicImages";
+import { isRateLimited } from "@/lib/rateLimit";
 import { isAnonymous, edgeCacheMatch, edgeCachePut } from "./edge-cache";
 import { createAuth } from "@/app/lib/auth.server";
 import { safeBlockConfig } from "@/lib/validation";
@@ -294,6 +295,16 @@ export async function POST(
   let slug = routeParams.slug;
   const env = await getEnv();
   const db = env.DB;
+
+  // Rate-limit guest-password attempts per IP to blunt brute-forcing a site's
+  // password.
+  const ip = req.headers.get("cf-connecting-ip") ?? "unknown";
+  if (await isRateLimited(env.KV, `sitepw:${ip}`, 10, 60)) {
+    return new Response("Too many attempts. Please wait a minute and retry.", {
+      status: 429,
+      headers: { "content-type": "text/plain; charset=utf-8" },
+    });
+  }
 
   if (slug === "__host__") {
     const host = (req.headers.get("host") ?? "").toLowerCase().split(":")[0];
