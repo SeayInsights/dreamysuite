@@ -44,7 +44,8 @@
 		}
 	],
 	"vars": {
-		"APP_URL": "https://dreamysuite.com"
+		"APP_URL": "https://dreamysuite.com",
+		"CF_ZONE_ID": "a750116061ab67a31efcae8ba39c99fa"
 	},
 	"d1_databases": [
 		{

@@ -36,9 +36,27 @@ export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ slug: string }> },
 ) {
-  const { slug } = await params;
+  const routeParams = await params;
+  let slug = routeParams.slug;
   const env = await getEnv();
   const db = env.DB;
+
+  // A connected custom domain was rewritten to /__host__ by middleware — resolve
+  // it to the owning site's slug, then fall through to the normal render path.
+  if (slug === "__host__") {
+    const host = (req.headers.get("host") ?? "").toLowerCase().split(":")[0];
+    const match = await db
+      .prepare("SELECT slug FROM site WHERE customDomain = ?")
+      .bind(host)
+      .first<{ slug: string }>();
+    if (!match) {
+      return new Response(notFoundHtml(), {
+        status: 404,
+        headers: { "content-type": "text/html; charset=utf-8" },
+      });
+    }
+    slug = match.slug;
+  }
 
   // Fast path: anonymous visitors are served straight from the edge cache.
   // Only live, published, non-gated public renders are ever stored (see the
@@ -272,9 +290,25 @@ export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ slug: string }> },
 ) {
-  const { slug } = await params;
+  const routeParams = await params;
+  let slug = routeParams.slug;
   const env = await getEnv();
   const db = env.DB;
+
+  if (slug === "__host__") {
+    const host = (req.headers.get("host") ?? "").toLowerCase().split(":")[0];
+    const match = await db
+      .prepare("SELECT slug FROM site WHERE customDomain = ?")
+      .bind(host)
+      .first<{ slug: string }>();
+    if (!match) {
+      return new Response(notFoundHtml(), {
+        status: 404,
+        headers: { "content-type": "text/html; charset=utf-8" },
+      });
+    }
+    slug = match.slug;
+  }
 
   const site = await db
     .prepare("SELECT id FROM site WHERE slug = ? AND status = 'published'")
