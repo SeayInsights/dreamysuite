@@ -868,7 +868,7 @@ function toggleMusic(){var a=document.getElementById('audio-player'),b=document.
   body.ds-reflow .site-nav-row .site-nav-lang-outside{display:none!important}
   .ds-hamburger{display:none;align-items:center;justify-content:center;background:none;border:none;cursor:pointer;padding:0.5rem;color:var(--nav-link,#78716c)}
   body.ds-reflow .ds-hamburger{display:flex}
-  .ds-mobile-menu{display:none;position:absolute;top:100%;left:0;right:0;background:rgba(255,255,255,0.65);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-radius:0 0 12px 12px;padding:0.5rem;flex-direction:column;gap:0.25rem;box-shadow:0 4px 16px rgba(0,0,0,0.1)}
+  .ds-mobile-menu{display:none;position:absolute;top:100%;left:0;right:0;background:var(--nav-bg,rgba(255,255,255,0.65));backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-radius:0 0 12px 12px;padding:0.5rem;flex-direction:column;gap:0.25rem;box-shadow:0 4px 16px rgba(0,0,0,0.1)}
   .ds-mobile-menu.open{display:flex}
   .ds-mobile-menu-item{background:none;border:none;padding:0.75rem 1rem;font-family:inherit;font-size:0.9375rem;color:var(--nav-link,#78716c);cursor:pointer;text-align:left;border-radius:8px;transition:background 0.15s}
   .ds-mobile-menu-item:hover{background:rgba(0,0,0,0.05)}
