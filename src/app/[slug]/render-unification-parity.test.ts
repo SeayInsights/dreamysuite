@@ -149,6 +149,36 @@ describe("render unification — home-hero React-SSR parity", () => {
     expect(actual).not.toContain("Add wedding date");
     expect(actual).toContain('data-lang-field="couple"');
   });
+
+  it("renders a hero background image with scrim when imageUrl is set", async () => {
+    const actual = await renderBlock(
+      makeBlock("hh4", "home-hero", {
+        imageUrl: "/stock/photos/wedding-hero.webp",
+      }),
+      settings,
+    );
+    expect(actual).toContain("hero-has-image");
+    expect(actual).toContain('class="hero-scrim"');
+    expect(actual).toContain("background-image");
+    expect(actual).toContain("/stock/photos/wedding-hero.webp");
+  });
+
+  it("has no image markup when imageUrl is absent (parity preserved)", async () => {
+    const actual = await renderBlock(
+      makeBlock("hh5", "home-hero", {}),
+      settings,
+    );
+    expect(actual).not.toContain("hero-has-image");
+    expect(actual).not.toContain("hero-scrim");
+  });
+
+  it("rejects a javascript: hero imageUrl (safeUrl neutralizes it)", async () => {
+    const actual = await renderBlock(
+      makeBlock("hh6", "home-hero", { imageUrl: "javascript:alert(1)" }),
+      settings,
+    );
+    expect(actual).not.toContain("javascript:");
+  });
 });
 
 describe("render unification — batch A (spacer, youtube, venue-map)", () => {

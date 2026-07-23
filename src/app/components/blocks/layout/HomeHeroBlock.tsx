@@ -22,14 +22,22 @@ export function HomeHeroBlock({ block }: { block: Block }) {
   const date = String(cfg.dateText ?? "");
   const location = String(cfg.locationText ?? "");
   const eyebrow = cfg.eyebrow ? String(cfg.eyebrow) : "We’re getting married";
+  const imageUrl = cfg.imageUrl ? String(cfg.imageUrl) : "";
+  const sectionStyle = imageUrl
+    ? {
+        ...blockSectionStyle(cfg, breakpoint),
+        backgroundImage: `url("${imageUrl}")`,
+      }
+    : blockSectionStyle(cfg, breakpoint);
 
   return (
     <section
-      className="block block-home-hero"
+      className={`block block-home-hero${imageUrl ? " hero-has-image" : ""}`}
       data-block-id={block.id}
       data-block-type={block.type}
-      style={blockSectionStyle(cfg, breakpoint)}
+      style={sectionStyle}
     >
+      {imageUrl ? <div className="hero-scrim" aria-hidden="true" /> : null}
       <div className="hero-inner">
         <p className="hero-eyebrow">{eyebrow}</p>
         <TextEffectWrapper

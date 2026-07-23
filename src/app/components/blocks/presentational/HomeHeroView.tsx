@@ -20,6 +20,12 @@ export interface HomeHeroViewProps {
   location: string;
   /** Small line above the title. Omitted → the default "We're getting married". */
   eyebrow?: string;
+  /**
+   * Optional hero background image (already sanitized/escaped by the caller).
+   * When set, the hero renders it full-bleed with a readability scrim and the
+   * heading text switches to light (`hero-has-image` styles in styles.ts).
+   */
+  imageUrl?: string;
   style?: CSSProperties;
   data?: Record<string, string>;
 }
@@ -31,19 +37,24 @@ export function HomeHeroView({
   date,
   location,
   eyebrow,
+  imageUrl,
   style,
   data,
 }: HomeHeroViewProps) {
-  const hasStyle = style && Object.keys(style).length > 0;
+  const mergedStyle: CSSProperties | undefined = imageUrl
+    ? { ...(style ?? {}), backgroundImage: `url('${imageUrl}')` }
+    : style;
+  const hasStyle = mergedStyle && Object.keys(mergedStyle).length > 0;
   return (
     <section
-      className="block block-home-hero"
-      {...(hasStyle ? { style } : {})}
+      className={`block block-home-hero${imageUrl ? " hero-has-image" : ""}`}
+      {...(hasStyle ? { style: mergedStyle } : {})}
       {...(data ?? {})}
       aria-label="Hero"
       data-block-id={id}
       data-block-type={type}
     >
+      {imageUrl ? <div className="hero-scrim" aria-hidden="true" /> : null}
       <div className="hero-inner">
         {/* Default kept byte-identical (entity form) so render-parity holds; the
             dynamic branch only runs when a template/owner sets an eyebrow. */}

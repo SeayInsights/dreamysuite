@@ -67,6 +67,12 @@ export function renderHomeHeroReact(ctx: RenderContext): Promise<string> {
     settings?.eventLocation ?? "",
   );
   const eyebrow = cfg.eyebrow ? String(cfg.eyebrow) : undefined;
+  // Hero background image: sanitize scheme + escape for safe use inside url('…').
+  const rawImage = cfg.imageUrl as string | undefined;
+  const imageUrl = rawImage
+    ? safeUrl(String(rawImage)).replace(/\\/g, "\\\\").replace(/'/g, "\\'")
+    : undefined;
+  const heroImage = imageUrl && imageUrl !== "#" ? imageUrl : undefined;
   const { style, data } = blockContainerStyle(cfg);
   return renderReactToHtml(
     <HomeHeroView
@@ -76,6 +82,7 @@ export function renderHomeHeroReact(ctx: RenderContext): Promise<string> {
       date={date}
       location={location}
       eyebrow={eyebrow}
+      imageUrl={heroImage}
       style={style}
       data={data}
     />,
