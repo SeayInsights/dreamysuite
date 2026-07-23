@@ -476,6 +476,10 @@ function switchLang() {
   const triggerPopupAfterAnim = showPopup && !!animation && !popupBundleActive;
   const introScript = introHtml
     ? `<script>
+// Run after DOMContentLoaded so the deferred gsap/CustomEase scripts (which
+// execute before that event) are loaded — the intro calls gsap at top level,
+// and running before gsap loaded threw and left click-to-enter unwired.
+document.addEventListener('DOMContentLoaded', function() {
 var _animKey = 'dsuite_intro_${escHtml(siteSlug)}_${escHtml(animation ?? "")}';
 var _introOpened = !!sessionStorage.getItem(_animKey);
 
@@ -698,6 +702,7 @@ if (_introOpened) {
     if (e.key==='Enter' || e.key===' ') openIntro();
   });
 }
+});
 </script>`
     : "";
 
