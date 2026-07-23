@@ -142,4 +142,30 @@ describe("fieldTextStyle", () => {
       fieldTextStyle({ bodySize: "1rem", titleBold: false }, "title"),
     ).toEqual({});
   });
+
+  // Parity with the editor's styleFromField: per-field font family + color must
+  // reach the published site (previously dropped), and bare numeric sizes are
+  // coerced to px so an imported unit-less size renders instead of being ignored.
+  it("emits font family and color (matches editor styleFromField)", () => {
+    expect(
+      fieldTextStyle(
+        {
+          titleFontFamily: "Playfair Display",
+          titleColor: "#B8921A",
+          titleSize: "2rem",
+        },
+        "title",
+      ),
+    ).toEqual({
+      fontFamily: "Playfair Display",
+      color: "#B8921A",
+      fontSize: "2rem",
+    });
+  });
+
+  it("coerces a bare numeric size to px", () => {
+    expect(fieldTextStyle({ headingSize: "32" }, "heading")).toEqual({
+      fontSize: "32px",
+    });
+  });
 });

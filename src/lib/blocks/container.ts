@@ -1,5 +1,7 @@
 import type { CSSProperties } from "react";
 
+import { styleFromField } from "@/lib/editableField";
+
 /**
  * Structured block-container style/attrs for the React server-render path.
  *
@@ -119,22 +121,18 @@ export function blockContainerStyle(cfg: Record<string, unknown>): {
 }
 
 /**
- * Per-field text style (font-size / align / bold / italic / underline) for a
- * `<prefix>Size`/`<prefix>Align`/`<prefix>Bold`/… convention. Structured mirror
- * of the inline style strings the text-style block renderers built. Key order
- * matches the legacy join order so serialized output is equivalent.
+ * Per-field text style for a `<prefix>FontFamily`/`<prefix>Size`/`<prefix>Color`/
+ * `<prefix>Align`/`<prefix>Bold`/… convention.
+ *
+ * Delegates to the editor's `styleFromField` (SSOT) so the published site emits
+ * the EXACT same per-field style the editor previews — font family, color, and
+ * bare-number→px coercion included. This previously re-implemented a subset
+ * (size/align/bold/italic/underline only), silently dropping per-field font and
+ * color on the live site. One function = the two pipelines can't drift again.
  */
 export function fieldTextStyle(
   cfg: Record<string, unknown>,
   prefix: string,
 ): CSSProperties {
-  const style: Record<string, string | number> = {};
-  const size = cfg[`${prefix}Size`] as string | undefined;
-  const align = cfg[`${prefix}Align`] as string | undefined;
-  if (size) style.fontSize = size;
-  if (align) style.textAlign = align;
-  if (cfg[`${prefix}Bold`]) style.fontWeight = 700;
-  if (cfg[`${prefix}Italic`]) style.fontStyle = "italic";
-  if (cfg[`${prefix}Underline`]) style.textDecoration = "underline";
-  return style as CSSProperties;
+  return styleFromField(cfg, prefix);
 }
