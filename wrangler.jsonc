@@ -37,6 +37,10 @@
 		{
 			"pattern": "dreamysuite.com",
 			"custom_domain": true
+		},
+		{
+			"pattern": "*.dreamysuite.com/*",
+			"zone_name": "dreamysuite.com"
 		}
 	],
 	"vars": {
