@@ -47,6 +47,15 @@ export function buildStyles(settings: SiteSettingRow | null): BuiltStyles {
   const navGlass = darkBg
     ? `rgba(${bgTriplet}, 0.6)`
     : "rgba(255,255,255,0.65)";
+  // Welcome popup ("visit site" greeting) must stay readable on dark themes:
+  // a fixed-white modal + theme-derived (light) text = invisible. On dark
+  // themes use a dark elevated card so the light --text reads; on light themes
+  // keep the white card with a fixed dark text.
+  const greetingModalBg = darkBg ? `rgb(${bgTriplet})` : "#ffffff";
+  const greetingModalText = darkBg ? "var(--text)" : "#1c1917";
+  const greetingModalBorder = darkBg
+    ? "1px solid rgba(255,255,255,0.14)"
+    : "none";
   const navPosition = settings?.navPosition ?? "fixed";
   const isFixed = navPosition === "fixed" || navPosition === "hide-on-scroll";
   const isScrollAway =
@@ -912,27 +921,28 @@ export function buildStyles(settings: SiteSettingRow | null): BuiltStyles {
     }
     .greeting-overlay.hidden { display: none; }
     .greeting-modal {
-      background: #fff;
+      background: ${greetingModalBg};
+      border: ${greetingModalBorder};
       border-radius: var(--site-radius);
       padding: 2.5rem;
       max-width: 440px;
       width: 100%;
       text-align: center;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.18);
+      box-shadow: 0 20px 60px rgba(0,0,0,0.35);
       overflow: hidden;
     }
     .greeting-title {
       font-family: var(--heading-font);
       font-size: 1.35rem;
       font-weight: normal;
-      color: var(--text);
+      color: ${greetingModalText};
       margin: 0 0 0.75rem;
     }
     .greeting-modal p {
       font-family: var(--heading-font);
       font-size: 1.125rem;
       line-height: 1.65;
-      color: var(--text);
+      color: ${greetingModalText};
       margin-bottom: 1.75rem;
       font-weight: normal;
     }
