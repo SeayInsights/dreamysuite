@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Starry night sky over mountain silhouettes">
+  <defs>
+    <linearGradient id="nv-sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#0c1233"/>
+      <stop offset="55%" stop-color="#22224e"/>
+      <stop offset="100%" stop-color="#4a3560"/>
+    </linearGradient>
+    <radialGradient id="nv-moon" cx="72%" cy="26%" r="16%">
+      <stop offset="0%" stop-color="#fdf6e3"/>
+      <stop offset="100%" stop-color="#fdf6e3" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1600" height="1000" fill="url(#nv-sky)"/>
+  <circle cx="1152" cy="260" r="70" fill="#f5eecb"/>
+  <rect width="1600" height="1000" fill="url(#nv-moon)"/>
+  <g fill="#eaf0ff">
+    <circle cx="140" cy="120" r="2"/><circle cx="300" cy="80" r="1.4"/><circle cx="460" cy="180" r="2.2"/>
+    <circle cx="600" cy="120" r="1.5"/><circle cx="760" cy="200" r="2"/><circle cx="900" cy="90" r="1.6"/>
+    <circle cx="1040" cy="170" r="1.8"/><circle cx="1320" cy="120" r="2"/><circle cx="1480" cy="200" r="1.6"/>
+    <circle cx="220" cy="300" r="1.5"/><circle cx="520" cy="340" r="1.4"/><circle cx="1420" cy="330" r="1.6"/>
+  </g>
+  <!-- mountain silhouettes -->
+  <path d="M0 760 L 260 560 L 480 720 L 720 500 L 980 720 L 1220 560 L 1600 780 L1600 1000 L0 1000 Z" fill="#1a1c3a"/>
+  <path d="M0 860 L 340 700 L 640 840 L 960 680 L 1280 840 L 1600 720 L1600 1000 L0 1000 Z" fill="#12142c"/>
+</svg>

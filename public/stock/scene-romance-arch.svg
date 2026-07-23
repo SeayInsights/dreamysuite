@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Floral archway over a warm romantic sky">
+  <defs>
+    <linearGradient id="ra-sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#f6d9c6"/>
+      <stop offset="45%" stop-color="#f3c1c4"/>
+      <stop offset="100%" stop-color="#e9a9b6"/>
+    </linearGradient>
+    <radialGradient id="ra-sun" cx="50%" cy="70%" r="55%">
+      <stop offset="0%" stop-color="#fff4e6" stop-opacity="0.9"/>
+      <stop offset="100%" stop-color="#fff4e6" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="ra-arch" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#8a9a6f"/>
+      <stop offset="100%" stop-color="#6f7f57"/>
+    </linearGradient>
+  </defs>
+  <rect width="1600" height="1000" fill="url(#ra-sky)"/>
+  <rect width="1600" height="1000" fill="url(#ra-sun)"/>
+  <!-- arch structure -->
+  <path d="M470 1000 C 470 470, 660 300, 800 300 C 940 300, 1130 470, 1130 1000 L 1070 1000 C 1070 500, 930 360, 800 360 C 670 360, 530 500, 530 1000 Z" fill="url(#ra-arch)" opacity="0.9"/>
+  <!-- florals along the arch -->
+  <g>
+    <g fill="#f7e2ea"><circle cx="800" cy="300" r="26"/><circle cx="720" cy="330" r="20"/><circle cx="880" cy="330" r="20"/></g>
+    <g fill="#eec7d6"><circle cx="620" cy="420" r="24"/><circle cx="980" cy="420" r="24"/><circle cx="560" cy="560" r="22"/><circle cx="1040" cy="560" r="22"/></g>
+    <g fill="#e6b1c6"><circle cx="524" cy="720" r="20"/><circle cx="1076" cy="720" r="20"/><circle cx="512" cy="880" r="18"/><circle cx="1088" cy="880" r="18"/></g>
+    <g fill="#c9b273"><circle cx="770" cy="316" r="7"/><circle cx="852" cy="316" r="7"/><circle cx="650" cy="440" r="6"/><circle cx="950" cy="440" r="6"/></g>
+    <g stroke="#7d8f63" stroke-width="3" fill="none" opacity="0.8" stroke-linecap="round">
+      <path d="M700 340 q -30 -22 -60 -14"/><path d="M900 340 q 30 -22 60 -14"/>
+      <path d="M600 440 q -34 -14 -56 8"/><path d="M1000 440 q 34 -14 56 8"/>
+    </g>
+  </g>
+</svg>

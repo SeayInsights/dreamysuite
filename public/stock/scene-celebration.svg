@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Festive confetti burst on a warm gradient">
+  <defs>
+    <linearGradient id="ce-bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#e8567f"/>
+      <stop offset="55%" stop-color="#d6486f"/>
+      <stop offset="100%" stop-color="#8f2f6a"/>
+    </linearGradient>
+    <radialGradient id="ce-glow" cx="50%" cy="42%" r="50%">
+      <stop offset="0%" stop-color="#ffe3ec" stop-opacity="0.55"/>
+      <stop offset="100%" stop-color="#ffe3ec" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1600" height="1000" fill="url(#ce-bg)"/>
+  <rect width="1600" height="1000" fill="url(#ce-glow)"/>
+  <g>
+    <g fill="#ffd76b"><rect x="180" y="150" width="26" height="10" rx="3" transform="rotate(30 193 155)"/><rect x="1360" y="200" width="26" height="10" rx="3" transform="rotate(-24 1373 205)"/><rect x="520" y="120" width="22" height="9" rx="3" transform="rotate(48 531 124)"/><rect x="980" y="140" width="24" height="9" rx="3" transform="rotate(-40 992 144)"/></g>
+    <g fill="#7fd8c4"><rect x="300" y="320" width="24" height="9" rx="3" transform="rotate(-18 312 324)"/><rect x="1180" y="360" width="24" height="9" rx="3" transform="rotate(36 1192 364)"/><rect x="700" y="300" width="20" height="8" rx="3" transform="rotate(60 710 304)"/></g>
+    <g fill="#ffffff"><circle cx="430" cy="230" r="6"/><circle cx="1080" cy="260" r="6"/><circle cx="820" cy="200" r="5"/><circle cx="250" cy="470" r="5"/><circle cx="1300" cy="500" r="6"/></g>
+    <g fill="#b9e0ff"><rect x="600" y="470" width="22" height="9" rx="3" transform="rotate(24 611 474)"/><rect x="1000" y="520" width="22" height="9" rx="3" transform="rotate(-30 1011 524)"/></g>
+    <!-- ribbon streamers -->
+    <path d="M120 0 C 200 180, 120 300, 220 460" stroke="#ffd76b" stroke-width="6" fill="none" opacity="0.7"/>
+    <path d="M1500 0 C 1420 200, 1520 320, 1420 480" stroke="#7fd8c4" stroke-width="6" fill="none" opacity="0.7"/>
+  </g>
+</svg>

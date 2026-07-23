@@ -2,7 +2,13 @@ import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
-import { STOCK_CATEGORIES, STOCK_IMAGES, isStockUrl } from "./library";
+import {
+  STOCK_CATEGORIES,
+  STOCK_IMAGES,
+  isStockUrl,
+  stockByKind,
+  sceneUrlFor,
+} from "./library";
 
 const PUBLIC_DIR = join(process.cwd(), "public");
 const CATEGORY_IDS = new Set(STOCK_CATEGORIES.map((c) => c.id));
@@ -46,6 +52,29 @@ describe("stock library manifest", () => {
         `category "${cat.id}" has no images`,
       ).toBe(true);
     }
+  });
+});
+
+describe("stock kinds & scenes", () => {
+  it("ships bold scene art (kind=scene), all present on disk", () => {
+    const scenes = stockByKind("scene");
+    expect(scenes.length).toBeGreaterThanOrEqual(6);
+    for (const s of scenes) {
+      const filePath = join(PUBLIC_DIR, s.url.replace(/^\//, ""));
+      expect(existsSync(filePath), `missing scene: ${s.url}`).toBe(true);
+    }
+  });
+
+  it("sceneUrlFor returns a scene for known categories", () => {
+    expect(sceneUrlFor("romance")).toMatch(/^\/stock\/scene-.*\.svg$/);
+    expect(sceneUrlFor("night")).toMatch(/^\/stock\/scene-.*\.svg$/);
+    // even a category without its own scene falls back to some scene
+    expect(sceneUrlFor("botanical")).toBeTruthy();
+  });
+
+  it("textures remain the default kind", () => {
+    const marble = STOCK_IMAGES.find((i) => i.id === "texture-marble")!;
+    expect(marble.kind).toBeUndefined(); // defaults to texture
   });
 });
 
