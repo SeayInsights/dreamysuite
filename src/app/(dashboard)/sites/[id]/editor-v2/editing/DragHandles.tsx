@@ -33,6 +33,7 @@ function iframeOffset(el: HTMLElement): { top: number; left: number } {
 function measureBlock(
   container: HTMLElement | null,
   blockId: string | null,
+  scale: number,
 ): Rect | null {
   if (!container || !blockId) return null;
   const el = container.querySelector<HTMLElement>(
@@ -62,20 +63,22 @@ function measureBlock(
     const cropL = isLegacy ? l : l * contentBox.width;
     const cropR = isLegacy ? r : r * contentBox.width;
     const cropB = isLegacy ? b : b * contentBox.height;
+    // iframe-internal coords are unscaled; the iframe element is visually scaled
+    // by the parent transform, so multiply by `scale` to get true screen px.
     return {
-      top: contentBox.top + cropT + off.top,
-      left: contentBox.left + cropL + off.left,
-      width: contentBox.width - cropL - cropR,
-      height: contentBox.height - cropT - cropB,
+      top: off.top + (contentBox.top + cropT) * scale,
+      left: off.left + (contentBox.left + cropL) * scale,
+      width: (contentBox.width - cropL - cropR) * scale,
+      height: (contentBox.height - cropT - cropB) * scale,
     };
   }
 
   const elBox = el.getBoundingClientRect();
   return {
-    top: elBox.top + off.top,
-    left: elBox.left + off.left,
-    width: elBox.width,
-    height: elBox.height,
+    top: off.top + elBox.top * scale,
+    left: off.left + elBox.left * scale,
+    width: elBox.width * scale,
+    height: elBox.height * scale,
   };
 }
 
@@ -109,6 +112,7 @@ const HANDLE_OFFSET = HANDLE_VISUAL / 2;
 export function DragHandles({ containerRef }: Props) {
   const { selectedBlockId } = useSelection();
   const isCropping = useEditorStore((s) => s.isCropping);
+  const canvasScale = useEditorStore((s) => s.canvasScale);
   const [rect, setRect] = useState<Rect | null>(null);
   const rafRef = useRef<number | null>(null);
 
@@ -120,8 +124,8 @@ export function DragHandles({ containerRef }: Props) {
   );
 
   const measure = useCallback(() => {
-    setRect(measureBlock(containerRef.current, selectedBlockId));
-  }, [containerRef, selectedBlockId]);
+    setRect(measureBlock(containerRef.current, selectedBlockId, canvasScale));
+  }, [containerRef, selectedBlockId, canvasScale]);
 
   useEffect(() => {
     measure();

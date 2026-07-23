@@ -10,7 +10,6 @@ import {
   constrainToBounds,
   type Rect,
 } from "../lib/boundsCalculator";
-import { useCanvasScale } from "../BreakpointFrame";
 import {
   COL_PCT,
   computeAlignmentSnap,
@@ -81,7 +80,10 @@ export function useDrag(containerRef: React.RefObject<HTMLElement | null>): {
   const setInspectorTab = useEditorStore((s) => s.setInspectorTab);
   const temporalStore = useEditorStore.temporal;
   const pendingTabSwitchRef = useRef(false);
-  const scaleFactor = useCanvasScale();
+  // Read the fit-scale from the store (not React context): DragHandles hosts the
+  // resize useDrag OUTSIDE the ScaleContext provider, so context returned 1 and
+  // corrupted persisted dimensions. The store value is correct in both paths.
+  const scaleFactor = useEditorStore((s) => s.canvasScale);
 
   const sessionRef = useRef<DragSession | null>(null);
   const cleanupRef = useRef<(() => void) | null>(null);

@@ -342,6 +342,14 @@ export function BreakpointFrame({ children, nav }: Props) {
   const canonicalWidth = WIDTHS[breakpoint];
   const scaleFactor = getFrameScale(availableWidth, canonicalWidth);
 
+  // Publish the fit-scale to the store so the resize path (DragHandles, mounted
+  // outside the ScaleContext React-context) reads the same value as move. Using
+  // context alone gave resize scaleFactor=1 and corrupted persisted dimensions.
+  const setCanvasScale = useEditorStore((s) => s.setCanvasScale);
+  useEffect(() => {
+    setCanvasScale(scaleFactor);
+  }, [scaleFactor, setCanvasScale]);
+
   const rawMT = Number(settings.marginTop ?? 0) || 0;
   const rawMR = Number(settings.marginRight ?? 0) || 0;
   const rawMB = Number(settings.marginBottom ?? 0) || 0;
