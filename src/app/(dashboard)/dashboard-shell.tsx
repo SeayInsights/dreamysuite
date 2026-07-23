@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { LogoutButton } from "@/app/components/LogoutButton";
-import { usePathname, useSearchParams, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 
 interface User {
   name?: string | null;
@@ -23,23 +23,11 @@ interface DashboardShellProps {
   site?: SiteData;
 }
 
-const editorNavItems = [
-  { key: "website", label: "Website", icon: "website" },
-  { key: "media", label: "Media", icon: "media" },
-  { key: "guestlist", label: "Guest List", icon: "guestlist" },
-  { key: "templates", label: "Templates", icon: "templates" },
-  { key: "site-setup", label: "Site Setup", icon: "settings" },
-  { key: "analytics", label: "Analytics", icon: "analytics" },
-] as const;
-
 export default function DashboardShell({
   user,
   children,
-  site,
 }: DashboardShellProps) {
   const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -53,15 +41,16 @@ export default function DashboardShell({
     return () => document.removeEventListener("mousedown", onDocClick);
   }, [menuOpen]);
 
-  // Detect editor mode: /sites/[id] pattern
+  // Detect editor mode: /sites/[id] (a real site id, not the /sites/new form).
+  // The editor route renders editor-v2, a self-contained fixed-inset-0 shell
+  // with its own TopBar (Back to dashboard) + SidebarNav — so DashboardShell
+  // must NOT wrap it (that produced a second, non-functional left nav).
   const pathMatch = pathname.match(/^\/sites\/([^/]+)$/);
-  const isEditor = Boolean(pathMatch?.[1]);
-  const currentSection = searchParams.get("s") ?? "website";
+  const editorSiteId = pathMatch?.[1] === "new" ? null : pathMatch?.[1];
+  const isEditor = Boolean(editorSiteId);
 
-  function setSection(s: string) {
-    const params = new URLSearchParams(searchParams.toString());
-    params.set("s", s);
-    router.push(`${pathname}?${params.toString()}`);
+  if (isEditor) {
+    return <>{children}</>;
   }
 
   const initials = (user.name ?? user.email)
@@ -82,54 +71,17 @@ export default function DashboardShell({
           </Link>
         </div>
         <nav className="ds-nav">
-          {isEditor ? (
-            <>
-              <Link href="/sites" className="ds-nav-back">
-                <svg
-                  className="ds-nav-icon"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M19 12H5M12 5l-7 7 7 7" />
-                </svg>
-                My Sites
-              </Link>
-              {site?.name && (
-                <span className="ds-nav-site-name">{site.name}</span>
-              )}
-              <span className="ds-nav-section-label">Editor</span>
-              {editorNavItems.map(({ key, label, icon }) => (
-                <button
-                  key={key}
-                  onClick={() => setSection(key)}
-                  className={
-                    "ds-nav-item" + (currentSection === key ? " ds-active" : "")
-                  }
-                >
-                  <NavIcon name={icon} />
-                  {label}
-                </button>
-              ))}
-            </>
-          ) : (
-            <>
-              <span className="ds-nav-section-label">Workspace</span>
-              <NavLink href="/sites" icon="grid">
-                My Sites
-              </NavLink>
-              <NavLink href="/templates" icon="layout">
-                Templates
-              </NavLink>
-              <span className="ds-nav-section-label">Account</span>
-              <NavLink href="/settings" icon="settings">
-                Settings
-              </NavLink>
-            </>
-          )}
+          <span className="ds-nav-section-label">Workspace</span>
+          <NavLink href="/sites" icon="grid">
+            My Sites
+          </NavLink>
+          <NavLink href="/templates" icon="layout">
+            Templates
+          </NavLink>
+          <span className="ds-nav-section-label">Account</span>
+          <NavLink href="/settings" icon="settings">
+            Settings
+          </NavLink>
         </nav>
         <div
           className="ds-user-footer-wrap"
@@ -228,7 +180,8 @@ export default function DashboardShell({
             minHeight: 0,
             display: "flex",
             flexDirection: "column",
-            overflow: "hidden",
+            overflowY: "auto",
+            overflowX: "hidden",
           }}
         >
           {children}
