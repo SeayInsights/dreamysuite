@@ -352,10 +352,13 @@ export function buildBlockAnimationScript(usedPresets: Set<string>): string {
   // JSON-encoded array is safe to embed — preset IDs are allowlisted above
   const idsJson = JSON.stringify(ids);
 
-  // <script type="module"> enables top-level await and native dynamic import().
-  // GSAP CDN is already loaded synchronously in <head>, so `gsap` global is
-  // available before this deferred module executes.
+  // <script type="module"> gives native dynamic import(); the body runs inside an
+  // async IIFE so `await` works AND early `return` guards are legal — a bare
+  // top-level `return` in a module is a SyntaxError ("Illegal return statement")
+  // that silently kills the whole script (and thus every block animation). GSAP
+  // is deferred in <head>, so its global is available before this module runs.
   return `<script type="module">
+(async () => {
 if (window.matchMedia('(prefers-reduced-motion:reduce)').matches) return;
 const ids = ${idsJson};
 const mods = await Promise.all(ids.map(id => import('/animations/presets/' + id + '.js')));
@@ -402,6 +405,7 @@ for (const el of els) {
   const trigger = el.dataset.animationTrigger || 'on-view';
   if (trigger === 'on-view') io.observe(el);
 }
+})();
 </script>`;
 }
 
