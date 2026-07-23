@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useRef, useCallback } from "react";
-import Image from "next/image";
 import { motion, AnimatePresence } from "motion/react";
 import type { NavStyleProps } from "../../types";
 
@@ -43,8 +42,10 @@ export default function GlassDropdown({
       }}
     >
       {/* Brand */}
-      <div style={{ display: "flex", alignItems: "center", gap: compact ? 6 : 10 }}>
-        <Image
+      <div
+        style={{ display: "flex", alignItems: "center", gap: compact ? 6 : 10 }}
+      >
+        <img
           src={logo}
           alt={logoAlt}
           width={compact ? 24 : 32}
