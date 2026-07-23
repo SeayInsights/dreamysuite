@@ -17,6 +17,12 @@ export interface TransientSlice {
   collidingIds: string[];
   /** Active alignment guide lines during a block drag (canvas-px coords). */
   alignGuides: AlignGuide[];
+  /**
+   * Canvas fit-scale (BreakpointFrame transform). Single source of truth so the
+   * resize path (DragHandles, mounted outside the scale React-context) uses the
+   * same value as move — a mismatch here corrupts persisted block dimensions.
+   */
+  canvasScale: number;
   contentDocument: Document | null;
   setDrag: (drag: DragState) => void;
   setHoveredBlockId: (id: string | null) => void;
@@ -25,6 +31,7 @@ export interface TransientSlice {
   setIsCropping: (v: boolean) => void;
   setCollidingIds: (ids: string[]) => void;
   setAlignGuides: (guides: AlignGuide[]) => void;
+  setCanvasScale: (scale: number) => void;
   setContentDocument: (doc: Document | null) => void;
 }
 
@@ -36,6 +43,7 @@ export const createTransientSlice: StateCreator<TransientSlice> = (set) => ({
   isCropping: false,
   collidingIds: [],
   alignGuides: [],
+  canvasScale: 1,
   contentDocument: null,
   setDrag: (drag) => set({ drag }),
   setHoveredBlockId: (hoveredBlockId) => set({ hoveredBlockId }),
@@ -44,5 +52,6 @@ export const createTransientSlice: StateCreator<TransientSlice> = (set) => ({
   setIsCropping: (isCropping) => set({ isCropping }),
   setCollidingIds: (collidingIds) => set({ collidingIds }),
   setAlignGuides: (alignGuides) => set({ alignGuides }),
+  setCanvasScale: (canvasScale) => set({ canvasScale }),
   setContentDocument: (contentDocument) => set({ contentDocument }),
 });
