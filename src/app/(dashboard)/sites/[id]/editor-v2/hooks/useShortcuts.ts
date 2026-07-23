@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 
 import { useEditorStore } from "@/app/stores/editorStore";
+import { parseCfg } from "@/lib/editableField";
 
 /**
  * Global keyboard map for the V2 editor.
@@ -22,89 +23,122 @@ import { useEditorStore } from "@/app/stores/editorStore";
  * subscribe without this hook knowing the details.
  */
 
-export type ShortcutEvent =
-	| { kind: "grid:toggle" }
-	| { kind: "preview:open" };
+export type ShortcutEvent = { kind: "grid:toggle" } | { kind: "preview:open" };
 
 function isEditableTarget(el: EventTarget | null): boolean {
-	if (!(el instanceof HTMLElement)) return false;
-	if (el.isContentEditable) return true;
-	const tag = el.tagName;
-	return tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT";
+  if (!(el instanceof HTMLElement)) return false;
+  if (el.isContentEditable) return true;
+  const tag = el.tagName;
+  return tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT";
 }
 
 export function useShortcuts() {
-	const toggleRail = useEditorStore((s) => s.toggleRail);
-	const toggleInspector = useEditorStore((s) => s.toggleInspector);
-	const setInspectorOpen = useEditorStore((s) => s.setInspectorOpen);
-	const toggleFullPreview = useEditorStore((s) => s.toggleFullPreview);
-	const selectBlock = useEditorStore((s) => s.selectBlock);
+  const toggleRail = useEditorStore((s) => s.toggleRail);
+  const toggleInspector = useEditorStore((s) => s.toggleInspector);
+  const setInspectorOpen = useEditorStore((s) => s.setInspectorOpen);
+  const toggleFullPreview = useEditorStore((s) => s.toggleFullPreview);
+  const selectBlock = useEditorStore((s) => s.selectBlock);
 
-	useEffect(() => {
-		function handler(e: KeyboardEvent) {
-			if (isEditableTarget(e.target)) return;
+  useEffect(() => {
+    function handler(e: KeyboardEvent) {
+      if (isEditableTarget(e.target)) return;
 
-			if (e.key === "Escape") {
-				e.preventDefault();
-				selectBlock(null);
-				return;
-			}
+      if (e.key === "Escape") {
+        e.preventDefault();
+        selectBlock(null);
+        return;
+      }
 
-			const mod = e.metaKey || e.ctrlKey;
+      const mod = e.metaKey || e.ctrlKey;
 
-			if (mod && !e.shiftKey && e.key.toLowerCase() === "z") {
-				e.preventDefault();
-				useEditorStore.temporal.getState().undo();
-				return;
-			}
-			if (mod && e.shiftKey && e.key.toLowerCase() === "z") {
-				e.preventDefault();
-				useEditorStore.temporal.getState().redo();
-				return;
-			}
-			if (mod && e.key === ".") {
-				e.preventDefault();
-				toggleFullPreview();
-				return;
-			}
-			if (mod || e.altKey) return;
+      if (mod && !e.shiftKey && e.key.toLowerCase() === "z") {
+        e.preventDefault();
+        useEditorStore.temporal.getState().undo();
+        return;
+      }
+      if (mod && e.shiftKey && e.key.toLowerCase() === "z") {
+        e.preventDefault();
+        useEditorStore.temporal.getState().redo();
+        return;
+      }
+      if (mod && e.key === ".") {
+        e.preventDefault();
+        toggleFullPreview();
+        return;
+      }
+      if (mod || e.altKey) return;
 
-			switch (e.key) {
-				case "[":
-					e.preventDefault();
-					toggleRail();
-					return;
-				case "]":
-					e.preventDefault();
-					toggleInspector();
-					return;
-				case "i":
-				case "I":
-					e.preventDefault();
-					setInspectorOpen(true);
-					return;
-				case "g":
-				case "G":
-					e.preventDefault();
-					window.dispatchEvent(
-						new CustomEvent<ShortcutEvent>("editor-v2:shortcut", {
-							detail: { kind: "grid:toggle" },
-						}),
-					);
-					return;
-				case "p":
-				case "P":
-					e.preventDefault();
-					window.dispatchEvent(
-						new CustomEvent<ShortcutEvent>("editor-v2:shortcut", {
-							detail: { kind: "preview:open" },
-						}),
-					);
-					return;
-			}
-		}
+      // Arrow-key nudge for the selected block (desktop free-canvas only —
+      // offsets are ignored on tablet/mobile). Shift = 10px step, else 1px.
+      if (
+        e.key === "ArrowUp" ||
+        e.key === "ArrowDown" ||
+        e.key === "ArrowLeft" ||
+        e.key === "ArrowRight"
+      ) {
+        const st = useEditorStore.getState();
+        if (!st.selectedBlockId || st.breakpoint !== "desktop") return;
+        const block = st.blocks.find((b) => b.id === st.selectedBlockId);
+        if (!block) return;
+        e.preventDefault();
+        const cfg = parseCfg(block.config);
+        const step = e.shiftKey ? 10 : 1;
+        const ox = typeof cfg.blockOffsetX === "number" ? cfg.blockOffsetX : 0;
+        const oy = typeof cfg.blockOffsetY === "number" ? cfg.blockOffsetY : 0;
+        const patch =
+          e.key === "ArrowLeft"
+            ? { blockOffsetX: ox - step }
+            : e.key === "ArrowRight"
+              ? { blockOffsetX: ox + step }
+              : e.key === "ArrowUp"
+                ? { blockOffsetY: oy - step }
+                : { blockOffsetY: oy + step };
+        st.updateBlock(block.id, { config: { ...cfg, ...patch } });
+        return;
+      }
 
-		window.addEventListener("keydown", handler);
-		return () => window.removeEventListener("keydown", handler);
-	}, [toggleRail, toggleInspector, setInspectorOpen, toggleFullPreview, selectBlock]);
+      switch (e.key) {
+        case "[":
+          e.preventDefault();
+          toggleRail();
+          return;
+        case "]":
+          e.preventDefault();
+          toggleInspector();
+          return;
+        case "i":
+        case "I":
+          e.preventDefault();
+          setInspectorOpen(true);
+          return;
+        case "g":
+        case "G":
+          e.preventDefault();
+          window.dispatchEvent(
+            new CustomEvent<ShortcutEvent>("editor-v2:shortcut", {
+              detail: { kind: "grid:toggle" },
+            }),
+          );
+          return;
+        case "p":
+        case "P":
+          e.preventDefault();
+          window.dispatchEvent(
+            new CustomEvent<ShortcutEvent>("editor-v2:shortcut", {
+              detail: { kind: "preview:open" },
+            }),
+          );
+          return;
+      }
+    }
+
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [
+    toggleRail,
+    toggleInspector,
+    setInspectorOpen,
+    toggleFullPreview,
+    selectBlock,
+  ]);
 }
