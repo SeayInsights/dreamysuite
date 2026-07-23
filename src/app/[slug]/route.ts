@@ -7,6 +7,7 @@
 import { NextRequest } from "next/server";
 import { getEnv } from "@/lib/cloudflare";
 import { rewritePhotoUrlsToPublic } from "@/lib/publicImages";
+import { isAnonymous, edgeCacheMatch, edgeCachePut } from "./edge-cache";
 import { createAuth } from "@/app/lib/auth.server";
 import { safeBlockConfig } from "@/lib/validation";
 import { getEffectById } from "@/lib/effects/registry";
@@ -38,6 +39,16 @@ export async function GET(
   const { slug } = await params;
   const env = await getEnv();
   const db = env.DB;
+
+  // Fast path: anonymous visitors are served straight from the edge cache.
+  // Only live, published, non-gated public renders are ever stored (see the
+  // edgeCachePut below), and owners/invited/logged-in viewers always carry a
+  // session cookie — so isAnonymous() keeps them out of this path and they get
+  // a fresh, correct render. Fails open: a miss or any error just renders.
+  if (isAnonymous(req)) {
+    const cached = await edgeCacheMatch(req);
+    if (cached) return cached;
+  }
 
   let viewerUserId: string | null = null;
   let viewerEmail: string | null = null;
@@ -229,11 +240,11 @@ export async function GET(
   // (/api/sites/[id]/photos/[photoId]) requires auth — so rewrite those URLs to
   // the public, WebP-optimized image route so guest browsers can load images.
   const publicHtml = rewritePhotoUrlsToPublic(html);
-  return new Response(publicHtml, {
+  const res = new Response(publicHtml, {
     status: 200,
     headers: {
       "content-type": "text/html; charset=utf-8",
-      "cache-control": "public, max-age=300, stale-while-revalidate=600",
+      "cache-control": "public, max-age=60, stale-while-revalidate=300",
       // Effect runtimes + gsap are self-hosted under /effects/vendor, so script
       // origins are limited to 'self' (+ Cloudflare web-analytics). No esm.sh /
       // cdnjs runtime dependency.
@@ -241,6 +252,20 @@ export async function GET(
         "default-src 'self'; script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://cloudflareinsights.com; frame-src https:",
     },
   });
+
+  // Store only live, public, non-gated renders (max-age=60 caps staleness so a
+  // publish/edit reflects within ~a minute without a cross-colo purge, which
+  // would need a Cloudflare zone-scoped API token). isAnonymous already implies
+  // a non-owner viewer; the gate checks keep password-protected content out.
+  if (
+    isAnonymous(req) &&
+    settings?.isLive &&
+    !settings?.guestPassword &&
+    !hasPerPagePassword
+  ) {
+    await edgeCachePut(req, res);
+  }
+  return res;
 }
 
 export async function POST(
