@@ -6,6 +6,7 @@ import {
   applyStarter,
   withEntranceAnimation,
   prepareStarterBlock,
+  enrichStarterPages,
 } from "./starters";
 import { VALID_PRESET_IDS } from "@/app/[slug]/scripts";
 
@@ -78,8 +79,9 @@ describe("starter templates", () => {
     );
     expect(settings.length).toBe(1);
     expect(pages.length).toBe(starter.pages.length);
+    // Blocks are enriched at persist time, so count the enriched pages.
     expect(blocks.length).toBe(
-      starter.pages.reduce((n, p) => n + p.blocks.length, 0),
+      enrichStarterPages(starter).reduce((n, p) => n + p.blocks.length, 0),
     );
   });
 
@@ -192,5 +194,54 @@ describe("template aesthetics", () => {
     )!;
     // bgImage is bound right after siteTextColor (8th positional arg, index 7)
     expect(setting.args).toContain("/stock/texture-marble.svg");
+  });
+});
+
+describe("enrichStarterPages", () => {
+  it("leaves every non-blank template page with at least two blocks", () => {
+    for (const s of STARTERS) {
+      if (s.id === "blank") continue;
+      for (const page of enrichStarterPages(s)) {
+        expect(
+          page.blocks.length,
+          `${s.id}/${page.slug} should not be a lone block`,
+        ).toBeGreaterThanOrEqual(2);
+      }
+    }
+  });
+
+  it("adds a welcome intro + quick facts to a hero home page", () => {
+    const pages = enrichStarterPages(getStarter("classic-wedding")!);
+    const home = pages.find((p) => p.slug === "home")!;
+    const types = home.blocks.map((b) => b.type);
+    // hero, then the welcome intro, …, then quick facts at the end
+    expect(types[0]).toBe("home-hero");
+    expect(types[1]).toBe("text");
+    expect(types[types.length - 1]).toBe("tidbits");
+  });
+
+  it("appends a supporting note under a lone rsvp/schedule/faq page", () => {
+    const pages = enrichStarterPages(getStarter("classic-wedding")!);
+    const rsvp = pages.find((p) => p.slug === "rsvp")!;
+    expect(rsvp.blocks).toHaveLength(2);
+    expect(rsvp.blocks[0].type).toBe("rsvp-form");
+    expect(rsvp.blocks[1].type).toBe("text");
+  });
+
+  it("never duplicates a block type already present on a page", () => {
+    for (const s of STARTERS) {
+      for (const page of enrichStarterPages(s)) {
+        const types = page.blocks.map((b) => b.type);
+        // the only type we intentionally allow twice is none — each stays unique
+        expect(new Set(types).size).toBe(types.length);
+      }
+    }
+  });
+
+  it("does not mutate the original starter pages", () => {
+    const starter = getStarter("modern-celebration")!;
+    const before = starter.pages.map((p) => p.blocks.length);
+    enrichStarterPages(starter);
+    expect(starter.pages.map((p) => p.blocks.length)).toEqual(before);
   });
 });

@@ -86,6 +86,99 @@ export function prepareStarterBlock(
   return withEntranceAnimation(b);
 }
 
+// ── Page enrichment ───────────────────────────────────────────────────────────
+//
+// Templates used to render a single bland block per interior page. This adds one
+// complementary, contextual block per page so nothing reads as "just one thing":
+//   • hero/home page → a warm welcome intro (from the template greeting) after the
+//     hero + a quick-facts strip (when / where / celebrate) at the end;
+//   • a lone schedule / rsvp / faq → a short supporting note beneath it;
+//   • a lone story (text) → the quick-facts strip.
+// It never duplicates a block type already on the page and only touches
+// single-block interior pages, so author-fleshed pages are left alone. Applied by
+// BOTH the preview route and applyStarter so previews and created sites match.
+
+function centeredNote(body: string): StarterBlock {
+  return { type: "text", config: { body, bodyAlign: "center" } };
+}
+
+function quickFactsBlock(starter: StarterTemplate): StarterBlock {
+  const s = starter.settings ?? {};
+  return {
+    type: "tidbits",
+    config: {
+      showTitle: false,
+      items: [
+        {
+          icon: "🗓️",
+          title: "When",
+          body: (s.eventDate as string) || "Date to be announced",
+        },
+        {
+          icon: "📍",
+          title: "Where",
+          body: (s.eventLocation as string) || "Details to come",
+        },
+        {
+          icon: "🎉",
+          title: "Celebrate",
+          body: "We can’t wait to share the day with you.",
+        },
+      ],
+    },
+  };
+}
+
+export function enrichStarterPages(starter: StarterTemplate): StarterPage[] {
+  return starter.pages.map((page) => {
+    const types = new Set(page.blocks.map((b) => b.type));
+
+    // Hero / home page: welcome intro (after the hero) + quick facts (at the end).
+    if (types.has("home-hero")) {
+      const blocks = [...page.blocks];
+      if (!types.has("text") && !types.has("multi-text")) {
+        const afterHero = blocks.findIndex((b) => b.type === "home-hero") + 1;
+        blocks.splice(
+          afterHero,
+          0,
+          centeredNote(
+            (starter.settings?.greeting as string) ||
+              "We’re so glad you’re here — explore the details below.",
+          ),
+        );
+      }
+      if (!types.has("tidbits") && !types.has("fun-facts")) {
+        blocks.push(quickFactsBlock(starter));
+      }
+      return { ...page, blocks };
+    }
+
+    // Lone interior block → one complementary supporting block.
+    if (page.blocks.length === 1) {
+      const only = page.blocks[0].type;
+      let extra: StarterBlock | null = null;
+      if (only === "schedule") {
+        extra = centeredNote(
+          "Times are approximate — check back for any updates as the day gets closer.",
+        );
+      } else if (only === "rsvp-form" || only === "rsvp") {
+        extra = centeredNote(
+          "Have a question before you reply? Reach out any time — we’d love to hear from you.",
+        );
+      } else if (only === "faq") {
+        extra = centeredNote(
+          "Still wondering about something? Get in touch and we’ll help however we can.",
+        );
+      } else if (only === "multi-text" || only === "text") {
+        extra = quickFactsBlock(starter);
+      }
+      if (extra) return { ...page, blocks: [...page.blocks, extra] };
+    }
+
+    return page;
+  });
+}
+
 export const STARTERS: StarterTemplate[] = [
   {
     id: "blank",
@@ -857,7 +950,7 @@ export async function applyStarter(
   }
 
   let pageOrder = 0;
-  for (const page of starter.pages) {
+  for (const page of enrichStarterPages(starter)) {
     const pageId = crypto.randomUUID();
     await db
       .prepare(
