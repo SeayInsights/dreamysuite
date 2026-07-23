@@ -46,6 +46,40 @@ function authSecretFor(env: Env): string | undefined {
 // Dashboard → your-zone → Security → WAF → Rate Limiting Rules
 // Rule: Path matches /api/auth/* | Threshold: 10 req / 60s per IP | Action: Block (1 min)
 
+/** Send a transactional email via Resend; logs (never throws) on failure. */
+async function sendResendEmail(
+  apiKey: string,
+  to: string,
+  subject: string,
+  html: string,
+): Promise<void> {
+  const res = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify({
+      from: "DreamySuite <hello@mail.dreamysuite.com>",
+      to: [to],
+      subject,
+      html,
+    }),
+  }).catch((err) => {
+    console.error("[auth] email fetch failed:", err);
+    return null;
+  });
+  if (res && !res.ok) {
+    const body = await res.text().catch(() => "");
+    console.error(`[auth] email rejected: ${res.status} ${body}`);
+  }
+}
+
+const EMAIL_WRAP = (inner: string) =>
+  `<div style="font-family:Georgia,serif;max-width:520px;margin:0 auto;padding:2rem;color:#292524">${inner}</div>`;
+const EMAIL_BTN = (url: string, label: string) =>
+  `<a href="${url}" style="display:inline-block;margin:1rem 0;padding:.75rem 1.5rem;background:#B8921A;color:#fff;text-decoration:none;border-radius:6px;font-family:inherit">${label}</a>`;
+
 export function createAuth(env: Env) {
   return betterAuth({
     database: env.DB,
@@ -120,6 +154,48 @@ export function createAuth(env: Env) {
     advanced: {
       defaultCookieAttributes: {
         sameSite: "Lax",
+      },
+    },
+    user: {
+      changeEmail: {
+        enabled: true,
+        sendChangeEmailVerification: async ({
+          user,
+          newEmail,
+          url,
+        }: {
+          user: { email: string };
+          newEmail: string;
+          url: string;
+        }) => {
+          await sendResendEmail(
+            env.RESEND_API_KEY,
+            user.email,
+            "Confirm your new DreamySuite email",
+            EMAIL_WRAP(
+              `<h2 style="font-weight:normal">Confirm your email change</h2><p>Approve changing your DreamySuite email to <strong>${newEmail}</strong>:</p>${EMAIL_BTN(url, "Confirm email change")}<p style="color:#a8a29e;font-size:.8rem;margin-top:1.5rem">If you didn't request this, ignore this email and your address stays the same.</p>`,
+            ),
+          );
+        },
+      },
+      deleteUser: {
+        enabled: true,
+        sendDeleteAccountVerification: async ({
+          user,
+          url,
+        }: {
+          user: { email: string };
+          url: string;
+        }) => {
+          await sendResendEmail(
+            env.RESEND_API_KEY,
+            user.email,
+            "Confirm your DreamySuite account deletion",
+            EMAIL_WRAP(
+              `<h2 style="font-weight:normal">Delete your account?</h2><p>This permanently deletes your DreamySuite account and every site you've created. This can't be undone.</p>${EMAIL_BTN(url, "Delete my account")}<p style="color:#a8a29e;font-size:.8rem;margin-top:1.5rem">If you didn't request this, ignore this email — nothing will be deleted.</p>`,
+            ),
+          );
+        },
       },
     },
   });
