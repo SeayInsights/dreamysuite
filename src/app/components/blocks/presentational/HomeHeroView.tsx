@@ -18,6 +18,8 @@ export interface HomeHeroViewProps {
   title: string;
   date: string;
   location: string;
+  /** Small line above the title. Omitted → the default "We're getting married". */
+  eyebrow?: string;
   style?: CSSProperties;
   data?: Record<string, string>;
 }
@@ -28,6 +30,7 @@ export function HomeHeroView({
   title,
   date,
   location,
+  eyebrow,
   style,
   data,
 }: HomeHeroViewProps) {
@@ -42,7 +45,13 @@ export function HomeHeroView({
       data-block-type={type}
     >
       <div className="hero-inner">
-        <p className="hero-eyebrow">We&#39;re getting married</p>
+        {/* Default kept byte-identical (entity form) so render-parity holds; the
+            dynamic branch only runs when a template/owner sets an eyebrow. */}
+        {eyebrow ? (
+          <p className="hero-eyebrow">{eyebrow}</p>
+        ) : (
+          <p className="hero-eyebrow">We&#39;re getting married</p>
+        )}
         <h1 className="hero-title" data-lang-field="couple">
           {title}
         </h1>

@@ -66,6 +66,7 @@ export function renderHomeHeroReact(ctx: RenderContext): Promise<string> {
     "locationText",
     settings?.eventLocation ?? "",
   );
+  const eyebrow = cfg.eyebrow ? String(cfg.eyebrow) : undefined;
   const { style, data } = blockContainerStyle(cfg);
   return renderReactToHtml(
     <HomeHeroView
@@ -74,6 +75,7 @@ export function renderHomeHeroReact(ctx: RenderContext): Promise<string> {
       title={title}
       date={date}
       location={location}
+      eyebrow={eyebrow}
       style={style}
       data={data}
     />,

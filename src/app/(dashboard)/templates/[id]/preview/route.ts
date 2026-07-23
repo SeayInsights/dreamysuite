@@ -7,7 +7,7 @@
 import { NextRequest } from "next/server";
 import { getEnv } from "@/lib/cloudflare";
 import { createAuth } from "@/app/lib/auth.server";
-import { getStarter, withEntranceAnimation } from "@/lib/templates/starters";
+import { getStarter, prepareStarterBlock } from "@/lib/templates/starters";
 import { buildHtml } from "@/app/[slug]/html-builder";
 import { escHtml } from "@/app/[slug]/helpers";
 import type {
@@ -69,6 +69,7 @@ export async function GET(
     bgColor: (s.bgColor as string) ?? null,
     siteTextColor: (s.siteTextColor as string) ?? null,
     animation: (s.animation as string) ?? null,
+    bgImage: (s.bgImage as string) ?? null,
     effectBg: (s.effectBg as string) ?? null,
     effectText: (s.effectText as string) ?? null,
     effectCard: (s.effectCard as string) ?? null,
@@ -89,7 +90,7 @@ export async function GET(
       siteId: "preview",
       pageId: `preview-page-${pi}`,
       type: b.type,
-      config: withEntranceAnimation(b).config,
+      config: prepareStarterBlock(b, starter).config,
       sortOrder: bi,
       isVisible: 1,
       createdAt: now,

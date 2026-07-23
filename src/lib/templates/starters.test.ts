@@ -5,8 +5,11 @@ import {
   getStarter,
   applyStarter,
   withEntranceAnimation,
+  prepareStarterBlock,
 } from "./starters";
 import { VALID_PRESET_IDS } from "@/app/[slug]/scripts";
+
+const STOCK_URL = /^\/stock\/[\w-]+\.svg$/;
 
 type ApplyDb = Parameters<typeof applyStarter>[0];
 
@@ -128,5 +131,66 @@ describe("withEntranceAnimation", () => {
         .animation as string;
       expect(VALID_PRESET_IDS.has(preset)).toBe(true);
     }
+  });
+});
+
+describe("prepareStarterBlock (hero eyebrow)", () => {
+  const starter = getStarter("golden-anniversary")!;
+
+  it("injects the template hero eyebrow onto a home-hero block", () => {
+    const out = prepareStarterBlock({ type: "home-hero", config: {} }, starter);
+    expect(out.config.eyebrow).toBe(starter.heroEyebrow);
+    // still gets an entrance animation
+    expect(typeof out.config.animation).toBe("string");
+  });
+
+  it("does not override a block's explicit eyebrow", () => {
+    const out = prepareStarterBlock(
+      { type: "home-hero", config: { eyebrow: "Custom" } },
+      starter,
+    );
+    expect(out.config.eyebrow).toBe("Custom");
+  });
+
+  it("leaves non-hero blocks' eyebrow unset", () => {
+    const out = prepareStarterBlock({ type: "text", config: {} }, starter);
+    expect(out.config.eyebrow).toBeUndefined();
+  });
+
+  it("no-ops eyebrow for a starter without heroEyebrow", () => {
+    const wedding = getStarter("classic-wedding")!;
+    expect(wedding.heroEyebrow).toBeUndefined();
+    const out = prepareStarterBlock({ type: "home-hero", config: {} }, wedding);
+    expect(out.config.eyebrow).toBeUndefined();
+  });
+});
+
+describe("template aesthetics", () => {
+  it("non-wedding templates set a hero eyebrow", () => {
+    for (const id of [
+      "golden-anniversary",
+      "engagement-party",
+      "vow-renewal",
+      "garden-party",
+    ]) {
+      expect(getStarter(id)!.heroEyebrow, `${id} eyebrow`).toBeTruthy();
+    }
+  });
+
+  it("any starter bgImage points at a bundled stock asset", () => {
+    for (const s of STARTERS) {
+      const bg = s.settings?.bgImage as string | undefined;
+      if (bg) expect(bg, `${s.id} bgImage`).toMatch(STOCK_URL);
+    }
+  });
+
+  it("applyStarter persists the template bgImage into site_setting", async () => {
+    const { db, calls } = mockDb();
+    await applyStarter(db, "site1", "classic-wedding", 1700000000000);
+    const setting = calls.find((c) =>
+      c.sql.includes("INSERT INTO site_setting"),
+    )!;
+    // bgImage is bound right after siteTextColor (8th positional arg, index 7)
+    expect(setting.args).toContain("/stock/texture-marble.svg");
   });
 });
