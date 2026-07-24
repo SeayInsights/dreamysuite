@@ -48,6 +48,8 @@ export interface CountdownViewProps {
   rsvpBorderColor?: string;
   style?: CSSProperties;
   data?: Record<string, string>;
+  /** Per-field style for the headline label — mirrors the editor's styleFromField. */
+  labelStyle?: CSSProperties;
 }
 
 export function CountdownView({
@@ -62,7 +64,9 @@ export function CountdownView({
   rsvpBorderColor,
   style,
   data,
+  labelStyle,
 }: CountdownViewProps) {
+  const hasLabelStyle = labelStyle && Object.keys(labelStyle).length > 0;
   return (
     <section
       className="block block-countdown"
@@ -71,7 +75,12 @@ export function CountdownView({
       data-block-id={id}
       data-block-type={type}
     >
-      <p className="countdown-label">{label}</p>
+      <p
+        className="countdown-label"
+        {...(hasLabelStyle ? { style: labelStyle } : {})}
+      >
+        {label}
+      </p>
       {targetDate ? (
         <div
           className="countdown-units"
