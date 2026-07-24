@@ -85,6 +85,9 @@ export function renderHomeHeroReact(ctx: RenderContext): Promise<string> {
       imageUrl={heroImage}
       style={style}
       data={data}
+      titleStyle={fieldTextStyle(cfg, "coupleNames")}
+      dateStyle={fieldTextStyle(cfg, "dateText")}
+      locationStyle={fieldTextStyle(cfg, "locationText")}
     />,
   );
 }
@@ -407,6 +410,7 @@ export function renderCountdownReact(ctx: RenderContext): Promise<string> {
       id={block.id}
       type={block.type}
       label={(cfg.label as string | undefined) ?? "Until we say I do"}
+      labelStyle={fieldTextStyle(cfg, "label")}
       targetDate={settings?.eventDate ?? ""}
       showRsvp={!!cfg.showRsvpButton}
       rsvpText={String(cfg.rsvpButtonText ?? "RSVP Now")}

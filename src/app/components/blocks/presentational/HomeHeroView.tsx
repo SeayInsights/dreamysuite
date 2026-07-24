@@ -28,6 +28,19 @@ export interface HomeHeroViewProps {
   imageUrl?: string;
   style?: CSSProperties;
   data?: Record<string, string>;
+  /**
+   * Per-field text styles (font/color/size/align/weight) for the couple names,
+   * date, and location — built from the same companion cfg keys the editor
+   * previews via styleFromField, so the published hero matches the editor.
+   */
+  titleStyle?: CSSProperties;
+  dateStyle?: CSSProperties;
+  locationStyle?: CSSProperties;
+}
+
+/** Emit a `style` attr only when the object is non-empty (keeps unstyled markup byte-identical). */
+function styleAttr(s?: CSSProperties) {
+  return s && Object.keys(s).length > 0 ? { style: s } : {};
 }
 
 export function HomeHeroView({
@@ -40,6 +53,9 @@ export function HomeHeroView({
   imageUrl,
   style,
   data,
+  titleStyle,
+  dateStyle,
+  locationStyle,
 }: HomeHeroViewProps) {
   const mergedStyle: CSSProperties | undefined = imageUrl
     ? { ...(style ?? {}), backgroundImage: `url('${imageUrl}')` }
@@ -63,16 +79,28 @@ export function HomeHeroView({
         ) : (
           <p className="hero-eyebrow">We&#39;re getting married</p>
         )}
-        <h1 className="hero-title" data-lang-field="couple">
+        <h1
+          className="hero-title"
+          data-lang-field="couple"
+          {...styleAttr(titleStyle)}
+        >
           {title}
         </h1>
         {date ? (
-          <p className="hero-date" data-lang-field="date">
+          <p
+            className="hero-date"
+            data-lang-field="date"
+            {...styleAttr(dateStyle)}
+          >
             {date}
           </p>
         ) : null}
         {location ? (
-          <p className="hero-location" data-lang-field="location">
+          <p
+            className="hero-location"
+            data-lang-field="location"
+            {...styleAttr(locationStyle)}
+          >
             {location}
           </p>
         ) : null}
