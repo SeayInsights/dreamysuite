@@ -129,10 +129,14 @@
 }
 
 /* ── Text ── */
+/* Left-aligned to match the published default (styles.ts): long-form body reads
+   best left-aligned; the block still centers on the page via margin auto, and
+   owners can re-center per block via the body-align control. Keeping this in
+   sync with published is what makes the editor a true preview. */
 .text-body {
   max-width: 640px;
   margin: 0 auto;
-  text-align: center;
+  text-align: left;
   color: var(--block-text, var(--body-color));
   font-size: 1.0625rem;
 }

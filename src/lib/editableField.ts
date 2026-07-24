@@ -187,6 +187,10 @@ export function blockSectionStyle(
     style.zIndex = cfg.blockZIndex;
   }
 
+  // Padding: allowed on all breakpoints
+  const pad = cfg.padding;
+  const hasPad = !!(pad && typeof pad === "object" && !Array.isArray(pad));
+
   if (typeof cfg.blockHeight === "number" && cfg.blockHeight > 0) {
     // minHeight (not height): blockHeight is a FLOOR, so the box grows to fit
     // content instead of freezing at a fixed height and clipping/overflowing
@@ -194,14 +198,19 @@ export function blockSectionStyle(
     // spilling after a resize; also means a block can't be shrunk below its
     // content.
     style.minHeight = `${cfg.blockHeight * scale}px`;
+    // Match published (container.ts): an explicit height means the CSS-class
+    // default 3.5rem top/bottom padding must not inflate the box. Custom padding
+    // below still wins.
+    if (!hasPad) {
+      style.paddingTop = "0";
+      style.paddingBottom = "0";
+    }
     style.display = "flex";
     style.flexDirection = "column";
     style.alignItems = "stretch";
   }
 
-  // Padding: allowed on all breakpoints
-  const pad = cfg.padding;
-  if (pad && typeof pad === "object" && !Array.isArray(pad)) {
+  if (hasPad) {
     const p = pad as Record<string, unknown>;
     // Baseline ALL sides to 0 so CSS-class padding doesn't mix with user values.
     // Individual sides below override only those the user explicitly set.
